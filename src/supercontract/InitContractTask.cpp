@@ -10,6 +10,8 @@ namespace sirius::contract {
 
 class InitContractTask : BaseContractTask {
 
+
+
 };
 
 }

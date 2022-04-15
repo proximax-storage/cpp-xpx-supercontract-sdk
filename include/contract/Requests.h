@@ -12,6 +12,7 @@ namespace sirius::contract {
 
 struct AddContractRequest {
     DriveKey m_driveKey;
+    std::set<ExecutorKey> m_executors;
 };
 
 struct CallRequest {

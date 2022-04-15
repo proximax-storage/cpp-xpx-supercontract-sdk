@@ -12,25 +12,32 @@
 #include "contract/Requests.h"
 #include "contract/Messenger.h"
 #include "contract/StorageBridge.h"
-#include "VirtualMachineEventHandler.h"
+#include "contract/StorageQueries.h"
+#include "contract/StorageBridgeEventHandler.h"
+#include "eventHandlers/ContractStorageBridgeEventHandler.h"
+#include "eventHandlers/ContractVirtualMachineEventHandler.h"
+#include "eventHandlers/ContractMessageEventHandler.h"
+#include "eventHandlers/ContractBlockchainEventHandler.h"
+#include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "VirtualMachine.h"
 
 namespace sirius::contract {
 
-class Contract {
+class Contract
+        : public ContractStorageBridgeEventHandler,
+          public ContractVirtualMachineEventHandler,
+          public ContractMessageEventHandler {
 public:
-
-    virtual ~Contract() = default;
 
     virtual void addContractCall( const CallRequest& ) = 0;
 
-    virtual void onCallExecuted(const CallExecutionResult& executionResult) = 0;
-
 };
 
-std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
-                                                 const AddContractRequest& addContractRequest,
-                                                 ExecutorEventHandler& eventHandler,
-                                                 Messenger& messenger,
-                                                 StorageBridge& storageBridge );
+std::unique_ptr<Contract> createDefaultContract( const ContractKey&,
+                                                 const AddContractRequest&,
+                                                 ExecutorEventHandler&,
+                                                 Messenger&,
+                                                 StorageBridge&,
+                                                 VirtualMachine&);
 
 }

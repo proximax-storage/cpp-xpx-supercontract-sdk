@@ -6,12 +6,18 @@
 
 #pragma once
 
+#include "Transactions.h"
+
 namespace sirius::contract {
 
 class ExecutorEventHandler {
 public:
 
     virtual ~ExecutorEventHandler() = default;
+
+    virtual void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) = 0;
+
+    virtual void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) = 0;
 
 };
 

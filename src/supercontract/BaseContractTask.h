@@ -8,26 +8,46 @@
 
 #include "types.h"
 #include "contract/Requests.h"
+#include "contract/Transactions.h"
+#include "contract/StorageQueries.h"
+#include "eventHandlers/ContractVirtualMachineEventHandler.h"
+#include "eventHandlers/ContractStorageBridgeEventHandler.h"
+#include "eventHandlers/ContractMessageEventHandler.h"
+#include "eventHandlers/ContractBlockchainEventHandler.h"
 #include "BatchesManager.h"
 #include "TaskContext.h"
-#include "VirtualMachineEventHandler.h"
+#include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "VirtualMachine.h"
+#include "log.h"
 
 namespace sirius::contract {
 
-class BaseContractTask {
+class BaseContractTask
+        : public ContractStorageBridgeEventHandler,
+          public ContractVirtualMachineEventHandler,
+          public ContractMessageEventHandler,
+          public ContractBlockchainEventHandler {
+protected:
+
+    TaskContext& m_taskContext;
+
 public:
 
-    virtual ~BaseContractTask() = default;
+    explicit BaseContractTask( TaskContext& taskContext )
+    : m_taskContext( taskContext )
+    {}
 
     virtual void run() = 0;
 
     virtual void terminate() = 0;
 
-    virtual void onCallExecuted( const CallExecutionResult& result ) = 0;
+    std::string dbgPeerName() {
+        return m_taskContext.dbgPeerName();
+    }
 
 };
 
 //std::unique_ptr<BaseContractTask> createInitContractTask(  )
-std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch, TaskContext& taskContext );
+std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&&, TaskContext&, VirtualMachine& );
 
 }

@@ -18,7 +18,7 @@ public:
 
     virtual ~VirtualMachine() = default;
 
-    virtual void execute(const std::unique_ptr<CallRequest>&) = 0;
+    virtual void execute( const CallRequest& ) = 0;
 
 };
 

@@ -6,12 +6,6 @@
 
 #pragma once
 
-#include "Requests.h"
-
-#include "types.h"
-
-#include <memory>
-
 namespace sirius::contract {
 
 class StorageBridge {
@@ -21,6 +15,10 @@ public:
     virtual ~StorageBridge() = default;
 
     virtual void synchronizeStorage() = 0;
+
+    virtual void applyStorageModifications() = 0;
+
+    virtual void discardStorageModifications() = 0;
 
 };
 

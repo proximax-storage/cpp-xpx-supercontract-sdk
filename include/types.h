@@ -116,7 +116,7 @@ namespace sirius {
 
     DECL_KEY( ContractKey );
     DECL_KEY( DriveKey );
-    DECL_KEY( ReplicatorKey );
+    DECL_KEY( ExecutorKey );
     DECL_KEY( CreatorKey );
     DECL_KEY( CallerKey );
     //using ChannelId   = HashArray<std::array<uint8_t,32>>;
