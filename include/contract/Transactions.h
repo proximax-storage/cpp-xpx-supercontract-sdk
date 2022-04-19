@@ -25,14 +25,14 @@ struct CallExecutorParticipation {
 
 struct SuccessfulBatchCallInfo {
     bool m_callExecutionSuccess;
-    uint64_t m_callLowerLevelSandboxSizeDelta;
-    uint64_t m_callUsedDriveSizeDelta;
+    int64_t m_callSandboxSizeDelta;
+    int64_t m_callStateSizeDelta;
 
     template<class Archive>
     void serialize( Archive& arch ) {
         arch( m_callExecutionSuccess );
-        arch( m_callLowerLevelSandboxSizeDelta );
-        arch( m_callUsedDriveSizeDelta );
+        arch( m_callSandboxSizeDelta );
+        arch( m_callStateSizeDelta );
     }
 };
 
@@ -85,7 +85,7 @@ struct SuccessfulBatchInfo {
 
 struct EndBatchExecutionTransactionInfo {
     ContractKey m_contractKey;
-    Hash256 m_batchId;
+    uint64_t m_batchIndex;
 
     std::optional<SuccessfulBatchInfo> m_successfulBatchInfo;
     std::vector<CallExecutionInfo> m_callsExecutionInfo;
@@ -110,13 +110,13 @@ struct EndBatchExecutionTransactionInfo {
 
 struct EndBatchExecutionSingleTransactionInfo {
     ContractKey m_contractKey;
-    Hash256     m_batchId;
+    uint64_t    m_batchIndex;
     PoEx        m_proofOfExecution;
 };
 
 struct PublishedEndBatchExecutionTransactionInfo {
     ContractKey m_contractKey;
-    Hash256     m_batchId;
+    uint64_t    m_batchIndex;
 
     // Has value only in the case of successful batch
     std::optional<Hash256> m_driveState;

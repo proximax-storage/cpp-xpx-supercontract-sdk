@@ -14,7 +14,7 @@
 namespace sirius::contract {
 
 struct Batch {
-    Hash256 m_batchId;
+    uint64_t m_batchIndex;
     std::deque<CallRequest> m_callRequests;
 };
 
@@ -34,6 +34,12 @@ public:
         auto&& batch = std::move(m_batches.front());
         m_batches.pop_front();
         return batch;
+    }
+
+    void clearOutdatedBatches( uint64_t batchIndex ) {
+        while ( m_batches.front().m_batchIndex < batchIndex ) {
+            m_batches.pop_front();
+        }
     }
 
 private:

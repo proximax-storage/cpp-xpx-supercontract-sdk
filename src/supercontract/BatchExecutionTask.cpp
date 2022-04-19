@@ -50,7 +50,7 @@ public:
               m_otherUnsuccessfulExecutorEndBatchInfos( std::move( otherUnsuccessfulExecutorEndBatchInfos )) {}
 
     void run() override {
-        executeNextCall();
+        m_taskContext.storageBridge().initiateModifications( m_taskContext.driveKey(), m_batch.m_batchIndex );
     }
 
     void terminate() override {
@@ -66,10 +66,8 @@ public:
             return false;
         }
 
-        // TODO maybe post is not needed
-        m_taskContext.threadManager().execute( [this] {
-            executeNextCall();
-        } );
+        m_call->setCallExecutionResult(executionResult);
+        m_taskContext.storageBridge().applyStorageModifications(m_taskContext.driveKey(), m_batch.m_batchIndex, executionResult.m_success);;
 
         return true;
     }
@@ -78,13 +76,73 @@ public:
 
     // region storage bridge event handler
 
-    bool onStorageModificationsApplied() override {
+    bool onStorageSynchronized( uint64_t batchIndex ) override {
+        _ASSERT( batchIndex == m_batch.m_batchIndex )
 
-        m_taskContext.threadManager().execute( [this] {
+        m_taskContext.threadManager().execute([this] {
             m_taskContext.onTaskFinished();
+        });
+
+        return true;
+    }
+
+    bool onInitiatedModifications( uint64_t batchIndex ) override {
+        _ASSERT( batchIndex == m_batch.m_batchIndex )
+
+        m_taskContext.threadManager().execute([this] {
+            executeNextCall();
+        });
+
+        return true;
+    }
+
+    bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta,
+                                               int64_t stateSizeDelta ) override {
+        _ASSERT( m_batch.m_batchIndex == batchIndex )
+
+        m_taskContext.threadManager().execute( [=, this] {
+            const auto& executionResult = m_call->callExecutionResult();
+
+            m_callsExecutionInfos.push_back( CallExecutionInfo{
+                    executionResult.m_callId,
+                    SuccessfulBatchCallInfo{
+                            success,
+                            sandboxSizeDelta,
+                            stateSizeDelta,
+                    },
+                    {
+                            CallExecutorParticipation{
+                                    executionResult.m_scConsumed,
+                                    executionResult.m_smConsumed
+                            }
+                    }
+            } );
+
+            executeNextCall();
         } );
 
-        return false;
+        return true;
+    }
+
+    bool onRootHashEvaluated( uint64_t batchIndex, const Hash256& rootHash,
+                                      uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
+        _ASSERT( m_batch.m_batchIndex == batchIndex )
+
+        m_taskContext.threadManager().execute([=, this] {
+            formSuccessfulEndBatchInfo( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
+        });
+
+        return true;
+    }
+
+    bool onAppliedStorageModifications( uint64_t batchIndex ) override {
+        _ASSERT( m_batch.m_batchIndex == batchIndex )
+
+        m_taskContext.threadManager().execute([this] {
+            m_taskContext.onTaskFinished();
+        });
+
+        return true;
     }
 
     // end region
@@ -92,7 +150,7 @@ public:
     // region messenger event handler
 
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) override {
-        if ( info.m_batchId != m_batch.m_batchId ) {
+        if ( info.m_batchIndex != m_batch.m_batchIndex ) {
             return false;
         }
 
@@ -110,7 +168,7 @@ public:
     // region blockchain event handler
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
-        if ( info.m_batchId != m_batch.m_batchId ) {
+        if ( info.m_batchIndex != m_batch.m_batchIndex ) {
             return false;
         }
 
@@ -129,11 +187,15 @@ public:
 
 private:
 
-    void formSuccessfulEndBatchInfo() {
+    void formSuccessfulEndBatchInfo( const Hash256& rootHash,
+                                     uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
         m_successfulEndBatchInfo = EndBatchExecutionTransactionInfo();
-        m_successfulEndBatchInfo->m_batchId = m_batch.m_batchId;
+        m_successfulEndBatchInfo->m_batchIndex = m_batch.m_batchIndex;
         m_successfulEndBatchInfo->m_contractKey = m_taskContext.contractKey();
         m_successfulEndBatchInfo->m_executorKeys.emplace_back( m_taskContext.keyPair().publicKey());
+
+        m_successfulEndBatchInfo->m_successfulBatchInfo = SuccessfulBatchInfo{rootHash, usedDriveSize, metaFilesSize,
+                                                                              fileStructureSize};
 
         m_successfulEndBatchInfo->m_callsExecutionInfo = std::move( m_callsExecutionInfos );
 
@@ -141,9 +203,10 @@ private:
             m_taskContext.messenger().sendArchiveMessage( executor, *m_successfulEndBatchInfo );
         }
 
-        m_unsuccessfulExecutionTimer = m_taskContext.threadManager().startTimer( 10, [this] {
-            onUnsuccessfulExecutionTimerExpiration();
-        } );
+        m_unsuccessfulExecutionTimer = m_taskContext.threadManager().startTimer(
+                m_taskContext.contractConfig().unsuccessfulApprovalDelayMs(), [this] {
+                    onUnsuccessfulExecutionTimerExpiration();
+                } );
 
         std::erase_if( m_otherSuccessfulExecutorEndBatchInfos, [this]( const auto& item ) {
             return validateOtherBatchInfo( item );
@@ -167,14 +230,14 @@ private:
             if ( *m_publishedEndBatchInfo->m_driveState ==
                  m_successfulEndBatchInfo->m_successfulBatchInfo->m_rootHash ) {
                 // We successfully executed the batch in the same way as other executors
-                m_taskContext.storageBridge().applyStorageModifications();
+                m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex, true );
             } else {
                 // The received result differs from the common one, synchronization is needed
                 canSignEndBatchTransaction = false;
-                m_taskContext.storageBridge().synchronizeStorage();
+                m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey() );
             }
         } else {
-            m_taskContext.storageBridge().discardStorageModifications();
+            m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex, false );
         }
 
         if ( canSignEndBatchTransaction ) {
@@ -182,7 +245,7 @@ private:
             if ( std::find( cosigners.begin(), cosigners.end(), m_taskContext.keyPair().publicKey()) ==
                  cosigners.end()) {
                 // TODO PoEx
-                EndBatchExecutionSingleTransactionInfo singleTx = {m_taskContext.contractKey(), m_batch.m_batchId, {}};
+                EndBatchExecutionSingleTransactionInfo singleTx = {m_taskContext.contractKey(), m_batch.m_batchIndex, {}};
                 m_taskContext.executorEventHandler().endBatchSingleTransactionIsReady( singleTx );
             }
         }
@@ -236,13 +299,13 @@ private:
                     return false;
                 }
 
-                if ( otherSuccessfulBatchInfo.m_callLowerLevelSandboxSizeDelta !=
-                     successfulBatchInfo.m_callLowerLevelSandboxSizeDelta ) {
+                if ( otherSuccessfulBatchInfo.m_callSandboxSizeDelta !=
+                     successfulBatchInfo.m_callSandboxSizeDelta ) {
                     return false;
                 }
 
-                if ( otherSuccessfulBatchInfo.m_callUsedDriveSizeDelta !=
-                     successfulBatchInfo.m_callUsedDriveSizeDelta ) {
+                if ( otherSuccessfulBatchInfo.m_callStateSizeDelta !=
+                     successfulBatchInfo.m_callStateSizeDelta ) {
                     return false;
                 }
             }
@@ -260,14 +323,14 @@ private:
             auto tx = createMultisigTransactionInfo( *m_successfulEndBatchInfo,
                                                      m_otherSuccessfulExecutorEndBatchInfos );
 
-            m_taskContext.threadManager().startTimer(10, [this, tx=std::move(tx)] {
+            m_taskContext.threadManager().startTimer(m_taskContext.contractConfig().executorConfig().successfulExecutionDelayMs(), [this, tx=std::move(tx)] {
                 sendEndBatchTransaction( tx );
             });
         } else if ( m_unsuccessfulEndBatchInfo &&
                     2 * m_otherUnsuccessfulExecutorEndBatchInfos.size() >= 3 * (m_taskContext.executors().size() + 1)) {
             auto tx = createMultisigTransactionInfo( *m_unsuccessfulEndBatchInfo,
                                                      m_otherUnsuccessfulExecutorEndBatchInfos );
-            m_taskContext.threadManager().startTimer(10, [this, tx=std::move(tx)] {
+            m_taskContext.threadManager().startTimer(m_taskContext.contractConfig().executorConfig().unsuccessfulExecutionDelayMs(), [this, tx=std::move(tx)] {
                 sendEndBatchTransaction( tx );
             });
         }
@@ -309,7 +372,7 @@ private:
             m_virtualMachine.execute( m_call->callRequest());
         } else {
             computeProofOfExecution();
-            formSuccessfulEndBatchInfo();
+            m_taskContext.storageBridge().evaluateRootHash( m_taskContext.driveKey(), m_batch.m_batchIndex );
         }
     }
 

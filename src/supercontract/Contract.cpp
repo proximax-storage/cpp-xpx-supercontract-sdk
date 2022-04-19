@@ -10,42 +10,43 @@
 #include "BaseContractTask.h"
 #include "ThreadManager.h"
 #include "ProofOfExecution.h"
+#include "ContractConfig.h"
+#include "ContractContext.h"
 
 namespace sirius::contract {
 
 class DefaultContract : public Contract, public TaskContext {
 
 private:
-    ContractKey           m_contractKey;
-    DriveKey              m_driveKey;
-    std::set<ExecutorKey> m_executors;
 
-    ExecutorEventHandler&               m_eventHandler;
-    Messenger&                          m_messenger;
-    StorageBridge&                      m_storageBridge;
-    VirtualMachine&                     m_virtualMachine;
+    ContractKey             m_contractKey;
+
+    DriveKey                m_driveKey;
+    std::set<ExecutorKey>   m_executors;
+
+    ContractContext&        m_contractContext;
+    ContractConfig          m_contractConfig;
 
     ProofOfExecution                    m_proofOfExecution;
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
 
     std::unique_ptr<BaseContractTask>   m_task;
 
-    std::map<Hash256, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownSuccessfulBatchInfos;
-    std::map<Hash256, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownUnsuccessfulBatchInfos;
+    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownSuccessfulBatchInfos;
+    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownUnsuccessfulBatchInfos;
 
 public:
 
     DefaultContract( const ContractKey& contractKey,
                      const AddContractRequest& addContractRequest,
-                     ExecutorEventHandler& eventHandler,
-                     Messenger& messenger,
-                     StorageBridge& storageBridge,
-                     VirtualMachine& virtualMachine )
-            : m_contractKey( contractKey ), m_driveKey( addContractRequest.m_driveKey ), m_executors(addContractRequest.m_executors),
-              m_eventHandler( eventHandler ), m_messenger( messenger ), m_storageBridge( storageBridge ),
-              m_virtualMachine( virtualMachine ) {
-
-    }
+                     ContractContext& contractContext,
+                     const ExecutorConfig& executorConfig)
+            : m_contractKey( contractKey )
+            , m_driveKey( addContractRequest.m_driveKey )
+            , m_executors(addContractRequest.m_executors)
+            , m_contractContext(contractContext)
+            , m_contractConfig(executorConfig)
+            {}
 
     void addContractCall( const CallRequest& request ) override {
         m_batchesManager->addCall( request );
@@ -54,21 +55,55 @@ public:
         }
     }
 
-    bool onStorageSynchronized() override {
+    // region storage bridge event handler
+
+    bool onStorageSynchronized( uint64_t batchIndex ) override {
         if ( !m_task ) {
             return false;
         }
 
-        return m_task->onStorageSynchronized();
+        m_batchesManager->clearOutdatedBatches( batchIndex );
+        m_task->onStorageSynchronized( batchIndex );
+
+        // TODO should we always return true?
+        return true;
     }
 
-    bool onStorageModificationsApplied() override {
+    bool onInitiatedModifications( uint64_t batchIndex ) override {
         if ( !m_task ) {
             return false;
         }
 
-        return m_task->onStorageModificationsApplied();
+        return m_task->onInitiatedModifications( batchIndex );
     }
+
+    bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
+        if ( !m_task ) {
+            return false;
+        }
+
+        return m_task->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta, stateSizeDelta);
+    }
+
+    bool
+    onRootHashEvaluated( uint64_t batchIndex, const Hash256& rootHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
+                         uint64_t fileStructureSize ) override {
+        if ( !m_task ) {
+            return false;
+        }
+
+        return m_task->onRootHashEvaluated( batchIndex, rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
+    }
+
+    bool onAppliedStorageModifications( uint64_t batchIndex ) override {
+        if ( !m_task ) {
+            return false;
+        }
+
+        return m_task->onAppliedStorageModifications( batchIndex );
+    }
+
+    // endregion
 
     bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
         if ( !m_task ) {
@@ -82,15 +117,59 @@ public:
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) override {
         if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
             if (info.isSuccessful()) {
-                m_unknownSuccessfulBatchInfos[info.m_batchId][info.m_executorKeys.front()] = info;
+                m_unknownSuccessfulBatchInfos[info.m_batchIndex][info.m_executorKeys.front()] = info;
             }
             else {
-                m_unknownUnsuccessfulBatchInfos[info.m_batchId][info.m_executorKeys.front()] = info;
+                m_unknownUnsuccessfulBatchInfos[info.m_batchIndex][info.m_executorKeys.front()] = info;
             }
         }
 
         return true;
     }
+
+    // region task context
+
+    const ContractKey& contractKey() const override {
+        return m_contractKey;
+    }
+
+    const std::set<ExecutorKey>& executors() const override {
+        return m_executors;
+    }
+
+    const crypto::KeyPair& keyPair() const override {
+        return m_contractContext.keyPair();
+    }
+
+    ThreadManager& threadManager() override {
+        return m_contractContext.threadManager();
+    }
+
+    Messenger& messenger() override {
+        return m_contractContext.messenger();
+    }
+
+    StorageBridge& storageBridge() override {
+        return m_contractContext.storageBridge();
+    }
+
+    ExecutorEventHandler& executorEventHandler() override {
+        return m_contractContext.executorEventHandler();
+    }
+
+    const ContractConfig& contractConfig() const override {
+        return m_contractConfig;
+    }
+
+    void onTaskFinished() override {
+
+    }
+
+    std::string dbgPeerName() override {
+        return m_contractContext.dbgPeerName();
+    }
+
+    // end region
 
 private:
 

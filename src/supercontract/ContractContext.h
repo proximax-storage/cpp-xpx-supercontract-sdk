@@ -12,21 +12,14 @@
 #include "crypto/KeyPair.h"
 
 #include "ThreadManager.h"
-#include "ContractConfig.h"
 
 namespace sirius::contract {
 
-class TaskContext {
+class ContractContext {
 
 public:
 
-    virtual ~TaskContext() = default;
-
-    virtual const ContractKey& contractKey() const = 0;
-
-    virtual const DriveKey& driveKey() const = 0;
-
-    virtual const std::set<ExecutorKey>& executors() const = 0;
+    virtual ~ContractContext() = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;
 
@@ -37,10 +30,6 @@ public:
     virtual StorageBridge& storageBridge() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
-
-    virtual const ContractConfig& contractConfig() const = 0;
-
-    virtual void onTaskFinished() = 0;
 
     virtual std::string dbgPeerName() = 0;
 

@@ -13,6 +13,7 @@ namespace sirius::contract {
 struct AddContractRequest {
     DriveKey m_driveKey;
     std::set<ExecutorKey> m_executors;
+    uint64_t m_unsuccessfulApprovalExpectation;
 };
 
 struct CallRequest {

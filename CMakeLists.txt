@@ -13,6 +13,7 @@ find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thr
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
 include_directories(cereal/include)
+include_directories(curlpp/include)
 
 #if (XPX_supercontract_SDK_BUILD_EMULATOR)
 #    add_subdirectory(cpp-xpx-rpclib)

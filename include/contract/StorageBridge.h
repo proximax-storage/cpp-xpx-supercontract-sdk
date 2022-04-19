@@ -14,12 +14,15 @@ public:
 
     virtual ~StorageBridge() = default;
 
-    virtual void synchronizeStorage() = 0;
+    virtual void synchronizeStorage( const DriveKey& driveKey ) = 0;
 
-    virtual void applyStorageModifications() = 0;
+    virtual void initiateModifications( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
 
-    virtual void discardStorageModifications() = 0;
+    virtual void applySandboxStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) = 0;
 
+    virtual void evaluateRootHash( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
+
+    virtual void applyStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) = 0;
 };
 
 }

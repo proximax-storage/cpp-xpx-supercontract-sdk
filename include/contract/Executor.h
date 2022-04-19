@@ -7,11 +7,11 @@
 #pragma once
 
 #include "Requests.h"
+#include "ExecutorConfig.h"
 
 #include "types.h"
 
 #include <memory>
-
 namespace sirius::contract {
 
 class Executor {
@@ -21,9 +21,9 @@ public:
     virtual ~Executor() = default;
 
 private:
-    virtual void addContract(const ContractKey&, const AddContractRequest&) = 0;
+    virtual void addContract( const ContractKey&, AddContractRequest&& ) = 0;
 
-    virtual void addContractCall(const ContractKey&, const CallRequest&) = 0;
+    virtual void addContractCall( const ContractKey&, CallRequest&& ) = 0;
 };
 
 //std::unique_ptr<Executor> createDefaultExecutor(
