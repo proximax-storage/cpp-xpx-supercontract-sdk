@@ -17,13 +17,7 @@ public:
 
     virtual void sendMessage(const ExecutorKey& key, const std::string& msg) = 0;
 
-    template<class T>
-    void sendArchiveMessage(const ExecutorKey& key, const T& value) {
-        std::ostringstream os( std::ios::binary );
-        cereal::PortableBinaryOutputArchive archive( os );
-        archive( value );
-        sendMessage(key, os.str());
-    }
+
 
 };
 

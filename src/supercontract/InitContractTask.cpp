@@ -10,7 +10,40 @@ namespace sirius::contract {
 
 class InitContractTask : BaseContractTask {
 
+private:
 
+    const AddContractRequest m_request;
+
+    bool isSynchronized = false;
+
+public:
+
+    InitContractTask(
+            const AddContractRequest& request,
+            TaskContext& taskContext )
+            : BaseContractTask( taskContext )
+            , m_request(request)
+            {}
+
+public:
+
+    void run() override {
+
+        // Now the task does not do anything,
+        // but it can do something in future
+
+        if (!m_request.isInActualState) {
+            m_taskContext.notifyNeedsSynchronization();
+        }
+        else {
+            m_taskContext.onTaskFinished();
+        }
+    }
+
+
+    void terminate() override {
+        m_taskContext.onTaskFinished();
+    }
 
 };
 

@@ -14,7 +14,7 @@
 namespace sirius::contract {
 
 struct Batch {
-    uint64_t m_batchIndex;
+    const uint64_t m_batchIndex;
     std::deque<CallRequest> m_callRequests;
 };
 

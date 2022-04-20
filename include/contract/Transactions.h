@@ -6,6 +6,11 @@
 
 #pragma once
 
+#include <cereal/types/vector.hpp>
+#include <cereal/types/array.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/optional.hpp>
+
 #include "types.h"
 
 #include <memory>
@@ -73,7 +78,6 @@ struct SuccessfulBatchInfo {
     uint64_t m_fileStructureSize;
 
     PoExVerificationInfo m_verificationInfo;
-    std::vector<PoEx> m_proofs;
 
     template<class Archive>
     void serialize( Archive& arch ) {
@@ -84,14 +88,15 @@ struct SuccessfulBatchInfo {
 };
 
 struct EndBatchExecutionTransactionInfo {
-    ContractKey m_contractKey;
-    uint64_t m_batchIndex;
+    ContractKey                         m_contractKey;
+    uint64_t                            m_batchIndex;
 
-    std::optional<SuccessfulBatchInfo> m_successfulBatchInfo;
-    std::vector<CallExecutionInfo> m_callsExecutionInfo;
+    std::optional<SuccessfulBatchInfo>  m_successfulBatchInfo;
+    std::vector<CallExecutionInfo>      m_callsExecutionInfo;
 
-    std::vector<ExecutorKey> m_executorKeys;
-    std::vector<Signature> m_signatures;
+    std::vector<PoEx>                   m_proofs;
+    std::vector<ExecutorKey>            m_executorKeys;
+    std::vector<Signature>              m_signatures;
 
     bool isSuccessful() const {
         return m_successfulBatchInfo.has_value();
@@ -100,9 +105,10 @@ struct EndBatchExecutionTransactionInfo {
     template<class Archive>
     void serialize( Archive& arch ) {
         arch( m_contractKey );
-        arch( m_batchId );
+        arch( m_batchIndex );
         arch( m_successfulBatchInfo );
         arch( m_callsExecutionInfo );
+        arch( m_proofs );
         arch( m_executorKeys );
         arch( m_signatures );
     }
@@ -110,7 +116,7 @@ struct EndBatchExecutionTransactionInfo {
 
 struct EndBatchExecutionSingleTransactionInfo {
     ContractKey m_contractKey;
-    uint64_t    m_batchIndex;
+    uint64_t    m_batchIndex = 0;
     PoEx        m_proofOfExecution;
 };
 
@@ -128,5 +134,9 @@ struct PublishedEndBatchExecutionTransactionInfo {
     }
 };
 
+struct PublishedEndBatchExecutionSingleTransactionInfo {
+    ContractKey m_contractKey;
+    uint64_t    m_batchIndex;
+};
 
 }

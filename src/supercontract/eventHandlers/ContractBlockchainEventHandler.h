@@ -21,6 +21,10 @@ public:
     virtual bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& ) {
         return false;
     }
+
+    virtual bool onEndBatchExecutionSingleTransactionPublished( const PublishedEndBatchExecutionSingleTransactionInfo& ) {
+        return false;
+    }
 };
 
 }

@@ -31,6 +31,8 @@ public:
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 
+    virtual VirtualMachine& virtualMachine() = 0;
+
     virtual std::string dbgPeerName() = 0;
 
 };

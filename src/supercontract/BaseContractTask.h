@@ -47,7 +47,13 @@ public:
 
 };
 
-//std::unique_ptr<BaseContractTask> createInitContractTask(  )
-std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&&, TaskContext&, VirtualMachine& );
+std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
+                                                            TaskContext& taskContext,
+                                                            VirtualMachine& virtualMachine,
+                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                                                            std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo );
+
+std::unique_ptr<BaseContractTask> createSynchronizationTask( const Hash256&, TaskContext& );
 
 }

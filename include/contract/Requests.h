@@ -11,8 +11,13 @@
 namespace sirius::contract {
 
 struct AddContractRequest {
+
+    // state
     DriveKey m_driveKey;
     std::set<ExecutorKey> m_executors;
+    bool isInActualState;
+
+    // config
     uint64_t m_unsuccessfulApprovalExpectation;
 };
 

@@ -14,7 +14,9 @@ public:
 
     virtual ~StorageBridge() = default;
 
-    virtual void synchronizeStorage( const DriveKey& driveKey ) = 0;
+    virtual void synchronizeStorage( const DriveKey& driveKey, const Hash256& rootHash ) = 0;
+
+    virtual void cancelStorageSynchronization( const DriveKey& driveKey ) = 0;
 
     virtual void initiateModifications( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
 

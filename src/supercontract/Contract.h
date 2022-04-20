@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <contract/ExecutorConfig.h>
 #include "types.h"
 
 #include "contract/ExecutorEventHandler.h"
@@ -20,24 +21,26 @@
 #include "eventHandlers/ContractBlockchainEventHandler.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "VirtualMachine.h"
+#include "ContractContext.h"
 
 namespace sirius::contract {
 
 class Contract
         : public ContractStorageBridgeEventHandler,
           public ContractVirtualMachineEventHandler,
-          public ContractMessageEventHandler {
+          public ContractMessageEventHandler,
+          public ContractBlockchainEventHandler {
 public:
 
     virtual void addContractCall( const CallRequest& ) = 0;
 
+    virtual void terminate() = 0;
+
 };
 
-std::unique_ptr<Contract> createDefaultContract( const ContractKey&,
-                                                 const AddContractRequest&,
-                                                 ExecutorEventHandler&,
-                                                 Messenger&,
-                                                 StorageBridge&,
-                                                 VirtualMachine&);
+std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
+                                                 AddContractRequest&& addContractRequest,
+                                                 ContractContext& contractContext,
+                                                 const ExecutorConfig& executorConfig );
 
 }

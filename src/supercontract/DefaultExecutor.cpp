@@ -15,6 +15,8 @@
 #include "crypto/KeyPair.h"
 #include "types.h"
 
+#include "utils/Serializer.h"
+
 namespace sirius::contract {
 
 class DefaultExecutor
@@ -40,6 +42,16 @@ public:
                      , m_dbgPeerName( dbgPeerName )
                      {}
 
+    ~DefaultExecutor() override {
+        m_threadManager.execute([this] {
+            for (auto& [_, contract] : m_contracts) {
+                contract->terminate();
+            }
+        });
+
+        m_threadManager.stop();
+    }
+
     void addContract( const ContractKey& key, AddContractRequest&& request ) override {
         m_threadManager.execute( [=, this, request = std::move( request )]() mutable {
             if ( m_contracts.contains( key )) {
@@ -55,7 +67,7 @@ public:
 
             request.m_executors.erase( it );
 
-            m_contracts[key] = createDefaultContract( key, request, m_eventHandler, m_messenger, m_storageBridge );
+            m_contracts[key] = createDefaultContract( key, std::move( request ), *this, m_config );
 
         } );
     }
@@ -80,13 +92,26 @@ public:
         }
     }
 
+public:
+
+    // region messenger event handler
+
     bool onMessageReceived( const std::string& tag, const std::string& msg ) override {
-        std::set<std::string> supportedTags = {};
-        if (supportedTags.contains(tag)) {
-            return true;
+
+        try {
+            if ( tag == "end_batch" ) {
+                auto info = deserialize<EndBatchExecutionTransactionInfo>(msg);
+                onEndBatchExecutionOpinionReceived( info );
+                return true;
+            }
+        } catch(...)
+        {
+            _LOG_WARN( "onMessageReceived: invalid message format: query=" << tag );
         }
         return false;
     }
+
+    // endregion
 
     // region contract context
 
@@ -115,6 +140,15 @@ public:
     }
 
     // endregion
+
+private:
+
+    void onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) {
+        auto contractIt = m_contracts.find(info.m_contractKey);
+        if ( contractIt == m_contracts.end() ) {
+            contractIt->second->onEndBatchExecutionOpinionReceived( info );
+        }
+    }
 
 private:
     const crypto::KeyPair& m_keyPair;

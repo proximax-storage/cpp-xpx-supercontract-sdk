@@ -7,6 +7,7 @@
 #include "BaseContractTask.h"
 #include "ProofOfExecution.h"
 #include "CallExecutionEnvironment.h"
+#include "utils/Serializer.h"
 
 namespace sirius::contract {
 
@@ -17,7 +18,6 @@ private:
     Batch m_batch;
 
     VirtualMachine& m_virtualMachine;
-    ProofOfExecution& m_proofOfExecution;
 
     std::vector<CallExecutionInfo> m_callsExecutionInfos;
 
@@ -41,23 +41,34 @@ public:
     BatchExecutionTask( Batch&& batch,
                         TaskContext& taskContext,
                         VirtualMachine& virtualMachine,
-                        ProofOfExecution& proofOfExecution,
                         std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
-                        std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos )
-            : BaseContractTask( taskContext ), m_batch( std::move( batch )), m_virtualMachine( virtualMachine ),
-              m_proofOfExecution( proofOfExecution ),
-              m_otherSuccessfulExecutorEndBatchInfos( std::move( otherSuccessfulExecutorEndBatchInfos )),
-              m_otherUnsuccessfulExecutorEndBatchInfos( std::move( otherUnsuccessfulExecutorEndBatchInfos )) {}
+                        std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                        std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo )
+            : BaseContractTask( taskContext )
+            , m_batch( std::move( batch ))
+            , m_virtualMachine( virtualMachine )
+            , m_publishedEndBatchInfo( std::move(publishedEndBatchInfo) )
+            , m_otherSuccessfulExecutorEndBatchInfos( std::move( otherSuccessfulExecutorEndBatchInfos ))
+            , m_otherUnsuccessfulExecutorEndBatchInfos( std::move( otherUnsuccessfulExecutorEndBatchInfos ))
+            {}
 
     void run() override {
-        m_taskContext.storageBridge().initiateModifications( m_taskContext.driveKey(), m_batch.m_batchIndex );
+        m_taskContext.threadManager().execute( [this] {
+            m_taskContext.storageBridge().initiateModifications( m_taskContext.driveKey(), m_batch.m_batchIndex );
+        } );
     }
 
     void terminate() override {
         m_unsuccessfulExecutionTimer.reset();
         m_successfulApprovalExpectationTimer.reset();
         m_unsuccessfulApprovalExpectationTimer.reset();
+
+        m_taskContext.threadManager().execute( [this] {
+            m_taskContext.onTaskFinished();
+        } );
     }
+
+public:
 
     // region virtual machine event handler
 
@@ -66,86 +77,88 @@ public:
             return false;
         }
 
-        m_call->setCallExecutionResult(executionResult);
-        m_taskContext.storageBridge().applyStorageModifications(m_taskContext.driveKey(), m_batch.m_batchIndex, executionResult.m_success);;
+        m_call->setCallExecutionResult( executionResult );
+
+        m_taskContext.threadManager().execute([=, this] {
+            m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex,
+                                                                     executionResult.m_success );
+        } );
 
         return true;
     }
 
-    // end region
+    // endregion
+
+public:
 
     // region storage bridge event handler
 
-    bool onStorageSynchronized( uint64_t batchIndex ) override {
-        _ASSERT( batchIndex == m_batch.m_batchIndex )
-
-        m_taskContext.threadManager().execute([this] {
-            m_taskContext.onTaskFinished();
-        });
-
-        return true;
-    }
-
     bool onInitiatedModifications( uint64_t batchIndex ) override {
-        _ASSERT( batchIndex == m_batch.m_batchIndex )
+        if ( batchIndex != m_batch.m_batchIndex ) {
+            return false;
+        }
 
-        m_taskContext.threadManager().execute([this] {
-            executeNextCall();
-        });
+        executeNextCall();
 
         return true;
     }
 
     bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta,
                                                int64_t stateSizeDelta ) override {
-        _ASSERT( m_batch.m_batchIndex == batchIndex )
+        if ( m_batch.m_batchIndex != batchIndex ) {
+            return false;
+        }
 
-        m_taskContext.threadManager().execute( [=, this] {
-            const auto& executionResult = m_call->callExecutionResult();
+        const auto& executionResult = m_call->callExecutionResult();
 
-            m_callsExecutionInfos.push_back( CallExecutionInfo{
-                    executionResult.m_callId,
-                    SuccessfulBatchCallInfo{
-                            success,
-                            sandboxSizeDelta,
-                            stateSizeDelta,
-                    },
-                    {
-                            CallExecutorParticipation{
-                                    executionResult.m_scConsumed,
-                                    executionResult.m_smConsumed
-                            }
-                    }
-            } );
-
-            executeNextCall();
+        m_callsExecutionInfos.push_back( CallExecutionInfo{
+                executionResult.m_callId,
+                SuccessfulBatchCallInfo{
+                        success,
+                        sandboxSizeDelta,
+                        stateSizeDelta,
+                },
+                {
+                        CallExecutorParticipation{
+                                executionResult.m_scConsumed,
+                                executionResult.m_smConsumed
+                        }
+                }
         } );
+
+        executeNextCall();
 
         return true;
     }
 
     bool onRootHashEvaluated( uint64_t batchIndex, const Hash256& rootHash,
-                                      uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
-        _ASSERT( m_batch.m_batchIndex == batchIndex )
+                              uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
+        if( m_batch.m_batchIndex != batchIndex ) {
+            return false;
+        }
 
-        m_taskContext.threadManager().execute([=, this] {
+        m_taskContext.threadManager().execute( [=, this] {
             formSuccessfulEndBatchInfo( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
-        });
+        } );
 
         return true;
     }
 
     bool onAppliedStorageModifications( uint64_t batchIndex ) override {
-        _ASSERT( m_batch.m_batchIndex == batchIndex )
+        if( m_batch.m_batchIndex != batchIndex ) {
+            return false;
+        }
 
-        m_taskContext.threadManager().execute([this] {
+        m_taskContext.threadManager().execute( [this] {
             m_taskContext.onTaskFinished();
-        });
+        } );
 
         return true;
     }
 
-    // end region
+    // endregion
+
+public:
 
     // region messenger event handler
 
@@ -163,7 +176,9 @@ public:
         return true;
     }
 
-    // end region
+    // endregion
+
+public:
 
     // region blockchain event handler
 
@@ -183,7 +198,7 @@ public:
         return true;
     }
 
-    // end region
+    // endregion
 
 private:
 
@@ -195,12 +210,13 @@ private:
         m_successfulEndBatchInfo->m_executorKeys.emplace_back( m_taskContext.keyPair().publicKey());
 
         m_successfulEndBatchInfo->m_successfulBatchInfo = SuccessfulBatchInfo{rootHash, usedDriveSize, metaFilesSize,
-                                                                              fileStructureSize};
+                                                                              fileStructureSize, {}};
 
         m_successfulEndBatchInfo->m_callsExecutionInfo = std::move( m_callsExecutionInfos );
 
         for ( const auto& executor: m_taskContext.executors()) {
-            m_taskContext.messenger().sendArchiveMessage( executor, *m_successfulEndBatchInfo );
+            auto serializedInfo = serialize( *m_successfulEndBatchInfo );
+            m_taskContext.messenger().sendMessage( executor, serializedInfo );
         }
 
         m_unsuccessfulExecutionTimer = m_taskContext.threadManager().startTimer(
@@ -209,14 +225,19 @@ private:
                 } );
 
         std::erase_if( m_otherSuccessfulExecutorEndBatchInfos, [this]( const auto& item ) {
-            return validateOtherBatchInfo( item );
+            return !validateOtherBatchInfo( item );
         } );
 
         std::erase_if( m_otherUnsuccessfulExecutorEndBatchInfos, [this]( const auto& item ) {
-            return validateOtherBatchInfo( item );
+            return !validateOtherBatchInfo( item );
         } );
 
-        checkEndBatchTransactionReadiness();
+        if ( m_publishedEndBatchInfo ) {
+            processPublishedEndBatch();
+        }
+        else {
+            checkEndBatchTransactionReadiness();
+        }
     }
 
     void processPublishedEndBatch() {
@@ -224,28 +245,30 @@ private:
         _ASSERT( m_publishedEndBatchInfo )
         _ASSERT( m_successfulEndBatchInfo )
 
-        bool canSignEndBatchTransaction = true;
+        bool batchIsSuccessful = m_publishedEndBatchInfo->isSuccessful();
 
-        if ( m_publishedEndBatchInfo->isSuccessful()) {
-            if ( *m_publishedEndBatchInfo->m_driveState ==
-                 m_successfulEndBatchInfo->m_successfulBatchInfo->m_rootHash ) {
-                // We successfully executed the batch in the same way as other executors
-                m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex, true );
-            } else {
-                // The received result differs from the common one, synchronization is needed
-                canSignEndBatchTransaction = false;
-                m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey() );
-            }
+        if ( batchIsSuccessful && *m_publishedEndBatchInfo->m_driveState !=
+                                  m_successfulEndBatchInfo->m_successfulBatchInfo->m_rootHash ) {
+            // The received result differs from the common one, synchronization is needed
+            m_taskContext.notifyNeedsSynchronization( *m_publishedEndBatchInfo->m_driveState );
+
+            m_taskContext.threadManager().execute( [this] {
+                m_taskContext.onTaskFinished();
+            } );
+
         } else {
-            m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex, false );
-        }
 
-        if ( canSignEndBatchTransaction ) {
+            m_taskContext.threadManager().execute( [=, this] {
+                m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex,
+                                                                         batchIsSuccessful );
+            } );
+
             const auto& cosigners = m_publishedEndBatchInfo->m_cosigners;
             if ( std::find( cosigners.begin(), cosigners.end(), m_taskContext.keyPair().publicKey()) ==
                  cosigners.end()) {
                 // TODO PoEx
-                EndBatchExecutionSingleTransactionInfo singleTx = {m_taskContext.contractKey(), m_batch.m_batchIndex, {}};
+                EndBatchExecutionSingleTransactionInfo singleTx = {m_taskContext.contractKey(), m_batch.m_batchIndex,
+                                                                   {}};
                 m_taskContext.executorEventHandler().endBatchSingleTransactionIsReady( singleTx );
             }
         }
@@ -323,16 +346,20 @@ private:
             auto tx = createMultisigTransactionInfo( *m_successfulEndBatchInfo,
                                                      m_otherSuccessfulExecutorEndBatchInfos );
 
-            m_taskContext.threadManager().startTimer(m_taskContext.contractConfig().executorConfig().successfulExecutionDelayMs(), [this, tx=std::move(tx)] {
-                sendEndBatchTransaction( tx );
-            });
+            m_taskContext.threadManager().startTimer(
+                    m_taskContext.contractConfig().executorConfig().successfulExecutionDelayMs(),
+                    [this, tx = std::move( tx )] {
+                        sendEndBatchTransaction( tx );
+                    } );
         } else if ( m_unsuccessfulEndBatchInfo &&
                     2 * m_otherUnsuccessfulExecutorEndBatchInfos.size() >= 3 * (m_taskContext.executors().size() + 1)) {
             auto tx = createMultisigTransactionInfo( *m_unsuccessfulEndBatchInfo,
                                                      m_otherUnsuccessfulExecutorEndBatchInfos );
-            m_taskContext.threadManager().startTimer(m_taskContext.contractConfig().executorConfig().unsuccessfulExecutionDelayMs(), [this, tx=std::move(tx)] {
-                sendEndBatchTransaction( tx );
-            });
+            m_taskContext.threadManager().startTimer(
+                    m_taskContext.contractConfig().executorConfig().unsuccessfulExecutionDelayMs(),
+                    [this, tx = std::move( tx )] {
+                        sendEndBatchTransaction( tx );
+                    } );
         }
     }
 
@@ -344,12 +371,9 @@ private:
         for ( const auto&[_, otherInfo]: otherTransactionInfos ) {
             multisigTransactionInfo.m_executorKeys.push_back( otherInfo.m_executorKeys.front());
             multisigTransactionInfo.m_signatures.push_back( otherInfo.m_signatures.front());
-            if ( multisigTransactionInfo.m_successfulBatchInfo ) {
-                _ASSERT( otherInfo.m_successfulBatchInfo )
-                multisigTransactionInfo.m_successfulBatchInfo->m_proofs.push_back(
-                        otherInfo.m_successfulBatchInfo->m_proofs.front());
-            }
-            _ASSERT( multisigTransactionInfo.m_callsExecutionInfo.size() == otherInfo.m_callsExecutionInfo.size());
+            multisigTransactionInfo.m_proofs.push_back( otherInfo.m_proofs.front());
+
+            _ASSERT( multisigTransactionInfo.m_callsExecutionInfo.size() == otherInfo.m_callsExecutionInfo.size())
             auto txCallIt = multisigTransactionInfo.m_callsExecutionInfo.begin();
             auto otherCallIt = multisigTransactionInfo.m_callsExecutionInfo.begin();
             for ( ; txCallIt != transactionInfo.m_callsExecutionInfo.end(); txCallIt++, otherCallIt++ ) {
@@ -369,10 +393,16 @@ private:
         if ( !m_batch.m_callRequests.empty()) {
             m_call = std::make_unique<CallExecutionEnvironment>( std::move( m_batch.m_callRequests.front()));
             m_batch.m_callRequests.pop_front();
-            m_virtualMachine.execute( m_call->callRequest());
+
+            m_taskContext.threadManager().execute( [this] {
+                m_virtualMachine.execute( m_call->callRequest());
+            } );
         } else {
             computeProofOfExecution();
-            m_taskContext.storageBridge().evaluateRootHash( m_taskContext.driveKey(), m_batch.m_batchIndex );
+
+            m_taskContext.threadManager().execute( [this] {
+                m_taskContext.storageBridge().evaluateRootHash( m_taskContext.driveKey(), m_batch.m_batchIndex );
+            } );
         }
     }
 
@@ -389,14 +419,26 @@ private:
         }
 
         for ( const auto& executor: m_taskContext.executors()) {
-            m_taskContext.messenger().sendArchiveMessage( executor, *m_unsuccessfulEndBatchInfo );
+            auto serializedInfo = serialize( *m_unsuccessfulEndBatchInfo );
+            m_taskContext.messenger().sendMessage( executor,  serializedInfo );
         }
+    }
+
+    void computeProofOfExecution() {
+
     }
 };
 
-std::unique_ptr<BaseContractTask>
-createBatchExecutionTask( Batch&& batch, TaskContext& taskContext, VirtualMachine& virtualMachine ) {
-    return std::make_unique<BatchExecutionTask>( std::move( batch ), taskContext, virtualMachine );
+std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
+                                                            TaskContext& taskContext,
+                                                            VirtualMachine& virtualMachine,
+                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                                                            std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo ) {
+    return std::make_unique<BatchExecutionTask>( std::move( batch ), taskContext, virtualMachine,
+                                                 std::move( otherSuccessfulExecutorEndBatchInfos ),
+                                                 std::move( otherUnsuccessfulExecutorEndBatchInfos ),
+                                                 std::move( publishedEndBatchInfo ));
 }
 
 }

@@ -22,6 +22,10 @@ public:
         return false;
     }
 
+    virtual bool onStorageSynchronizationCancelled() {
+        return false;
+    }
+
     virtual bool onInitiatedModifications( uint64_t batchIndex ) {
         return false;
     }

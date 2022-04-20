@@ -42,6 +42,8 @@ public:
 
     virtual void onTaskFinished() = 0;
 
+    virtual void notifyNeedsSynchronization( const Hash256& state ) = 0;
+
     virtual std::string dbgPeerName() = 0;
 
 };
