@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "contract/StorageQueries.h"
+#include "Messages.h"
 
 namespace sirius::contract {
 
@@ -16,9 +16,7 @@ public:
 
     virtual ~ContractMessageEventHandler() = default;
 
-    //    virtual void onAppliedStorageModifications(const ContractKey& contractKey, )
-
-    virtual bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& ) {
+    virtual bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& ) {
         return false;
     }
 };

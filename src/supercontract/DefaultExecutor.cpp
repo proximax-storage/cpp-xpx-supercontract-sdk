@@ -7,6 +7,7 @@
 #include "Contract.h"
 #include "ThreadManager.h"
 #include "ContractContext.h"
+#include "Messages.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 
 #include "contract/Executor.h"
@@ -16,6 +17,7 @@
 #include "types.h"
 
 #include "utils/Serializer.h"
+#include "log.h"
 
 namespace sirius::contract {
 
@@ -25,6 +27,23 @@ class DefaultExecutor
           public StorageBridgeEventHandler,
           public MessengerEventHandler,
           public ContractContext {
+
+private:
+    const crypto::KeyPair& m_keyPair;
+
+    std::map<ContractKey, std::unique_ptr<Contract>> m_contracts;
+    std::map<DriveKey, ContractKey> m_contractsDriveKeys;
+
+    ThreadManager m_threadManager;
+    const ExecutorConfig m_config;
+
+    ExecutorEventHandler& m_eventHandler;
+    Messenger& m_messenger;
+    StorageBridge& m_storageBridge;
+
+    std::unique_ptr<VirtualMachine> m_virtualMachine;
+
+    std::string m_dbgPeerName;
 
 public:
 
@@ -85,27 +104,33 @@ public:
         } );
     }
 
+public:
+
+    // region virtual machine event handler
+
     void
     onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {
         if ( auto it = m_contracts.find( contractKey ); it != m_contracts.end()) {
-
+            it->second->onSuperContractCallExecuted( executionResult );
         }
     }
+
+
+
+    // endregion
 
 public:
 
     // region messenger event handler
 
     bool onMessageReceived( const std::string& tag, const std::string& msg ) override {
-
         try {
             if ( tag == "end_batch" ) {
-                auto info = deserialize<EndBatchExecutionTransactionInfo>(msg);
+                auto info = utils::deserialize<EndBatchExecutionOpinion>( msg );
                 onEndBatchExecutionOpinionReceived( info );
                 return true;
             }
-        } catch(...)
-        {
+        } catch (...) {
             _LOG_WARN( "onMessageReceived: invalid message format: query=" << tag );
         }
         return false;
@@ -135,6 +160,10 @@ public:
         return m_eventHandler;
     }
 
+    VirtualMachine& virtualMachine() override {
+        return *m_virtualMachine;
+    }
+
     std::string dbgPeerName() override {
         return m_dbgPeerName;
     }
@@ -143,27 +172,17 @@ public:
 
 private:
 
-    void onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) {
-        auto contractIt = m_contracts.find(info.m_contractKey);
+    void onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) {
+
+        if (!opinion.hasValidForm() || !opinion.verify()) {
+            return;
+        }
+
+        auto contractIt = m_contracts.find(opinion.m_contractKey);
         if ( contractIt == m_contracts.end() ) {
-            contractIt->second->onEndBatchExecutionOpinionReceived( info );
+            contractIt->second->onEndBatchExecutionOpinionReceived( opinion );
         }
     }
-
-private:
-    const crypto::KeyPair& m_keyPair;
-
-    std::map<ContractKey, std::unique_ptr<Contract>> m_contracts;
-    std::map<DriveKey, ContractKey> m_contractsDriveKeys;
-
-    ThreadManager m_threadManager;
-    const ExecutorConfig m_config;
-
-    ExecutorEventHandler& m_eventHandler;
-    Messenger& m_messenger;
-    StorageBridge& m_storageBridge;
-
-    std::string m_dbgPeerName;
 };
 
 }

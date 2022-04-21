@@ -6,11 +6,6 @@
 
 #pragma once
 
-#include <cereal/types/vector.hpp>
-#include <cereal/types/array.hpp>
-#include <cereal/types/map.hpp>
-#include <cereal/types/optional.hpp>
-
 #include "types.h"
 
 #include <memory>
@@ -48,13 +43,6 @@ struct CallExecutionInfo {
     std::optional<SuccessfulBatchCallInfo> m_callExecutionInfo;
 
     std::vector<CallExecutorParticipation> m_executorsParticipation;
-
-    template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_callId );
-        arch( m_callExecutionInfo );
-        arch( m_executorsParticipation );
-    }
 };
 
 // Temporary
@@ -97,21 +85,6 @@ struct EndBatchExecutionTransactionInfo {
     std::vector<PoEx>                   m_proofs;
     std::vector<ExecutorKey>            m_executorKeys;
     std::vector<Signature>              m_signatures;
-
-    bool isSuccessful() const {
-        return m_successfulBatchInfo.has_value();
-    }
-
-    template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_contractKey );
-        arch( m_batchIndex );
-        arch( m_successfulBatchInfo );
-        arch( m_callsExecutionInfo );
-        arch( m_proofs );
-        arch( m_executorKeys );
-        arch( m_signatures );
-    }
 };
 
 struct EndBatchExecutionSingleTransactionInfo {
@@ -127,7 +100,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     // Has value only in the case of successful batch
     std::optional<Hash256> m_driveState;
 
-    std::vector<ExecutorKey> m_cosigners;
+    std::vector <ExecutorKey> m_cosigners;
 
     bool isSuccessful() const {
         return m_driveState.has_value();

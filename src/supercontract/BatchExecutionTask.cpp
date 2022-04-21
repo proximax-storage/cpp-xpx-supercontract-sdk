@@ -8,6 +8,7 @@
 #include "ProofOfExecution.h"
 #include "CallExecutionEnvironment.h"
 #include "utils/Serializer.h"
+#include "Messages.h"
 
 namespace sirius::contract {
 
@@ -19,17 +20,17 @@ private:
 
     VirtualMachine& m_virtualMachine;
 
-    std::vector<CallExecutionInfo> m_callsExecutionInfos;
+    std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
 
     std::unique_ptr<CallExecutionEnvironment> m_call;
 
-    std::optional<EndBatchExecutionTransactionInfo> m_successfulEndBatchInfo;
-    std::optional<EndBatchExecutionTransactionInfo> m_unsuccessfulEndBatchInfo;
+    std::optional<EndBatchExecutionOpinion> m_successfulEndBatchOpinion;
+    std::optional<EndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
 
     std::optional<PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
 
-    std::map<ExecutorKey, EndBatchExecutionTransactionInfo> m_otherSuccessfulExecutorEndBatchInfos;
-    std::map<ExecutorKey, EndBatchExecutionTransactionInfo> m_otherUnsuccessfulExecutorEndBatchInfos;
+    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
 
     std::optional<boost::asio::high_resolution_timer> m_unsuccessfulExecutionTimer;
 
@@ -41,15 +42,15 @@ public:
     BatchExecutionTask( Batch&& batch,
                         TaskContext& taskContext,
                         VirtualMachine& virtualMachine,
-                        std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
-                        std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                        std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
+                        std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
                         std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo )
             : BaseContractTask( taskContext )
             , m_batch( std::move( batch ))
             , m_virtualMachine( virtualMachine )
             , m_publishedEndBatchInfo( std::move(publishedEndBatchInfo) )
-            , m_otherSuccessfulExecutorEndBatchInfos( std::move( otherSuccessfulExecutorEndBatchInfos ))
-            , m_otherUnsuccessfulExecutorEndBatchInfos( std::move( otherUnsuccessfulExecutorEndBatchInfos ))
+            , m_otherSuccessfulExecutorEndBatchOpinions( std::move( otherSuccessfulExecutorEndBatchOpinions ))
+            , m_otherUnsuccessfulExecutorEndBatchOpinions( std::move( otherSuccessfulExecutorEndBatchOpinions ))
             {}
 
     void run() override {
@@ -91,6 +92,28 @@ public:
 
 public:
 
+    // region message event handler
+
+    bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) override {
+        if (opinion.m_batchIndex != m_batch.m_batchIndex) {
+            return false;
+        }
+
+        if ( !m_successfulEndBatchOpinion || validateOtherBatchInfo(opinion) ) {
+            if ( opinion.isSuccessful()) {
+                m_otherSuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
+            } else {
+                m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
+            }
+        }
+
+        return true;
+    }
+
+    // endregion
+
+public:
+
     // region storage bridge event handler
 
     bool onInitiatedModifications( uint64_t batchIndex ) override {
@@ -111,18 +134,16 @@ public:
 
         const auto& executionResult = m_call->callExecutionResult();
 
-        m_callsExecutionInfos.push_back( CallExecutionInfo{
+        m_callsExecutionOpinions.push_back( CallExecutionOpinion{
                 executionResult.m_callId,
                 SuccessfulBatchCallInfo{
                         success,
                         sandboxSizeDelta,
                         stateSizeDelta,
                 },
-                {
-                        CallExecutorParticipation{
-                                executionResult.m_scConsumed,
-                                executionResult.m_smConsumed
-                        }
+                CallExecutorParticipation{
+                        executionResult.m_scConsumed,
+                        executionResult.m_smConsumed
                 }
         } );
 
@@ -138,7 +159,7 @@ public:
         }
 
         m_taskContext.threadManager().execute( [=, this] {
-            formSuccessfulEndBatchInfo( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
+            formSuccessfulEndBatchOpinion( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
         } );
 
         return true;
@@ -160,26 +181,6 @@ public:
 
 public:
 
-    // region messenger event handler
-
-    bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) override {
-        if ( info.m_batchIndex != m_batch.m_batchIndex ) {
-            return false;
-        }
-
-        if ( info.isSuccessful()) {
-            m_otherSuccessfulExecutorEndBatchInfos[info.m_executorKeys.front()] = info;
-        } else {
-            m_otherUnsuccessfulExecutorEndBatchInfos[info.m_executorKeys.front()] = info;
-        }
-
-        return true;
-    }
-
-    // endregion
-
-public:
-
     // region blockchain event handler
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
@@ -189,7 +190,7 @@ public:
 
         m_publishedEndBatchInfo = info;
 
-        if ( m_successfulEndBatchInfo ) {
+        if ( m_successfulEndBatchOpinion ) {
             processPublishedEndBatch();
         } else {
             // We are not able to process the transaction yet, we will do it as soon as the batch will be executed
@@ -202,20 +203,20 @@ public:
 
 private:
 
-    void formSuccessfulEndBatchInfo( const Hash256& rootHash,
-                                     uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
-        m_successfulEndBatchInfo = EndBatchExecutionTransactionInfo();
-        m_successfulEndBatchInfo->m_batchIndex = m_batch.m_batchIndex;
-        m_successfulEndBatchInfo->m_contractKey = m_taskContext.contractKey();
-        m_successfulEndBatchInfo->m_executorKeys.emplace_back( m_taskContext.keyPair().publicKey());
+    void formSuccessfulEndBatchOpinion( const Hash256& rootHash,
+                                        uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
+        m_successfulEndBatchOpinion = EndBatchExecutionOpinion();
+        m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
+        m_successfulEndBatchOpinion->m_contractKey = m_taskContext.contractKey();
+        m_successfulEndBatchOpinion->m_executorKey = m_taskContext.keyPair().publicKey();
 
-        m_successfulEndBatchInfo->m_successfulBatchInfo = SuccessfulBatchInfo{rootHash, usedDriveSize, metaFilesSize,
-                                                                              fileStructureSize, {}};
+        m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{rootHash, usedDriveSize, metaFilesSize,
+                                                                                 fileStructureSize, {}};
 
-        m_successfulEndBatchInfo->m_callsExecutionInfo = std::move( m_callsExecutionInfos );
+        m_successfulEndBatchOpinion->m_callsExecutionInfo = std::move( m_callsExecutionOpinions );
 
         for ( const auto& executor: m_taskContext.executors()) {
-            auto serializedInfo = serialize( *m_successfulEndBatchInfo );
+            auto serializedInfo = utils::serialize( *m_successfulEndBatchOpinion );
             m_taskContext.messenger().sendMessage( executor, serializedInfo );
         }
 
@@ -224,11 +225,11 @@ private:
                     onUnsuccessfulExecutionTimerExpiration();
                 } );
 
-        std::erase_if( m_otherSuccessfulExecutorEndBatchInfos, [this]( const auto& item ) {
+        std::erase_if( m_otherSuccessfulExecutorEndBatchOpinions, [this]( const auto& item ) {
             return !validateOtherBatchInfo( item );
         } );
 
-        std::erase_if( m_otherUnsuccessfulExecutorEndBatchInfos, [this]( const auto& item ) {
+        std::erase_if( m_otherUnsuccessfulExecutorEndBatchOpinions, [this]( const auto& item ) {
             return !validateOtherBatchInfo( item );
         } );
 
@@ -243,12 +244,12 @@ private:
     void processPublishedEndBatch() {
 
         _ASSERT( m_publishedEndBatchInfo )
-        _ASSERT( m_successfulEndBatchInfo )
+        _ASSERT( m_successfulEndBatchOpinion )
 
         bool batchIsSuccessful = m_publishedEndBatchInfo->isSuccessful();
 
         if ( batchIsSuccessful && *m_publishedEndBatchInfo->m_driveState !=
-                                  m_successfulEndBatchInfo->m_successfulBatchInfo->m_rootHash ) {
+                                  m_successfulEndBatchOpinion->m_successfulBatchInfo->m_rootHash ) {
             // The received result differs from the common one, synchronization is needed
             m_taskContext.notifyNeedsSynchronization( *m_publishedEndBatchInfo->m_driveState );
 
@@ -274,13 +275,15 @@ private:
         }
     }
 
-    bool validateOtherBatchInfo( const EndBatchExecutionTransactionInfo& other ) {
+    bool validateOtherBatchInfo( const EndBatchExecutionOpinion& other ) {
+
+        _ASSERT( m_successfulEndBatchOpinion )
 
         bool otherSuccessfulBatch = other.m_successfulBatchInfo.has_value();
 
         if ( otherSuccessfulBatch ) {
             const auto& otherSuccessfulBatchInfo = *other.m_successfulBatchInfo;
-            const auto& successfulBatchInfo = *m_successfulEndBatchInfo->m_successfulBatchInfo;
+            const auto& successfulBatchInfo = *m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
 //            if (otherSuccessfulBatchInfo.m_verificationInfo != successfulBatchInfo.m_verificationInfo) {
 //                return false;
@@ -303,32 +306,32 @@ private:
             }
         }
 
-        if ( other.m_callsExecutionInfo.size() != m_successfulEndBatchInfo->m_callsExecutionInfo.size()) {
+        if ( other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
             return false;
         }
 
         auto otherCallIt = other.m_callsExecutionInfo.begin();
-        auto callIt = m_successfulEndBatchInfo->m_callsExecutionInfo.begin();
+        auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.begin();
         for ( ; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++ ) {
             if ( otherCallIt->m_callId != callIt->m_callId ) {
                 return false;
             }
 
             if ( otherSuccessfulBatch ) {
-                const auto& otherSuccessfulBatchInfo = *otherCallIt->m_callExecutionInfo;
-                const auto& successfulBatchInfo = *callIt->m_callExecutionInfo;
+                const auto& otherSuccessfulCallInfo = *otherCallIt->m_successfulCallExecutionInfo;
+                const auto& successfulCallInfo = *callIt->m_successfulCallExecutionInfo;
 
-                if ( otherSuccessfulBatchInfo.m_callExecutionSuccess != successfulBatchInfo.m_callExecutionSuccess ) {
+                if ( otherSuccessfulCallInfo.m_callExecutionSuccess != successfulCallInfo.m_callExecutionSuccess ) {
                     return false;
                 }
 
-                if ( otherSuccessfulBatchInfo.m_callSandboxSizeDelta !=
-                     successfulBatchInfo.m_callSandboxSizeDelta ) {
+                if ( otherSuccessfulCallInfo.m_callSandboxSizeDelta !=
+                     successfulCallInfo.m_callSandboxSizeDelta ) {
                     return false;
                 }
 
-                if ( otherSuccessfulBatchInfo.m_callStateSizeDelta !=
-                     successfulBatchInfo.m_callStateSizeDelta ) {
+                if ( otherSuccessfulCallInfo.m_callStateSizeDelta !=
+                     successfulCallInfo.m_callStateSizeDelta ) {
                     return false;
                 }
             }
@@ -338,23 +341,24 @@ private:
     }
 
     void checkEndBatchTransactionReadiness() {
-        _ASSERT( m_successfulEndBatchInfo )
+        _ASSERT( m_successfulEndBatchOpinion )
 
-        if ( m_successfulEndBatchInfo &&
-             2 * m_otherSuccessfulExecutorEndBatchInfos.size() >= 3 * (m_taskContext.executors().size() + 1)) {
+        if ( m_successfulEndBatchOpinion &&
+             2 * m_otherSuccessfulExecutorEndBatchOpinions.size() >= 3 * (m_taskContext.executors().size() + 1)) {
             // Enough signatures for successful batch
-            auto tx = createMultisigTransactionInfo( *m_successfulEndBatchInfo,
-                                                     m_otherSuccessfulExecutorEndBatchInfos );
+            auto tx = createMultisigTransactionInfo( *m_successfulEndBatchOpinion,
+                                                     std::move( m_otherSuccessfulExecutorEndBatchOpinions ));
 
             m_taskContext.threadManager().startTimer(
                     m_taskContext.contractConfig().executorConfig().successfulExecutionDelayMs(),
                     [this, tx = std::move( tx )] {
                         sendEndBatchTransaction( tx );
                     } );
-        } else if ( m_unsuccessfulEndBatchInfo &&
-                    2 * m_otherUnsuccessfulExecutorEndBatchInfos.size() >= 3 * (m_taskContext.executors().size() + 1)) {
-            auto tx = createMultisigTransactionInfo( *m_unsuccessfulEndBatchInfo,
-                                                     m_otherUnsuccessfulExecutorEndBatchInfos );
+        } else if ( m_unsuccessfulEndBatchOpinion &&
+                    2 * m_otherUnsuccessfulExecutorEndBatchOpinions.size() >=
+                    3 * (m_taskContext.executors().size() + 1)) {
+            auto tx = createMultisigTransactionInfo( *m_unsuccessfulEndBatchOpinion,
+                                                     std::move( m_otherUnsuccessfulExecutorEndBatchOpinions ));
             m_taskContext.threadManager().startTimer(
                     m_taskContext.contractConfig().executorConfig().unsuccessfulExecutionDelayMs(),
                     [this, tx = std::move( tx )] {
@@ -364,21 +368,35 @@ private:
     }
 
     EndBatchExecutionTransactionInfo
-    createMultisigTransactionInfo( const EndBatchExecutionTransactionInfo& transactionInfo,
-                                   const std::map<ExecutorKey, EndBatchExecutionTransactionInfo>& otherTransactionInfos ) {
-        auto multisigTransactionInfo = transactionInfo;
+    createMultisigTransactionInfo( const EndBatchExecutionOpinion& transactionOpinion,
+                                   std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherTransactionOpinions ) {
+        EndBatchExecutionTransactionInfo multisigTransactionInfo;
 
-        for ( const auto&[_, otherInfo]: otherTransactionInfos ) {
-            multisigTransactionInfo.m_executorKeys.push_back( otherInfo.m_executorKeys.front());
-            multisigTransactionInfo.m_signatures.push_back( otherInfo.m_signatures.front());
-            multisigTransactionInfo.m_proofs.push_back( otherInfo.m_proofs.front());
+        // Fill common information
+        multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
+        multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
+        multisigTransactionInfo.m_successfulBatchInfo = transactionOpinion.m_successfulBatchInfo;
 
-            _ASSERT( multisigTransactionInfo.m_callsExecutionInfo.size() == otherInfo.m_callsExecutionInfo.size())
+        for ( const auto& call: multisigTransactionInfo.m_callsExecutionInfo ) {
+            CallExecutionInfo callInfo;
+            callInfo.m_callId = call.m_callId;
+            callInfo.m_callExecutionInfo = call.m_callExecutionInfo;
+            multisigTransactionInfo.m_callsExecutionInfo.push_back( callInfo );
+        }
+
+        otherTransactionOpinions[m_taskContext.keyPair().publicKey()] = transactionOpinion;
+
+        for ( const auto&[_, otherOpinion]: otherTransactionOpinions ) {
+            multisigTransactionInfo.m_executorKeys.push_back( otherOpinion.m_executorKey );
+            multisigTransactionInfo.m_signatures.push_back( otherOpinion.m_signature );
+            multisigTransactionInfo.m_proofs.push_back( otherOpinion.m_proof );
+
+            _ASSERT( multisigTransactionInfo.m_callsExecutionInfo.size() == otherOpinion.m_callsExecutionInfo.size())
             auto txCallIt = multisigTransactionInfo.m_callsExecutionInfo.begin();
-            auto otherCallIt = multisigTransactionInfo.m_callsExecutionInfo.begin();
-            for ( ; txCallIt != transactionInfo.m_callsExecutionInfo.end(); txCallIt++, otherCallIt++ ) {
+            auto otherCallIt = otherOpinion.m_callsExecutionInfo.begin();
+            for ( ; txCallIt != multisigTransactionInfo.m_callsExecutionInfo.end(); txCallIt++, otherCallIt++ ) {
                 _ASSERT( txCallIt->m_callId == otherCallIt->m_callId )
-                txCallIt->m_executorsParticipation.push_back( otherCallIt->m_executorsParticipation.front());
+                txCallIt->m_executorsParticipation.push_back( otherCallIt->m_executorParticipation );
             }
         }
 
@@ -408,18 +426,18 @@ private:
 
     void onUnsuccessfulExecutionTimerExpiration() {
 
-        _ASSERT( m_successfulEndBatchInfo )
-        _ASSERT( !m_unsuccessfulEndBatchInfo )
+        _ASSERT( m_successfulEndBatchOpinion )
+        _ASSERT( !m_unsuccessfulEndBatchOpinion )
 
-        m_unsuccessfulEndBatchInfo = m_successfulEndBatchInfo;
+        m_unsuccessfulEndBatchOpinion = m_successfulEndBatchOpinion;
 
-        m_unsuccessfulEndBatchInfo->m_successfulBatchInfo.reset();
-        for ( auto& callInfo: m_unsuccessfulEndBatchInfo->m_callsExecutionInfo ) {
-            callInfo.m_callExecutionInfo.reset();
+        m_unsuccessfulEndBatchOpinion->m_successfulBatchInfo.reset();
+        for ( auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo ) {
+            callInfo.m_successfulCallExecutionInfo.reset();
         }
 
         for ( const auto& executor: m_taskContext.executors()) {
-            auto serializedInfo = serialize( *m_unsuccessfulEndBatchInfo );
+            auto serializedInfo = utils::serialize( *m_unsuccessfulEndBatchOpinion );
             m_taskContext.messenger().sendMessage( executor,  serializedInfo );
         }
     }
@@ -432,8 +450,8 @@ private:
 std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
                                                             TaskContext& taskContext,
                                                             VirtualMachine& virtualMachine,
-                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
-                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
                                                             std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo ) {
     return std::make_unique<BatchExecutionTask>( std::move( batch ), taskContext, virtualMachine,
                                                  std::move( otherSuccessfulExecutorEndBatchInfos ),

@@ -36,8 +36,8 @@ private:
 
     std::unique_ptr<BaseContractTask>   m_task;
 
-    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownSuccessfulBatchInfos;
-    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionTransactionInfo>> m_unknownUnsuccessfulBatchInfos;
+    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
+    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
     std::map<uint64_t, PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
 
 public:
@@ -159,15 +159,16 @@ public:
 
 public:
 
-    // region messenger event handler
+    // region message event handler
 
-    bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionTransactionInfo& info ) override {
-        if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
-            if (info.isSuccessful()) {
-                m_unknownSuccessfulBatchInfos[info.m_batchIndex][info.m_executorKeys.front()] = info;
-            }
-            else {
-                m_unknownUnsuccessfulBatchInfos[info.m_batchIndex][info.m_executorKeys.front()] = info;
+    bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& info ) override {
+        if ( !m_task || !m_task->onEndBatchExecutionOpinionReceived( info )) {
+            if ( m_batchesManager->batchIndex() <= info.m_batchIndex ) {
+                if ( info.isSuccessful()) {
+                    m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+                } else {
+                    m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+                }
             }
         }
 
@@ -255,18 +256,18 @@ private:
 
         auto batch = m_batchesManager->popFormedBatch();
 
-        std::map<ExecutorKey, EndBatchExecutionTransactionInfo> successfulEndBatchInfos;
-        auto successfulExecutorsEndBatchInfosIt = m_unknownSuccessfulBatchInfos.find( batch.m_batchIndex );
-        if ( successfulExecutorsEndBatchInfosIt != m_unknownSuccessfulBatchInfos.end()) {
-            successfulEndBatchInfos = std::move( successfulExecutorsEndBatchInfosIt->second );
-            m_unknownSuccessfulBatchInfos.erase( successfulExecutorsEndBatchInfosIt );
+        std::map<ExecutorKey, EndBatchExecutionOpinion> successfulEndBatchOpinions;
+        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find( batch.m_batchIndex );
+        if ( successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
+            successfulEndBatchOpinions = std::move( successfulExecutorsEndBatchOpinionsIt->second );
+            m_unknownSuccessfulBatchOpinions.erase( successfulExecutorsEndBatchOpinionsIt );
         }
 
-        std::map<ExecutorKey, EndBatchExecutionTransactionInfo> unsuccessfulEndBatchInfos;
-        auto unsuccessfulExecutorsEndBatchInfosIt = m_unknownUnsuccessfulBatchInfos.find( batch.m_batchIndex );
-        if ( unsuccessfulExecutorsEndBatchInfosIt != m_unknownUnsuccessfulBatchInfos.end()) {
-            unsuccessfulEndBatchInfos = std::move( unsuccessfulExecutorsEndBatchInfosIt->second );
-            m_unknownUnsuccessfulBatchInfos.erase( unsuccessfulExecutorsEndBatchInfosIt );
+        std::map<ExecutorKey, EndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
+        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find( batch.m_batchIndex );
+        if ( unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
+            unsuccessfulEndBatchOpinions = std::move( unsuccessfulExecutorsEndBatchOpinionsIt->second );
+            m_unknownUnsuccessfulBatchOpinions.erase( unsuccessfulExecutorsEndBatchOpinionsIt );
         }
 
         std::optional<PublishedEndBatchExecutionTransactionInfo> publishedInfo;
@@ -277,7 +278,7 @@ private:
         }
 
         m_task = createBatchExecutionTask( std::move( batch ), *this, m_contractContext.virtualMachine(),
-                                           std::move( successfulEndBatchInfos ), std::move( unsuccessfulEndBatchInfos ),
+                                           std::move( successfulEndBatchOpinions ), std::move( unsuccessfulEndBatchOpinions ),
                                            std::move( publishedInfo ));
         m_task->run();
     }

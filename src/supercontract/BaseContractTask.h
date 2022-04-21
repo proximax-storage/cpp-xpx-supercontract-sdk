@@ -50,8 +50,8 @@ public:
 std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
                                                             TaskContext& taskContext,
                                                             VirtualMachine& virtualMachine,
-                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherSuccessfulExecutorEndBatchInfos,
-                                                            std::map<ExecutorKey, EndBatchExecutionTransactionInfo>&& otherUnsuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchInfos,
+                                                            std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
                                                             std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo );
 
 std::unique_ptr<BaseContractTask> createSynchronizationTask( const Hash256&, TaskContext& );

@@ -25,7 +25,13 @@ public:
 
     virtual void addCall(const CallRequest&) = 0;
 
-    virtual bool hasFormedBatch() = 0;
+    virtual bool hasFormedBatch() const = 0;
+
+    uint64_t batchIndex() const {
+
+        // TODO
+        return 0;
+    }
 
     Batch popFormedBatch() {
         if (!hasFormedBatch()) {
