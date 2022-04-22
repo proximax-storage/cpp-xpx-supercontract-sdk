@@ -18,10 +18,9 @@ class ThreadManager {
 
 public:
     ThreadManager()
-            :
-            m_context(),
-            m_work( boost::asio::make_work_guard( m_context )),
-            m_thread( std::thread( [this] { m_context.run(); } )) {
+            : m_context()
+            , m_work( boost::asio::make_work_guard( m_context ))
+            , m_thread( std::thread( [this] { m_context.run(); } )) {
     }
 
     ~ThreadManager() {
@@ -30,7 +29,7 @@ public:
 
     void stop() {
         m_context.stop();
-        if ( m_thread.joinable()) {
+        if ( m_thread.joinable() ) {
             m_thread.join();
         }
     }
@@ -42,10 +41,10 @@ public:
     }
 
     std::optional<boost::asio::high_resolution_timer>
-    startTimer( int miliseconds, const std::function<void()>& func ) {
+    startTimer( int milliseconds, const std::function<void()>& func ) {
         boost::asio::high_resolution_timer timer( m_context );
 
-        timer.expires_after( std::chrono::milliseconds( miliseconds ));
+        timer.expires_after( std::chrono::milliseconds( milliseconds ));
         timer.async_wait( [func = func]( boost::system::error_code const& e ) {
             if ( !e ) {
                 func();

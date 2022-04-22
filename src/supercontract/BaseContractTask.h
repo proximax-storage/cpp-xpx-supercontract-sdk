@@ -14,6 +14,7 @@
 #include "eventHandlers/ContractStorageBridgeEventHandler.h"
 #include "eventHandlers/ContractMessageEventHandler.h"
 #include "eventHandlers/ContractBlockchainEventHandler.h"
+#include "TaskRequests.h"
 #include "BatchesManager.h"
 #include "TaskContext.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
@@ -54,6 +55,8 @@ std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
                                                             std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
                                                             std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo );
 
-std::unique_ptr<BaseContractTask> createSynchronizationTask( const Hash256&, TaskContext& );
+std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&&, TaskContext& );
+
+std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, TaskContext& );
 
 }

@@ -33,7 +33,8 @@ public:
         // but it can do something in future
 
         if (!m_request.isInActualState) {
-            m_taskContext.notifyNeedsSynchronization();
+            // TODO
+            m_taskContext.addSynchronizationTask(  );
         }
         else {
             m_taskContext.onTaskFinished();

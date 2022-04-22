@@ -34,10 +34,7 @@ public:
     }
 
     Batch popFormedBatch() {
-        if (!hasFormedBatch()) {
-
-        }
-        auto&& batch = std::move(m_batches.front());
+        auto batch = std::move(m_batches.front());
         m_batches.pop_front();
         return batch;
     }

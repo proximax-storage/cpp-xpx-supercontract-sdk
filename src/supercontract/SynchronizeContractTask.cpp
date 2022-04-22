@@ -32,11 +32,15 @@ public:
             // TODO What if not success? BatchId?
             m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey(), *info.m_driveState);
         }
+
+        return true;
     }
 
     bool onEndBatchExecutionSingleTransactionPublished(
             const PublishedEndBatchExecutionSingleTransactionInfo& info ) override {
         m_taskContext.storageBridge().cancelStorageSynchronization( m_taskContext.driveKey() );
+
+        return true;
     }
 
     // endregion
@@ -62,12 +66,14 @@ public:
 public:
 
     void run() override {
-        m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey());
+
+        // TODO
+//        m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey(), );
     }
 
 
     void terminate() override {
-        m_taskContext.onTaskFinished();
+        m_taskContext.finishTask();
     }
 };
 }

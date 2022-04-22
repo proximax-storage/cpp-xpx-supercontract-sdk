@@ -28,7 +28,7 @@ public:
 
     virtual const std::set<ExecutorKey>& executors() const = 0;
 
-    virtual const crypto::KeyPair& keyPair() const = 0;
+    virtual const crypto::KeyPair& keyPair() const = 0; // executor key pair
 
     virtual ThreadManager& threadManager() = 0;
 
@@ -40,9 +40,9 @@ public:
 
     virtual const ContractConfig& contractConfig() const = 0;
 
-    virtual void onTaskFinished() = 0;
+    virtual void finishTask() = 0;
 
-    virtual void notifyNeedsSynchronization( const Hash256& state ) = 0;
+    virtual void addSynchronizationTask( const Hash256& state ) = 0;
 
     virtual std::string dbgPeerName() = 0;
 

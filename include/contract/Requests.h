@@ -25,4 +25,8 @@ struct CallRequest {
     Hash256 m_callId;
 };
 
+struct RemoveRequest {
+    Hash256 m_closeId;
+};
+
 }

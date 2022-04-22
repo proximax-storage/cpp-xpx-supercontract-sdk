@@ -15,7 +15,7 @@ public:
 
     virtual ~MessengerEventHandler() = default;
 
-    virtual bool onMessageReceived(const std::string& tag, const std::string& msg) = 0;
+    virtual void onMessageReceived(const std::string& tag, const std::string& msg) = 0;
 
 };
 

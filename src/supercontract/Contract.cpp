@@ -12,6 +12,7 @@
 #include "ProofOfExecution.h"
 #include "ContractConfig.h"
 #include "ContractContext.h"
+#include "TaskRequests.h"
 
 namespace sirius::contract {
 
@@ -24,15 +25,15 @@ private:
     DriveKey                m_driveKey;
     std::set<ExecutorKey>   m_executors;
 
-    ContractContext&        m_contractContext;
-    ContractConfig          m_contractConfig;
+    ContractContext&                            m_contractContext;
+    ContractConfig                              m_contractConfig;
 
-    ProofOfExecution                    m_proofOfExecution;
+    ProofOfExecution                            m_proofOfExecution;
 
     // Requests
-    std::unique_ptr<BaseBatchesManager> m_batchesManager;
-    std::optional<Hash256>              m_synchronizationRequest;
-    bool                                m_contractCloseRequest = false;
+    std::unique_ptr<BaseBatchesManager>         m_batchesManager;
+    std::optional<SynchronizationRequest>       m_synchronizationRequest;
+    std::optional<RemoveRequest>                m_contractRemoveRequest;
 
     std::unique_ptr<BaseContractTask>   m_task;
 
@@ -64,6 +65,14 @@ public:
     void addContractCall( const CallRequest& request ) override {
         m_batchesManager->addCall( request );
         if ( !m_task ) {
+            runTask();
+        }
+    }
+
+    void removeContract( const RemoveRequest& request ) override {
+        if ( m_task ) {
+            m_task->terminate();
+        } else {
             runTask();
         }
     }
@@ -217,7 +226,7 @@ public:
         return m_contractConfig;
     }
 
-    void onTaskFinished() override {
+    void finishTask() override {
 
     }
 
@@ -234,8 +243,11 @@ public:
 private:
 
     void runTask() {
-        if ( m_contractCloseRequest ) {
 
+        m_task.reset();
+
+        if ( m_contractRemoveRequest ) {
+            runRemoveContractTask();
         }
         else if ( m_synchronizationRequest ) {
             runSynchronizationTask();
@@ -245,14 +257,31 @@ private:
         }
     }
 
+    void runInitializeContractTask() {
+    }
+
+    void runRemoveContractTask() {
+        _ASSERT( m_contractRemoveRequest )
+
+        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this );
+
+        m_contractRemoveRequest.reset();
+
+        m_task->run();
+    }
+
     void runSynchronizationTask() {
-        auto state = *m_synchronizationRequest;
+        _ASSERT( m_synchronizationRequest )
+
+        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this );
+
         m_synchronizationRequest.reset();
 
-        m_task = createSynchronizationTask( state, *this );
+        m_task->run();
     }
 
     void runBatchExecutionTask() {
+        _ASSERT(  m_batchesManager->hasFormedBatch() )
 
         auto batch = m_batchesManager->popFormedBatch();
 
@@ -281,9 +310,6 @@ private:
                                            std::move( successfulEndBatchOpinions ), std::move( unsuccessfulEndBatchOpinions ),
                                            std::move( publishedInfo ));
         m_task->run();
-    }
-
-    void runInitializeContractTask() {
     }
 
 };

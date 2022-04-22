@@ -11,8 +11,6 @@
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 
 #include "contract/Executor.h"
-#include "contract/StorageBridgeEventHandler.h"
-#include "contract/MessengerEventHandler.h"
 #include "crypto/KeyPair.h"
 #include "types.h"
 
@@ -24,8 +22,6 @@ namespace sirius::contract {
 class DefaultExecutor
         : public Executor,
           public VirtualMachineEventHandler,
-          public StorageBridgeEventHandler,
-          public MessengerEventHandler,
           public ContractContext {
 
 private:
@@ -97,10 +93,25 @@ public:
             auto contractIt = m_contracts.find( key );
 
             if ( contractIt == m_contracts.end()) {
+                _LOG_ERR( "Add Call to Non-Existing Contract " << key );
                 return;
             }
 
             contractIt->second->addContractCall( request );
+        } );
+    }
+
+    void removeContract( const ContractKey& key, RemoveRequest&& request ) override {
+        m_threadManager.execute( [=, this, request = std::move( request )] {
+
+            auto contractIt = m_contracts.find( key );
+
+            if ( contractIt == m_contracts.end()) {
+                _LOG_ERR( "Remove Non-Existing Contract " << key );
+                return;
+            }
+
+            contractIt->second->removeContract( request );
         } );
     }
 
@@ -110,33 +121,38 @@ public:
 
     void
     onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {
-        if ( auto it = m_contracts.find( contractKey ); it != m_contracts.end()) {
-            it->second->onSuperContractCallExecuted( executionResult );
-        }
+        m_threadManager.execute( [=, this] {
+
+            if ( auto it = m_contracts.find( contractKey ); it != m_contracts.end()) {
+                it->second->onSuperContractCallExecuted( executionResult );
+            }
+        } );
     }
-
-
 
     // endregion
 
 public:
 
-    // region messenger event handler
+    // region message event handler
 
-    bool onMessageReceived( const std::string& tag, const std::string& msg ) override {
-        try {
-            if ( tag == "end_batch" ) {
-                auto info = utils::deserialize<EndBatchExecutionOpinion>( msg );
-                onEndBatchExecutionOpinionReceived( info );
-                return true;
+    void onMessageReceived( const std::string& tag, const std::string& msg ) override {
+        m_threadManager.execute( [=, this] {
+            try {
+                if ( tag == "end_batch" ) {
+                    auto info = utils::deserialize<EndBatchExecutionOpinion>( msg );
+                    onEndBatchExecutionOpinionReceived( info );
+                    return true;
+                }
+            } catch (...) {
+                _LOG_WARN( "onMessageReceived: invalid message format: query=" << tag );
             }
-        } catch (...) {
-            _LOG_WARN( "onMessageReceived: invalid message format: query=" << tag );
-        }
-        return false;
+            return false;
+        } );
     }
 
     // endregion
+
+public:
 
     // region contract context
 
@@ -173,7 +189,6 @@ public:
 private:
 
     void onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) {
-
         if (!opinion.hasValidForm() || !opinion.verify()) {
             return;
         }

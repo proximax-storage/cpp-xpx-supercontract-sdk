@@ -16,26 +16,26 @@ class BatchExecutionTask : public BaseContractTask {
 
 private:
 
-    Batch m_batch;
+    Batch                                                               m_batch;
 
-    VirtualMachine& m_virtualMachine;
+    VirtualMachine&                                                     m_virtualMachine;
 
-    std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
+    std::vector<CallExecutionOpinion>                                   m_callsExecutionOpinions;
 
-    std::unique_ptr<CallExecutionEnvironment> m_call;
+    std::unique_ptr<CallExecutionEnvironment>                           m_call;
 
-    std::optional<EndBatchExecutionOpinion> m_successfulEndBatchOpinion;
-    std::optional<EndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
+    std::optional<EndBatchExecutionOpinion>                             m_successfulEndBatchOpinion;
+    std::optional<EndBatchExecutionOpinion>                             m_unsuccessfulEndBatchOpinion;
 
-    std::optional<PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
+    std::optional<PublishedEndBatchExecutionTransactionInfo>            m_publishedEndBatchInfo;
 
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, EndBatchExecutionOpinion>                     m_otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, EndBatchExecutionOpinion>                     m_otherUnsuccessfulExecutorEndBatchOpinions;
 
-    std::optional<boost::asio::high_resolution_timer> m_unsuccessfulExecutionTimer;
+    std::optional<boost::asio::high_resolution_timer>                   m_unsuccessfulExecutionTimer;
 
-    std::optional<boost::asio::high_resolution_timer> m_successfulApprovalExpectationTimer;
-    std::optional<boost::asio::high_resolution_timer> m_unsuccessfulApprovalExpectationTimer;
+    std::optional<boost::asio::high_resolution_timer>                   m_successfulApprovalExpectationTimer;
+    std::optional<boost::asio::high_resolution_timer>                   m_unsuccessfulApprovalExpectationTimer;
 
 public:
 
@@ -54,9 +54,8 @@ public:
             {}
 
     void run() override {
-        m_taskContext.threadManager().execute( [this] {
-            m_taskContext.storageBridge().initiateModifications( m_taskContext.driveKey(), m_batch.m_batchIndex );
-        } );
+        m_taskContext.storageBridge().initiateModifications( m_taskContext.driveKey(),
+                                                             m_batch.m_batchIndex );
     }
 
     void terminate() override {
@@ -64,9 +63,7 @@ public:
         m_successfulApprovalExpectationTimer.reset();
         m_unsuccessfulApprovalExpectationTimer.reset();
 
-        m_taskContext.threadManager().execute( [this] {
-            m_taskContext.onTaskFinished();
-        } );
+        m_taskContext.finishTask();
     }
 
 public:
@@ -80,10 +77,8 @@ public:
 
         m_call->setCallExecutionResult( executionResult );
 
-        m_taskContext.threadManager().execute([=, this] {
-            m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex,
-                                                                     executionResult.m_success );
-        } );
+        m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex,
+                                                                 executionResult.m_success );
 
         return true;
     }
@@ -106,6 +101,8 @@ public:
                 m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
             }
         }
+
+        checkEndBatchTransactionReadiness();
 
         return true;
     }
@@ -158,9 +155,7 @@ public:
             return false;
         }
 
-        m_taskContext.threadManager().execute( [=, this] {
-            formSuccessfulEndBatchOpinion( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
-        } );
+        formSuccessfulEndBatchOpinion( rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
 
         return true;
     }
@@ -170,9 +165,7 @@ public:
             return false;
         }
 
-        m_taskContext.threadManager().execute( [this] {
-            m_taskContext.onTaskFinished();
-        } );
+        m_taskContext.finishTask();
 
         return true;
     }
@@ -226,11 +219,11 @@ private:
                 } );
 
         std::erase_if( m_otherSuccessfulExecutorEndBatchOpinions, [this]( const auto& item ) {
-            return !validateOtherBatchInfo( item );
+            return !validateOtherBatchInfo( item.second );
         } );
 
         std::erase_if( m_otherUnsuccessfulExecutorEndBatchOpinions, [this]( const auto& item ) {
-            return !validateOtherBatchInfo( item );
+            return !validateOtherBatchInfo( item.second );
         } );
 
         if ( m_publishedEndBatchInfo ) {
@@ -251,18 +244,15 @@ private:
         if ( batchIsSuccessful && *m_publishedEndBatchInfo->m_driveState !=
                                   m_successfulEndBatchOpinion->m_successfulBatchInfo->m_rootHash ) {
             // The received result differs from the common one, synchronization is needed
-            m_taskContext.notifyNeedsSynchronization( *m_publishedEndBatchInfo->m_driveState );
+            m_taskContext.addSynchronizationTask( *m_publishedEndBatchInfo->m_driveState );
 
-            m_taskContext.threadManager().execute( [this] {
-                m_taskContext.onTaskFinished();
-            } );
+            m_taskContext.finishTask();
 
         } else {
 
-            m_taskContext.threadManager().execute( [=, this] {
-                m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(), m_batch.m_batchIndex,
-                                                                         batchIsSuccessful );
-            } );
+            m_taskContext.storageBridge().applyStorageModifications( m_taskContext.driveKey(),
+                                                                     m_batch.m_batchIndex,
+                                                                     batchIsSuccessful );
 
             const auto& cosigners = m_publishedEndBatchInfo->m_cosigners;
             if ( std::find( cosigners.begin(), cosigners.end(), m_taskContext.keyPair().publicKey()) ==
@@ -412,15 +402,11 @@ private:
             m_call = std::make_unique<CallExecutionEnvironment>( std::move( m_batch.m_callRequests.front()));
             m_batch.m_callRequests.pop_front();
 
-            m_taskContext.threadManager().execute( [this] {
-                m_virtualMachine.execute( m_call->callRequest());
-            } );
+            m_virtualMachine.execute( m_call->callRequest());
         } else {
             computeProofOfExecution();
 
-            m_taskContext.threadManager().execute( [this] {
-                m_taskContext.storageBridge().evaluateRootHash( m_taskContext.driveKey(), m_batch.m_batchIndex );
-            } );
+            m_taskContext.storageBridge().evaluateRootHash( m_taskContext.driveKey(), m_batch.m_batchIndex );
         }
     }
 
