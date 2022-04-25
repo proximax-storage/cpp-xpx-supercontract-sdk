@@ -8,7 +8,7 @@
 
 namespace sirius::contract {
 
-class InitContractTask : BaseContractTask {
+class InitContractTask : public BaseContractTask {
 
 private:
 
@@ -17,11 +17,11 @@ private:
 public:
 
     InitContractTask(
-            const AddContractRequest& request,
+            AddContractRequest&& request,
             ContractEnvironment& contractEnvironment,
             ExecutorEnvironment& executorEnvironment )
             : BaseContractTask( executorEnvironment, contractEnvironment )
-            , m_request( request ) {}
+            , m_request( std::move(request) ) {}
 
 public:
 
@@ -64,5 +64,11 @@ public:
     // endregion
 
 };
+
+std::unique_ptr<BaseContractTask> createInitContractTask( AddContractRequest&& request,
+                                                          ContractEnvironment& contractEnvironment,
+                                                          ExecutorEnvironment& executorEnvironment ) {
+    return std::make_unique<InitContractTask>(std::move(request), contractEnvironment, executorEnvironment);
+}
 
 }

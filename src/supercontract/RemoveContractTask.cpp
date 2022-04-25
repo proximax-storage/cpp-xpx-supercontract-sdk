@@ -8,7 +8,7 @@
 
 namespace sirius::contract {
 
-class InitContractTask : BaseContractTask {
+class RemoveContractTask : public BaseContractTask {
 
 private:
 
@@ -16,7 +16,7 @@ private:
 
 public:
 
-    InitContractTask(
+    RemoveContractTask(
             RemoveRequest&& request,
             ContractEnvironment& contractEnvironment,
             ExecutorEnvironment& executorEnvironment)
@@ -34,5 +34,9 @@ public:
     }
 
 };
+
+std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment& contractEnvironment, ExecutorEnvironment& executorEnvironment) {
+    return std::make_unique<RemoveContractTask>(std::move(request), contractEnvironment, executorEnvironment);
+}
 
 }

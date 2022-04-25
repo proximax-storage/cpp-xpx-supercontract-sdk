@@ -45,14 +45,14 @@ public:
 
     DefaultContract( const ContractKey& contractKey,
                      AddContractRequest&& addContractRequest,
-                     ExecutorEnvironment& contractContext,
-                     const ExecutorConfig& executorConfig)
+                     ExecutorEnvironment& contractContext)
             : m_contractKey( contractKey )
             , m_driveKey( addContractRequest.m_driveKey )
             , m_executors( std::move(addContractRequest.m_executors) )
             , m_executorEnvironment( contractContext)
-            , m_contractConfig(executorConfig)
-            {}
+            , m_contractConfig() {
+       runInitializeContractTask(std::move(addContractRequest));
+    }
 
     void terminate() override {
         if ( m_task ) {
@@ -230,13 +230,18 @@ private:
         }
     }
 
-    void runInitializeContractTask() {
+    void runInitializeContractTask( AddContractRequest&& request ) {
+        m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment );
+
+        m_contractRemoveRequest.reset();
+
+        m_task->run();
     }
 
     void runRemoveContractTask() {
         _ASSERT( m_contractRemoveRequest )
 
-        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this );
+        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this, m_executorEnvironment );
 
         m_contractRemoveRequest.reset();
 
@@ -246,7 +251,7 @@ private:
     void runSynchronizationTask() {
         _ASSERT( m_synchronizationRequest )
 
-        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this );
+        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this, m_executorEnvironment );
 
         m_synchronizationRequest.reset();
 
@@ -279,7 +284,7 @@ private:
             m_unknownPublishedEndBatchTransactions.erase( publishedTransactionInfoIt );
         }
 
-        m_task = createBatchExecutionTask( std::move( batch ), *this, m_executorEnvironment.virtualMachine(),
+        m_task = createBatchExecutionTask( std::move( batch ), *this, m_executorEnvironment,
                                            std::move( successfulEndBatchOpinions ), std::move( unsuccessfulEndBatchOpinions ),
                                            std::move( publishedInfo ));
         m_task->run();
@@ -289,9 +294,8 @@ private:
 
 std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
                                                  AddContractRequest&& addContractRequest,
-                                                 ExecutorEnvironment& contractContext,
-                                                 const ExecutorConfig& executorConfig ) {
-    return std::make_unique<DefaultContract>(contractKey, std::move(addContractRequest), contractContext, executorConfig);
+                                                 ExecutorEnvironment& contractContext) {
+    return std::make_unique<DefaultContract>(contractKey, std::move(addContractRequest), contractContext);
 }
 
 }

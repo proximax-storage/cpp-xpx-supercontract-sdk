@@ -18,17 +18,11 @@ class ContractConfig {
 
 private:
 
-    const ExecutorConfig& m_executorConfig;
-
     int m_unsuccessfulApprovalDelayMs = 2 * 60 * 60 * 1000; // 2 hours
 
 public:
 
-    ContractConfig( const ExecutorConfig& executorConfig ) : m_executorConfig( executorConfig ) {}
-
-    const ExecutorConfig& executorConfig() const {
-        return m_executorConfig;
-    }
+    ContractConfig() {}
 
     int unsuccessfulApprovalDelayMs() const {
         return m_unsuccessfulApprovalDelayMs;

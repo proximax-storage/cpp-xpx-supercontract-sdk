@@ -364,7 +364,7 @@ private:
                                                         std::move(m_otherSuccessfulExecutorEndBatchOpinions));
 
                 m_successfulApprovalExpectationTimer = m_executorEnvironment.threadManager().startTimer(
-                        m_contractEnvironment.contractConfig().executorConfig().successfulExecutionDelayMs(),
+                        m_executorEnvironment.executorConfig().successfulExecutionDelayMs(),
                         [this, tx = std::move(tx)] {
                             sendEndBatchTransaction(tx);
                         });
@@ -381,7 +381,7 @@ private:
                 auto tx = createMultisigTransactionInfo(*m_unsuccessfulEndBatchOpinion,
                                                         std::move(m_otherUnsuccessfulExecutorEndBatchOpinions));
                 m_unsuccessfulApprovalExpectationTimer = m_executorEnvironment.threadManager().startTimer(
-                        m_contractEnvironment.contractConfig().executorConfig().unsuccessfulExecutionDelayMs(),
+                        m_executorEnvironment.executorConfig().unsuccessfulExecutionDelayMs(),
                         [this, tx = std::move(tx)] {
                             sendEndBatchTransaction(tx);
                         });

@@ -31,7 +31,7 @@ private:
     std::map<DriveKey, ContractKey>                     m_contractsDriveKeys;
 
     ThreadManager m_threadManager;
-    const ExecutorConfig m_config;
+    ExecutorConfig m_config;
 
     ExecutorEventHandler& m_eventHandler;
     Messenger& m_messenger;
@@ -241,7 +241,7 @@ public:
 
 public:
 
-    // region contract context
+    // region executor environment
 
     const crypto::KeyPair& keyPair() const override {
         return m_keyPair;
@@ -265,6 +265,10 @@ public:
 
     VirtualMachine& virtualMachine() override {
         return *m_virtualMachine;
+    }
+
+    ExecutorConfig& executorConfig() override {
+        return m_config;
     }
 
     std::string dbgPeerName() override {

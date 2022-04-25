@@ -53,15 +53,21 @@ public:
 
 };
 
+std::unique_ptr<BaseContractTask> createInitContractTask( AddContractRequest&& request,
+                                                          ContractEnvironment& contractEnvironment,
+                                                          ExecutorEnvironment& executorEnvironment );
+
 std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
-                                                            ContractEnvironment& taskContext,
-                                                            VirtualMachine& virtualMachine,
+                                                            ContractEnvironment& contractEnvironment,
+                                                            ExecutorEnvironment& executorEnvironment,
                                                             std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchInfos,
                                                             std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
                                                             std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo );
 
-std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&&, ContractEnvironment& );
+std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&& storageState,
+                                                             ContractEnvironment& contractEnvironment,
+                                                             ExecutorEnvironment& executorEnvironment );
 
-std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment& );
+std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment&, ExecutorEnvironment& );
 
 }

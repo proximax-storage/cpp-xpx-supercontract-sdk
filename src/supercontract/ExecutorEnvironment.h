@@ -34,6 +34,8 @@ public:
 
     virtual VirtualMachine& virtualMachine() = 0;
 
+    virtual ExecutorConfig& executorConfig() = 0;
+
     virtual std::string dbgPeerName() = 0;
 
 };

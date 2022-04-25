@@ -7,7 +7,7 @@
 #include "BaseContractTask.h"
 
 namespace sirius::contract {
-class SynchronizeContractTask : public BaseContractTask {
+class SynchronizationTask : public BaseContractTask {
 
 private:
 
@@ -15,11 +15,12 @@ private:
 
 public:
 
-    SynchronizeContractTask( SynchronizationRequest& storageState,
-                             ContractEnvironment& contractEnvironment,
-                             ExecutorEnvironment& executorEnvironment)
-                             : BaseContractTask( executorEnvironment, contractEnvironment )
-                             , m_request( storageState ) {}
+    SynchronizationTask( SynchronizationRequest&& synchronizationRequest,
+                         ContractEnvironment& contractEnvironment,
+                         ExecutorEnvironment& executorEnvironment)
+                         : BaseContractTask( executorEnvironment, contractEnvironment )
+                         , m_request( std::move(synchronizationRequest) )
+                         {}
 
 public:
 
@@ -57,4 +58,12 @@ public:
         m_contractEnvironment.finishTask();
     }
 };
+
+std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&& synchronizationRequest,
+                                                             ContractEnvironment& contractEnvironment,
+                                                             ExecutorEnvironment& executorEnvironment ) {
+    return std::make_unique<SynchronizationTask>( std::move( synchronizationRequest ), contractEnvironment,
+                                                  executorEnvironment );
+}
+
 }
