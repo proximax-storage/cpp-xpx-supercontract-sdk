@@ -6,7 +6,7 @@
 
 #include "Contract.h"
 #include "ThreadManager.h"
-#include "ContractContext.h"
+#include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 
@@ -22,20 +22,20 @@ namespace sirius::contract {
 class DefaultExecutor
         : public Executor,
           public VirtualMachineEventHandler,
-          public ContractContext {
+          public ExecutorEnvironment {
 
 private:
     const crypto::KeyPair& m_keyPair;
 
-    std::map<ContractKey, std::unique_ptr<Contract>> m_contracts;
-    std::map<DriveKey, ContractKey> m_contractsDriveKeys;
+    std::map<ContractKey, std::unique_ptr<Contract>>    m_contracts;
+    std::map<DriveKey, ContractKey>                     m_contractsDriveKeys;
 
     ThreadManager m_threadManager;
     const ExecutorConfig m_config;
 
     ExecutorEventHandler& m_eventHandler;
     Messenger& m_messenger;
-    StorageBridge& m_storageBridge;
+    Storage& m_storage;
 
     std::unique_ptr<VirtualMachine> m_virtualMachine;
 
@@ -47,13 +47,13 @@ public:
                      const ExecutorConfig config,
                      ExecutorEventHandler& eventHandler,
                      Messenger& messenger,
-                     StorageBridge& storageBridge,
+                     Storage& storage,
                      const std::string& dbgPeerName = "executor")
                      : m_keyPair(keyPair)
                      , m_config( config )
                      , m_eventHandler( eventHandler )
                      , m_messenger( messenger )
-                     , m_storageBridge( storageBridge )
+                     , m_storage( storage )
                      , m_dbgPeerName( dbgPeerName )
                      {}
 
@@ -76,14 +76,13 @@ public:
             auto it = request.m_executors.find( m_keyPair.publicKey());
 
             if ( it == request.m_executors.end()) {
-                // ERROR
+                _LOG_ERR( "The Executor Is Not In List" )
                 return;
             }
 
             request.m_executors.erase( it );
 
             m_contracts[key] = createDefaultContract( key, std::move( request ), *this, m_config );
-
         } );
     }
 
@@ -114,6 +113,94 @@ public:
             contractIt->second->removeContract( request );
         } );
     }
+
+    void setExecutors( const ContractKey& key, std::set<ExecutorKey>&& executors ) override {
+        m_threadManager.execute([=, this, executors=std::move(executors)] () mutable {
+
+            auto contractIt = m_contracts.find(key);
+
+            auto executorIt = executors.find(m_keyPair.publicKey());
+
+            if ( executorIt == executors.end() ) {
+                _LOG_ERR("The Executor Is Not In List")
+                return;
+            }
+
+            executors.erase(executorIt);
+
+            contractIt->second->setExecutors(std::move(executors));
+        });
+    }
+
+public:
+
+    // region storage event handler
+
+    void onInitiatedModifications( const DriveKey& driveKey, uint64_t batchIndex ) override {
+        m_threadManager.execute([=, this] {
+            auto driveIt = m_contractsDriveKeys.find(driveKey);
+
+            if ( driveIt == m_contractsDriveKeys.end()) {
+                return;
+            }
+
+            auto contractIt = m_contracts.find(driveIt->second);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onInitiatedModifications(batchIndex);
+        });
+    }
+
+    void onAppliedSandboxStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success,
+                                               int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
+        m_threadManager.execute([=, this] {
+            auto driveIt = m_contractsDriveKeys.find(driveKey);
+
+            if ( driveIt == m_contractsDriveKeys.end()) {
+                return;
+            }
+
+            auto contractIt = m_contracts.find(driveIt->second);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta, stateSizeDelta);
+        });
+    }
+
+    void
+    onStorageHashEvaluated( const DriveKey& driveKey, uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize,
+                            uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
+        m_threadManager.execute([=, this] {
+            auto driveIt = m_contractsDriveKeys.find(driveKey);
+
+            if ( driveIt == m_contractsDriveKeys.end()) {
+                return;
+            }
+
+            auto contractIt = m_contracts.find(driveIt->second);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onStorageHashEvaluated( batchIndex, storageHash, usedDriveSize, metaFilesSize,
+                                                        fileStructureSize );
+        });
+    }
+
+    // endregion
 
 public:
 
@@ -168,8 +255,8 @@ public:
         return m_messenger;
     }
 
-    StorageBridge& storageBridge() override {
-        return m_storageBridge;
+    Storage& storage() override {
+        return m_storage;
     }
 
     ExecutorEventHandler& executorEventHandler() override {
@@ -182,6 +269,63 @@ public:
 
     std::string dbgPeerName() override {
         return m_dbgPeerName;
+    }
+
+    // endregion
+
+public:
+
+    // region blockchain event handler
+
+    void onEndBatchExecutionPublished( PublishedEndBatchExecutionTransactionInfo&& info ) override {
+        m_threadManager.execute([this, info = std::move(info)] {
+            auto contractIt = m_contracts.find(info.m_contractKey);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onEndBatchExecutionPublished(info);
+        });
+    }
+
+    void onEndBatchExecutionSingleTransactionPublished(
+            PublishedEndBatchExecutionSingleTransactionInfo&& info ) override {
+        m_threadManager.execute([this, info = std::move(info)] {
+            auto contractIt = m_contracts.find(info.m_contractKey);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onEndBatchExecutionSingleTransactionPublished(info);
+        });
+    }
+
+    void onEndBatchExecutionFailed( FailedEndBatchExecutionTransactionInfo&& info ) override {
+        m_threadManager.execute([this, info = std::move(info)] {
+            auto contractIt = m_contracts.find(info.m_contractKey);
+
+            contractIt->second->onEndBatchExecutionFailed(info);
+        });
+    }
+
+    void onStorageSynchronized( const ContractKey& contractKey, uint64_t batchIndex ) override {
+        m_threadManager.execute([=, this] {
+            auto contractIt = m_contracts.find(contractKey);
+
+            if ( contractIt == m_contracts.end() ) {
+
+                // TODO maybe error?
+                return;
+            }
+
+            contractIt->second->onStorageSynchronized(batchIndex);
+        });
     }
 
     // endregion

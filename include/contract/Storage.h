@@ -8,21 +8,21 @@
 
 namespace sirius::contract {
 
-class StorageBridge {
+class Storage {
 
 public:
 
-    virtual ~StorageBridge() = default;
+    virtual ~Storage() = default;
 
-    virtual void synchronizeStorage( const DriveKey& driveKey, const Hash256& rootHash ) = 0;
+    virtual void synchronizeStorage( const DriveKey& driveKey, const StorageHash& storageHash ) = 0;
 
-    virtual void cancelStorageSynchronization( const DriveKey& driveKey ) = 0;
+//    virtual void cancelStorageSynchronization( const DriveKey& driveKey ) = 0;
 
     virtual void initiateModifications( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
 
     virtual void applySandboxStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) = 0;
 
-    virtual void evaluateRootHash( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
+    virtual void evaluateStorageHash( const DriveKey& driveKey, uint64_t batchIndex ) = 0;
 
     virtual void applyStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) = 0;
 };

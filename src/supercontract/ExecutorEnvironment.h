@@ -6,20 +6,21 @@
 
 #pragma once
 
-#include "contract/StorageBridge.h"
+#include "contract/Storage.h"
 #include "contract/Messenger.h"
 #include "contract/ExecutorEventHandler.h"
+#include "VirtualMachine.h"
 #include "crypto/KeyPair.h"
 
 #include "ThreadManager.h"
 
 namespace sirius::contract {
 
-class ContractContext {
+class ExecutorEnvironment {
 
 public:
 
-    virtual ~ContractContext() = default;
+    virtual ~ExecutorEnvironment() = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;
 
@@ -27,7 +28,7 @@ public:
 
     virtual Messenger& messenger() = 0;
 
-    virtual StorageBridge& storageBridge() = 0;
+    virtual Storage& storage() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

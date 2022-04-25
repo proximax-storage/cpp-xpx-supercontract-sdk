@@ -22,7 +22,7 @@ public:
 
     CallExecutionEnvironment( const CallRequest& request ) : m_callRequest( request ) {}
 
-    const Hash256& callId() const {
+    const CallId& callId() const {
         return m_callRequest.m_callId;
     }
 

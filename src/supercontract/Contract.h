@@ -12,21 +12,21 @@
 #include "contract/ExecutorEventHandler.h"
 #include "contract/Requests.h"
 #include "contract/Messenger.h"
-#include "contract/StorageBridge.h"
+#include "contract/Storage.h"
 #include "contract/StorageQueries.h"
-#include "contract/StorageBridgeEventHandler.h"
-#include "eventHandlers/ContractStorageBridgeEventHandler.h"
+#include "contract/StorageEventHandler.h"
+#include "eventHandlers/ContractStorageEventHandler.h"
 #include "eventHandlers/ContractVirtualMachineEventHandler.h"
 #include "eventHandlers/ContractMessageEventHandler.h"
 #include "eventHandlers/ContractBlockchainEventHandler.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "VirtualMachine.h"
-#include "ContractContext.h"
+#include "ExecutorEnvironment.h"
 
 namespace sirius::contract {
 
 class Contract
-        : public ContractStorageBridgeEventHandler,
+        : public ContractStorageEventHandler,
           public ContractVirtualMachineEventHandler,
           public ContractMessageEventHandler,
           public ContractBlockchainEventHandler {
@@ -36,13 +36,15 @@ public:
 
     virtual void removeContract( const RemoveRequest& ) = 0;
 
+    virtual void setExecutors( std::set<ExecutorKey>&& executors ) = 0;
+
     virtual void terminate() = 0;
 
 };
 
 std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
                                                  AddContractRequest&& addContractRequest,
-                                                 ContractContext& contractContext,
+                                                 ExecutorEnvironment& contractContext,
                                                  const ExecutorConfig& executorConfig );
 
 }

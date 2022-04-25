@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "contract/StorageQueries.h"
+#include "contract/Transactions.h"
 
 namespace sirius::contract {
 
@@ -16,13 +16,19 @@ public:
 
     virtual ~ContractBlockchainEventHandler() = default;
 
-    //    virtual void onAppliedStorageModifications(const ContractKey& contractKey, )
-
     virtual bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& ) {
         return false;
     }
 
     virtual bool onEndBatchExecutionSingleTransactionPublished( const PublishedEndBatchExecutionSingleTransactionInfo& ) {
+        return false;
+    }
+
+    virtual bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& ) {
+        return false;
+    }
+
+    virtual bool onStorageSynchronized( uint64_t batchIndex ) {
         return false;
     }
 };

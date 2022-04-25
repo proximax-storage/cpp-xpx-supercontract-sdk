@@ -8,8 +8,9 @@
 
 #include "Requests.h"
 #include "ExecutorConfig.h"
-#include "StorageBridgeEventHandler.h"
+#include "StorageEventHandler.h"
 #include "MessengerEventHandler.h"
+#include "BlockchainEventHandler.h"
 
 
 #include "types.h"
@@ -18,19 +19,21 @@
 namespace sirius::contract {
 
 class Executor :
-        public StorageBridgeEventHandler,
-        public MessengerEventHandler {
+        public StorageEventHandler,
+        public MessengerEventHandler,
+        public BlockchainEventHandler {
 
 public:
 
     virtual ~Executor() = default;
 
-private:
     virtual void addContract( const ContractKey&, AddContractRequest&& ) = 0;
 
     virtual void addContractCall( const ContractKey&, CallRequest&& ) = 0;
 
     virtual void removeContract( const ContractKey&, RemoveRequest&& ) = 0;
+
+    virtual void setExecutors( const ContractKey&, std::set<ExecutorKey>&& executors ) = 0;
 };
 
 //std::unique_ptr<Executor> createDefaultExecutor(

@@ -8,12 +8,12 @@
 
 namespace sirius::contract {
 
-struct ApplyStorageModificationResponse {
-    Hash256     m_batchId;
-    Hash256     m_rootHash;
-    uint64_t    m_usedSize;
-    uint64_t    m_metafilesSize;
-    uint64_t    m_fsTreeSize;
-};
+//struct ApplyStorageModificationResponse {
+//    Hash256     m_batchId;
+//    Hash256     m_rootHash;
+//    uint64_t    m_usedSize;
+//    uint64_t    m_metafilesSize;
+//    uint64_t    m_fsTreeSize;
+//};
 
 }

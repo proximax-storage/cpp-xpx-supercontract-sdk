@@ -38,7 +38,7 @@ struct SuccessfulBatchCallInfo {
 
 struct CallExecutionInfo {
 
-    Hash256 m_callId;
+    CallId m_callId;
 
     std::optional<SuccessfulBatchCallInfo> m_callExecutionInfo;
 
@@ -60,16 +60,17 @@ struct PoEx {
 };
 
 struct SuccessfulBatchInfo {
-    Hash256  m_rootHash;
-    uint64_t m_usedDriveSize;
-    uint64_t m_metaFilesSize;
-    uint64_t m_fileStructureSize;
+    StorageHash  m_storageHash;
+    uint64_t    m_usedStorageSize;
+    uint64_t    m_metaFilesSize;
+    uint64_t    m_fileStructureSize;
 
     PoExVerificationInfo m_verificationInfo;
 
     template<class Archive>
     void serialize( Archive& arch ) {
-        arch( m_usedDriveSize );
+        arch( m_storageHash );
+        arch( m_usedStorageSize );
         arch( m_metaFilesSize );
         arch( m_fileStructureSize );
     }
@@ -94,22 +95,26 @@ struct EndBatchExecutionSingleTransactionInfo {
 };
 
 struct PublishedEndBatchExecutionTransactionInfo {
-    ContractKey m_contractKey;
-    uint64_t    m_batchIndex;
+    ContractKey                 m_contractKey;
+    uint64_t                    m_batchIndex;
+    bool                        m_batchSuccess;
+    Hash256                     m_driveState;
+    std::vector <ExecutorKey>   m_cosigners;
 
-    // Has value only in the case of successful batch
-    std::optional<Hash256> m_driveState;
-
-    std::vector <ExecutorKey> m_cosigners;
-
-    bool isSuccessful() const {
-        return m_driveState.has_value();
-    }
+//    bool isSuccessful() const {
+//        return m_success;
+//    }
 };
 
 struct PublishedEndBatchExecutionSingleTransactionInfo {
     ContractKey m_contractKey;
     uint64_t    m_batchIndex;
+};
+
+struct FailedEndBatchExecutionTransactionInfo {
+    ContractKey m_contractKey;
+    uint64_t    m_batchIndex;
+    bool        m_batchSuccess;
 };
 
 }

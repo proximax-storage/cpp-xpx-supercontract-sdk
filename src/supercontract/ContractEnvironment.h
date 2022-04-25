@@ -6,21 +6,22 @@
 
 #pragma once
 
-#include "contract/StorageBridge.h"
+#include "contract/Storage.h"
 #include "contract/Messenger.h"
 #include "contract/ExecutorEventHandler.h"
 #include "crypto/KeyPair.h"
 
 #include "ThreadManager.h"
+#include "TaskRequests.h"
 #include "ContractConfig.h"
 
 namespace sirius::contract {
 
-class TaskContext {
+class ContractEnvironment {
 
 public:
 
-    virtual ~TaskContext() = default;
+    virtual ~ContractEnvironment() = default;
 
     virtual const ContractKey& contractKey() const = 0;
 
@@ -28,23 +29,11 @@ public:
 
     virtual const std::set<ExecutorKey>& executors() const = 0;
 
-    virtual const crypto::KeyPair& keyPair() const = 0; // executor key pair
-
-    virtual ThreadManager& threadManager() = 0;
-
-    virtual Messenger& messenger() = 0;
-
-    virtual StorageBridge& storageBridge() = 0;
-
-    virtual ExecutorEventHandler& executorEventHandler() = 0;
-
     virtual const ContractConfig& contractConfig() const = 0;
 
     virtual void finishTask() = 0;
 
-    virtual void addSynchronizationTask( const Hash256& state ) = 0;
-
-    virtual std::string dbgPeerName() = 0;
+    virtual void addSynchronizationTask( const SynchronizationRequest& ) = 0;
 
 };
 

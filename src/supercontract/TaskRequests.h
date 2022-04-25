@@ -9,7 +9,7 @@
 namespace sirius::contract {
 
 struct SynchronizationRequest {
-    Hash256 m_rootHash;
+    StorageHash m_storageHash;
 };
 
 }

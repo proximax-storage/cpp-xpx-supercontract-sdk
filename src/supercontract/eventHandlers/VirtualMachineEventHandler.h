@@ -11,7 +11,7 @@
 namespace sirius::contract {
 
 struct CallExecutionResult {
-    Hash256 m_callId;
+    CallId m_callId;
     bool m_success;
     uint64_t m_scConsumed;
     uint64_t m_smConsumed;

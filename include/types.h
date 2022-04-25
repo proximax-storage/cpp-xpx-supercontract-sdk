@@ -119,6 +119,9 @@ namespace sirius {
     DECL_KEY( ExecutorKey );
     DECL_KEY( CreatorKey );
     DECL_KEY( CallerKey );
+
+    DECL_HASH( CallId )
+    DECL_HASH( StorageHash )
     //using ChannelId   = HashArray<std::array<uint8_t,32>>;
     //using TxHash   = HashArray<std::array<uint8_t,32>>;
     //using ModifyTxHash   = HashArray<std::array<uint8_t,32>>;

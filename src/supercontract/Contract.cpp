@@ -6,26 +6,26 @@
 
 #include "Contract.h"
 #include "BatchesManager.h"
-#include "TaskContext.h"
+#include "ContractEnvironment.h"
 #include "BaseContractTask.h"
 #include "ThreadManager.h"
 #include "ProofOfExecution.h"
 #include "ContractConfig.h"
-#include "ContractContext.h"
+#include "ExecutorEnvironment.h"
 #include "TaskRequests.h"
 
 namespace sirius::contract {
 
-class DefaultContract : public Contract, public TaskContext {
+class DefaultContract : public Contract, public ContractEnvironment {
 
 private:
 
-    ContractKey             m_contractKey;
+ContractKey                                     m_contractKey;
 
-    DriveKey                m_driveKey;
-    std::set<ExecutorKey>   m_executors;
+    DriveKey                                    m_driveKey;
+    std::set<ExecutorKey>                       m_executors;
 
-    ContractContext&                            m_contractContext;
+    ExecutorEnvironment&                        m_executorEnvironment;
     ContractConfig                              m_contractConfig;
 
     ProofOfExecution                            m_proofOfExecution;
@@ -35,7 +35,7 @@ private:
     std::optional<SynchronizationRequest>       m_synchronizationRequest;
     std::optional<RemoveRequest>                m_contractRemoveRequest;
 
-    std::unique_ptr<BaseContractTask>   m_task;
+    std::unique_ptr<BaseContractTask>           m_task;
 
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
@@ -45,12 +45,12 @@ public:
 
     DefaultContract( const ContractKey& contractKey,
                      AddContractRequest&& addContractRequest,
-                     ContractContext& contractContext,
+                     ExecutorEnvironment& contractContext,
                      const ExecutorConfig& executorConfig)
             : m_contractKey( contractKey )
             , m_driveKey( addContractRequest.m_driveKey )
             , m_executors( std::move(addContractRequest.m_executors) )
-            , m_contractContext(contractContext)
+            , m_executorEnvironment( contractContext)
             , m_contractConfig(executorConfig)
             {}
 
@@ -59,8 +59,6 @@ public:
             m_task->terminate();
         }
     }
-
-public:
 
     void addContractCall( const CallRequest& request ) override {
         m_batchesManager->addCall( request );
@@ -77,21 +75,17 @@ public:
         }
     }
 
+    void setExecutors( std::set<ExecutorKey>&& executors ) override {
+        m_executors = std::move(executors);
+    }
+
+    std::string dbgPeerName() {
+        return m_executorEnvironment.dbgPeerName();
+    }
+
 public:
 
-    // region storage bridge event handler
-
-    bool onStorageSynchronized( uint64_t batchIndex ) override {
-        if ( !m_task ) {
-            return false;
-        }
-
-        m_batchesManager->clearOutdatedBatches( batchIndex );
-        m_task->onStorageSynchronized( batchIndex );
-
-        // TODO should we always return true?
-        return true;
-    }
+    // region storage event handler
 
     bool onInitiatedModifications( uint64_t batchIndex ) override {
         if ( !m_task ) {
@@ -110,21 +104,13 @@ public:
     }
 
     bool
-    onRootHashEvaluated( uint64_t batchIndex, const Hash256& rootHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
-                         uint64_t fileStructureSize ) override {
+    onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
+                            uint64_t fileStructureSize ) override {
         if ( !m_task ) {
             return false;
         }
 
-        return m_task->onRootHashEvaluated( batchIndex, rootHash, usedDriveSize, metaFilesSize, fileStructureSize );
-    }
-
-    bool onAppliedStorageModifications( uint64_t batchIndex ) override {
-        if ( !m_task ) {
-            return false;
-        }
-
-        return m_task->onAppliedStorageModifications( batchIndex );
+        return m_task->onStorageHashEvaluated( batchIndex, storageHash, usedDriveSize, metaFilesSize, fileStructureSize );
     }
 
     // endregion
@@ -155,13 +141,24 @@ public:
         return true;
     }
 
-    bool onEndBatchExecutionSingleTransactionPublished(
-            const PublishedEndBatchExecutionSingleTransactionInfo& info ) override {
+    bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& info ) override {
         if ( !m_task ) {
             return false;
         }
 
-        return m_task->onEndBatchExecutionSingleTransactionPublished( info );
+        return m_task->onEndBatchExecutionFailed(info);
+    }
+
+    bool onStorageSynchronized( uint64_t batchIndex ) override {
+        if ( !m_task ) {
+            return false;
+        }
+
+        m_batchesManager->clearOutdatedBatches( batchIndex );
+        m_task->onStorageSynchronized( batchIndex );
+
+        // TODO should we always return true?
+        return true;
     }
 
     // endregion
@@ -198,28 +195,8 @@ public:
         return m_executors;
     }
 
-    const crypto::KeyPair& keyPair() const override {
-        return m_contractContext.keyPair();
-    }
-
     const DriveKey& driveKey() const override {
         return m_driveKey;
-    }
-
-    ThreadManager& threadManager() override {
-        return m_contractContext.threadManager();
-    }
-
-    Messenger& messenger() override {
-        return m_contractContext.messenger();
-    }
-
-    StorageBridge& storageBridge() override {
-        return m_contractContext.storageBridge();
-    }
-
-    ExecutorEventHandler& executorEventHandler() override {
-        return m_contractContext.executorEventHandler();
     }
 
     const ContractConfig& contractConfig() const override {
@@ -230,12 +207,8 @@ public:
 
     }
 
-    void notifyNeedsSynchronization( const Hash256& state ) override {
-
-    }
-
-    std::string dbgPeerName() override {
-        return m_contractContext.dbgPeerName();
+    void addSynchronizationTask( const SynchronizationRequest& request ) override {
+        m_synchronizationRequest = request;
     }
 
     // endregion
@@ -306,7 +279,7 @@ private:
             m_unknownPublishedEndBatchTransactions.erase( publishedTransactionInfoIt );
         }
 
-        m_task = createBatchExecutionTask( std::move( batch ), *this, m_contractContext.virtualMachine(),
+        m_task = createBatchExecutionTask( std::move( batch ), *this, m_executorEnvironment.virtualMachine(),
                                            std::move( successfulEndBatchOpinions ), std::move( unsuccessfulEndBatchOpinions ),
                                            std::move( publishedInfo ));
         m_task->run();
@@ -316,7 +289,7 @@ private:
 
 std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
                                                  AddContractRequest&& addContractRequest,
-                                                 ContractContext& contractContext,
+                                                 ExecutorEnvironment& contractContext,
                                                  const ExecutorConfig& executorConfig ) {
     return std::make_unique<DefaultContract>(contractKey, std::move(addContractRequest), contractContext, executorConfig);
 }

@@ -14,37 +14,54 @@ private:
 
     const AddContractRequest m_request;
 
-    bool isSynchronized = false;
-
 public:
 
     InitContractTask(
             const AddContractRequest& request,
-            TaskContext& taskContext )
-            : BaseContractTask( taskContext )
-            , m_request(request)
-            {}
+            ContractEnvironment& contractEnvironment,
+            ExecutorEnvironment& executorEnvironment )
+            : BaseContractTask( executorEnvironment, contractEnvironment )
+            , m_request( request ) {}
 
 public:
 
     void run() override {
-
-        // Now the task does not do anything,
-        // but it can do something in future
-
-        if (!m_request.isInActualState) {
-            // TODO
-            m_taskContext.addSynchronizationTask(  );
-        }
-        else {
-            m_taskContext.onTaskFinished();
+        if ( !m_request.m_isContractDeployed ) {
+            // The corresponding storage is not yet fully controlled by the Contract,
+            // so the Storage performs necessary synchronization by himself
+            m_contractEnvironment.finishTask();
         }
     }
 
 
     void terminate() override {
-        m_taskContext.onTaskFinished();
+        m_contractEnvironment.finishTask();
     }
+
+public:
+
+    // region blockchain event handler
+
+    bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+
+        const auto& cosigners = info.m_cosigners;
+
+        if ( std::find( cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) != cosigners.end()) {
+            // We are in the actual state from the point of blockchain view
+            // At the same time storage actually may not be in the actual state
+            // So we should try to synchronize storage without expecting approval in the blockchain
+            m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), info.m_driveState );
+        }
+        else {
+            m_contractEnvironment.addSynchronizationTask( SynchronizationRequest{info.m_driveState} );
+        }
+
+        m_contractEnvironment.finishTask();
+
+        return true;
+    }
+
+    // endregion
 
 };
 

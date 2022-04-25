@@ -10,21 +10,13 @@
 
 namespace sirius::contract {
 
-class ContractStorageBridgeEventHandler {
+class ContractStorageEventHandler {
 
 public:
 
-    virtual ~ContractStorageBridgeEventHandler() = default;
+    virtual ~ContractStorageEventHandler() = default;
 
     //    virtual void onAppliedStorageModifications(const ContractKey& contractKey, )
-
-    virtual bool onStorageSynchronized( uint64_t batchIndex ) {
-        return false;
-    }
-
-    virtual bool onStorageSynchronizationCancelled() {
-        return false;
-    }
 
     virtual bool onInitiatedModifications( uint64_t batchIndex ) {
         return false;
@@ -35,12 +27,8 @@ public:
         return false;
     }
 
-    virtual bool onRootHashEvaluated( uint64_t batchIndex, const Hash256& rootHash,
-                                      uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
-        return false;
-    }
-
-    virtual bool onAppliedStorageModifications( uint64_t batchIndex ) {
+    virtual bool onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash,
+                                         uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
         return false;
     }
 };

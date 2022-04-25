@@ -13,16 +13,16 @@ namespace sirius::contract {
 struct AddContractRequest {
 
     // state
-    DriveKey m_driveKey;
-    std::set<ExecutorKey> m_executors;
-    bool isInActualState;
+    DriveKey                m_driveKey;
+    std::set<ExecutorKey>   m_executors;
+    bool                    m_isContractDeployed;
 
     // config
-    uint64_t m_unsuccessfulApprovalExpectation;
+    uint64_t                m_unsuccessfulApprovalExpectation;
 };
 
 struct CallRequest {
-    Hash256 m_callId;
+    CallId m_callId;
 };
 
 struct RemoveRequest {

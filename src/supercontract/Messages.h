@@ -23,7 +23,7 @@ namespace sirius::contract {
 
 struct CallExecutionOpinion {
 
-    Hash256 m_callId;
+    CallId m_callId;
 
     std::optional<SuccessfulBatchCallInfo> m_successfulCallExecutionInfo;
 
@@ -95,9 +95,9 @@ struct EndBatchExecutionOpinion {
         arch( m_batchIndex );
         arch( m_successfulBatchInfo );
         arch( m_callsExecutionInfo );
-        arch( m_proof );
-        arch( m_executorKey );
-        arch( m_signature );
+//        arch( m_proof );
+//        arch( m_executorKey );
+//        arch( m_signature );
     }
 
 private:
@@ -111,8 +111,8 @@ private:
         bool isSuccessful = m_successfulBatchInfo.has_value();
         utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&isSuccessful), sizeof( bool ));
         if ( isSuccessful ) {
-            utils::copyToVector( buffer, m_successfulBatchInfo->m_rootHash.data(), Hash256_Size );
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo->m_usedDriveSize),
+            utils::copyToVector( buffer, m_successfulBatchInfo->m_storageHash.data(), sizeof(StorageHash));
+            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo->m_usedStorageSize),
                           sizeof( uint64_t ));
             utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo->m_metaFilesSize),
                           sizeof( uint64_t ));
@@ -121,7 +121,7 @@ private:
         }
 
         for ( const auto& call: m_callsExecutionInfo ) {
-            utils::copyToVector( buffer, call.m_callId.data(), Hash256_Size );
+            utils::copyToVector( buffer, call.m_callId.data(), sizeof(CallId) );
 
             if ( isSuccessful ) {
                 auto& successfulCallInfo = *call.m_successfulCallExecutionInfo;

@@ -9,13 +9,17 @@
 namespace sirius::contract {
 class SynchronizeContractTask : public BaseContractTask {
 
+private:
+
+    SynchronizationRequest m_request;
+
 public:
 
-    SynchronizeContractTask( Hash256& rootHash,
-                             TaskContext& context )
-            : BaseContractTask( context ) {
-        m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey(), rootHash );
-    }
+    SynchronizeContractTask( SynchronizationRequest& storageState,
+                             ContractEnvironment& contractEnvironment,
+                             ExecutorEnvironment& executorEnvironment)
+                             : BaseContractTask( executorEnvironment, contractEnvironment )
+                             , m_request( storageState ) {}
 
 public:
 
@@ -24,39 +28,18 @@ public:
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
         const auto& cosigners = info.m_cosigners;
 
-        if ( std::find( cosigners.begin(), cosigners.end(), m_taskContext.keyPair().publicKey()) != cosigners.end()) {
-            // We are among the cosigners, so now  we are in the actual state and can execute usual batches
-            m_taskContext.storageBridge().cancelStorageSynchronization( m_taskContext.driveKey() );
-        }
-        else if (info.m_driveState) {
-            // TODO What if not success? BatchId?
-            m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey(), *info.m_driveState);
+        if ( std::find( cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) == cosigners.end() ) {
+            m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), info.m_driveState );
         }
 
-        return true;
-    }
-
-    bool onEndBatchExecutionSingleTransactionPublished(
-            const PublishedEndBatchExecutionSingleTransactionInfo& info ) override {
-        m_taskContext.storageBridge().cancelStorageSynchronization( m_taskContext.driveKey() );
+        // TODO What if we are among the cosigners? Is it possible?
 
         return true;
     }
 
-    // endregion
+    bool onStorageSynchronized( uint64_t ) override {
 
-public:
-
-    // region storage bridge event handler
-
-    bool onStorageSynchronized( uint64_t batchIndex ) override {
-        m_taskContext.onTaskFinished();
-
-        return true;
-    }
-
-    bool onStorageSynchronizationCancelled() override {
-        m_taskContext.onTaskFinished();
+        m_contractEnvironment.finishTask();
 
         return true;
     }
@@ -66,14 +49,12 @@ public:
 public:
 
     void run() override {
-
-        // TODO
-//        m_taskContext.storageBridge().synchronizeStorage( m_taskContext.driveKey(), );
+        m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), m_request.m_storageHash );
     }
 
 
     void terminate() override {
-        m_taskContext.finishTask();
+        m_contractEnvironment.finishTask();
     }
 };
 }

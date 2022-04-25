@@ -18,17 +18,19 @@ public:
 
     InitContractTask(
             RemoveRequest&& request,
-            TaskContext& taskContext )
-            : BaseContractTask( taskContext ), m_request( std::move( request )) {}
+            ContractEnvironment& contractEnvironment,
+            ExecutorEnvironment& executorEnvironment)
+            : BaseContractTask( executorEnvironment, contractEnvironment )
+            , m_request( std::move( request )) {}
 
 public:
 
     void run() override {
-        m_taskContext.finishTask();
+        m_contractEnvironment.finishTask();
     }
 
     void terminate() override {
-        m_taskContext.finishTask();
+        m_contractEnvironment.finishTask();
     }
 
 };
