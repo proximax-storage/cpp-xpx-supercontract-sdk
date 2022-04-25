@@ -11,10 +11,11 @@
 namespace sirius::contract {
 
 struct CallExecutionResult {
-    CallId m_callId;
-    bool m_success;
-    uint64_t m_scConsumed;
-    uint64_t m_smConsumed;
+    CallId      m_callId;
+    bool        m_success;
+    int32_t     m_return;
+    uint64_t    m_scConsumed;
+    uint64_t    m_smConsumed;
     // m_proofOfExecution
 };
 

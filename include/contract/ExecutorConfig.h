@@ -21,6 +21,9 @@ private:
     int m_unsuccessfulExecutionDelayMs = 10 * 1000;
     int m_successfulExecutionDelayMs = 10 * 1000;
 
+    uint64_t m_autorunSCLimit = 50;
+
+
 public:
 
     int unsuccessfulExecutionDelayMs() const {
@@ -37,6 +40,14 @@ public:
 
     void setSuccessfulExecutionDelayMs( int successfulExecutionDelayMs ) {
         m_successfulExecutionDelayMs = successfulExecutionDelayMs;
+    }
+
+    uint64_t autorunSCLimit() const {
+        return m_autorunSCLimit;
+    }
+
+    void setAutorunSCLimit( uint64_t autorunScLimit ) {
+        m_autorunSCLimit = autorunScLimit;
     }
 };
 

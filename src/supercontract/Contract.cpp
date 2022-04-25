@@ -41,6 +41,8 @@ ContractKey                                     m_contractKey;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
     std::map<uint64_t, PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
 
+    bool                                        m_automaticExecutionsEnabled;
+
 public:
 
     DefaultContract( const ContractKey& contractKey,
@@ -78,6 +80,22 @@ public:
     void setExecutors( std::set<ExecutorKey>&& executors ) override {
         m_executors = std::move(executors);
     }
+
+    // region automatic executions
+
+    void setAutomaticExecutions( bool enabled ) override {
+        if (enabled == m_automaticExecutionsEnabled) {
+            return;
+        }
+
+        m_automaticExecutionsEnabled = enabled;
+
+        if (!m_automaticExecutionsEnabled) {
+            m_batchesManager
+        }
+    }
+
+    // endregion
 
     std::string dbgPeerName() {
         return m_executorEnvironment.dbgPeerName();

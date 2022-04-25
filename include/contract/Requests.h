@@ -23,10 +23,21 @@ struct AddContractRequest {
 
 struct CallRequest {
     CallId m_callId;
+    std::string m_file;
+    std::string m_function;
+    std::vector<uint8_t> m_params;
+    uint64_t m_scLimit;
+    uint64_t m_smLimit;
+    bool m_isAutomatic = false;
 };
 
 struct RemoveRequest {
     Hash256 m_closeId;
+};
+
+struct Block{
+    BlockHash m_blockHash;
+    uint64_t m_height;
 };
 
 }

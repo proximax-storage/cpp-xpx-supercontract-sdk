@@ -9,7 +9,10 @@
 #include <deque>
 #include <list>
 #include <vector>
+
 #include "contract/Requests.h"
+
+#include "eventHandlers/ContractVirtualMachineEventHandler.h"
 
 namespace sirius::contract {
 
@@ -18,39 +21,32 @@ struct Batch {
     std::deque<CallRequest> m_callRequests;
 };
 
-class BaseBatchesManager {
+class BaseBatchesManager: public ContractVirtualMachineEventHandler {
+
 public:
 
     virtual ~BaseBatchesManager() = default;
 
     virtual void addCall(const CallRequest&) = 0;
 
-    virtual bool hasFormedBatch() const = 0;
+    virtual void onBlockPublished( const Block& block ) = 0;
 
-    uint64_t batchIndex() const {
+    virtual bool hasNextBatch() = 0;
 
-        // TODO
-        return 0;
-    }
+    virtual Batch nextBatch() = 0;
 
-    Batch popFormedBatch() {
-        auto batch = std::move(m_batches.front());
-        m_batches.pop_front();
-        return batch;
-    }
+    virtual void setAutomaticExecutionsEnabledSince( std::optional<uint64_t> blockHeight ) = 0;
 
-    void clearOutdatedBatches( uint64_t batchIndex ) {
-        while ( m_batches.front().m_batchIndex < batchIndex ) {
-            m_batches.pop_front();
-        }
-    }
-
-private:
-    std::deque<Batch> m_batches;
-};
-
-class DefaultBatchesManager : BaseBatchesManager{
-
+//    uint64_t batchIndex() const {
+//
+//        // TODO
+//        return 0;
+//    }
+//    {
+//        auto batch = std::move(m_batches.front());
+//        m_batches.pop_front();
+//        return batch;
+//    }
 };
 
 }

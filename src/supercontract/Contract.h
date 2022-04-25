@@ -34,6 +34,10 @@ public:
 
     virtual void addContractCall( const CallRequest& ) = 0;
 
+    virtual void setAutomaticExecutions(bool enabled) = 0;
+
+    virtual void addPossibleContractCall ( const CallRequest& ) = 0;
+
     virtual void removeContract( const RemoveRequest& ) = 0;
 
     virtual void setExecutors( std::set<ExecutorKey>&& executors ) = 0;
