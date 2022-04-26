@@ -34,9 +34,9 @@ public:
 
     virtual void addContractCall( const CallRequest& ) = 0;
 
-    virtual void setAutomaticExecutions(bool enabled) = 0;
+    virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
 
-    virtual void addPossibleContractCall ( const CallRequest& ) = 0;
+    virtual void addBlockInfo( const Block& ) = 0;
 
     virtual void removeContract( const RemoveRequest& ) = 0;
 

@@ -15,20 +15,29 @@ struct AddContractRequest {
     // state
     DriveKey                m_driveKey;
     std::set<ExecutorKey>   m_executors;
-    bool                    m_isContractDeployed;
+    uint64_t                m_batchesExecuted;
+    uint64_t                m_automaticExecutionsSCLimit;
+    uint64_t                m_automaticExecutionsSMLimit;
 
     // config
     uint64_t                m_unsuccessfulApprovalExpectation;
 };
 
 struct CallRequest {
+
+    enum class CallLevel {
+        AUTORUN,
+        AUTOMATIC,
+        MANUAL
+    };
+
     CallId m_callId;
     std::string m_file;
     std::string m_function;
     std::vector<uint8_t> m_params;
     uint64_t m_scLimit;
     uint64_t m_smLimit;
-    bool m_isAutomatic = false;
+    CallLevel m_callLevel;
 };
 
 struct RemoveRequest {

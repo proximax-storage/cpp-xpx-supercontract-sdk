@@ -5,7 +5,7 @@
 */
 
 #include "Contract.h"
-#include "BatchesManager.h"
+#include "supercontract/batchesManagers/BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "BaseContractTask.h"
 #include "ThreadManager.h"
@@ -13,6 +13,7 @@
 #include "ContractConfig.h"
 #include "ExecutorEnvironment.h"
 #include "TaskRequests.h"
+#include "batchesManagers/DefaultBatchesManager.h"
 
 namespace sirius::contract {
 
@@ -24,6 +25,9 @@ ContractKey                                     m_contractKey;
 
     DriveKey                                    m_driveKey;
     std::set<ExecutorKey>                       m_executors;
+
+    uint64_t                                    m_automaticExecutionsSCLimit;
+    uint64_t                                    m_automaticExecutionsSMLimit;
 
     ExecutorEnvironment&                        m_executorEnvironment;
     ContractConfig                              m_contractConfig;
@@ -41,8 +45,6 @@ ContractKey                                     m_contractKey;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
     std::map<uint64_t, PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
 
-    bool                                        m_automaticExecutionsEnabled;
-
 public:
 
     DefaultContract( const ContractKey& contractKey,
@@ -51,8 +53,11 @@ public:
             : m_contractKey( contractKey )
             , m_driveKey( addContractRequest.m_driveKey )
             , m_executors( std::move(addContractRequest.m_executors) )
+            , m_automaticExecutionsSCLimit( addContractRequest.m_automaticExecutionsSCLimit )
+            , m_automaticExecutionsSMLimit( addContractRequest.m_automaticExecutionsSMLimit )
             , m_executorEnvironment( contractContext)
-            , m_contractConfig() {
+            , m_contractConfig()
+            , m_batchesManager( std::make_unique<DefaultBatchesManager>( addContractRequest.m_batchesExecuted, *this, m_executorEnvironment ) ){
        runInitializeContractTask(std::move(addContractRequest));
     }
 
@@ -81,21 +86,13 @@ public:
         m_executors = std::move(executors);
     }
 
-    // region automatic executions
-
-    void setAutomaticExecutions( bool enabled ) override {
-        if (enabled == m_automaticExecutionsEnabled) {
-            return;
-        }
-
-        m_automaticExecutionsEnabled = enabled;
-
-        if (!m_automaticExecutionsEnabled) {
-            m_batchesManager
-        }
+    void addBlockInfo( const Block& block ) override {
+        m_batchesManager->addBlockInfo( block );
     }
 
-    // endregion
+    void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) override {
+        m_batchesManager->setAutomaticExecutionsEnabledSince(blockHeight);
+    }
 
     std::string dbgPeerName() {
         return m_executorEnvironment.dbgPeerName();
@@ -138,11 +135,16 @@ public:
     // region virtual machine event handler
 
     bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
-        if ( !m_task ) {
-            return false;
+
+        if ( m_batchesManager->onSuperContractCallExecuted(executionResult) ) {
+            return true;
         }
 
-        return m_task->onSuperContractCallExecuted(executionResult);
+        if (m_task && m_task->onSuperContractCallExecuted(executionResult)) {
+            return true;
+        }
+
+        return false;
     }
 
     // endregion
@@ -152,6 +154,17 @@ public:
     // region blockchain event handler
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+
+        while ( !m_unknownSuccessfulBatchOpinions.empty()
+                && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
+            m_unknownSuccessfulBatchOpinions.erase( m_unknownSuccessfulBatchOpinions.begin());
+        }
+
+        while ( !m_unknownUnsuccessfulBatchOpinions.empty()
+                && m_unknownUnsuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
+            m_unknownUnsuccessfulBatchOpinions.erase( m_unknownUnsuccessfulBatchOpinions.begin());
+        }
+
         if ( !m_task || !m_task->onEndBatchExecutionPublished( info )) {
             m_unknownPublishedEndBatchTransactions[info.m_batchIndex] = info;
         }
@@ -168,11 +181,12 @@ public:
     }
 
     bool onStorageSynchronized( uint64_t batchIndex ) override {
+        m_batchesManager->onStorageSynchronized( batchIndex );
+
         if ( !m_task ) {
             return false;
         }
 
-        m_batchesManager->clearOutdatedBatches( batchIndex );
         m_task->onStorageSynchronized( batchIndex );
 
         // TODO should we always return true?
@@ -187,12 +201,10 @@ public:
 
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& info ) override {
         if ( !m_task || !m_task->onEndBatchExecutionOpinionReceived( info )) {
-            if ( m_batchesManager->batchIndex() <= info.m_batchIndex ) {
-                if ( info.isSuccessful()) {
-                    m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
-                } else {
-                    m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
-                }
+            if ( info.isSuccessful()) {
+                m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+            } else {
+                m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
             }
         }
 
@@ -215,6 +227,14 @@ public:
 
     const DriveKey& driveKey() const override {
         return m_driveKey;
+    }
+
+    uint64_t automaticExecutionsSCLimit() const override {
+        return m_automaticExecutionsSCLimit;
+    }
+
+    uint64_t automaticExecutionsSMLimit() const override {
+        return m_automaticExecutionsSMLimit;
     }
 
     const ContractConfig& contractConfig() const override {
@@ -243,7 +263,7 @@ private:
         else if ( m_synchronizationRequest ) {
             runSynchronizationTask();
         }
-        else if ( m_batchesManager->hasFormedBatch()) {
+        else if ( m_batchesManager->hasNextBatch() ) {
             runBatchExecutionTask();
         }
     }
@@ -277,9 +297,9 @@ private:
     }
 
     void runBatchExecutionTask() {
-        _ASSERT(  m_batchesManager->hasFormedBatch() )
+        _ASSERT(  m_batchesManager->hasNextBatch() )
 
-        auto batch = m_batchesManager->popFormedBatch();
+        auto batch = m_batchesManager->nextBatch();
 
         std::map<ExecutorKey, EndBatchExecutionOpinion> successfulEndBatchOpinions;
         auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find( batch.m_batchIndex );

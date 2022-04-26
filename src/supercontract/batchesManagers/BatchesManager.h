@@ -12,7 +12,8 @@
 
 #include "contract/Requests.h"
 
-#include "eventHandlers/ContractVirtualMachineEventHandler.h"
+#include "supercontract/eventHandlers/ContractVirtualMachineEventHandler.h"
+#include "supercontract/eventHandlers/ContractBlockchainEventHandler.h"
 
 namespace sirius::contract {
 
@@ -21,7 +22,9 @@ struct Batch {
     std::deque<CallRequest> m_callRequests;
 };
 
-class BaseBatchesManager: public ContractVirtualMachineEventHandler {
+class BaseBatchesManager
+        : public ContractVirtualMachineEventHandler
+        , public ContractBlockchainEventHandler {
 
 public:
 
@@ -29,24 +32,13 @@ public:
 
     virtual void addCall(const CallRequest&) = 0;
 
-    virtual void onBlockPublished( const Block& block ) = 0;
+    virtual void addBlockInfo( const Block& block ) = 0;
 
     virtual bool hasNextBatch() = 0;
 
     virtual Batch nextBatch() = 0;
 
-    virtual void setAutomaticExecutionsEnabledSince( std::optional<uint64_t> blockHeight ) = 0;
-
-//    uint64_t batchIndex() const {
-//
-//        // TODO
-//        return 0;
-//    }
-//    {
-//        auto batch = std::move(m_batches.front());
-//        m_batches.pop_front();
-//        return batch;
-//    }
+    virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
 };
 
 }

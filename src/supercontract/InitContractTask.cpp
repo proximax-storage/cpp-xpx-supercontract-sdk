@@ -26,7 +26,7 @@ public:
 public:
 
     void run() override {
-        if ( !m_request.m_isContractDeployed ) {
+        if ( m_request.m_batchesExecuted > 0 ) {
             // The corresponding storage is not yet fully controlled by the Contract,
             // so the Storage performs necessary synchronization by himself
             m_contractEnvironment.finishTask();

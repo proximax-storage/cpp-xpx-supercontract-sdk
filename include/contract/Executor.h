@@ -31,6 +31,8 @@ public:
 
     virtual void addContractCall( const ContractKey&, CallRequest&& ) = 0;
 
+    virtual void addBlockInfo( const ContractKey&, Block&& ) = 0;
+
     virtual void removeContract( const ContractKey&, RemoveRequest&& ) = 0;
 
     virtual void setExecutors( const ContractKey&, std::set<ExecutorKey>&& executors ) = 0;

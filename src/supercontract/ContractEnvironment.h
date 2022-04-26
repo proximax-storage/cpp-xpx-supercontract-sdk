@@ -29,6 +29,10 @@ public:
 
     virtual const std::set<ExecutorKey>& executors() const = 0;
 
+    virtual uint64_t automaticExecutionsSCLimit() const = 0;
+
+    virtual uint64_t automaticExecutionsSMLimit() const = 0;
+
     virtual const ContractConfig& contractConfig() const = 0;
 
     virtual void finishTask() = 0;

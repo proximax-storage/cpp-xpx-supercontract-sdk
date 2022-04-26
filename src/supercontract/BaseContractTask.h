@@ -15,7 +15,7 @@
 #include "eventHandlers/ContractMessageEventHandler.h"
 #include "eventHandlers/ContractBlockchainEventHandler.h"
 #include "TaskRequests.h"
-#include "BatchesManager.h"
+#include "supercontract/batchesManagers/BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "ExecutorEnvironment.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"

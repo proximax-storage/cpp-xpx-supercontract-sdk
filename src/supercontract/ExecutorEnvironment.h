@@ -9,6 +9,7 @@
 #include "contract/Storage.h"
 #include "contract/Messenger.h"
 #include "contract/ExecutorEventHandler.h"
+#include "contract/ExecutorConfig.h"
 #include "VirtualMachine.h"
 #include "crypto/KeyPair.h"
 

@@ -100,6 +100,20 @@ public:
         } );
     }
 
+    void addBlockInfo( const ContractKey& key, Block&& block ) override {
+        m_threadManager.execute( [=, this, request = std::move( block )] {
+
+            auto contractIt = m_contracts.find( key );
+
+            if ( contractIt == m_contracts.end()) {
+                _LOG_ERR( "Add Block to Non-Existing Contract " << key );
+                return;
+            }
+
+            contractIt->second->addBlockInfo( block );
+        } );
+    }
+
     void removeContract( const ContractKey& key, RemoveRequest&& request ) override {
         m_threadManager.execute( [=, this, request = std::move( request )] {
 
