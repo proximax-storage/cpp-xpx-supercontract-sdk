@@ -6,21 +6,15 @@
 
 #pragma once
 
-#include "contract/Requests.h"
-
-#include <memory>
-
 namespace sirius::contract {
 
-class VirtualMachine {
+class StorageObserver {
 
 public:
 
-    virtual ~VirtualMachine() = default;
-
-    virtual void executeCall( const ContractKey&, const CallRequest& ) = 0;
+    virtual void
+    getAbsolutePath( const std::string& relativePath, const std::function<void( std::string&& )> callback ) const = 0;
 
 };
-
 
 }

@@ -29,6 +29,8 @@ private:
     std::string     m_automaticExecutionFile = "default.wasm";
     std::string     m_automaticExecutionFunction = "main";
 
+    std::string     m_rpcServerAddress = "localhost:50051";
+
 public:
 
     int unsuccessfulExecutionDelayMs() const {
@@ -85,6 +87,14 @@ public:
 
     void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
         m_automaticExecutionFunction = automaticExecutionFunction;
+    }
+
+    const std::string& rpcServerAddress() const {
+        return m_rpcServerAddress;
+    }
+
+    void setRpcServerAddress( const std::string& rpcServerAddress ) {
+        m_rpcServerAddress = rpcServerAddress;
     }
 };
 

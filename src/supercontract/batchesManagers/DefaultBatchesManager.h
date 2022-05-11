@@ -134,15 +134,15 @@ public:
 
             m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash};
 
-            m_executorEnvironment.virtualMachine().execute(CallRequest{
-                callId,
-                m_executorEnvironment.executorConfig().autorunFile(),
-                m_executorEnvironment.executorConfig().autorunFunction(),
-                {},
-                m_executorEnvironment.executorConfig().autorunSCLimit(),
-                0,
-                CallRequest::CallLevel::AUTORUN
-            });
+            m_executorEnvironment.virtualMachine().executeCall( m_contractEnvironment.contractKey(), CallRequest{
+                    callId,
+                    m_executorEnvironment.executorConfig().autorunFile(),
+                    m_executorEnvironment.executorConfig().autorunFunction(),
+                    {},
+                    m_executorEnvironment.executorConfig().autorunSCLimit(),
+                    0,
+                    CallRequest::CallLevel::AUTORUN
+            } );
         }
     }
 

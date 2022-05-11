@@ -434,7 +434,7 @@ private:
             m_call = std::make_unique<CallExecutionEnvironment>(std::move(m_batch.m_callRequests.front()));
             m_batch.m_callRequests.pop_front();
 
-            m_executorEnvironment.virtualMachine().execute(m_call->callRequest());
+            m_executorEnvironment.virtualMachine().executeCall(m_contractEnvironment.contractKey(), m_call->callRequest());
         } else {
             computeProofOfExecution();
 

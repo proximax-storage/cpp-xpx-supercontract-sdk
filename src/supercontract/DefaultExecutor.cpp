@@ -9,6 +9,7 @@
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "supercontract/RPCVirtualMachine.h"
 
 #include "contract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -37,7 +38,7 @@ private:
     Messenger& m_messenger;
     Storage& m_storage;
 
-    std::unique_ptr<VirtualMachine> m_virtualMachine;
+    std::shared_ptr<VirtualMachine> m_virtualMachine;
 
     std::string m_dbgPeerName;
 
@@ -48,12 +49,14 @@ public:
                      ExecutorEventHandler& eventHandler,
                      Messenger& messenger,
                      Storage& storage,
+//                     const StorageObserver& storageObserver,
                      const std::string& dbgPeerName = "executor")
                      : m_keyPair(keyPair)
                      , m_config( config )
                      , m_eventHandler( eventHandler )
                      , m_messenger( messenger )
                      , m_storage( storage )
+//                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>(storageObserver, m_threadManager, *this, m_config.rpcServerAddress()))
                      , m_dbgPeerName( dbgPeerName )
                      {}
 

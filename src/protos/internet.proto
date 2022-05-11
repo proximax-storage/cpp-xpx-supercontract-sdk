@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package internet;
+
+service Internet {
+  rpc OpenConnection (String) returns (ReturnStatus) {}
+  rpc ReadConnectionStream (Uint64) returns (ReturnedReadBuffer) {}
+  rpc CloseConnection (Uint64) returns (Bool) {}
+}
+
+message String {
+  bytes contractKey = 1;
+  bytes callId = 2;
+  string str = 3;
+}
+
+message Uint64 {
+  bytes contractKey = 1;
+  bytes callId = 2;
+  uint64 integer = 3;
+}
+
+message Bool {
+  bool boolean = 1;
+}
+
+message ReturnStatus {
+  bool success = 1;
+  uint64 integer = 2;
+}
+
+message ReturnedReadBuffer {
+  bool success = 1;
+  bytes buffer = 2;
+}
