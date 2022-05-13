@@ -3,47 +3,48 @@ set(CMAKE_CXX_STANDARD 20)
 
 supercontract_sdk_shared_library_target(supercontract)
 
-# Proto file
-get_filename_component(vm_client_proto "../protos/supercontract_server.proto" ABSOLUTE)
-get_filename_component(vm_client_proto_path "${vm_client_proto}" PATH)
+foreach(_service supercontract_server internet)
 
-# Generated sources
-set(vm_client_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/supercontract_server.pb.cc")
-set(vm_client_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/supercontract_server.pb.h")
-set(vm_client_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/supercontract_server.grpc.pb.cc")
-set(vm_client_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/supercontract_server.grpc.pb.h")
-add_custom_command(
-        OUTPUT "${vm_client_proto_srcs}" "${vm_client_proto_hdrs}" "${vm_client_grpc_srcs}" "${vm_client_grpc_hdrs}"
-        COMMAND ${_PROTOBUF_PROTOC}
-        ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
-        --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-        -I "${vm_client_proto_path}"
-        --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-        "${vm_client_proto}"
-        DEPENDS "${vm_client_proto}")
+    # Proto file
+    get_filename_component(${_service}_proto "../protos/${_service}.proto" ABSOLUTE)
+    get_filename_component(${_service}_proto_path "${${_service}_proto}" PATH)
 
-# Include generated *.pb.h files
-include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+    # Generated sources
+    set(${_service}_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.pb.cc")
+    set(${_service}_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.pb.h")
+    set(${_service}_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.grpc.pb.cc")
+    set(${_service}_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.grpc.pb.h")
+    add_custom_command(
+            OUTPUT "${${_service}_proto_srcs}" "${${_service}_proto_hdrs}" "${${_service}_grpc_srcs}" "${${_service}_grpc_hdrs}"
+            COMMAND ${_PROTOBUF_PROTOC}
+            ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
+            --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
+            -I "${${_service}_proto_path}"
+            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
+            "${${_service}_proto}"
+            DEPENDS "${${_service}_proto}")
 
-# vm_client_grpc_proto
-add_library(vm_client_grpc_proto
-        ${vm_client_grpc_srcs}
-        ${vm_client_grpc_hdrs}
-        ${vm_client_proto_srcs}
-        ${vm_client_proto_hdrs})
-target_link_libraries(vm_client_grpc_proto
-        ${_REFLECTION}
-        ${_GRPC_GRPCPP}
-        ${_PROTOBUF_LIBPROTOBUF})
+    # Include generated *.pb.h files
+    include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 
-message(ERROR "${vm_client_grpc_srcs}")
+    # vm_client_grpc_proto
+    add_library(${_service}_grpc_proto
+            ${${_service}_grpc_srcs}
+            ${${_service}_grpc_hdrs}
+            ${${_service}_proto_srcs}
+            ${${_service}_proto_hdrs})
+    target_link_libraries(${_service}_grpc_proto
+            ${_REFLECTION}
+            ${_GRPC_GRPCPP}
+            ${_PROTOBUF_LIBPROTOBUF})
 
-# Targets greeter_[async_](client|server)
-target_link_libraries(supercontract
-        vm_client_grpc_proto
-        ${_REFLECTION}
-        ${_GRPC_GRPCPP}
-        ${_PROTOBUF_LIBPROTOBUF})
+    # Targets greeter_[async_](client|server)
+    target_link_libraries(supercontract
+            ${_service}_grpc_proto
+            ${_REFLECTION}
+            ${_GRPC_GRPCPP}
+            ${_PROTOBUF_LIBPROTOBUF})
+endforeach()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(-D_GNU_SOURCE)

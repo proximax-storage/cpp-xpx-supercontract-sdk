@@ -14,22 +14,22 @@
 
 namespace sirius::contract {
 
-class RPCVirtualMachineCall {
+class RPCCall {
 
 public:
 
-    virtual ~RPCVirtualMachineCall() = default;
+    virtual ~RPCCall() = default;
 
-    virtual void processReply() = 0;
+    virtual void process() = 0;
 
 };
 
 template<class TRequest, class TReply>
-class BaseRPCVirtualMachineCall : public RPCVirtualMachineCall {
+class RPCCallRequest : public RPCCall {
 
 public:
 
-    BaseRPCVirtualMachineCall( const TRequest& request ) : m_request( request ) {}
+    explicit RPCCallRequest( const TRequest& request ) : m_request( request ) {}
 
 public:
 
@@ -45,8 +45,8 @@ public:
 
 };
 
-class ExecuteCallRPCVirtualMachineCall
-        : public BaseRPCVirtualMachineCall<supercontractserver::ExecuteRequest, supercontractserver::ExecuteReturns> {
+class ExecuteCallRPCVirtualMachineRequest
+        : public RPCCallRequest<supercontractserver::ExecuteRequest, supercontractserver::ExecuteReturns> {
 
 private:
 
@@ -54,13 +54,13 @@ private:
 
 public:
 
-    explicit ExecuteCallRPCVirtualMachineCall(
+    explicit ExecuteCallRPCVirtualMachineRequest(
             const supercontractserver::ExecuteRequest& request,
             VirtualMachineEventHandler& virtualMachineEventHandler )
-            : BaseRPCVirtualMachineCall(request)
+            : RPCCallRequest( request)
             , m_virtualMachineEventHandler( virtualMachineEventHandler ) {}
 
-    void processReply() override {
+    void process() override {
         if ( m_status.ok() ) {
             auto contractKey = *reinterpret_cast<const ContractKey*>(m_request.contractkey().data());
             auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
@@ -75,6 +75,38 @@ public:
             };
             m_virtualMachineEventHandler.onSuperContractCallExecuted( contractKey, executionResult );
         }
+    }
+
+};
+
+template <class TService, class TRequest, class TReply>
+class RPCCallResponse : public RPCCall {
+
+protected:
+
+    enum class ResponseStatus {
+        READY_TO_PROCESS,
+        READY_TO_FINISH
+    };
+
+    ResponseStatus m_status;
+    TService* m_service;
+    grpc::ServerCompletionQueue* m_completionQueue;
+    TRequest m_request;
+    TReply m_reply;
+    grpc::ServerContext m_serverContext;
+    grpc::ServerAsyncResponseWriter<TReply> m_responder;
+
+    virtual void addNextToCompletionQueue() = 0;
+
+public:
+
+    RPCCallResponse( TService* service, grpc::ServerCompletionQueue* completionQueue )
+            : m_status( ResponseStatus::READY_TO_PROCESS )
+            , m_service( service )
+            , m_completionQueue( completionQueue )
+            , m_responder( &m_serverContext ) {
+        addNextToCompletionQueue();
     }
 
 };

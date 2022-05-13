@@ -5,7 +5,7 @@
 */
 
 #include "RPCVirtualMachine.h"
-#include "RPCVirtualMachineCall.h"
+#include "RPCCall.h"
 
 namespace sirius::contract {
 

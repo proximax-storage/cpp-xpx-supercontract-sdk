@@ -9,7 +9,7 @@
 #include <grpcpp/create_channel.h>
 #include "VirtualMachine.h"
 #include "supercontract_server.grpc.pb.h"
-#include "RPCVirtualMachineCall.h"
+#include "RPCCall.h"
 #include "contract/StorageObserver.h"
 #include "ThreadManager.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
@@ -91,7 +91,7 @@ private:
         rpcRequest.set_scprepayment( request.m_scLimit );
         rpcRequest.set_smprepayment( request.m_smLimit );
 
-        auto* call = new ExecuteCallRPCVirtualMachineCall( rpcRequest, m_virtualMachineEventHandler );
+        auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler );
 
         call->m_response_reader =
                 m_stub->PrepareAsyncExecuteCall( &call->m_context, rpcRequest, &m_completionQueue );
@@ -104,9 +104,9 @@ private:
         void* pTag;
         bool ok;
         while ( m_completionQueue.Next( &pTag, &ok )) {
-            auto* pQuery = static_cast<RPCVirtualMachineCall*>(pTag);
+            auto* pQuery = static_cast<RPCCall*>(pTag);
             if ( ok ) {
-                pQuery->processReply();
+                pQuery->process();
             }
             delete pQuery;
         }
