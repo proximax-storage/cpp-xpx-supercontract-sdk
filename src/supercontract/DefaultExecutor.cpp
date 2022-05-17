@@ -11,6 +11,7 @@
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "supercontract/RPCVirtualMachine.h"
 #include "supercontract/InternetRPC.h"
+#include "VirtualMachineQueriesHandler.h"
 
 #include "contract/Executor.h"
 #include "crypto/KeyPair.h"

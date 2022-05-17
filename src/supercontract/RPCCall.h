@@ -79,7 +79,7 @@ public:
 
 };
 
-template <class TService, class TRequest, class TReply>
+template <class TService, class TRequest, class TReply, class THandler>
 class RPCCallResponse : public RPCCall {
 
 protected:
@@ -96,10 +96,17 @@ protected:
     TReply m_reply;
     grpc::ServerContext m_serverContext;
     grpc::ServerAsyncResponseWriter<TReply> m_responder;
+    std::weak_ptr<THandler> m_pWeakHandler;
 
     virtual void addNextToCompletionQueue() = 0;
 
 public:
+
+    ~RPCCallResponse() override {
+        if (auto pHandler = m_pWeakHandler.lock(); pHandler) {
+            pHandler->cancel();
+        }
+    }
 
     RPCCallResponse( TService* service, grpc::ServerCompletionQueue* completionQueue )
             : m_status( ResponseStatus::READY_TO_PROCESS )

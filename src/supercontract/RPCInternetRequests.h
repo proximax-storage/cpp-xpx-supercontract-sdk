@@ -11,7 +11,7 @@
 
 namespace sirius::contract {
 class OpenConnectionRPCInternetRequest
-        : public RPCCallResponse<internet::Internet::AsyncService, internet::String, internet::ReturnStatus> {
+        : public RPCCallResponse<internet::Internet::AsyncService, internet::String, internet::ReturnStatus, void> {
 public:
 
     OpenConnectionRPCInternetRequest( internet::Internet::AsyncService* service,
