@@ -50,7 +50,7 @@ public:
                 waitForRPCResponse();
             } ) {}
 
-    void terminate() {
+    ~RPCVirtualMachine() override {
         for ( auto& [_, query]: m_pathQueries ) {
             query->terminate();
         }

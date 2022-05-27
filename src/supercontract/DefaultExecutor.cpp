@@ -289,8 +289,8 @@ public:
         return m_eventHandler;
     }
 
-    VirtualMachine& virtualMachine() override {
-        return *m_virtualMachine;
+    std::weak_ptr<VirtualMachine> virtualMachine() override {
+        return m_virtualMachine;
     }
 
     ExecutorConfig& executorConfig() override {
@@ -368,6 +368,10 @@ private:
 
     void terminate() {
         m_rpcServerServiceManager.terminate();
+        m_virtualMachine.reset();
+        for ( auto&[_, contract]: m_contracts ) {
+            contract->terminate();
+        }
     }
 
     void onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) {

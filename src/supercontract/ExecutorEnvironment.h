@@ -35,7 +35,7 @@ public:
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 
-    virtual VirtualMachine& virtualMachine() = 0;
+    virtual std::weak_ptr<VirtualMachine> virtualMachine() = 0;
 
     virtual ExecutorConfig& executorConfig() = 0;
 

@@ -134,7 +134,8 @@ public:
 
             m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash};
 
-            m_executorEnvironment.virtualMachine().executeCall( m_contractEnvironment.contractKey(), CallRequest{
+            if ( auto pVirtualMachine = m_executorEnvironment.virtualMachine().lock(); pVirtualMachine ) {
+                pVirtualMachine->executeCall( m_contractEnvironment.contractKey(), CallRequest{
                     callId,
                     m_executorEnvironment.executorConfig().autorunFile(),
                     m_executorEnvironment.executorConfig().autorunFunction(),
@@ -142,7 +143,8 @@ public:
                     m_executorEnvironment.executorConfig().autorunSCLimit(),
                     0,
                     CallRequest::CallLevel::AUTORUN
-            } );
+                } );
+            }
         }
     }
 

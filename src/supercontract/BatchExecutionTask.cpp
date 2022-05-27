@@ -444,7 +444,9 @@ private:
 
             m_batch.m_callRequests.pop_front();
 
-            m_executorEnvironment.virtualMachine().executeCall(m_contractEnvironment.contractKey(), m_call->callRequest());
+            if ( auto pVirtualMachine = m_executorEnvironment.virtualMachine().lock(); pVirtualMachine ) {
+                pVirtualMachine->executeCall(m_contractEnvironment.contractKey(), m_call->callRequest());
+            }
         } else {
             computeProofOfExecution();
 
