@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "AsyncQuery.h"
+
 namespace sirius::contract {
 
 class StorageObserver {
@@ -13,7 +15,7 @@ class StorageObserver {
 public:
 
     virtual void
-    getAbsolutePath( const std::string& relativePath, const std::function<void( std::string&& )> callback ) const = 0;
+    getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const = 0;
 
 };
 

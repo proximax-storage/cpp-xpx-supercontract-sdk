@@ -8,30 +8,61 @@
 
 #include "internet.grpc.pb.h"
 #include "RPCCall.h"
+#include "VirtualMachineInternetQueryHandler.h"
 
 namespace sirius::contract {
 class OpenConnectionRPCInternetRequest
-        : public RPCCallResponse<internet::Internet::AsyncService, internet::String, internet::ReturnStatus, void> {
+        : public RPCCallResponse<internet::Internet::AsyncService, internet::String, internet::ReturnStatus, VirtualMachineInternetQueryHandler> {
 public:
 
     OpenConnectionRPCInternetRequest( internet::Internet::AsyncService* service,
-                                      grpc::ServerCompletionQueue* completionQueue ) :
-            RPCCallResponse( service, completionQueue )
-            {}
+                                      grpc::ServerCompletionQueue* completionQueue,
+                                      std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> handlersExtractor,
+                                      const bool& serviceTerminated )
+    : RPCCallResponse( service, completionQueue, handlersExtractor, serviceTerminated ) {
+        addNextToCompletionQueue();
+    }
 
     void process() override {
+
+        // MAIN_THREAD
+
         if (m_status == ResponseStatus::READY_TO_PROCESS) {
-            new OpenConnectionRPCInternetRequest( m_service, m_completionQueue );
-            m_responder.Finish(m_reply, grpc::Status::OK, this);
-            m_status = ResponseStatus::READY_TO_FINISH;
+            if ( !m_serviceTerminated ) {
+                new OpenConnectionRPCInternetRequest( m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated );
+            }
+            auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
+
+            std::shared_ptr<VirtualMachineInternetQueryHandler> pHandler;
+            if ( auto pHandlersExtractor = m_pWeakHandlersExtractor.lock(); pHandlersExtractor ) {
+                pHandler = pHandlersExtractor->getHandler( callId );
+            }
+
+            if ( pHandler ) {
+                pHandler->openConnection( m_request.str(), [this]( uint64_t connectionId ) {
+                    onSuccess( connectionId );
+                }, [this] {
+                    onFailure();
+                } );
+            }
+            else {
+                onFailure();
+            }
         } else {
             delete this;
         }
     }
 
-protected:
+private:
 
-    void addNextToCompletionQueue() override {
+    void onSuccess( uint64_t connectionId ) {
+        m_reply.set_success( true );
+        m_reply.set_integer( connectionId );
+        m_status = ResponseStatus::READY_TO_FINISH;
+        m_responder.Finish( m_reply, grpc::Status::OK, this );
+    }
+
+    void addNextToCompletionQueue() {
         m_service->RequestOpenConnection(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }
 

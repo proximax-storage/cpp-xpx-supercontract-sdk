@@ -7,20 +7,32 @@
 #pragma once
 
 #include "types.h"
-#include "eventHandlers/ContractVirtualMachineQueryHandler.h"
+#include "contract/AsyncQuery.h"
 
 namespace sirius::contract {
 
-class CallExecutionEnvironment {
+class CallExecutionEnvironment: public VirtualMachineInternetQueryHandler {
 
 private:
+
+    ExecutorEnvironment& m_executorEnvironment;
+    ContractEnvironment& m_contractEnvironment;
+
     const CallRequest m_callRequest;
 
     std::optional<CallExecutionResult> m_callExecutionResult;
 
+    std::shared_ptr<AsyncQuery> m_asyncQuery;
+
 public:
 
-    CallExecutionEnvironment( const CallRequest& request ) : m_callRequest( request ) {}
+    CallExecutionEnvironment( const CallRequest& request,
+                              ExecutorEnvironment& executorEnvironment,
+                              ContractEnvironment& contractEnvironment )
+    : m_callRequest( request )
+    , m_executorEnvironment( executorEnvironment )
+    , m_contractEnvironment( contractEnvironment )
+    {}
 
     const CallId& callId() const {
         return m_callRequest.m_callId;
@@ -37,6 +49,18 @@ public:
     void setCallExecutionResult( const CallExecutionResult& callExecutionResult ) {
         m_callExecutionResult = callExecutionResult;
     }
+
+    void terminate() {
+        if ( m_asyncQuery ) {
+            m_asyncQuery->terminate();
+        }
+    }
+
+    // region internet
+
+
+
+    // endregion
 
 };
 

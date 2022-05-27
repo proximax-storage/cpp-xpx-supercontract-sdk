@@ -12,8 +12,10 @@
 #include "contract/ExecutorConfig.h"
 #include "VirtualMachine.h"
 #include "crypto/KeyPair.h"
+#include "VirtualMachineQueryHandlersKeeper.h"
+#include "VirtualMachineInternetQueryHandler.h"
 
-#include "ThreadManager.h"
+#include "contract/ThreadManager.h"
 
 namespace sirius::contract {
 
@@ -36,6 +38,8 @@ public:
     virtual VirtualMachine& virtualMachine() = 0;
 
     virtual ExecutorConfig& executorConfig() = 0;
+
+    virtual std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() = 0;
 
     virtual std::string dbgPeerName() = 0;
 

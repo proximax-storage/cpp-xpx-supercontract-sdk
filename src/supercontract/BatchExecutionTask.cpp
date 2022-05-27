@@ -20,7 +20,7 @@ private:
 
     std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
 
-    std::unique_ptr<CallExecutionEnvironment> m_call;
+    std::shared_ptr<CallExecutionEnvironment> m_call;
 
     std::optional<EndBatchExecutionOpinion> m_successfulEndBatchOpinion;
     std::optional<EndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
@@ -58,6 +58,12 @@ public:
     }
 
     void terminate() override {
+
+        if ( auto pInternetHandlerKeeper = m_executorEnvironment.internetHandlerKeeper().lock(); pInternetHandlerKeeper ) {
+            pInternetHandlerKeeper->removeHandler(m_call->callId());
+        }
+        m_call->terminate();
+
         m_unsuccessfulExecutionTimer.reset();
         m_successfulApprovalExpectationTimer.reset();
         m_unsuccessfulApprovalExpectationTimer.reset();
@@ -431,7 +437,11 @@ private:
 
     void executeNextCall() {
         if ( !m_batch.m_callRequests.empty()) {
-            m_call = std::make_unique<CallExecutionEnvironment>(std::move(m_batch.m_callRequests.front()));
+            m_call = std::make_shared<CallExecutionEnvironment>( std::move(m_batch.m_callRequests.front()), m_executorEnvironment, m_contractEnvironment );
+            if ( auto pInternetHandlerKeeper = m_executorEnvironment.internetHandlerKeeper().lock(); pInternetHandlerKeeper ) {
+                pInternetHandlerKeeper->addHandler(m_call->callId(), m_call);
+            }
+
             m_batch.m_callRequests.pop_front();
 
             m_executorEnvironment.virtualMachine().executeCall(m_contractEnvironment.contractKey(), m_call->callRequest());

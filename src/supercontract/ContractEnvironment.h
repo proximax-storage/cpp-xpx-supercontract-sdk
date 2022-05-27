@@ -11,9 +11,10 @@
 #include "contract/ExecutorEventHandler.h"
 #include "crypto/KeyPair.h"
 
-#include "ThreadManager.h"
+#include "contract/ThreadManager.h"
 #include "TaskRequests.h"
 #include "ContractConfig.h"
+#include "VirtualMachineInternetQueryHandler.h"
 
 namespace sirius::contract {
 

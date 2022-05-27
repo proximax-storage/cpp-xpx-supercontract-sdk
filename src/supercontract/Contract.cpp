@@ -8,7 +8,7 @@
 #include "supercontract/batchesManagers/BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "BaseContractTask.h"
-#include "ThreadManager.h"
+#include "contract/ThreadManager.h"
 #include "ProofOfExecution.h"
 #include "ContractConfig.h"
 #include "ExecutorEnvironment.h"

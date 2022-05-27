@@ -8,7 +8,7 @@
 
 #include <grpcpp/grpcpp.h>
 
-//#include "supercontract_server.pb.h"
+#include "VirtualMachineQueryHandlersKeeper.h"
 
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 
@@ -96,25 +96,24 @@ protected:
     TReply m_reply;
     grpc::ServerContext m_serverContext;
     grpc::ServerAsyncResponseWriter<TReply> m_responder;
-    std::weak_ptr<THandler> m_pWeakHandler;
+    std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_pWeakHandlersExtractor;
+    const bool& m_serviceTerminated;
 
-    virtual void addNextToCompletionQueue() = 0;
+    void onFailure() {
+        m_status = ResponseStatus::READY_TO_FINISH;
+        m_responder.FinishWithError( grpc::Status::CANCELLED, this );
+    }
 
 public:
 
-    ~RPCCallResponse() override {
-        if (auto pHandler = m_pWeakHandler.lock(); pHandler) {
-            pHandler->cancel();
-        }
-    }
-
-    RPCCallResponse( TService* service, grpc::ServerCompletionQueue* completionQueue )
+    RPCCallResponse( TService* service, grpc::ServerCompletionQueue* completionQueue, std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor, const bool& serviceTerminated )
             : m_status( ResponseStatus::READY_TO_PROCESS )
             , m_service( service )
             , m_completionQueue( completionQueue )
-            , m_responder( &m_serverContext ) {
-        addNextToCompletionQueue();
-    }
+            , m_responder( &m_serverContext )
+            , m_pWeakHandlersExtractor( handlersExtractor )
+            , m_serviceTerminated( serviceTerminated )
+            {}
 
 };
 

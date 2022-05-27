@@ -5,13 +5,14 @@
 */
 
 #include "Contract.h"
-#include "ThreadManager.h"
+#include "contract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
-#include "supercontract/RPCVirtualMachine.h"
-#include "supercontract/InternetRPC.h"
-#include "VirtualMachineQueriesHandler.h"
+#include "RPCVirtualMachine.h"
+#include "RPCInternetService.h"
+#include "VirtualMachineQueryHandlersKeeper.h"
+#include "RPCServerServiceManager.h"
 
 #include "contract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -42,6 +43,9 @@ private:
 
     std::shared_ptr<VirtualMachine> m_virtualMachine;
 
+    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
+    RPCServerServiceManager m_rpcServerServiceManager;
+
     std::string m_dbgPeerName;
 
 public:
@@ -58,9 +62,12 @@ public:
                      , m_eventHandler( eventHandler )
                      , m_messenger( messenger )
                      , m_storage( storage )
-                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>(storageObserver, m_threadManager, *this, m_config.rpcServerAddress()))
-                     , m_dbgPeerName( dbgPeerName )
-                     {}
+                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>(storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress()))
+                     , m_rpcServerServiceManager( m_config.rpcServerAddress() )
+                     , m_dbgPeerName( dbgPeerName ) {
+        m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>( m_threadManager );
+        m_rpcServerServiceManager.run();
+    }
 
     ~DefaultExecutor() override {
         m_threadManager.execute([this] {
@@ -290,6 +297,10 @@ public:
         return m_config;
     }
 
+    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
+        return m_virtualMachineInternetQueryKeeper;
+    }
+
     std::string dbgPeerName() override {
         return m_dbgPeerName;
     }
@@ -354,6 +365,10 @@ public:
     // endregion
 
 private:
+
+    void terminate() {
+        m_rpcServerServiceManager.terminate();
+    }
 
     void onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) {
         if (!opinion.hasValidForm() || !opinion.verify()) {

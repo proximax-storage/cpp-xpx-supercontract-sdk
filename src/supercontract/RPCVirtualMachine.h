@@ -11,14 +11,13 @@
 #include "supercontract_server.grpc.pb.h"
 #include "RPCCall.h"
 #include "contract/StorageObserver.h"
-#include "ThreadManager.h"
+#include "contract/ThreadManager.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "contract/AsyncQuery.h"
 
 namespace sirius::contract {
 
-class RPCVirtualMachine : public VirtualMachine
-        , public std::enable_shared_from_this<RPCVirtualMachine>
-{
+class RPCVirtualMachine : public VirtualMachine {
 
 private:
 
@@ -32,6 +31,8 @@ private:
 
     grpc::CompletionQueue m_completionQueue;
     std::thread m_completionQueueThread;
+
+    std::map<CallId, std::shared_ptr<AsyncQuery>> m_pathQueries;
 
 public:
 
@@ -49,7 +50,10 @@ public:
                 waitForRPCResponse();
             } ) {}
 
-    ~RPCVirtualMachine() override {
+    void terminate() {
+        for ( auto& [_, query]: m_pathQueries ) {
+            query->terminate();
+        }
         m_completionQueue.Shutdown();
         if ( m_completionQueueThread.joinable()) {
             m_completionQueueThread.join();
@@ -57,23 +61,13 @@ public:
     }
 
     void executeCall( const ContractKey& contractKey, const CallRequest& request ) override {
-        m_storageObserver.getAbsolutePath( request.m_file,
-           [pThisWeak = weak_from_this(), contractKey, request = request](
-                   std::string&& path ) mutable {
-               if ( auto pThis = pThisWeak.lock(); pThis ) {
-                   pThis->m_threadManager.execute(
-                           [=, request = std::move( request ), path = std::move(
-                                   path )]() mutable {
-                               if ( auto pThis = pThisWeak.lock(); pThis ) {
-                                   pThis->onReceivedCallAbsolutePath( contractKey,
-                                                                      std::move(
-                                                                              request ),
-                                                                      std::move(
-                                                                              path ));
-                               }
-                           } );
-               }
-           } );
+        std::function<void( std::string&& )> call = [=, this, request = request](
+                std::string&& callAbsolutePath ) mutable -> void {
+            onReceivedCallAbsolutePath( contractKey, std::move( request ), std::move( callAbsolutePath ));
+        };
+        auto callback = std::make_shared<AbstractAsyncQuery<std::string>>(call, m_threadManager );
+        m_pathQueries[request.m_callId] = callback;
+        m_storageObserver.getAbsolutePath( request.m_file, callback );
     }
 
 private:
@@ -81,6 +75,9 @@ private:
     void
     onReceivedCallAbsolutePath( const ContractKey& contractKey, CallRequest&& request,
                                 std::string&& callAbsolutePath ) {
+
+        m_pathQueries.erase( request.m_callId );
+
         request.m_file = callAbsolutePath;
 
         supercontractserver::ExecuteRequest rpcRequest;

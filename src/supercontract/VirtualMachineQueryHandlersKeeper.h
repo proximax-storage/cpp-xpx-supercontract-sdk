@@ -18,15 +18,17 @@ namespace sirius::contract {
 
     private:
 
-        std::map<CallId, std::weak_ptr<THandler>> m_handlers;
+        std::map<CallId, std::shared_ptr<THandler>> m_handlers;
 
     public:
 
-        std::shared_ptr<THandler> getHandler(const CallId& callId);
+        ~VirtualMachineQueryHandlersKeeper();
 
-        void addHandler(const CallId& callId, const std::shared_ptr<THandler>&);
+        std::shared_ptr<THandler> getHandler( const CallId& callId ) const;
 
-        void removeHandler(const CallId& callId);
+        void addHandler( const CallId& callId, std::shared_ptr<THandler> );
+
+        void removeHandler( const CallId& callId );
 
     };
 

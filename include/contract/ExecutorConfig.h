@@ -29,7 +29,8 @@ private:
     std::string     m_automaticExecutionFile = "default.wasm";
     std::string     m_automaticExecutionFunction = "main";
 
-    std::string     m_rpcServerAddress = "localhost:50051";
+    std::string     m_rpcVirtualMachineAddress = "localhost:50051";
+    std::string     m_rpcServerAddress = "localhost:50052";
 
 public:
 
@@ -87,6 +88,14 @@ public:
 
     void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
         m_automaticExecutionFunction = automaticExecutionFunction;
+    }
+
+    const std::string& rpcVirtualMachineAddress() const {
+        return m_rpcVirtualMachineAddress;
+    }
+
+    void setRpcVirtualMachineAddress( const std::string& rpcVirtualMachineAddress ) {
+        m_rpcVirtualMachineAddress = rpcVirtualMachineAddress;
     }
 
     const std::string& rpcServerAddress() const {

@@ -21,25 +21,36 @@ namespace sirius::contract {
 
         virtual void runService() = 0;
 
+        virtual void terminate() = 0;
+
     };
 
-    template <class TService>
+    template <class TService, class THandler>
     class RPCServiceImpl : public RPCService {
 
     protected:
 
-        TService m_service;
+        TService                                     m_service;
         std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
+        std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_handlersExtractor;
+        bool                                         m_terminated = false;
 
     private:
 
-        std::thread m_completionQueueThread;
+        ThreadManager&      m_threadManager;
+        std::thread         m_completionQueueThread;
 
     public:
 
-        RPCServiceImpl() = default;
+        explicit RPCServiceImpl( const std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>>& handlersExtractor,
+                                 ThreadManager& threadManager )
+        : m_handlersExtractor( handlersExtractor )
+        , m_threadManager( threadManager )
+        {}
 
-        ~RPCServiceImpl() override {
+        void terminate() override {
+            m_terminated = true;
+            m_handlersExtractor.template reset();
             if ( m_completionQueue ) {
                 m_completionQueue->Shutdown();
             }
@@ -56,10 +67,10 @@ namespace sirius::contract {
         }
 
         void runService() override {
-            m_completionQueueThread = [this] {
+            m_completionQueueThread = std::thread( [this] {
                 registerCalls();
                 handleCalls();
-            };
+            } );
         }
 
     private:
@@ -72,18 +83,14 @@ namespace sirius::contract {
             while (m_completionQueue->Next(&tag, &ok)) {
                 auto* call = static_cast<RPCCall *>(tag);
                 if (ok) {
-                    call->process();
+                    m_threadManager.execute( [call] {
+                        call->process();
+                    } );
                 }
                 else {
                     delete call;
                 }
             }
-        }
-    };
-
-    class InternetService: public RPCServiceImpl<internet::Internet::AsyncService> {
-        void registerCalls() override {
-            new OpenConnectionRPCInternetRequest(&m_service, m_completionQueue.get());
         }
     };
 }
