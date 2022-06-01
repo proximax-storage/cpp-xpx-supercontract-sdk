@@ -19,18 +19,19 @@ public:
                                       internet::Internet::AsyncService* service,
                                       grpc::ServerCompletionQueue* completionQueue,
                                       std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> handlersExtractor,
-                                      const bool& serviceTerminated )
-    : RPCCallResponse( sessionId, service, completionQueue, handlersExtractor, serviceTerminated ) {
+                                      const bool& serviceTerminated,
+                                      const DebugInfo& debugInfo )
+    : RPCCallResponse( sessionId, service, completionQueue, handlersExtractor, serviceTerminated, debugInfo ) {
         addNextToCompletionQueue();
     }
 
     void process() override {
 
-        // MAIN_THREAD
+        DBG_MAIN_THREAD
 
-        if (m_status == ResponseStatus::READY_TO_PROCESS) {
+        if ( m_status == ResponseStatus::READY_TO_PROCESS ) {
             if ( !m_serviceTerminated ) {
-                new OpenConnectionRPCInternetRequest( m_sessionId, m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated );
+                new OpenConnectionRPCInternetRequest( m_sessionId, m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated, m_dbgInfo );
             }
             auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
 
@@ -57,6 +58,9 @@ public:
 private:
 
     void onSuccess( uint64_t connectionId ) {
+
+        DBG_MAIN_THREAD
+
         m_reply.set_success( true );
         m_reply.set_integer( connectionId );
         m_status = ResponseStatus::READY_TO_FINISH;
@@ -64,6 +68,9 @@ private:
     }
 
     void addNextToCompletionQueue() {
+
+        DBG_MAIN_THREAD
+
         m_service->RequestOpenConnection(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }
 

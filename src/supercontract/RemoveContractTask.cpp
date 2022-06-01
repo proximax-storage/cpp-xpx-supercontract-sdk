@@ -19,24 +19,31 @@ public:
     RemoveContractTask(
             RemoveRequest&& request,
             ContractEnvironment& contractEnvironment,
-            ExecutorEnvironment& executorEnvironment)
-            : BaseContractTask( executorEnvironment, contractEnvironment )
+            ExecutorEnvironment& executorEnvironment,
+            const DebugInfo& debugInfo )
+            : BaseContractTask( executorEnvironment, contractEnvironment, debugInfo )
             , m_request( std::move( request )) {}
 
 public:
 
     void run() override {
+
+        DBG_MAIN_THREAD
+
         m_contractEnvironment.finishTask();
     }
 
     void terminate() override {
+
+        DBG_MAIN_THREAD
+
         m_contractEnvironment.finishTask();
     }
 
 };
 
-std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment& contractEnvironment, ExecutorEnvironment& executorEnvironment) {
-    return std::make_unique<RemoveContractTask>(std::move(request), contractEnvironment, executorEnvironment);
+std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment& contractEnvironment, ExecutorEnvironment& executorEnvironment, const DebugInfo& debugInfo ) {
+    return std::make_unique<RemoveContractTask>( std::move(request), contractEnvironment, executorEnvironment, debugInfo );
 }
 
 }

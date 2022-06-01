@@ -19,13 +19,17 @@ public:
     InitContractTask(
             AddContractRequest&& request,
             ContractEnvironment& contractEnvironment,
-            ExecutorEnvironment& executorEnvironment )
-            : BaseContractTask( executorEnvironment, contractEnvironment )
+            ExecutorEnvironment& executorEnvironment,
+            const DebugInfo& debugInfo )
+            : BaseContractTask( executorEnvironment, contractEnvironment, debugInfo )
             , m_request( std::move(request) ) {}
 
 public:
 
     void run() override {
+
+        DBG_MAIN_THREAD
+
         if ( m_request.m_batchesExecuted > 0 ) {
             // The corresponding storage is not yet fully controlled by the Contract,
             // so the Storage performs necessary synchronization by himself
@@ -43,6 +47,8 @@ public:
     // region blockchain event handler
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+
+        DBG_MAIN_THREAD
 
         const auto& cosigners = info.m_cosigners;
 
@@ -67,8 +73,9 @@ public:
 
 std::unique_ptr<BaseContractTask> createInitContractTask( AddContractRequest&& request,
                                                           ContractEnvironment& contractEnvironment,
-                                                          ExecutorEnvironment& executorEnvironment ) {
-    return std::make_unique<InitContractTask>(std::move(request), contractEnvironment, executorEnvironment);
+                                                          ExecutorEnvironment& executorEnvironment,
+                                                          const DebugInfo& debugInfo ) {
+    return std::make_unique<InitContractTask>( std::move(request), contractEnvironment, executorEnvironment, debugInfo );
 }
 
 }

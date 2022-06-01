@@ -35,6 +35,7 @@ namespace sirius::contract {
         std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
         std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_handlersExtractor;
         bool                                         m_terminated = false;
+        const DebugInfo                              m_dbgInfo;
 
     private:
 
@@ -45,13 +46,18 @@ namespace sirius::contract {
 
         explicit RPCServiceImpl( const SessionId& sessionId,
                                  const std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>>& handlersExtractor,
-                                 ThreadManager& threadManager )
+                                 ThreadManager& threadManager,
+                                 const DebugInfo& debugInfo )
         : m_sessionId( sessionId )
         , m_handlersExtractor( handlersExtractor )
         , m_threadManager( threadManager )
+        , m_dbgInfo( debugInfo )
         {}
 
         void terminate() override {
+
+            DBG_MAIN_THREAD
+
             m_terminated = true;
             m_handlersExtractor.template reset();
             if ( m_completionQueue ) {
@@ -65,13 +71,20 @@ namespace sirius::contract {
     public:
 
         void registerService( grpc::ServerBuilder& builder ) override {
+
+            DBG_MAIN_THREAD
+
             builder.RegisterService(&m_service);
             m_completionQueue = builder.AddCompletionQueue();
         }
 
         void runService() override {
+
+            DBG_MAIN_THREAD
+
+            registerCalls();
+
             m_completionQueueThread = std::thread( [this] {
-                registerCalls();
                 handleCalls();
             } );
         }
@@ -81,6 +94,9 @@ namespace sirius::contract {
         virtual void registerCalls() = 0;
 
         virtual void handleCalls() {
+
+            DBG_SECONDARY_THREAD
+
             void* tag;
             bool ok;
             while (m_completionQueue->Next(&tag, &ok)) {

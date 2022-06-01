@@ -53,6 +53,10 @@ public:
 
         return timer;
     }
+
+    auto threadId() {
+        return m_thread.get_id();
+    }
 };
 
 }

@@ -49,14 +49,18 @@ private:
 
     std::map<uint64_t, DraftBatch> m_batches;
 
+    const DebugInfo m_dbgInfo;
+
 public:
 
     DefaultBatchesManager( uint64_t nextBatchIndex,
                            ContractEnvironment& contractEnvironment,
-                           ExecutorEnvironment& executorEnvironment )
+                           ExecutorEnvironment& executorEnvironment,
+                           const DebugInfo& debugInfo )
             : m_contractEnvironment( contractEnvironment )
             , m_executorEnvironment( executorEnvironment )
             , m_nextBatchIndex( nextBatchIndex )
+            , m_dbgInfo( debugInfo )
             {}
 
 public:
@@ -211,10 +215,6 @@ private:
             m_batches.erase( m_batches.begin());
             m_nextBatchIndex++;
         }
-    }
-
-    std::string dbgPeerName() const {
-        return m_executorEnvironment.dbgPeerName();
     }
 
 };

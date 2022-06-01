@@ -12,6 +12,8 @@
 
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 
+#include "log.h"
+
 namespace sirius::contract {
 
 class RPCCall {
@@ -29,7 +31,10 @@ class RPCCallRequest : public RPCCall {
 
 public:
 
-    explicit RPCCallRequest( const TRequest& request ) : m_request( request ) {}
+    explicit RPCCallRequest( const TRequest& request, const DebugInfo& debugInfo )
+    : m_request( request )
+    , m_dbgInfo( debugInfo )
+    {}
 
 public:
 
@@ -42,6 +47,8 @@ public:
     grpc::Status m_status;
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<TReply>> m_response_reader;
+
+    const DebugInfo m_dbgInfo;
 
 };
 
@@ -56,11 +63,16 @@ public:
 
     explicit ExecuteCallRPCVirtualMachineRequest(
             const supercontractserver::ExecuteRequest& request,
-            VirtualMachineEventHandler& virtualMachineEventHandler )
-            : RPCCallRequest( request)
-            , m_virtualMachineEventHandler( virtualMachineEventHandler ) {}
+            VirtualMachineEventHandler& virtualMachineEventHandler,
+            const DebugInfo& debugInfo )
+            : RPCCallRequest( request, debugInfo )
+            , m_virtualMachineEventHandler( virtualMachineEventHandler )
+            {}
 
     void process() override {
+
+        DBG_SECONDARY_THREAD
+
         if ( m_status.ok() ) {
             auto contractKey = *reinterpret_cast<const ContractKey*>(m_request.contractkey().data());
             auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
@@ -99,15 +111,24 @@ protected:
     grpc::ServerAsyncResponseWriter<TReply> m_responder;
     std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_pWeakHandlersExtractor;
     const bool& m_serviceTerminated;
+    const DebugInfo m_dbgInfo;
 
     void onFailure() {
+
+        DBG_MAIN_THREAD
+
         m_status = ResponseStatus::READY_TO_FINISH;
         m_responder.FinishWithError( grpc::Status::CANCELLED, this );
     }
 
 public:
 
-    RPCCallResponse( const SessionId& sessionId, TService* service, grpc::ServerCompletionQueue* completionQueue, std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor, const bool& serviceTerminated )
+    RPCCallResponse( const SessionId& sessionId,
+                     TService* service,
+                     grpc::ServerCompletionQueue* completionQueue,
+                     std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor,
+                     const bool& serviceTerminated,
+                     const DebugInfo& debugInfo )
             : m_sessionId( sessionId )
             , m_status( ResponseStatus::READY_TO_PROCESS )
             , m_service( service )
@@ -115,6 +136,7 @@ public:
             , m_responder( &m_serverContext )
             , m_pWeakHandlersExtractor( handlersExtractor )
             , m_serviceTerminated( serviceTerminated )
+            , m_dbgInfo( debugInfo )
             {}
 
 };

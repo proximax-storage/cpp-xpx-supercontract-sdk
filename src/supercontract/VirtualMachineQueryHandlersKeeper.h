@@ -11,6 +11,8 @@
 
 #include "types.h"
 
+#include "DebugInfo.h"
+
 namespace sirius::contract {
 
     template <class THandler>
@@ -19,8 +21,11 @@ namespace sirius::contract {
     private:
 
         std::map<CallId, std::shared_ptr<THandler>> m_handlers;
+        const DebugInfo m_dbgInfo;
 
     public:
+
+        VirtualMachineQueryHandlersKeeper( const DebugInfo& debugInfo );
 
         ~VirtualMachineQueryHandlersKeeper();
 

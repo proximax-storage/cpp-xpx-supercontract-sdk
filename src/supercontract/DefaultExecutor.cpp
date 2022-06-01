@@ -13,6 +13,7 @@
 #include "RPCInternetService.h"
 #include "VirtualMachineQueryHandlersKeeper.h"
 #include "RPCServerServiceManager.h"
+#include "DebugInfo.h"
 
 #include "contract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -30,27 +31,27 @@ class DefaultExecutor
           public ExecutorEnvironment {
 
 private:
+
     const crypto::KeyPair& m_keyPair;
 
     std::map<ContractKey, std::unique_ptr<Contract>>    m_contracts;
     std::map<DriveKey, ContractKey>                     m_contractsDriveKeys;
 
     ThreadManager m_threadManager;
+    DebugInfo     m_dbgInfo;
+
     ExecutorConfig m_config;
 
     ExecutorEventHandler& m_eventHandler;
     Messenger& m_messenger;
     Storage& m_storage;
 
+    const SessionId m_virtualMachineSessionId;
+
     std::shared_ptr<VirtualMachine> m_virtualMachine;
 
-    const SessionId m_virtualMachineSessionId;
     std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
     RPCServerServiceManager m_rpcServerServiceManager;
-
-    std::string m_dbgPeerName;
-
-
 
 public:
 
@@ -63,16 +64,18 @@ public:
                      const StorageObserver& storageObserver,
                      const std::string& dbgPeerName = "executor")
                      : m_keyPair(keyPair)
+                     , m_dbgInfo( dbgPeerName, m_threadManager.threadId() )
                      , m_config( config )
                      , m_eventHandler( eventHandler )
                      , m_messenger( messenger )
                      , m_storage( storage )
                      , m_virtualMachineSessionId( utils::generateRandomByteValue<SessionId>() )
-                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>( m_virtualMachineSessionId, storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress()))
-                     , m_rpcServerServiceManager( m_config.rpcServerAddress(), m_virtualMachineSessionId, m_threadManager )
-                     , m_dbgPeerName( dbgPeerName ) {
-        m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>();
-        m_rpcServerServiceManager.run();
+                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>( m_virtualMachineSessionId, storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress(), m_dbgInfo ) )
+                     , m_rpcServerServiceManager( m_config.rpcServerAddress(), m_virtualMachineSessionId, m_threadManager, m_dbgInfo ) {
+        m_threadManager.execute( [this] {
+            m_virtualMachineInternetQueryKeeper = m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>();
+            m_rpcServerServiceManager.run();
+        } );
     }
 
     ~DefaultExecutor() override {
@@ -100,7 +103,7 @@ public:
 
             request.m_executors.erase( it );
 
-            m_contracts[key] = createDefaultContract( key, std::move( request ), *this, m_config );
+            m_contracts[key] = createDefaultContract( key, std::move( request ), *this, m_config, m_dbgInfo );
         } );
     }
 
@@ -305,10 +308,6 @@ public:
 
     std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
         return m_virtualMachineInternetQueryKeeper;
-    }
-
-    std::string dbgPeerName() override {
-        return m_dbgPeerName;
     }
 
     // endregion

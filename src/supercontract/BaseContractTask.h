@@ -20,6 +20,7 @@
 #include "ExecutorEnvironment.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "VirtualMachine.h"
+#include "DebugInfo.h"
 #include "log.h"
 
 namespace sirius::contract {
@@ -33,23 +34,22 @@ protected:
 
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
+    const DebugInfo m_dbgInfo;
 
 public:
 
     explicit BaseContractTask(
             ExecutorEnvironment& executorEnvironment,
-            ContractEnvironment& contractEnvironment )
+            ContractEnvironment& contractEnvironment,
+            const DebugInfo& debugInfo )
             : m_executorEnvironment( executorEnvironment )
             , m_contractEnvironment( contractEnvironment )
+            , m_dbgInfo( debugInfo )
     {}
 
     virtual void run() = 0;
 
     virtual void terminate() = 0;
-
-    std::string dbgPeerName() {
-        return m_executorEnvironment.dbgPeerName();
-    }
 
 };
 

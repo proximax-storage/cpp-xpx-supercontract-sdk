@@ -17,8 +17,9 @@ public:
 
     SynchronizationTask( SynchronizationRequest&& synchronizationRequest,
                          ContractEnvironment& contractEnvironment,
-                         ExecutorEnvironment& executorEnvironment)
-                         : BaseContractTask( executorEnvironment, contractEnvironment )
+                         ExecutorEnvironment& executorEnvironment,
+                         const DebugInfo& debugInfo )
+                         : BaseContractTask( executorEnvironment, contractEnvironment, debugInfo )
                          , m_request( std::move(synchronizationRequest) )
                          {}
 
@@ -27,6 +28,9 @@ public:
     // region blockchain event handler
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+
+        DBG_MAIN_THREAD
+
         const auto& cosigners = info.m_cosigners;
 
         if ( std::find( cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) == cosigners.end() ) {
@@ -40,6 +44,8 @@ public:
 
     bool onStorageSynchronized( uint64_t ) override {
 
+        DBG_MAIN_THREAD
+
         m_contractEnvironment.finishTask();
 
         return true;
@@ -50,20 +56,27 @@ public:
 public:
 
     void run() override {
+
+        DBG_MAIN_THREAD
+
         m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), m_request.m_storageHash );
     }
 
 
     void terminate() override {
+
+        DBG_MAIN_THREAD
+
         m_contractEnvironment.finishTask();
     }
 };
 
 std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&& synchronizationRequest,
                                                              ContractEnvironment& contractEnvironment,
-                                                             ExecutorEnvironment& executorEnvironment ) {
+                                                             ExecutorEnvironment& executorEnvironment,
+                                                             const DebugInfo& debugInfo ) {
     return std::make_unique<SynchronizationTask>( std::move( synchronizationRequest ), contractEnvironment,
-                                                  executorEnvironment );
+                                                  executorEnvironment, debugInfo );
 }
 
 }

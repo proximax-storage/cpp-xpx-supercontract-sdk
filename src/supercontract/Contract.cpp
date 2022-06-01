@@ -14,6 +14,7 @@
 #include "ExecutorEnvironment.h"
 #include "TaskRequests.h"
 #include "batchesManagers/DefaultBatchesManager.h"
+#include "DebugInfo.h"
 
 namespace sirius::contract {
 
@@ -21,7 +22,7 @@ class DefaultContract : public Contract, public ContractEnvironment {
 
 private:
 
-ContractKey                                     m_contractKey;
+    ContractKey                                 m_contractKey;
 
     DriveKey                                    m_driveKey;
     std::set<ExecutorKey>                       m_executors;
@@ -33,6 +34,8 @@ ContractKey                                     m_contractKey;
     ContractConfig                              m_contractConfig;
 
     ProofOfExecution                            m_proofOfExecution;
+
+    const DebugInfo                             m_dbgInfo;
 
     // Requests
     std::unique_ptr<BaseBatchesManager>         m_batchesManager;
@@ -49,7 +52,8 @@ public:
 
     DefaultContract( const ContractKey& contractKey,
                      AddContractRequest&& addContractRequest,
-                     ExecutorEnvironment& contractContext)
+                     ExecutorEnvironment& contractContext,
+                     const DebugInfo& debugInfo )
             : m_contractKey( contractKey )
             , m_driveKey( addContractRequest.m_driveKey )
             , m_executors( std::move(addContractRequest.m_executors) )
@@ -57,17 +61,24 @@ public:
             , m_automaticExecutionsSMLimit( addContractRequest.m_automaticExecutionsSMLimit )
             , m_executorEnvironment( contractContext)
             , m_contractConfig()
-            , m_batchesManager( std::make_unique<DefaultBatchesManager>( addContractRequest.m_batchesExecuted, *this, m_executorEnvironment ) ){
-       runInitializeContractTask(std::move(addContractRequest));
+            , m_dbgInfo( debugInfo )
+            , m_batchesManager( std::make_unique<DefaultBatchesManager>( addContractRequest.m_batchesExecuted, *this, m_executorEnvironment, m_dbgInfo ) ) {
+        runInitializeContractTask(std::move(addContractRequest));
     }
 
     void terminate() override {
+
+        DBG_MAIN_THREAD
+
         if ( m_task ) {
             m_task->terminate();
         }
     }
 
     void addContractCall( const CallRequest& request ) override {
+
+        DBG_MAIN_THREAD
+
         m_batchesManager->addCall( request );
         if ( !m_task ) {
             runTask();
@@ -75,6 +86,9 @@ public:
     }
 
     void removeContract( const RemoveRequest& request ) override {
+
+        DBG_MAIN_THREAD
+
         if ( m_task ) {
             m_task->terminate();
         } else {
@@ -83,19 +97,24 @@ public:
     }
 
     void setExecutors( std::set<ExecutorKey>&& executors ) override {
+
+        DBG_MAIN_THREAD
+
         m_executors = std::move(executors);
     }
 
     void addBlockInfo( const Block& block ) override {
+
+        DBG_MAIN_THREAD
+
         m_batchesManager->addBlockInfo( block );
     }
 
     void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) override {
-        m_batchesManager->setAutomaticExecutionsEnabledSince(blockHeight);
-    }
 
-    std::string dbgPeerName() {
-        return m_executorEnvironment.dbgPeerName();
+        DBG_MAIN_THREAD
+
+        m_batchesManager->setAutomaticExecutionsEnabledSince(blockHeight);
     }
 
 public:
@@ -103,6 +122,9 @@ public:
     // region storage event handler
 
     bool onInitiatedModifications( uint64_t batchIndex ) override {
+
+        DBG_MAIN_THREAD
+
         if ( !m_task ) {
             return false;
         }
@@ -111,6 +133,9 @@ public:
     }
 
     bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
+
+        DBG_MAIN_THREAD
+
         if ( !m_task ) {
             return false;
         }
@@ -121,6 +146,9 @@ public:
     bool
     onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
                             uint64_t fileStructureSize ) override {
+
+        DBG_MAIN_THREAD
+
         if ( !m_task ) {
             return false;
         }
@@ -135,6 +163,8 @@ public:
     // region virtual machine event handler
 
     bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
+
+        DBG_MAIN_THREAD
 
         if ( m_batchesManager->onSuperContractCallExecuted(executionResult) ) {
             return true;
@@ -155,6 +185,8 @@ public:
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
 
+        DBG_MAIN_THREAD
+
         while ( !m_unknownSuccessfulBatchOpinions.empty()
                 && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
             m_unknownSuccessfulBatchOpinions.erase( m_unknownSuccessfulBatchOpinions.begin());
@@ -173,6 +205,9 @@ public:
     }
 
     bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& info ) override {
+
+        DBG_MAIN_THREAD
+
         if ( !m_task ) {
             return false;
         }
@@ -181,6 +216,9 @@ public:
     }
 
     bool onStorageSynchronized( uint64_t batchIndex ) override {
+
+        DBG_MAIN_THREAD
+
         m_batchesManager->onStorageSynchronized( batchIndex );
 
         if ( !m_task ) {
@@ -200,6 +238,9 @@ public:
     // region message event handler
 
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& info ) override {
+
+        DBG_MAIN_THREAD
+
         if ( !m_task || !m_task->onEndBatchExecutionOpinionReceived( info )) {
             if ( info.isSuccessful()) {
                 m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
@@ -218,34 +259,55 @@ public:
     // region task context
 
     const ContractKey& contractKey() const override {
+
+        DBG_MAIN_THREAD
+
         return m_contractKey;
     }
 
     const std::set<ExecutorKey>& executors() const override {
+
+        DBG_MAIN_THREAD
+
         return m_executors;
     }
 
     const DriveKey& driveKey() const override {
+
+        DBG_MAIN_THREAD
+
         return m_driveKey;
     }
 
     uint64_t automaticExecutionsSCLimit() const override {
+
+        DBG_MAIN_THREAD
+
         return m_automaticExecutionsSCLimit;
     }
 
     uint64_t automaticExecutionsSMLimit() const override {
+
+        DBG_MAIN_THREAD
+
         return m_automaticExecutionsSMLimit;
     }
 
     const ContractConfig& contractConfig() const override {
+
+        DBG_MAIN_THREAD
+
         return m_contractConfig;
     }
 
     void finishTask() override {
-
+        DBG_MAIN_THREAD
     }
 
     void addSynchronizationTask( const SynchronizationRequest& request ) override {
+
+        DBG_MAIN_THREAD
+
         m_synchronizationRequest = request;
     }
 
@@ -254,6 +316,8 @@ public:
 private:
 
     void runTask() {
+
+        DBG_MAIN_THREAD
 
         m_task.reset();
 
@@ -269,6 +333,9 @@ private:
     }
 
     void runInitializeContractTask( AddContractRequest&& request ) {
+
+        DBG_MAIN_THREAD
+
         m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment );
 
         m_contractRemoveRequest.reset();
@@ -277,6 +344,9 @@ private:
     }
 
     void runRemoveContractTask() {
+
+        DBG_MAIN_THREAD
+
         _ASSERT( m_contractRemoveRequest )
 
         m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this, m_executorEnvironment );
@@ -287,6 +357,9 @@ private:
     }
 
     void runSynchronizationTask() {
+
+        DBG_MAIN_THREAD
+
         _ASSERT( m_synchronizationRequest )
 
         m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this, m_executorEnvironment );
@@ -297,6 +370,9 @@ private:
     }
 
     void runBatchExecutionTask() {
+
+        DBG_MAIN_THREAD
+
         _ASSERT(  m_batchesManager->hasNextBatch() )
 
         auto batch = m_batchesManager->nextBatch();
@@ -332,8 +408,9 @@ private:
 
 std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
                                                  AddContractRequest&& addContractRequest,
-                                                 ExecutorEnvironment& contractContext) {
-    return std::make_unique<DefaultContract>(contractKey, std::move(addContractRequest), contractContext);
+                                                 ExecutorEnvironment& contractContext,
+                                                 const DebugInfo& debugInfo ) {
+    return std::make_unique<DefaultContract>( contractKey, std::move(addContractRequest), contractContext, debugInfo );
 }
 
 }

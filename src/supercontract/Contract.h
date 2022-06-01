@@ -22,6 +22,7 @@
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "VirtualMachine.h"
 #include "ExecutorEnvironment.h"
+#include "DebugInfo.h"
 
 namespace sirius::contract {
 
@@ -49,6 +50,7 @@ public:
 std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
                                                  AddContractRequest&& addContractRequest,
                                                  ExecutorEnvironment& contractContext,
-                                                 const ExecutorConfig& executorConfig );
+                                                 const ExecutorConfig& executorConfig,
+                                                 const DebugInfo& debugInfo );
 
 }

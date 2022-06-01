@@ -16,14 +16,19 @@ public:
 
     InternetService( const SessionId& sessionId,
                      const std::shared_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>>& handlersExtractor,
-                     ThreadManager& threadManager )
-                     : RPCServiceImpl( sessionId, handlersExtractor, threadManager )
-                     {}
+                     ThreadManager& threadManager,
+                     const DebugInfo& debugInfo )
+                     : RPCServiceImpl( sessionId, handlersExtractor, threadManager, debugInfo ) {
+        DBG_MAIN_THREAD
+    }
 
 private:
 
     void registerCalls() override {
-        new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated );
+
+        DBG_MAIN_THREAD
+
+        new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
     }
 };
 

@@ -8,6 +8,7 @@
 
 #include "grpc++/server_builder.h"
 #include "RPCInternetRequests.h"
+#include "log.h"
 
 namespace sirius::contract {
 
@@ -17,6 +18,8 @@ namespace sirius::contract {
         const SessionId m_sessionId;
         ThreadManager& m_threadManager;
 
+        const DebugInfo m_dbgInfo;
+
         std::vector<std::unique_ptr<RPCService>> m_services;
 
         std::unique_ptr<grpc::ServerBuilder> m_builder;
@@ -24,23 +27,30 @@ namespace sirius::contract {
 
     public:
 
-        RPCServerServiceManager( const std::string& serverAddress, const SessionId& sessionId, ThreadManager& threadManager )
+        RPCServerServiceManager( const std::string& serverAddress, const SessionId& sessionId, ThreadManager& threadManager, const DebugInfo& debugInfo )
         : m_sessionId(sessionId)
-        , m_threadManager( threadManager ) {
+        , m_threadManager( threadManager )
+        , m_dbgInfo( debugInfo ) {
             m_builder = std::make_unique<grpc::ServerBuilder>();
             m_builder->AddListeningPort( serverAddress, grpc::InsecureServerCredentials());
         }
 
         template<class TService, class THandler>
         std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> addService() {
-            auto handler = std::make_shared<VirtualMachineQueryHandlersKeeper<THandler>>();
-            auto service = std::make_unique<TService>( m_sessionId, handler, m_threadManager );
+
+            DBG_MAIN_THREAD
+
+            auto handler = std::make_shared<VirtualMachineQueryHandlersKeeper<THandler>>( m_dbgInfo );
+            auto service = std::make_unique<TService>( m_sessionId, handler, m_threadManager, m_dbgInfo );
             service->registerService( *m_builder );
             m_services.push_back( std::move( service ));
             return handler;
         }
 
         void run() {
+
+            DBG_MAIN_THREAD
+
             m_server = m_builder->BuildAndStart();
             m_builder.reset();
             for (auto& service: m_services) {
@@ -49,6 +59,9 @@ namespace sirius::contract {
         }
 
         void terminate() {
+
+            DBG_MAIN_THREAD
+
             m_server->Shutdown();
             for (auto& service: m_services) {
                 service->terminate();

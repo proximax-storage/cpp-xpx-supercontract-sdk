@@ -40,9 +40,6 @@ public:
     virtual ExecutorConfig& executorConfig() = 0;
 
     virtual std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() = 0;
-
-    virtual std::string dbgPeerName() = 0;
-
 };
 
 }

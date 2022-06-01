@@ -14,6 +14,7 @@
 #include "contract/ThreadManager.h"
 #include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
 #include "contract/AsyncQuery.h"
+#include "DebugInfo.h"
 
 namespace sirius::contract {
 
@@ -36,6 +37,8 @@ private:
 
     std::map<CallId, std::shared_ptr<AsyncQuery>> m_pathQueries;
 
+    const DebugInfo m_dbgInfo;
+
 public:
 
     RPCVirtualMachine(
@@ -43,7 +46,8 @@ public:
             const StorageObserver& storageObserver,
             ThreadManager& threadManager,
             VirtualMachineEventHandler& virtualMachineEventHandler,
-            const std::string& serverAddress )
+            const std::string& serverAddress,
+            const DebugInfo& debugInfo )
             : m_sessionId( sessionId )
             , m_storageObserver( storageObserver )
             , m_threadManager( threadManager )
@@ -52,9 +56,13 @@ public:
                       serverAddress, grpc::InsecureChannelCredentials()))))
             , m_completionQueueThread( [this] {
                 waitForRPCResponse();
-            } ) {}
+            } )
+            , m_dbgInfo( debugInfo ) {}
 
     ~RPCVirtualMachine() override {
+
+        DBG_MAIN_THREAD
+
         for ( auto& [_, query]: m_pathQueries ) {
             query->terminate();
         }
@@ -65,6 +73,9 @@ public:
     }
 
     void executeCall( const ContractKey& contractKey, const CallRequest& request ) override {
+
+        DBG_MAIN_THREAD
+
         std::function<void( std::string&& )> call = [=, this, request = request](
                 std::string&& callAbsolutePath ) mutable -> void {
             onReceivedCallAbsolutePath( contractKey, std::move( request ), std::move( callAbsolutePath ));
@@ -80,6 +91,8 @@ private:
     onReceivedCallAbsolutePath( const ContractKey& contractKey, CallRequest&& request,
                                 std::string&& callAbsolutePath ) {
 
+        DBG_MAIN_THREAD
+
         m_pathQueries.erase( request.m_callId );
 
         request.m_file = callAbsolutePath;
@@ -92,7 +105,7 @@ private:
         rpcRequest.set_scprepayment( request.m_scLimit );
         rpcRequest.set_smprepayment( request.m_smLimit );
 
-        auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler );
+        auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler, m_dbgInfo );
 
         call->m_response_reader =
                 m_stub->PrepareAsyncExecuteCall( &call->m_context, rpcRequest, &m_completionQueue );
@@ -102,6 +115,9 @@ private:
     }
 
     void waitForRPCResponse() {
+
+        DBG_SECONDARY_THREAD
+
         void* pTag;
         bool ok;
         while ( m_completionQueue.Next( &pTag, &ok )) {

@@ -24,33 +24,52 @@ private:
 
     std::shared_ptr<AsyncQuery> m_asyncQuery;
 
+    const DebugInfo m_dbgInfo;
+
 public:
 
     CallExecutionEnvironment( const CallRequest& request,
                               ExecutorEnvironment& executorEnvironment,
-                              ContractEnvironment& contractEnvironment )
+                              ContractEnvironment& contractEnvironment,
+                              const DebugInfo& debugInfo )
     : m_callRequest( request )
     , m_executorEnvironment( executorEnvironment )
     , m_contractEnvironment( contractEnvironment )
+    , m_dbgInfo( debugInfo )
     {}
 
     const CallId& callId() const {
+
+        DBG_MAIN_THREAD
+
         return m_callRequest.m_callId;
     }
 
     const CallRequest& callRequest() const {
+
+        DBG_MAIN_THREAD
+
         return m_callRequest;
     }
 
     const CallExecutionResult& callExecutionResult() const {
+
+        DBG_MAIN_THREAD
+
         return *m_callExecutionResult;
     }
 
     void setCallExecutionResult( const CallExecutionResult& callExecutionResult ) {
+
+        DBG_MAIN_THREAD
+
         m_callExecutionResult = callExecutionResult;
     }
 
     void terminate() {
+
+        DBG_MAIN_THREAD
+
         if ( m_asyncQuery ) {
             m_asyncQuery->terminate();
         }

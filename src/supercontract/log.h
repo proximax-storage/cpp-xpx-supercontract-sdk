@@ -15,18 +15,15 @@ inline std::mutex gLogMutex;
 #define DEBUG_OFF_CATAPULT
 #endif
 
-#define LOG(expr)
-
-// __LOG
 #ifdef DEBUG_OFF_CATAPULT
-    #define __LOG(expr) { \
+    #define LOG(expr) { \
             const std::lock_guard<std::mutex> autolock( gLogMutex ); \
             std::cout << expr << std::endl << std::flush; \
         }
 #else
-    #define __LOG(expr) { \
+    #define LOG(expr) { \
             std::ostringstream out; \
-            out << dbgPeerName() << ": " << expr; \
+            out << m_dbgInfo.m_peerName << ": " << expr; \
             CATAPULT_LOG(debug) << out.str(); \
     }
 #endif
@@ -35,12 +32,12 @@ inline std::mutex gLogMutex;
 #ifdef DEBUG_OFF_CATAPULT
     #define _LOG(expr) { \
             const std::lock_guard<std::mutex> autolock( gLogMutex ); \
-            std::cout << dbgPeerName() << ": " << expr << std::endl << std::flush; \
+            std::cout << m_dbgInfo.m_peerName << ": " << expr << std::endl << std::flush; \
         }
 #else
     #define _LOG(expr) { \
             std::ostringstream out; \
-            out << dbgPeerName() << ": " << expr; \
+            out << m_dbgInfo.m_peerName << ": " << expr; \
             CATAPULT_LOG(debug) << out.str(); \
         }
 #endif
@@ -51,26 +48,26 @@ inline bool gBreakOnWarning = false;
 #ifdef DEBUG_OFF_CATAPULT
     #define _LOG_WARN(expr) { \
             const std::lock_guard<std::mutex> autolock( gLogMutex ); \
-            std::cout << dbgPeerName() << ": WARNING!!! in " << __FUNCTION__ << "() " << expr << std::endl << std::flush; \
+            std::cout << m_dbgInfo.m_peerName << ": WARNING!!! in " << __FUNCTION__ << "() " << expr << std::endl << std::flush; \
             if ( gBreakOnWarning ) { assert(0); } \
         }
 #else
     #define _LOG_WARN(expr) { \
             std::ostringstream out; \
-            cout << dbgPeerName() << ": WARNING!!! in " << __FUNCTION__ << "() " << expr; \
+            cout << m_dbgInfo.m_peerName << ": WARNING!!! in " << __FUNCTION__ << "() " << expr; \
             CATAPULT_LOG(debug) << out.str(); \
             if ( gBreakOnWarning ) { assert(0); } \
         }
 #endif
 
 #ifdef DEBUG_OFF_CATAPULT
-    #define __LOG_WARN(expr) { \
+    #define LOG_WARN(expr) { \
             const std::lock_guard<std::mutex> autolock( gLogMutex ); \
             std::cout << ": WARNING!!! in " << __FUNCTION__ << "() " << expr << std::endl << std::flush; \
             if ( gBreakOnWarning ) { assert(0); } \
         }
 #else
-    #define __LOG_WARN(expr) { \
+    #define LOG_WARN(expr) { \
             std::ostringstream out; \
             cout << ": WARNING!!! in " << __FUNCTION__ << "() " << expr; \
             CATAPULT_LOG(debug) << out.str(); \
@@ -101,7 +98,7 @@ inline bool gBreakOnError = true;
 #else
 #define _FUNC_ENTRY() { \
         const std::lock_guard<std::mutex> autolock( gLogMutex ); \
-        std::cout << dbgPeerName() << ": call: " << __PRETTY_FUNCTION__ << std::endl << std::flush; \
+        std::cout << m_dbgInfo.m_peerName << ": call: " << __PRETTY_FUNCTION__ << std::endl << std::flush; \
     }
 #endif
 
@@ -109,14 +106,14 @@ inline bool gBreakOnError = true;
     if (!(expr)) {\
         const std::lock_guard<std::mutex> autolock( gLogMutex ); \
         if (0) \
-            std::cerr << dbgPeerName() << ": " << __FILE__ << ":" << __LINE__ << " failed: " << #expr << "\n" << std::flush; \
+            std::cerr << m_dbgInfo.m_peerName << ": " << __FILE__ << ":" << __LINE__ << " failed: " << #expr << "\n" << std::flush; \
         else \
-            std::cerr << dbgPeerName() << ": failed assert: " << #expr << "\n" << std::flush; \
+            std::cerr << m_dbgInfo.m_peerName << ": failed assert: " << #expr << "\n" << std::flush; \
         assert(0); \
     }\
 }
 
-#define __ASSERT(expr) { \
+#define ASSERT(expr) { \
     if (!(expr)) {\
         const std::lock_guard<std::mutex> autolock( gLogMutex ); \
             std::cerr << __FILE__ << ":" << __LINE__ << " failed: " << #expr << "\n" << std::flush; \
@@ -124,3 +121,6 @@ inline bool gBreakOnError = true;
         assert(0); \
     }\
 }
+
+#define DBG_MAIN_THREAD { _FUNC_ENTRY(); _ASSERT( m_dbgInfo.m_threadId == std::this_thread::get_id() ); }
+#define DBG_SECONDARY_THREAD { _ASSERT( m_dbgInfo.m_threadId != std::this_thread::get_id() ); }
