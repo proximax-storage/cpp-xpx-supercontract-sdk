@@ -38,7 +38,6 @@ foreach(_service supercontract_server internet)
             ${_GRPC_GRPCPP}
             ${_PROTOBUF_LIBPROTOBUF})
 
-    # Targets greeter_[async_](client|server)
     target_link_libraries(supercontract
             ${_service}_grpc_proto
             ${_REFLECTION}

@@ -66,6 +66,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 endif()
 
 add_subdirectory(src)
+add_subdirectory(test)
 
 if (XPX_supercontract_SDK_BUILD_EXAMPLES)
 #    add_subdirectory(examples)
