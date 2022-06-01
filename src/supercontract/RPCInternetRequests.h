@@ -15,11 +15,12 @@ class OpenConnectionRPCInternetRequest
         : public RPCCallResponse<internet::Internet::AsyncService, internet::String, internet::ReturnStatus, VirtualMachineInternetQueryHandler> {
 public:
 
-    OpenConnectionRPCInternetRequest( internet::Internet::AsyncService* service,
+    OpenConnectionRPCInternetRequest( const SessionId& sessionId,
+                                      internet::Internet::AsyncService* service,
                                       grpc::ServerCompletionQueue* completionQueue,
                                       std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> handlersExtractor,
                                       const bool& serviceTerminated )
-    : RPCCallResponse( service, completionQueue, handlersExtractor, serviceTerminated ) {
+    : RPCCallResponse( sessionId, service, completionQueue, handlersExtractor, serviceTerminated ) {
         addNextToCompletionQueue();
     }
 
@@ -29,7 +30,7 @@ public:
 
         if (m_status == ResponseStatus::READY_TO_PROCESS) {
             if ( !m_serviceTerminated ) {
-                new OpenConnectionRPCInternetRequest( m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated );
+                new OpenConnectionRPCInternetRequest( m_sessionId, m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated );
             }
             auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
 

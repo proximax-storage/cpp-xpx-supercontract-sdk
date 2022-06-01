@@ -121,6 +121,7 @@ namespace sirius {
     DECL_KEY( CallerKey );
 
     DECL_HASH( CallId )
+    DECL_HASH( SessionId )
     DECL_HASH( StorageHash )
     DECL_HASH( BlockHash )
 

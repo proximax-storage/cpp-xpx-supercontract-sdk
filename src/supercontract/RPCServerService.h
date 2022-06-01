@@ -30,6 +30,7 @@ namespace sirius::contract {
 
     protected:
 
+        const SessionId                              m_sessionId;
         TService                                     m_service;
         std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
         std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_handlersExtractor;
@@ -42,9 +43,11 @@ namespace sirius::contract {
 
     public:
 
-        explicit RPCServiceImpl( const std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>>& handlersExtractor,
+        explicit RPCServiceImpl( const SessionId& sessionId,
+                                 const std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>>& handlersExtractor,
                                  ThreadManager& threadManager )
-        : m_handlersExtractor( handlersExtractor )
+        : m_sessionId( sessionId )
+        , m_handlersExtractor( handlersExtractor )
         , m_threadManager( threadManager )
         {}
 

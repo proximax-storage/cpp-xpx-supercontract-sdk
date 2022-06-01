@@ -19,6 +19,7 @@
 #include "types.h"
 
 #include "utils/Serializer.h"
+#include "utils/Random.h"
 #include "log.h"
 
 namespace sirius::contract {
@@ -43,14 +44,18 @@ private:
 
     std::shared_ptr<VirtualMachine> m_virtualMachine;
 
+    const SessionId m_virtualMachineSessionId;
     std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
     RPCServerServiceManager m_rpcServerServiceManager;
 
     std::string m_dbgPeerName;
 
+
+
 public:
 
     DefaultExecutor( const crypto::KeyPair& keyPair,
+                     const SessionId& sessionId,
                      const ExecutorConfig config,
                      ExecutorEventHandler& eventHandler,
                      Messenger& messenger,
@@ -62,10 +67,11 @@ public:
                      , m_eventHandler( eventHandler )
                      , m_messenger( messenger )
                      , m_storage( storage )
-                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>(storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress()))
-                     , m_rpcServerServiceManager( m_config.rpcServerAddress() )
+                     , m_virtualMachineSessionId( utils::generateRandomByteValue<SessionId>() )
+                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>( m_virtualMachineSessionId, storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress()))
+                     , m_rpcServerServiceManager( m_config.rpcServerAddress(), m_virtualMachineSessionId, m_threadManager )
                      , m_dbgPeerName( dbgPeerName ) {
-        m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>( m_threadManager );
+        m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>();
         m_rpcServerServiceManager.run();
     }
 

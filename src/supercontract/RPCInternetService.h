@@ -14,15 +14,16 @@ class InternetService: public RPCServiceImpl<internet::Internet::AsyncService, V
 
 public:
 
-    InternetService( const std::shared_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>>& handlersExtractor,
+    InternetService( const SessionId& sessionId,
+                     const std::shared_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>>& handlersExtractor,
                      ThreadManager& threadManager )
-                     : RPCServiceImpl( handlersExtractor, threadManager )
+                     : RPCServiceImpl( sessionId, handlersExtractor, threadManager )
                      {}
 
 private:
 
     void registerCalls() override {
-        new OpenConnectionRPCInternetRequest( &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated );
+        new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated );
     }
 };
 

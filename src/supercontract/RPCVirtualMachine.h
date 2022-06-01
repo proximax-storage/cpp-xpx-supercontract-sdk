@@ -21,6 +21,8 @@ class RPCVirtualMachine : public VirtualMachine {
 
 private:
 
+    SessionId m_sessionId;
+
     const StorageObserver& m_storageObserver;
 
     ThreadManager& m_threadManager;
@@ -37,11 +39,13 @@ private:
 public:
 
     RPCVirtualMachine(
+            const SessionId& sessionId,
             const StorageObserver& storageObserver,
             ThreadManager& threadManager,
             VirtualMachineEventHandler& virtualMachineEventHandler,
             const std::string& serverAddress )
-            : m_storageObserver( storageObserver )
+            : m_sessionId( sessionId )
+            , m_storageObserver( storageObserver )
             , m_threadManager( threadManager )
             , m_virtualMachineEventHandler( virtualMachineEventHandler )
             , m_stub( std::move(supercontractserver::SupercontractServer::NewStub( grpc::CreateChannel(

@@ -89,6 +89,7 @@ protected:
         READY_TO_FINISH
     };
 
+    const SessionId m_sessionId;
     ResponseStatus m_status;
     TService* m_service;
     grpc::ServerCompletionQueue* m_completionQueue;
@@ -106,8 +107,9 @@ protected:
 
 public:
 
-    RPCCallResponse( TService* service, grpc::ServerCompletionQueue* completionQueue, std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor, const bool& serviceTerminated )
-            : m_status( ResponseStatus::READY_TO_PROCESS )
+    RPCCallResponse( const SessionId& sessionId, TService* service, grpc::ServerCompletionQueue* completionQueue, std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor, const bool& serviceTerminated )
+            : m_sessionId( sessionId )
+            , m_status( ResponseStatus::READY_TO_PROCESS )
             , m_service( service )
             , m_completionQueue( completionQueue )
             , m_responder( &m_serverContext )

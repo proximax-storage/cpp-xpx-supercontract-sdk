@@ -14,6 +14,8 @@ namespace sirius::contract {
     class RPCServerServiceManager {
 
     private:
+        const SessionId m_sessionId;
+        ThreadManager& m_threadManager;
 
         std::vector<std::unique_ptr<RPCService>> m_services;
 
@@ -22,15 +24,17 @@ namespace sirius::contract {
 
     public:
 
-        RPCServerServiceManager( const std::string& serverAddress ) {
+        RPCServerServiceManager( const std::string& serverAddress, const SessionId& sessionId, ThreadManager& threadManager )
+        : m_sessionId(sessionId)
+        , m_threadManager( threadManager ) {
             m_builder = std::make_unique<grpc::ServerBuilder>();
             m_builder->AddListeningPort( serverAddress, grpc::InsecureServerCredentials());
         }
 
         template<class TService, class THandler>
-        std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> addService( ThreadManager& threadManager ) {
+        std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> addService() {
             auto handler = std::make_shared<VirtualMachineQueryHandlersKeeper<THandler>>();
-            auto service = std::make_unique<TService>( handler, threadManager );
+            auto service = std::make_unique<TService>( m_sessionId, handler, m_threadManager );
             service->registerService( *m_builder );
             m_services.push_back( std::move( service ));
             return handler;
