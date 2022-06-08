@@ -17,10 +17,6 @@ include(FetchContent)
 FetchContent_Declare(
         grpc
         GIT_REPOSITORY https://github.com/grpc/grpc.git
-        # when using gRPC, you will actually set this to an existing tag, such as
-        # v1.25.0, v1.26.0 etc..
-        # For the purpose of testing, we override the tag used to the commit
-        # that's currently under test.
         GIT_TAG        v1.45.2)
 FetchContent_MakeAvailable(grpc)
 

@@ -1,4 +1,3 @@
-
 // Copyright 2015 gRPC authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,10 +36,11 @@ message PingReply {
 message ExecuteRequest {
   bytes contractKey = 1;
   bytes callId = 2;
+  bytes session_id = 9;
   string fileToCall = 3;
   string functionToCall = 4;
   string parameters = 5;
-  bytes poExSecretDataPrefix = 6;
+  uint64 poExSecretDataPrefix = 6;
   uint64 scPrepayment = 7;
   uint64 smPrepayment = 8;
 }

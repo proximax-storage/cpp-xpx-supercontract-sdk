@@ -301,7 +301,10 @@ public:
     }
 
     void finishTask() override {
+
         DBG_MAIN_THREAD
+
+        runTask();
     }
 
     void addSynchronizationTask( const SynchronizationRequest& request ) override {

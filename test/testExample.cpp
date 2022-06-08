@@ -5,6 +5,7 @@
 */
 
 #include "gtest/gtest.h"
+#include "supercontract/batchesManagers/DefaultBatchesManager.h"
 
 namespace sirius::contract::test {
 

@@ -12,12 +12,14 @@ message String {
   bytes contractKey = 1;
   bytes callId = 2;
   string str = 3;
+  bytes session_id = 5;
 }
 
 message Uint64 {
   bytes contractKey = 1;
   bytes callId = 2;
   uint64 integer = 3;
+  bytes session_id = 5;
 }
 
 message Bool {

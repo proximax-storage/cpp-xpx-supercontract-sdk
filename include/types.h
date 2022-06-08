@@ -103,7 +103,7 @@ namespace sirius {
             HashName() = default; \
             HashName( const Hash256& key ) : Hash256(key) {} \
             HashName( const std::array<uint8_t,32>& array ) : Hash256(array) {} \
-            \
+            HashName( const std::string& s ) : HashName(*reinterpret_cast<const HashName*>(s.data())) {} \
             int operator[]( std::array<uint8_t,32>::size_type pos ) const { return (int) static_cast<const Hash256&>(*this)[pos]; } \
             \
             template<class Archive> \

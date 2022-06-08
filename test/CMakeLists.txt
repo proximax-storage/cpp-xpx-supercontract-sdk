@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.2)
+
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
+
 project(supercontract-tests)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -15,7 +18,8 @@ endif()
 
 add_executable(supercontract-tests ${TEST_FILES})
 
-include_directories(${GTEST_INCLUDE_DIRS})
+#include_directories(${GTEST_INCLUDE_DIRS})
+include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     add_definitions(-D_GNU_SOURCE)

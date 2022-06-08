@@ -29,7 +29,8 @@ public:
 
         DBG_MAIN_THREAD
 
-        if ( m_status == ResponseStatus::READY_TO_PROCESS ) {
+        SessionId sessionId( m_request.session_id() );
+        if ( m_status == ResponseStatus::READY_TO_PROCESS && sessionId == m_sessionId ) {
             if ( !m_serviceTerminated ) {
                 new OpenConnectionRPCInternetRequest( m_sessionId, m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated, m_dbgInfo );
             }
@@ -51,6 +52,9 @@ public:
                 onFailure();
             }
         } else {
+            if ( m_sessionId != sessionId ) {
+                _LOG_WARN( "Incorrect Session Id " << sessionId << " " << m_sessionId );
+            }
             delete this;
         }
     }
