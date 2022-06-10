@@ -54,6 +54,10 @@ public:
         return timer;
     }
 
+    boost::asio::io_context& context() {
+        return m_context;
+    }
+
     auto threadId() {
         return m_thread.get_id();
     }

@@ -8,10 +8,11 @@
 
 #include "types.h"
 #include "contract/AsyncQuery.h"
+#include "DefaultInternetConnection.h"
 
 namespace sirius::contract {
 
-class CallExecutionEnvironment: public VirtualMachineInternetQueryHandler {
+class CallExecutionEnvironment : public VirtualMachineInternetQueryHandler {
 
 private:
 
@@ -24,6 +25,9 @@ private:
 
     std::shared_ptr<AsyncQuery> m_asyncQuery;
 
+    uint64_t totalConnectionsCreated = 0;
+    std::map<uint64_t, std::unique_ptr<InternetConnection>> m_internetConnections;
+
     const DebugInfo m_dbgInfo;
 
 public:
@@ -32,11 +36,8 @@ public:
                               ExecutorEnvironment& executorEnvironment,
                               ContractEnvironment& contractEnvironment,
                               const DebugInfo& debugInfo )
-    : m_callRequest( request )
-    , m_executorEnvironment( executorEnvironment )
-    , m_contractEnvironment( contractEnvironment )
-    , m_dbgInfo( debugInfo )
-    {}
+            : m_callRequest( request ), m_executorEnvironment( executorEnvironment ),
+              m_contractEnvironment( contractEnvironment ), m_dbgInfo( debugInfo ) {}
 
     const CallId& callId() const {
 
@@ -77,7 +78,80 @@ public:
 
     // region internet
 
+    void
+    openConnection( const std::string& host,
+                    const std::string& target,
+                    std::function<void( std::optional<uint64_t>&& )>&& callback,
+                    std::function<void()>&& terminateCallback ) override {
 
+        DBG_MAIN_THREAD
+
+        _ASSERT( !m_asyncQuery )
+
+        auto[connectionIt, insertSuccess] = m_internetConnections.insert(
+                {totalConnectionsCreated,
+                 std::make_unique<DefaultInternetConnection>( m_executorEnvironment.threadManager(), host, target,
+                                                              m_dbgInfo )} );
+        _ASSERT( insertSuccess )
+        auto query = std::make_shared<AbstractAsyncQuery<bool>>( [this, callback = std::move(
+                callback ), connectionId = totalConnectionsCreated]
+                                                                         ( bool&& success ) {
+            // If the callback is executed, 'this' will always be alive
+            if ( !success ) {
+                m_internetConnections.erase( connectionId );
+                callback( {} );
+            } else {
+                callback( connectionId );
+            }
+            m_asyncQuery.reset();
+        }, std::move( terminateCallback ), m_executorEnvironment.threadManager());
+        totalConnectionsCreated++;
+        m_asyncQuery = query;
+        connectionIt->second->open( query );
+    }
+
+    void read( uint64_t connectionId, std::function<void( std::optional<std::vector<uint8_t>>&& )>&& callback,
+               std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( !m_asyncQuery )
+
+        auto connectionIt = m_internetConnections.find( connectionId );
+        if ( connectionIt == m_internetConnections.end()) {
+            callback( {} );
+        }
+
+        auto query = std::make_shared<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>>(
+                [this, callback = std::move(
+                        callback ), connectionId = totalConnectionsCreated]
+                        ( std::optional<std::vector<uint8_t>>&& data ) {
+                    // If the callback is executed, 'this' will always be alive
+                    callback( std::move( data ));
+                    m_asyncQuery.reset();
+                },
+                std::move(
+                        terminateCallback ),
+                m_executorEnvironment.threadManager());
+        m_asyncQuery = query;
+        connectionIt->second->read( query );
+    }
+
+    void close( uint64_t connectionId, std::function<void( bool )>&& callback,
+                std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( !m_asyncQuery )
+
+        auto connectionIt = m_internetConnections.find( connectionId );
+        if ( connectionIt == m_internetConnections.end()) {
+            callback( false );
+        }
+
+        m_internetConnections.erase( connectionIt );
+        callback( true );
+    }
 
     // endregion
 

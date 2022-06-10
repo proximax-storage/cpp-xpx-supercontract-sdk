@@ -34,7 +34,7 @@ public:
             if ( !m_serviceTerminated ) {
                 new OpenConnectionRPCInternetRequest( m_sessionId, m_service, m_completionQueue, m_pWeakHandlersExtractor, m_serviceTerminated, m_dbgInfo );
             }
-            auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
+            CallId callId( m_request.callid());
 
             std::shared_ptr<VirtualMachineInternetQueryHandler> pHandler;
             if ( auto pHandlersExtractor = m_pWeakHandlersExtractor.lock(); pHandlersExtractor ) {
@@ -42,14 +42,14 @@ public:
             }
 
             if ( pHandler ) {
-                pHandler->openConnection( m_request.str(), [this]( uint64_t connectionId ) {
+                pHandler->openConnection( m_request.str(), "", [this]( const std::optional<uint64_t>& connectionId ) {
                     onSuccess( connectionId );
                 }, [this] {
-                    onFailure();
+                    onTerminate();
                 } );
             }
             else {
-                onFailure();
+                onTerminate();
             }
         } else {
             if ( m_sessionId != sessionId ) {
@@ -61,12 +61,17 @@ public:
 
 private:
 
-    void onSuccess( uint64_t connectionId ) {
+    void onSuccess( const std::optional<uint64_t>& connectionId ) {
 
         DBG_MAIN_THREAD
 
-        m_reply.set_success( true );
-        m_reply.set_integer( connectionId );
+        if ( connectionId.has_value() ) {
+            m_reply.set_success( true );
+            m_reply.set_integer( *connectionId );
+        }
+        else {
+            m_reply.set_success(false);
+        }
         m_status = ResponseStatus::READY_TO_FINISH;
         m_responder.Finish( m_reply, grpc::Status::OK, this );
     }

@@ -113,7 +113,7 @@ protected:
     const bool& m_serviceTerminated;
     const DebugInfo m_dbgInfo;
 
-    void onFailure() {
+    void onTerminate() {
 
         DBG_MAIN_THREAD
 

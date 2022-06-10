@@ -80,7 +80,7 @@ public:
                 std::string&& callAbsolutePath ) mutable -> void {
             onReceivedCallAbsolutePath( contractKey, std::move( request ), std::move( callAbsolutePath ));
         };
-        auto callback = std::make_shared<AbstractAsyncQuery<std::string>>(call, m_threadManager );
+        auto callback = std::make_shared<AbstractAsyncQuery<std::string>>( call, [] {}, m_threadManager );
         m_pathQueries[request.m_callId] = callback;
         m_storageObserver.getAbsolutePath( request.m_file, callback );
     }

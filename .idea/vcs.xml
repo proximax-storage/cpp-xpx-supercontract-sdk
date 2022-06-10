@@ -3,6 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cereal" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/curl-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/grpc-src" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/grpc-src/third_party/abseil-cpp" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/cmake-build-debug/_deps/grpc-src/third_party/benchmark" vcs="Git" />
