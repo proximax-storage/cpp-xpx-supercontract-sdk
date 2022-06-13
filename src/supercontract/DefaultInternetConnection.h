@@ -44,6 +44,9 @@ private:
     http::parser<false, http::buffer_body> m_res;
     std::vector<uint8_t> m_readDataBuffer;
 
+    int m_timeout;
+    std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
+
     const DebugInfo m_dbgInfo;
 
 public:
@@ -52,14 +55,19 @@ public:
             ThreadManager& threadManager,
             const std::string& host,
             const std::string& target,
+            int timeout,
             const DebugInfo& debugInfo )
     : m_threadManager( threadManager )
     , m_host( host )
     , m_target( target )
     , m_resolver( threadManager.context() )
     , m_stream( threadManager.context() )
+    , m_timeout( timeout )
     , m_dbgInfo( debugInfo )
-    {}
+    {
+        m_stream.expires_never();
+        m_res.body_limit(-1);
+    }
 
 public:
 
@@ -86,6 +94,8 @@ public:
                             }
                         } )
         );
+
+        runTimeoutTimer();
     }
 
     void read( std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback ) override {
@@ -115,9 +125,8 @@ public:
                         pThis->onRead( ec, bytes_transferred, callback );
                     }
                 } ));
-    }
 
-    void close( std::weak_ptr<AbstractAsyncQuery<bool>> ) override {
+        runTimeoutTimer();
     }
 
     ~DefaultInternetConnection() override {
@@ -134,6 +143,7 @@ private:
 
         m_resolver.cancel();
         m_stream.close();
+        m_timeoutTimer.reset();
     }
 
     void
@@ -143,6 +153,8 @@ private:
             std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        m_timeoutTimer.reset();
 
         auto c = callback.lock();
 
@@ -168,6 +180,8 @@ private:
                             }
                         }
                 ));
+
+        runTimeoutTimer();
     }
 
     void
@@ -176,6 +190,8 @@ private:
                  std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        m_timeoutTimer.reset();
 
         auto c = callback.lock();
 
@@ -196,6 +212,8 @@ private:
                                    pThis->onWritten( ec, bytes_transferred, callback );
                                }
                            } ));
+
+        runTimeoutTimer();
     }
 
     void onWritten( beast::error_code ec,
@@ -203,6 +221,8 @@ private:
                     std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        m_timeoutTimer.reset();
 
         auto c = callback.lock();
 
@@ -226,6 +246,8 @@ private:
     ) {
 
         DBG_MAIN_THREAD
+
+        m_timeoutTimer.reset();
 
         auto c = callback.lock();
 
@@ -259,7 +281,19 @@ private:
                             pThis->onRead( ec, bytes_transferred, callback );
                         }
                     } ));
+            runTimeoutTimer();
         }
+    }
+
+    void runTimeoutTimer() {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( !m_timeoutTimer )
+
+        m_timeoutTimer = m_threadManager.startTimer( m_timeout, [this] {
+            close();
+        } );
     }
 };
 

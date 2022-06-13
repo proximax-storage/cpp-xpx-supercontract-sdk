@@ -91,6 +91,7 @@ public:
         auto[connectionIt, insertSuccess] = m_internetConnections.insert(
                 {totalConnectionsCreated,
                  std::make_unique<DefaultInternetConnection>( m_executorEnvironment.threadManager(), host, target,
+                                                              m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                               m_dbgInfo )} );
         _ASSERT( insertSuccess )
         auto query = std::make_shared<AbstractAsyncQuery<bool>>( [this, callback = std::move(

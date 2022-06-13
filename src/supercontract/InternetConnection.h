@@ -18,8 +18,6 @@ public:
 
     virtual void read( std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> ) = 0;
 
-    virtual void close( std::weak_ptr<AbstractAsyncQuery<bool>> ) = 0;
-
 };
 
 }

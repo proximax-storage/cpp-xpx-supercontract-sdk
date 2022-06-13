@@ -32,6 +32,8 @@ private:
     std::string     m_rpcVirtualMachineAddress = "localhost:50051";
     std::string     m_rpcServerAddress = "localhost:50052";
 
+    int             m_internetConnectionTimeoutMilliseconds = 10000;
+
 public:
 
     int unsuccessfulExecutionDelayMs() const {
@@ -104,6 +106,14 @@ public:
 
     void setRpcServerAddress( const std::string& rpcServerAddress ) {
         m_rpcServerAddress = rpcServerAddress;
+    }
+
+    int internetConnectionTimeoutMilliseconds() const {
+        return m_internetConnectionTimeoutMilliseconds;
+    }
+
+    void setInternetConnectionTimeoutMilliseconds( int internetConnectionTimeoutMilliseconds ) {
+        m_internetConnectionTimeoutMilliseconds = internetConnectionTimeoutMilliseconds;
     }
 };
 
