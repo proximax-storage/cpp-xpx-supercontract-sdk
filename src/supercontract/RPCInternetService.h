@@ -29,6 +29,8 @@ private:
         DBG_MAIN_THREAD
 
         new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
+        new ReadConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
+        new CloseConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
     }
 };
 

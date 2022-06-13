@@ -39,7 +39,7 @@ message ExecuteRequest {
   bytes session_id = 9;
   string fileToCall = 3;
   string functionToCall = 4;
-  string parameters = 5;
+  bytes parameters = 5;
   uint64 poExSecretDataPrefix = 6;
   uint64 scPrepayment = 7;
   uint64 smPrepayment = 8;
@@ -49,5 +49,6 @@ message ExecuteReturns {
   bool success = 1;
   uint64 scConsumed = 2;
   uint64 smConsumed = 3;
-  bytes poExSecretData = 4;
+  uint64 poExSecretData = 4;
+  uint32 return_val = 5;
 }
