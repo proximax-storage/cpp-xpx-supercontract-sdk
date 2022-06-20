@@ -13,172 +13,172 @@
 
 namespace sirius::contract::test {
 
-#define TEST_NAME Example
+    #define TEST_NAME Example
 
-// ExecutorEnvironmentMock
-class ExecutorEnvironmentMock: public ExecutorEnvironment {
+    // ExecutorEnvironmentMock
+    class ExecutorEnvironmentMock: public ExecutorEnvironment {
 
-private: 
+    private: 
 
-    const crypto::KeyPair& m_keyPair;
-    ThreadManager m_threadManager;
-    Messenger& m_messenger;
-    Storage& m_storage;
-    ExecutorEventHandler& m_eventHandler;
-    std::shared_ptr<VirtualMachine> m_virtualMachine;
-    ExecutorConfig m_config;
-    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
+        const crypto::KeyPair& m_keyPair;
+        ThreadManager m_threadManager;
+        Messenger& m_messenger;
+        Storage& m_storage;
+        ExecutorEventHandler& m_eventHandler;
+        std::shared_ptr<VirtualMachine> m_virtualMachine;
+        ExecutorConfig m_config;
+        std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
 
-public:
+    public:
 
-    ~ExecutorEnvironmentMock() = default;
+        ~ExecutorEnvironmentMock() = default;
 
-    const crypto::KeyPair& keyPair() const override {
-        return m_keyPair;
-    }
+        const crypto::KeyPair& keyPair() const override {
+            return m_keyPair;
+        }
 
-    ThreadManager& threadManager() override {
-        return m_threadManager;
-    }
+        ThreadManager& threadManager() override {
+            return m_threadManager;
+        }
 
-    Messenger& messenger() override {
-        return m_messenger;
-    }
+        Messenger& messenger() override {
+            return m_messenger;
+        }
 
-    Storage& storage() override {
-        return m_storage;
-    }
+        Storage& storage() override {
+            return m_storage;
+        }
 
-    ExecutorEventHandler& executorEventHandler() override {
-        return m_eventHandler;
-    }
+        ExecutorEventHandler& executorEventHandler() override {
+            return m_eventHandler;
+        }
 
-    std::weak_ptr<VirtualMachine> virtualMachine() override {
-        return m_virtualMachine;
-    }
+        std::weak_ptr<VirtualMachine> virtualMachine() override {
+            return m_virtualMachine;
+        }
 
-    ExecutorConfig& executorConfig() override {
-        return m_config;
-    }
+        ExecutorConfig& executorConfig() override {
+            return m_config;
+        }
 
-    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
-        return m_virtualMachineInternetQueryKeeper;
-    }
-};
-
-// ContractEnvironmentMock
-class ContractEnvironmentMock: public ContractEnvironment {
-
-private:
-
-    ContractKey m_contractKey;
-    DriveKey m_driveKey;
-    std::set<ExecutorKey> m_executors;
-    uint64_t m_automaticExecutionsSCLimit;
-    uint64_t m_automaticExecutionsSMLimit;
-    ContractConfig                              m_contractConfig;
-
-public:
-
-    ~ContractEnvironmentMock() = default;
-
-    const ContractKey& contractKey() const override {
-        return m_contractKey;
+        std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
+            return m_virtualMachineInternetQueryKeeper;
+        }
     };
 
-    const DriveKey& driveKey() const override {
-        return m_driveKey;
+    // ContractEnvironmentMock
+    class ContractEnvironmentMock: public ContractEnvironment {
+
+    private:
+
+        ContractKey m_contractKey;
+        DriveKey m_driveKey;
+        std::set<ExecutorKey> m_executors;
+        uint64_t m_automaticExecutionsSCLimit;
+        uint64_t m_automaticExecutionsSMLimit;
+        ContractConfig                              m_contractConfig;
+
+    public:
+
+        ~ContractEnvironmentMock() = default;
+
+        const ContractKey& contractKey() const override {
+            return m_contractKey;
+        };
+
+        const DriveKey& driveKey() const override {
+            return m_driveKey;
+        };
+
+        const std::set<ExecutorKey>& executors() const override {
+            return m_executors;
+        };
+
+        uint64_t automaticExecutionsSCLimit() const override {
+            return m_automaticExecutionsSCLimit;
+        };
+
+        uint64_t automaticExecutionsSMLimit() const override {
+            return m_automaticExecutionsSMLimit;
+        };
+
+        const ContractConfig& contractConfig() const override {
+            return m_contractConfig;
+        };
+
+        void finishTask() override {};
+
+        void addSynchronizationTask( const SynchronizationRequest& ) override {};
     };
 
-    const std::set<ExecutorKey>& executors() const override {
-        return m_executors;
+    // VirtualMachineMock
+    class VirtualMachineMock
+            : public VirtualMachine,
+            public VirtualMachineEventHandler,
+            public ThreadManager {
+
+    private:
+
+        VirtualMachineEventHandler& m_virtualMachineEventHandler;
+        ThreadManager m_threadManager;
+
+    public:
+
+        VirtualMachineMock( VirtualMachineEventHandler& virtualMachineEventHandler)
+                            :m_virtualMachineEventHandler(virtualMachineEventHandler) {
+            m_threadManager.execute( [this] {
+                //not complete
+                executeCall();  
+            } );
+                m_virtualMachineEventHandler.onSuperContractCallExecuted();
+        }
+
+        ~VirtualMachineMock() = default;
+
+        // not complete
+        void executeCall( const ContractKey&, const CallRequest& ) {}
+
+    public: 
+
+        // region virtual machine event handler
+
+        void
+        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
+
+    };
+        // endregion
+
+    // VirtualMachineEventHandlerMock
+    class VirtualMachineEventHandlerMock: public VirtualMachineEventHandler {
+
+    public:
+
+        ~ VirtualMachineEventHandlerMock() = default;
+
+        void
+        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
     };
 
-    uint64_t automaticExecutionsSCLimit() const override {
-        return m_automaticExecutionsSCLimit;
+    // StorageObserverMock
+    class StorageObserverMock: public StorageObserver {
+
+    public:
+
+        ~StorageObserverMock() = default;
+
+        void getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const {};
     };
 
-    uint64_t automaticExecutionsSMLimit() const override {
-        return m_automaticExecutionsSMLimit;
-    };
+    TEST(Example, TEST_NAME) {
+        auto debugThread = std::this_thread::get_id();;
+        uint64_t index = 1;
+        ContractEnvironmentMock contractEnv("param");
+        ExecutorEnvironmentMock executorEnv("param");
+        DebugInfo debugInfo("peer", debugThread);
+        DefaultBatchesManager manager(index, contractEnv, executorEnv, debugInfo); 
 
-    const ContractConfig& contractConfig() const override {
-        return m_contractConfig;
-    };
-
-    void finishTask() override {};
-
-    void addSynchronizationTask( const SynchronizationRequest& ) override {};
-};
-
-// VirtualMachineMock
-class VirtualMachineMock
-        : public VirtualMachine,
-          public VirtualMachineEventHandler,
-          public ThreadManager {
-
-private:
-
-    VirtualMachineEventHandler& m_virtualMachineEventHandler;
-    ThreadManager m_threadManager;
-
-public:
-
-    VirtualMachineMock( VirtualMachineEventHandler& virtualMachineEventHandler)
-                        :m_virtualMachineEventHandler(virtualMachineEventHandler) {
-        m_threadManager.execute( [this] {
-            //not complete
-            executeCall();  
-        } );
-            m_virtualMachineEventHandler.onSuperContractCallExecuted();
+        VirtualMachineMock vm(VirtualMachineEventHandlerMock vmHandler);  
+        
+        StorageObserverMock observer;
     }
-
-    ~VirtualMachineMock() = default;
-
-    // not complete
-    void executeCall( const ContractKey&, const CallRequest& ) {}
-
-public: 
-
-    // region virtual machine event handler
-
-    void
-    onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
-
-};
-    // endregion
-
-// VirtualMachineEventHandlerMock
-class VirtualMachineEventHandlerMock: public VirtualMachineEventHandler {
-
-public:
-
-    ~ VirtualMachineEventHandlerMock() = default;
-
-    void
-    onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
-};
-
-// StorageObserverMock
-class StorageObserverMock: public StorageObserver {
-
-public:
-
-    ~StorageObserverMock() = default;
-
-    void getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const {};
-};
-
-TEST(Example, TEST_NAME) {
-    auto debugThread = std::this_thread::get_id();;
-    uint64_t index = 1;
-    ContractEnvironmentMock contractEnv("param");
-    ExecutorEnvironmentMock executorEnv("param");
-    DebugInfo debugInfo("peer", debugThread);
-    DefaultBatchesManager manager(index, contractEnv, executorEnv, debugInfo); 
-
-    VirtualMachineMock vm(VirtualMachineEventHandlerMock vmHandler);  
-    
-    StorageObserverMock observer;
-}
 }
