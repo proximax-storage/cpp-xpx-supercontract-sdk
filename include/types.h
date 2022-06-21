@@ -124,6 +124,7 @@ namespace sirius {
     DECL_HASH( SessionId )
     DECL_HASH( StorageHash )
     DECL_HASH( BlockHash )
+    DECL_HASH( RequestId )
 
     //using ChannelId   = HashArray<std::array<uint8_t,32>>;
     //using TxHash   = HashArray<std::array<uint8_t,32>>;

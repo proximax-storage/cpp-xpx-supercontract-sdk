@@ -15,26 +15,31 @@
 namespace sirius::contract {
 
 enum class CertificateRevocationCheckStatus {
-    VALID, REVOKED, UNKNOWN, ERROR
+    VALID, REVOKED, UNDEFINED
 };
 
-class OCSPCheckException : public std::runtime_error {
+class OCSPResponseException : public std::runtime_error {
 public:
 
-    OCSPCheckException( const std::string& what )
+    OCSPResponseException( const std::string& what )
     : std::runtime_error( what )
     {}
 
 };
 
-class OCSPChecker {
+class OCSPHandler {
 
 private:
 
     BIO*            m_socketBio = nullptr;
     OCSP_REQ_CTX*   m_ctx = nullptr;
     OCSP_RESPONSE*  m_response = nullptr;
+
+    // We do not own this object
     OCSP_REQUEST*   m_request;
+    OCSP_CERTID*   m_requestId;
+    stack_st_X509*  m_chain;
+    X509_STORE*     m_store;
 
     char*   m_host = nullptr;
     char*   m_port = nullptr;
@@ -44,6 +49,9 @@ private:
     ThreadManager& m_threadManager;
 
     std::optional<boost::asio::high_resolution_timer> m_retryTimer;
+    const int m_timerDelayMs;
+    const int m_maxEfforts;
+    int m_effortsLeft;
 
     std::function<void( CertificateRevocationCheckStatus status )> m_callback;
 
@@ -51,14 +59,25 @@ private:
 
 public:
 
-    OCSPChecker( std::string&& url,
+    OCSPHandler( std::string&& url,
                  OCSP_REQUEST* request,
+                 OCSP_CERTID* requestId,
+                 stack_st_X509* chain,
+                 X509_STORE* store,
                  ThreadManager& threadManager,
                  std::function<void( CertificateRevocationCheckStatus status )> callback,
+                 int timerDelayMs,
+                 int maxEfforts,
                  const DebugInfo& debugInfo )
             : m_request( request )
+            , m_requestId( requestId )
+            , m_chain( chain )
+            , m_store( store )
             , m_threadManager( threadManager )
             , m_callback( std::move(callback) )
+            , m_timerDelayMs( timerDelayMs )
+            , m_maxEfforts( maxEfforts )
+            , m_effortsLeft( maxEfforts )
             , m_dbgInfo( debugInfo ) {
         OCSP_parse_url(url.c_str(), &m_host, &m_port, &m_path, &m_ssl );
     }
@@ -67,11 +86,11 @@ public:
         sendRequest();
     }
 
-private:
-
-    void close() {
+    ~OCSPHandler() {
 
         DBG_MAIN_THREAD
+
+        m_retryTimer.reset();
 
         if ( m_socketBio ) {
             BIO_set_close( m_socketBio, BIO_CLOSE );
@@ -85,6 +104,8 @@ private:
         OPENSSL_free( m_port );
     }
 
+private:
+
     void sendRequest() {
 
         DBG_MAIN_THREAD
@@ -94,14 +115,14 @@ private:
         _ASSERT( m_path )
 
         if ( m_ssl != 0 ) {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         m_socketBio = BIO_new_connect( m_host );
 
         if ( !m_socketBio ) {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
@@ -111,17 +132,17 @@ private:
         m_ctx = OCSP_sendreq_new( m_socketBio, m_path, nullptr, -1 );
 
         if ( !m_ctx ) {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         if ( !OCSP_REQ_CTX_add1_header( m_ctx, "Host", m_host ) ) {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         if ( !OCSP_REQ_CTX_set1_req( m_ctx, m_request ) ) {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
@@ -136,17 +157,19 @@ private:
         auto rv = BIO_do_connect( m_socketBio );
 
         if ( rv > 0 ) {
-            read();
             // Successfully connected
+            m_effortsLeft = m_maxEfforts;
+            read();
         }
-        else if ( rv < 0 ) {
-            m_retryTimer = m_threadManager.startTimer( 500, [this] {
+        else if ( rv < 0 && m_effortsLeft > 0 ) {
+            m_effortsLeft--;
+            m_retryTimer = m_threadManager.startTimer( m_timerDelayMs, [this] {
                 connect();
             } );
         }
         else {
             // Real error has occurred
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         }
     }
 
@@ -158,16 +181,16 @@ private:
 
         auto rv = OCSP_sendreq_nbio( &m_response, m_ctx );
         if ( rv > 0 ) {
-            m_retryTimer.reset();
             onResponseReceived();
         }
-        else if ( rv < 0 ) {
-            m_retryTimer = m_threadManager.startTimer(500, [this] {
+        else if ( rv < 0 && m_effortsLeft > 0 ) {
+            m_effortsLeft--;
+            m_retryTimer = m_threadManager.startTimer( m_timerDelayMs, [this] {
                 read();
             });
         }
         else {
-            m_callback( CertificateRevocationCheckStatus::ERROR );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
     }
@@ -184,27 +207,31 @@ private:
 
         try {
             if ( !m_response ) {
-                throw OCSPCheckException( "OCSP Response Is Null" );
+                throw OCSPResponseException( "OCSP Response Is Null" );
             }
 
             int responder_status = OCSP_response_status( m_response );
 
             if ( responder_status != OCSP_RESPONSE_STATUS_SUCCESSFUL )  {
-                throw OCSPCheckException( "OCSP Response Unsuccessful" );
+                throw OCSPResponseException( "OCSP Response Unsuccessful" );
             }
 
             basicResponse = OCSP_response_get1_basic( m_response );
 
             if ( !basicResponse ) {
-                throw OCSPCheckException( "OCSP Basic Response Is Null" );
+                throw OCSPResponseException( "OCSP Basic Response Is Null" );
             }
 
-            int rc, reason, ssl, status;
-            bool foundId = OCSP_resp_find_status( basicResponse, id, &status, &reason, &producedAt, &thisUpdate,
-                                                  &nextUpdate );
+            int status;
+            int reason;
+            bool foundId = OCSP_resp_find_status( basicResponse, m_requestId, &status, &reason, &producedAt, &thisUpdate, &nextUpdate );
 
             if ( !foundId ) {
-                throw OCSPCheckException( "OCSP Response Id Not Found" );
+                throw OCSPResponseException( "OCSP Response Id Not Found" );
+            }
+
+            if ( !OCSP_basic_verify( basicResponse, m_chain, m_store, 0 ) ) {
+                throw OCSPResponseException( "OCSP Response Basic Verify Not Passed" );
             }
 
             if ( status == V_OCSP_CERTSTATUS_GOOD ) {
@@ -214,16 +241,13 @@ private:
                 revocationStatus = CertificateRevocationCheckStatus::REVOKED;
             }
             else {
-                revocationStatus = CertificateRevocationCheckStatus::UNKNOWN;
+                throw OCSPResponseException( "OCSP Response Invalid Status" );
             }
         }
-        catch ( const OCSPCheckException& ex ) {
-            revocationStatus = CertificateRevocationCheckStatus::ERROR;
+        catch ( const OCSPResponseException& ex ) {
+            revocationStatus = CertificateRevocationCheckStatus::UNDEFINED;
         }
         OCSP_BASICRESP_free( basicResponse );
-        ASN1_GENERALIZEDTIME_free( producedAt );
-        ASN1_GENERALIZEDTIME_free( thisUpdate );
-        ASN1_GENERALIZEDTIME_free( nextUpdate );
         m_callback(revocationStatus);
     }
 };
