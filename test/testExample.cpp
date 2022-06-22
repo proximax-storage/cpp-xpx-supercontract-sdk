@@ -32,16 +32,15 @@ namespace sirius::contract::test {
 
     public:
 
-        ExecutorEnvironmentMock(
-                                crypto::KeyPair& keyPair,
+        ExecutorEnvironmentMock(crypto::KeyPair& keyPair,
                                 Messenger& messenger,
-                                Storage& m_storage,
+                                Storage& storage,
                                 ExecutorEventHandler& eventHandler,
                                 std::shared_ptr<VirtualMachine> virtualMachine,
                                 ExecutorConfig config)
                                 : m_keyPair(keyPair),
                                 m_messenger(messenger),
-                                m_storage(m_storage),
+                                m_storage(storage),
                                 m_eventHandler(eventHandler),
                                 m_virtualMachine(virtualMachine),
                                 m_config(config) {}
@@ -103,6 +102,12 @@ namespace sirius::contract::test {
         ~ExecutorEventHandlerMock() = default;
         void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) {}
         void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) {}
+    };
+
+    class VmMock: public VirtualMachine {
+    public:
+        ~VmMock() = default;
+        void executeCall( const ContractKey&, const CallRequest& ) {}
     };
     // End of mock classes
 
@@ -226,25 +231,18 @@ namespace sirius::contract::test {
 
         // ExecutorEnvironment field
         crypto::PrivateKey privateKey;
-        crypto::KeyPair::FromPrivate( std::move( privateKey ) );
-        
-        // crypto::PrivateKey rvalue_ref = (crypto::PrivateKey&&) privateKey;
-        // crypto::KeyPair keyPair(rvalue_ref); 
-        // crypto::PrivateKey rvalue_ref( (crypto::PrivateKey&&) privateKey );
-        // crypto::KeyPair keyPair(rvalue_ref); 
-        // crypto::PrivateKey rvalue_ref = std::move(privateKey);
-        // crypto::KeyPair keyPair(rvalue_ref); 
-
+        auto keyPair = crypto::KeyPair::FromPrivate( std::move( privateKey ) );
         MessengerMock messengerMock;
         StorageMock storageMock;
         ExecutorEventHandlerMock executorEventHandlerMock;
+        VmMock vmMock;
         ExecutorConfig executorConfig;
 
         // DefaultBatchesManager field
         ThreadManager debugThread;
         uint64_t index = 1;
         ContractEnvironmentMock contractEnv(contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
-        ExecutorEnvironmentMock executorEnv(keyPair, messengerMock, storageMock, executorEventHandlerMock, executorConfig);
+        ExecutorEnvironmentMock executorEnv(keyPair, messengerMock, storageMock, executorEventHandlerMock, vmMock, executorConfig);
         DebugInfo debugInfo("peer", debugThread.threadId());
 
         DefaultBatchesManager batchesManager(index, contractEnv, executorEnv, debugInfo); 
