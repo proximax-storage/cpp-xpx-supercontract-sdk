@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "contract/AsyncQuery.h"
+
 namespace sirius::contract {
 
 class InternetConnection {

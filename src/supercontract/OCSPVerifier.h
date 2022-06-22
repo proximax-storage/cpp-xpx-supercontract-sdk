@@ -11,6 +11,11 @@
 #include <openssl/x509_vfy.h>
 #include <openssl/ssl.h>
 #include <openssl/ocsp.h>
+#include <deque>
+
+#include "contract/ThreadManager.h"
+#include "supercontract/DebugInfo.h"
+#include "supercontract/log.h"
 #include "OCSPHandler.h"
 
 namespace sirius::contract {
@@ -45,12 +50,27 @@ private:
 
 public:
 
-    OCSPVerifier( ThreadManager& threadManager, int timerDelayMs, int maxEfforts, const DebugInfo& debugInfo )
-            : m_threadManager( threadManager )
+    OCSPVerifier( X509_STORE* store,
+                  stack_st_X509* chain,
+                  std::function<void( CertificateRevocationCheckStatus )> callback,
+                  ThreadManager& threadManager, int timerDelayMs,
+                  int maxEfforts, const DebugInfo& debugInfo )
+            : m_store( store )
+            , m_chain( chain )
+            , m_callback( std::move(callback) )
+            , m_threadManager( threadManager )
             , m_timerDelayMs( timerDelayMs )
             , m_maxEfforts( maxEfforts )
             , m_dbgInfo( debugInfo )
             {}
+
+    OCSPVerifier( const OCSPVerifier& ) = delete;
+
+    OCSPVerifier( OCSPVerifier&& ) = delete;
+
+    OCSPVerifier& operator=( OCSPVerifier&& ) = delete;
+
+    OCSPVerifier& operator=( const OCSPVerifier& ) = delete;
 
     ~OCSPVerifier() {
         sk_X509_free(m_chain);

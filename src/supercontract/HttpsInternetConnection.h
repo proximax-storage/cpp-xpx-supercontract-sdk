@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "InternetConnection.h"
 
 #include "boost/beast.hpp"
 #include <boost/beast/core.hpp>
@@ -21,6 +20,13 @@
 #include <string>
 #include "OCSPHandler.h"
 #include "OCSPVerifier.h"
+#include "utils/Random.h"
+#include "InternetConnection.h"
+#include "contract/ThreadManager.h"
+#include "types.h"
+#include "supercontract/DebugInfo.h"
+#include "contract/AsyncQuery.h"
+#include "log.h"
 
 namespace sirius::contract {
 
@@ -47,6 +53,9 @@ private:
     http::request<http::empty_body> m_req;
     http::parser<false, http::buffer_body> m_res;
     std::vector<uint8_t> m_readDataBuffer;
+
+    std::map<RequestId, std::unique_ptr<OCSPVerifier>> m_ocspVerifiers;
+    bool m_handshakeReceived = false;
 
     int m_timeout;
     std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
@@ -146,7 +155,7 @@ public:
         runTimeoutTimer();
     }
 
-    ~HttpInternetConnection() override {
+    ~HttpsInternetConnection() override {
 
         DBG_MAIN_THREAD
 
@@ -159,12 +168,11 @@ private:
         DBG_MAIN_THREAD
 
         m_resolver.cancel();
-        m_stream.close();
+        m_stream.next_layer().close();
         m_timeoutTimer.reset();
     }
 
-    void
-    onHostResolved(
+    void onHostResolved(
             beast::error_code ec,
             const tcp::resolver::results_type& results,
             std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
@@ -186,12 +194,12 @@ private:
         }
 
         // Make the connection on the IP address we get from a lookup
-        m_stream.async_connect(
+        beast::get_lowest_layer( m_stream ).async_connect(
                 results,
                 beast::bind_front_handler(
                         [pThisWeak = weak_from_this(), callback](
                                 beast::error_code ec,
-                                tcp::resolver::results_type::endpoint_type results) {
+                                tcp::resolver::results_type::endpoint_type results ) {
                             if ( auto pThis = pThisWeak.lock(); pThis ) {
                                 pThis->onConnected( ec, results, callback );
                             }
@@ -222,7 +230,44 @@ private:
             return;
         }
 
+        m_stream.set_verify_callback( [=, pThisWeak = weak_from_this()]( bool p, ssl::verify_context& c ) -> bool {
+            if ( auto pThis = pThisWeak.lock(); pThis ) {
+                auto requestId = utils::generateRandomByteValue<RequestId>();
+                auto* handle = c.native_handle();
 
+                stack_st_X509* chain = X509_STORE_CTX_get1_chain( handle );
+
+                std::function<void (CertificateRevocationCheckStatus)> f = [=]( CertificateRevocationCheckStatus status ) {
+                    if ( auto pThis = pThisWeak.lock(); pThis ) {
+                        pThis->onOCSPVerified( requestId, status, callback );
+                    }
+                };
+
+                auto ocspVerifier = std::make_unique<OCSPVerifier>(
+                        X509_STORE_CTX_get0_store( handle ),
+                        X509_STORE_CTX_get1_chain( handle ),
+                        [=] ( CertificateRevocationCheckStatus status ) {
+                            if ( auto pThis = pThisWeak.lock(); pThis ) {
+                                pThis->onOCSPVerified( requestId, status, callback );
+                            }
+                        },
+                        pThis->m_threadManager,
+                        500,
+                        100,
+                        pThis->m_dbgInfo );
+                auto [it, success] = pThis->m_ocspVerifiers.emplace( requestId, std::move(ocspVerifier) );
+                it->second->run( X509_STORE_CTX_get_current_cert(handle), X509_STORE_CTX_get0_current_issuer(handle) );
+            }
+            return p;
+        } );
+
+        m_stream.async_handshake(
+                ssl::stream_base::client,
+                beast::bind_front_handler( [pThisWeak = weak_from_this(), callback]( beast::error_code ec ) {
+                    if ( auto pThis = pThisWeak.lock(); pThis ) {
+                        pThis->onHandshake( ec, callback );
+                    }
+                } ));
 
         runTimeoutTimer();
     }
@@ -230,6 +275,8 @@ private:
     void onHandshake( beast::error_code ec, std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        _ASSERT( !m_handshakeReceived )
 
         m_timeoutTimer.reset();
 
@@ -244,15 +291,11 @@ private:
             return;
         }
 
-        http::async_write( m_stream, m_req,
-                           beast::bind_front_handler( [pThisWeak = weak_from_this(), callback]( beast::error_code ec,
-                                   std::size_t bytes_transferred ) {
-                               if ( auto pThis = pThisWeak.lock(); pThis ) {
-                                   pThis->onWritten( ec, bytes_transferred, callback );
-                               }
-                           } ));
+        m_handshakeReceived = true;
 
-        runTimeoutTimer();
+        if ( m_ocspVerifiers.empty() ) {
+            onExtendedHandshake( callback );
+        }
     }
 
     void onWritten( beast::error_code ec,
@@ -281,8 +324,7 @@ private:
     void onRead(
             beast::error_code ec,
             std::size_t bytes_transferred,
-            std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback
-    ) {
+            std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback ) {
 
         DBG_MAIN_THREAD
 
@@ -333,6 +375,33 @@ private:
         m_timeoutTimer = m_threadManager.startTimer( m_timeout, [this] {
             close();
         } );
+    }
+
+    void onOCSPVerified( const RequestId& requestId, CertificateRevocationCheckStatus status, std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
+
+        DBG_MAIN_THREAD
+
+        auto it = m_ocspVerifiers.find( requestId );
+
+        _ASSERT( it != m_ocspVerifiers.end() )
+
+        m_ocspVerifiers.erase( it );
+
+        if ( m_ocspVerifiers.empty() && m_handshakeReceived ) {
+            onExtendedHandshake( callback );
+        }
+    }
+
+    void onExtendedHandshake( std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
+        http::async_write( m_stream, m_req,
+                           beast::bind_front_handler( [pThisWeak = weak_from_this(), callback]( beast::error_code ec,
+                                   std::size_t bytes_transferred ) {
+                               if ( auto pThis = pThisWeak.lock(); pThis ) {
+                                   pThis->onWritten( ec, bytes_transferred, callback );
+                               }
+                           } ));
+
+        runTimeoutTimer();
     }
 };
 

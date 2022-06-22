@@ -12,6 +12,10 @@
 #include <openssl/ssl.h>
 #include <openssl/ocsp.h>
 
+#include "contract/ThreadManager.h"
+#include "log.h"
+#include "supercontract/DebugInfo.h"
+
 namespace sirius::contract {
 
 enum class CertificateRevocationCheckStatus {
