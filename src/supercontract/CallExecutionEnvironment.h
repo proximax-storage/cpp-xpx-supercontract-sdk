@@ -8,7 +8,8 @@
 
 #include "types.h"
 #include "contract/AsyncQuery.h"
-#include "DefaultInternetConnection.h"
+#include "HttpInternetConnection.h"
+#include "HttpsInternetConnection.h"
 
 namespace sirius::contract {
 
@@ -90,7 +91,7 @@ public:
 
         auto[connectionIt, insertSuccess] = m_internetConnections.insert(
                 {totalConnectionsCreated,
-                 std::make_unique<DefaultInternetConnection>( m_executorEnvironment.threadManager(), host, target,
+                 std::make_unique<HttpInternetConnection>( m_executorEnvironment.threadManager(), host, target,
                                                               m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                               m_dbgInfo )} );
         _ASSERT( insertSuccess )

@@ -28,9 +28,9 @@ namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
 
-class DefaultInternetConnection:
+class HttpInternetConnection:
         public InternetConnection,
-        public std::enable_shared_from_this<DefaultInternetConnection> {
+        public std::enable_shared_from_this<HttpInternetConnection> {
 
 private:
 
@@ -53,7 +53,7 @@ private:
 
 public:
 
-    DefaultInternetConnection(
+    HttpInternetConnection(
             ThreadManager& threadManager,
             const std::string& host,
             const std::string& target,
@@ -131,7 +131,7 @@ public:
         runTimeoutTimer();
     }
 
-    ~DefaultInternetConnection() override {
+    ~HttpInternetConnection() override {
 
         DBG_MAIN_THREAD
 
