@@ -9,6 +9,7 @@
 #include "contract/StorageObserver.h"
 #include <thread>
 #include <future>
+#include <time.h>
 // #include "Executor.h"
 
 namespace sirius::contract::test {
@@ -30,6 +31,20 @@ namespace sirius::contract::test {
         std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
 
     public:
+
+        ExecutorEnvironmentMock(
+                                crypto::KeyPair& keyPair,
+                                Messenger& messenger,
+                                Storage& m_storage,
+                                ExecutorEventHandler& eventHandler,
+                                std::shared_ptr<VirtualMachine> virtualMachine,
+                                ExecutorConfig config)
+                                : m_keyPair(keyPair),
+                                m_messenger(messenger),
+                                m_storage(m_storage),
+                                m_eventHandler(eventHandler),
+                                m_virtualMachine(virtualMachine),
+                                m_config(config) {}
 
         ~ExecutorEnvironmentMock() = default;
 
@@ -66,6 +81,31 @@ namespace sirius::contract::test {
         }
     };
 
+    // Mock classes that required by ExecutorEnvironment
+    class MessengerMock: public Messenger {
+    public:
+        ~MessengerMock() = default;
+        void sendMessage(const ExecutorKey& key, const std::string& msg) {}
+    };
+
+    class StorageMock: public Storage {
+    public:
+        ~StorageMock() = default;
+        void synchronizeStorage( const DriveKey& driveKey, const StorageHash& storageHash ) {}
+        void initiateModifications( const DriveKey& driveKey, uint64_t batchIndex ) {}
+        void applySandboxStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) {}
+        void evaluateStorageHash( const DriveKey& driveKey, uint64_t batchIndex ) {}
+        void applyStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success ) {}
+    };
+
+    class ExecutorEventHandlerMock: public ExecutorEventHandler {
+    public:
+        ~ExecutorEventHandlerMock() = default;
+        void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) {}
+        void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) {}
+    };
+    // End of mock classes
+
     // ContractEnvironmentMock
     class ContractEnvironmentMock: public ContractEnvironment {
 
@@ -76,9 +116,14 @@ namespace sirius::contract::test {
         std::set<ExecutorKey> m_executors;
         uint64_t m_automaticExecutionsSCLimit;
         uint64_t m_automaticExecutionsSMLimit;
-        ContractConfig                              m_contractConfig;
+        ContractConfig m_contractConfig;
 
     public:
+
+        ContractEnvironmentMock(ContractKey contractKey, uint64_t automaticExecutionsSCLimit, uint64_t automaticExecutionsSMLimit)
+                                : m_contractKey(contractKey),
+                                  m_automaticExecutionsSCLimit(automaticExecutionsSCLimit),
+                                  m_automaticExecutionsSMLimit(automaticExecutionsSMLimit) {}
 
         ~ContractEnvironmentMock() = default;
 
@@ -114,49 +159,51 @@ namespace sirius::contract::test {
     // VirtualMachineMock
     class VirtualMachineMock
             : public VirtualMachine,
-            public VirtualMachineEventHandler,
             public ThreadManager {
 
     private:
 
-        VirtualMachineEventHandler& m_virtualMachineEventHandler;
+        VirtualMachineEventHandlerMock& m_virtualMachineEventHandlerMock;
         ThreadManager m_threadManager;
 
     public:
-
-        VirtualMachineMock( VirtualMachineEventHandler& virtualMachineEventHandler)
-                            :m_virtualMachineEventHandler(virtualMachineEventHandler) {
-            m_threadManager.execute( [this] {
-                //not complete
-                executeCall();  
-            } );
-                m_virtualMachineEventHandler.onSuperContractCallExecuted();
+        // VirtualMachineMock constructor
+        VirtualMachineMock( VirtualMachineEventHandlerMock& virtualMachineEventHandlerMock)  
+                            :m_virtualMachineEventHandlerMock(virtualMachineEventHandlerMock) {
+            srand(time(0));
+            // thread call executeCall() in random time 1-10sec
+            m_threadManager.startTimer(
+                (rand()%10000), 
+                [this] { executeCall(); }
+            );
         }
 
         ~VirtualMachineMock() = default;
 
-        // not complete
-        void executeCall( const ContractKey&, const CallRequest& ) {}
-
-    public: 
-
-        // region virtual machine event handler
-
-        void
-        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
-
+        void executeCall( const ContractKey&, const CallRequest& ) {
+            // executeCall() call vmHandlerMock::onSuperContractCallExecuted()
+            m_virtualMachineEventHandlerMock.onSuperContractCallExecuted();
+        }
     };
-        // endregion
 
     // VirtualMachineEventHandlerMock
     class VirtualMachineEventHandlerMock: public VirtualMachineEventHandler {
 
+    private:
+        DefaultBatchesManager& m_defaultBatchesManager;
+
     public:
+        VirtualMachineEventHandlerMock( DefaultBatchesManager& defaultBatchesManager)
+                                        :m_defaultBatchesManager(defaultBatchesManager){}
 
         ~ VirtualMachineEventHandlerMock() = default;
 
         void
-        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {}
+        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {
+            // create new thread to call corresponding method of the batches manager 
+            ThreadManager worker;
+            worker.execute([this] {m_defaultBatchesManager.hasNextBatch();});
+        }
     };
 
     // StorageObserverMock
@@ -166,18 +213,43 @@ namespace sirius::contract::test {
 
         ~StorageObserverMock() = default;
 
-        void getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const {};
+        void getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const {
+
+        };
     };
 
     TEST(Example, TEST_NAME) {
-        auto debugThread = std::this_thread::get_id();;
-        uint64_t index = 1;
-        ContractEnvironmentMock contractEnv("param");
-        ExecutorEnvironmentMock executorEnv("param");
-        DebugInfo debugInfo("peer", debugThread);
-        DefaultBatchesManager manager(index, contractEnv, executorEnv, debugInfo); 
+        // ContractEnvironment field
+        ContractKey contractKey;
+        uint64_t automaticExecutionsSCLimit = 0;
+        uint64_t automaticExecutionsSMLimit = 0;
 
-        VirtualMachineMock vm(VirtualMachineEventHandlerMock vmHandler);  
+        // ExecutorEnvironment field
+        crypto::PrivateKey privateKey;
+        crypto::KeyPair keyPair(std::move(privateKey)); 
+        
+        // crypto::PrivateKey rvalue_ref = (crypto::PrivateKey&&) privateKey;
+        // crypto::KeyPair keyPair(rvalue_ref); 
+        // crypto::PrivateKey rvalue_ref( (crypto::PrivateKey&&) privateKey );
+        // crypto::KeyPair keyPair(rvalue_ref); 
+        // crypto::PrivateKey rvalue_ref = std::move(privateKey);
+        // crypto::KeyPair keyPair(rvalue_ref); 
+
+        MessengerMock messengerMock;
+        StorageMock storageMock;
+        ExecutorEventHandlerMock executorEventHandlerMock;
+        ExecutorConfig executorConfig;
+
+        // DefaultBatchesManager field
+        ThreadManager debugThread;
+        uint64_t index = 1;
+        ContractEnvironmentMock contractEnv(contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
+        ExecutorEnvironmentMock executorEnv(keyPair, messengerMock, storageMock, executorEventHandlerMock, executorConfig);
+        DebugInfo debugInfo("peer", debugThread.threadId());
+
+        DefaultBatchesManager batchesManager(index, contractEnv, executorEnv, debugInfo); 
+        VirtualMachineEventHandlerMock vmHandler(batchesManager);
+        VirtualMachineMock virtualMachine(vmHandler);  
         
         StorageObserverMock observer;
     }
