@@ -13,6 +13,7 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/strand.hpp>
+#include <boost/beast/ssl.hpp>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -27,6 +28,7 @@ namespace beast = boost::beast;
 namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
 
 class HttpsInternetConnection:
         public InternetConnection,
@@ -40,7 +42,7 @@ private:
     std::string m_target;
 
     tcp::resolver m_resolver;
-    beast::tcp_stream m_stream;
+    beast::ssl_stream<beast::tcp_stream> m_stream;
     beast::flat_buffer m_buffer;
     http::request<http::empty_body> m_req;
     http::parser<false, http::buffer_body> m_res;
@@ -53,7 +55,8 @@ private:
 
 public:
 
-    HttpInternetConnection(
+    HttpsInternetConnection(
+            ssl::context& ctx,
             ThreadManager& threadManager,
             const std::string& host,
             const std::string& target,
@@ -63,11 +66,11 @@ public:
     , m_host( host )
     , m_target( target )
     , m_resolver( threadManager.context() )
-    , m_stream( threadManager.context() )
+    , m_stream( threadManager.context(), ctx )
     , m_timeout( timeout )
     , m_dbgInfo( debugInfo )
     {
-        m_stream.expires_never();
+        beast::get_lowest_layer( m_stream ).expires_never();
         m_res.body_limit(-1);
     }
 
@@ -76,6 +79,18 @@ public:
     void open( std::weak_ptr<AbstractAsyncQuery<bool>> callback ) override {
 
         DBG_MAIN_THREAD
+
+        auto c = callback.lock();
+
+        if ( !c ) {
+            return;
+        }
+
+        if(  SSL_set_tlsext_host_name( m_stream.native_handle(), m_host.c_str() ) )
+        {
+            c->postReply( false );
+            return;
+        }
 
         m_req.version( 10 );
         m_req.method( http::verb::get );
@@ -87,7 +102,7 @@ public:
         // Look up the domain name
         m_resolver.async_resolve(
                 m_host,
-                "80",
+                "443",
                 beast::bind_front_handler(
                         [pThisWeak = weak_from_this(), callback] ( beast::error_code ec,
                                                         tcp::resolver::results_type results ) {
@@ -207,9 +222,31 @@ private:
             return;
         }
 
+
+
+        runTimeoutTimer();
+    }
+
+    void onHandshake( beast::error_code ec, std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
+
+        DBG_MAIN_THREAD
+
+        m_timeoutTimer.reset();
+
+        auto c = callback.lock();
+
+        if ( !c ) {
+            return;
+        }
+
+        if ( ec ) {
+            c->postReply( false );
+            return;
+        }
+
         http::async_write( m_stream, m_req,
                            beast::bind_front_handler( [pThisWeak = weak_from_this(), callback]( beast::error_code ec,
-                                                                                                std::size_t bytes_transferred ) {
+                                   std::size_t bytes_transferred ) {
                                if ( auto pThis = pThisWeak.lock(); pThis ) {
                                    pThis->onWritten( ec, bytes_transferred, callback );
                                }
