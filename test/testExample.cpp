@@ -226,7 +226,7 @@ namespace sirius::contract::test {
 
         // ExecutorEnvironment field
         crypto::PrivateKey privateKey;
-        crypto::KeyPair keyPair(std::move(privateKey)); 
+        crypto::KeyPair::FromPrivate( std::move( privateKey ) );
         
         // crypto::PrivateKey rvalue_ref = (crypto::PrivateKey&&) privateKey;
         // crypto::KeyPair keyPair(rvalue_ref); 
