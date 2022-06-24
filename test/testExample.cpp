@@ -38,12 +38,13 @@ namespace sirius::contract::test {
                                 ExecutorEventHandler& eventHandler,
                                 std::shared_ptr<VirtualMachine> virtualMachine,
                                 ExecutorConfig config)
-                                : m_keyPair(keyPair),
-                                m_messenger(messenger),
-                                m_storage(storage),
-                                m_eventHandler(eventHandler),
-                                m_virtualMachine(virtualMachine),
-                                m_config(config) {}
+                : m_keyPair( keyPair ),
+                m_messenger( messenger ),
+                m_storage( storage ),
+                m_eventHandler( eventHandler ),
+                m_virtualMachine( virtualMachine ),
+                m_config( config ) 
+                {}
 
         ~ExecutorEnvironmentMock() = default;
 
@@ -84,7 +85,7 @@ namespace sirius::contract::test {
     class MessengerMock: public Messenger {
     public:
         ~MessengerMock() = default;
-        void sendMessage(const ExecutorKey& key, const std::string& msg) {}
+        void sendMessage( const ExecutorKey& key, const std::string& msg ) {}
     };
 
     class StorageMock: public Storage {
@@ -109,7 +110,7 @@ namespace sirius::contract::test {
         ~VmMock() = default;
         void executeCall( const ContractKey&, const CallRequest& ) {}
     };
-    // End of mock classes
+    // End of ExecutorEnvironmentMock's mock classes
 
     // ContractEnvironmentMock
     class ContractEnvironmentMock: public ContractEnvironment {
@@ -125,10 +126,13 @@ namespace sirius::contract::test {
 
     public:
 
-        ContractEnvironmentMock(ContractKey contractKey, uint64_t automaticExecutionsSCLimit, uint64_t automaticExecutionsSMLimit)
-                                : m_contractKey(contractKey),
-                                  m_automaticExecutionsSCLimit(automaticExecutionsSCLimit),
-                                  m_automaticExecutionsSMLimit(automaticExecutionsSMLimit) {}
+        ContractEnvironmentMock( ContractKey contractKey, 
+                                uint64_t automaticExecutionsSCLimit, 
+                                uint64_t automaticExecutionsSMLimit)
+                : m_contractKey( contractKey ),
+                m_automaticExecutionsSCLimit( automaticExecutionsSCLimit ),
+                m_automaticExecutionsSMLimit( automaticExecutionsSMLimit ) 
+                {}
 
         ~ContractEnvironmentMock() = default;
 
@@ -162,52 +166,31 @@ namespace sirius::contract::test {
     };
 
     // VirtualMachineMock
-    class VirtualMachineMock
-            : public VirtualMachine,
-            public ThreadManager {
-
-    private:
-
-        VirtualMachineEventHandlerMock& m_virtualMachineEventHandlerMock;
-        ThreadManager m_threadManager;
+    class VirtualMachineMock: public VirtualMachine {
 
     public:
-        // VirtualMachineMock constructor
-        VirtualMachineMock( VirtualMachineEventHandlerMock& virtualMachineEventHandlerMock)  
-                            :m_virtualMachineEventHandlerMock(virtualMachineEventHandlerMock) {
-            srand(time(0));
-            // thread call executeCall() in random time 1-10sec
-            m_threadManager.startTimer(
-                (rand()%10000), 
-                [this] { executeCall(); }
-            );
-        }
+
+        DefaultBatchesManager m_batchesManager;
+
+    public:
+        bool status = false;
+        
+        VirtualMachineMock( DefaultBatchesManager batchesManager )
+                :m_batchesManager(batchesManager) {}
 
         ~VirtualMachineMock() = default;
 
         void executeCall( const ContractKey&, const CallRequest& ) {
-            // executeCall() call vmHandlerMock::onSuperContractCallExecuted()
-            m_virtualMachineEventHandlerMock.onSuperContractCallExecuted();
-        }
-    };
+            // Create call executed result for onSuperContractCallExecuted()
+            CallId callId;
+            CallExecutionResult callExecutionResult;
+            callExecutionResult.m_callId = callId;
+            callExecutionResult.m_success = true;
+            callExecutionResult.m_return = 0;
+            callExecutionResult.m_scConsumed = 0;
+            callExecutionResult.m_smConsumed = 0;
 
-    // VirtualMachineEventHandlerMock
-    class VirtualMachineEventHandlerMock: public VirtualMachineEventHandler {
-
-    private:
-        DefaultBatchesManager& m_defaultBatchesManager;
-
-    public:
-        VirtualMachineEventHandlerMock( DefaultBatchesManager& defaultBatchesManager)
-                                        :m_defaultBatchesManager(defaultBatchesManager){}
-
-        ~ VirtualMachineEventHandlerMock() = default;
-
-        void
-        onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {
-            // create new thread to call corresponding method of the batches manager 
-            ThreadManager worker;
-            worker.execute([this] {m_defaultBatchesManager.hasNextBatch();});
+            status = m_batchesManager.onSuperContractCallExecuted(callExecutionResult);   
         }
     };
 
@@ -224,31 +207,94 @@ namespace sirius::contract::test {
     };
 
     TEST(Example, TEST_NAME) {
-        // ContractEnvironment field
+        // ContractEnvironment field needed for batchesManager creation
         ContractKey contractKey;
         uint64_t automaticExecutionsSCLimit = 0;
         uint64_t automaticExecutionsSMLimit = 0;
 
-        // ExecutorEnvironment field
+        // ExecutorEnvironment field needed for batchesManager creation
         crypto::PrivateKey privateKey;
         auto keyPair = crypto::KeyPair::FromPrivate( std::move( privateKey ) );
         MessengerMock messengerMock;
         StorageMock storageMock;
         ExecutorEventHandlerMock executorEventHandlerMock;
-        VmMock vmMock;
+        auto vmMock = std::make_shared<VmMock>();
         ExecutorConfig executorConfig;
 
         // DefaultBatchesManager field
         ThreadManager debugThread;
         uint64_t index = 1;
-        ContractEnvironmentMock contractEnv(contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
-        ExecutorEnvironmentMock executorEnv(keyPair, messengerMock, storageMock, executorEventHandlerMock, vmMock, executorConfig);
-        DebugInfo debugInfo("peer", debugThread.threadId());
+        ContractEnvironmentMock contractEnv( contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit );
+        ExecutorEnvironmentMock executorEnv( keyPair, messengerMock, storageMock, executorEventHandlerMock, vmMock, executorConfig );
+        DebugInfo debugInfo( "peer", debugThread.threadId() );
 
-        DefaultBatchesManager batchesManager(index, contractEnv, executorEnv, debugInfo); 
-        VirtualMachineEventHandlerMock vmHandler(batchesManager);
-        VirtualMachineMock virtualMachine(vmHandler);  
+        DefaultBatchesManager batchesManager( index, contractEnv, executorEnv, debugInfo ); 
+        VirtualMachineMock virtualMachine( batchesManager );  
         
-        StorageObserverMock observer;
+
+        // Call request for batchesManager::addCall()
+        CallRequest callRequest;
+        CallId callId;
+        std::vector<uint8_t> params = {0, 1, 2, 3};
+        callRequest.m_callId = callId;
+        callRequest.m_file = "";
+        callRequest.m_function = "";
+        callRequest.m_params = params;
+        callRequest.m_scLimit = 0;
+        callRequest.m_smLimit = 0;
+        callRequest.m_callLevel = CallRequest::CallLevel::MANUAL;
+
+        // Block for batchesManager::addBlockInfo()
+        BlockHash blockHash;
+        Block block;
+        block.m_blockHash = blockHash;
+        block.m_height = 0;
+
+        // Call addCall and addBlockInfo
+        batchesManager.addCall(callRequest);
+        batchesManager.addCall(callRequest);
+        batchesManager.addBlockInfo(block);
+        batchesManager.addBlockInfo(block);
+        batchesManager.addBlockInfo(block);
+        batchesManager.addCall(callRequest);
+        batchesManager.addCall(callRequest);
+        batchesManager.addBlockInfo(block);
+        batchesManager.setAutomaticExecutionsEnabledSince(0);
+
+        // ThreadManagers
+        ThreadManager threadManager1;
+        ThreadManager threadManager2;
+
+        StorageObserverMock storageObserver;
+
+        threadManager1.startTimer(1000, [&] {
+            auto path = "/";
+            auto query = std::make_shared<AbstractAsyncQuery<std::string>>();
+            storageObserver.getAbsolutePath(path, query);
+        });
+
+        // srand( time( 0 ) );
+        // m_threadManager.startTimer( ( rand()%10000 ), [&] {       
+        threadManager2.startTimer( 3000 , [&] {   
+            // Create call request for executeCall()
+            CallRequest callRequest;
+            CallId callId;
+            std::vector<uint8_t> params = {0, 1, 2, 3};
+            callRequest.m_callId = callId;
+            callRequest.m_file = "";
+            callRequest.m_function = "";
+            callRequest.m_params = params;
+            callRequest.m_scLimit = 0;
+            callRequest.m_smLimit = 0;
+            callRequest.m_callLevel = CallRequest::CallLevel::MANUAL;
+
+            ContractKey contractKey;
+
+            //call executeCall
+            virtualMachine.executeCall(contractKey, callRequest);
+        }); 
+        bool expectedResult = true;
+        ASSERT_EQ(expectedResult, virtualMachine.status);
+
     }
 }
