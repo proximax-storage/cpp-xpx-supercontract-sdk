@@ -80,6 +80,7 @@ public:
                 if ( pThis->m_status != Status::ACTIVE ) {
                     return;
                 }
+                pThis->m_status = Status::EXECUTED;
                 pThis->m_callback( std::move(reply) );
             }
         });

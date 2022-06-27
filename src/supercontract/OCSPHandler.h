@@ -57,6 +57,9 @@ private:
     const int m_maxEfforts;
     int m_effortsLeft;
 
+    // The callback might be both synchronous and asynchronous
+    // After calling the callback one can not know
+    // whether the object exists anymore
     std::function<void( CertificateRevocationCheckStatus status )> m_callback;
 
     DebugInfo m_dbgInfo;
@@ -84,8 +87,15 @@ public:
             , m_effortsLeft( maxEfforts )
             , m_dbgInfo( debugInfo ) {
         OCSP_parse_url(url.c_str(), &m_host, &m_port, &m_path, &m_ssl );
-        _LOG( "Host " << m_host );
     }
+
+    OCSPHandler( const OCSPHandler& ) = delete;
+
+    OCSPHandler( OCSPHandler&& ) = delete;
+
+    OCSPHandler& operator=( OCSPHandler&& ) = delete;
+
+    OCSPHandler& operator=( const OCSPHandler& ) = delete;
 
     void run() {
         sendRequest();
@@ -95,6 +105,8 @@ public:
 
         DBG_MAIN_THREAD
 
+        // After the timer is reset we are sure that no asynchronous operation will be called
+        // And so there will not be asynchronous object access
         m_retryTimer.reset();
 
         if ( m_socketBio ) {
@@ -138,8 +150,6 @@ private:
 
         m_ctx = OCSP_sendreq_new( m_socketBio, m_path, nullptr, -1 );
 
-        _LOG( "m_path " << m_path );
-
         if ( !m_ctx ) {
             _LOG_WARN( "Could Not Create OCSP Context" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
@@ -167,8 +177,6 @@ private:
         DBG_MAIN_THREAD
 
         auto rv = BIO_do_connect( m_socketBio );
-
-        _LOG( "RV " << rv );
 
         if ( rv > 0 ) {
             // Successfully connected
@@ -252,11 +260,9 @@ private:
 
             if ( status == V_OCSP_CERTSTATUS_GOOD ) {
                 revocationStatus = CertificateRevocationCheckStatus::VALID;
-                _LOG( "Valid" );
             }
             else if ( status == V_OCSP_CERTSTATUS_REVOKED ) {
                 revocationStatus = CertificateRevocationCheckStatus::REVOKED;
-                _LOG( "Revoked" );
             }
             else {
                 throw OCSPResponseException( "OCSP Response Invalid Status" );

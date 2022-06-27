@@ -264,6 +264,7 @@ private:
         if( ec ) {
             close();
             c->postReply( {} );
+            return;
         }
 
         if ( m_res.is_done() || m_res.get().body().size == 0 ) {

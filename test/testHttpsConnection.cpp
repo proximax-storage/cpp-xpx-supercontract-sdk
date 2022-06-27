@@ -42,7 +42,7 @@ namespace sirius::contract::test {
 
 #define TEST_NAME HttpsConnection
 
-TEST(Example, TEST_NAME) {
+TEST(Internet, ValidCertificate) {
 
     ThreadManager threadManager;
 
@@ -52,10 +52,12 @@ TEST(Example, TEST_NAME) {
 
     DebugInfo info{ "peer", threadManager.threadId() };
     auto connection =
-            std::make_shared<HttpsInternetConnection>(ctx, threadManager, "revoked.badssl.com", "/", 30000, info);
+            std::make_shared<HttpsInternetConnection>( ctx, threadManager, "example.com", "/", 30000,
+                                                       RevocationVerificationMode::HARD, info );
 
     std::function<void(bool&&)> f = [&] (bool&& s) {
-        std::cout << "success " << s << std::endl;
+        ASSERT_TRUE(s);
+        connection.reset();
     };
     std::function<void()> terminateCallback = [] {};
     auto query = std::make_shared<AbstractAsyncQuery<bool>>(f, terminateCallback, threadManager);
@@ -64,7 +66,32 @@ TEST(Example, TEST_NAME) {
         connection->open(query);
     });
     threadManager.stop();
-    std::cout<< "stopped" << std::endl;
+}
+
+TEST(Internet, RevokedCertificate) {
+
+    ThreadManager threadManager;
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode( ssl::verify_peer );
+
+    DebugInfo info{ "peer", threadManager.threadId() };
+    auto connection =
+            std::make_shared<HttpsInternetConnection>( ctx, threadManager, "revoked.badssl.com", "/", 30000,
+                                                       RevocationVerificationMode::HARD, info );
+
+    std::function<void(bool&&)> f = [&] (bool&& s) {
+        ASSERT_FALSE(s);
+        connection.reset();
+    };
+    std::function<void()> terminateCallback = [] {};
+    auto query = std::make_shared<AbstractAsyncQuery<bool>>(f, terminateCallback, threadManager);
+
+    threadManager.execute([&] {
+        connection->open(query);
+    });
+    threadManager.stop();
 }
 
 }

@@ -39,7 +39,10 @@ private:
 
     std::unique_ptr<OCSPHandler> m_ocspChecker;
 
-    std::function<void( CertificateRevocationCheckStatus )> m_callback;
+    // The callback is ALWAYS executed asynchronously
+    // After calling the callback one can not know
+    // whether the object exists anymore
+    std::function<void( CertificateRevocationCheckStatus )> m_asyncCallback;
 
     ThreadManager& m_threadManager;
 
@@ -54,12 +57,12 @@ public:
 
     OCSPVerifier( X509_STORE* store,
                   stack_st_X509* chain,
-                  std::function<void( CertificateRevocationCheckStatus )> callback,
+                  std::function<void( CertificateRevocationCheckStatus )> asyncCallback,
                   ThreadManager& threadManager, int timerDelayMs,
                   int maxEfforts, const DebugInfo& debugInfo )
             : m_store( store )
             , m_chain( chain )
-            , m_callback( std::move(callback) )
+            , m_asyncCallback( std::move( asyncCallback) )
             , m_threadManager( threadManager )
             , m_timerDelayMs( timerDelayMs )
             , m_maxEfforts( maxEfforts )
@@ -75,8 +78,8 @@ public:
     OCSPVerifier& operator=( const OCSPVerifier& ) = delete;
 
     ~OCSPVerifier() {
-//        m_ocspChecker.reset();
-//        sk_X509_free(m_chain);
+        m_ocspChecker.reset();
+        sk_X509_free(m_chain);
         OCSP_REQUEST_free( m_request );
     }
 
@@ -94,7 +97,7 @@ private:
 
         if ( !issuer ) {
             _LOG_WARN( "Certificate Issuer Is Null" );
-            m_callback(  CertificateRevocationCheckStatus::UNDEFINED );
+            postReply( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
@@ -102,7 +105,7 @@ private:
 
         if ( !m_request ) {
             _LOG_WARN( "Request Is Null" );
-            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
+            postReply( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
@@ -111,13 +114,13 @@ private:
 
         if ( !m_requestId ) {
             _LOG_WARN( "Request Id Is Null" );
-            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
+            postReply( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         if ( !OCSP_request_add0_id( m_request, m_requestId )) {
             _LOG_WARN( "Could Not Add Id To Request" );
-            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
+            postReply( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
     }
@@ -131,7 +134,6 @@ private:
             m_urls.emplace_back( sk_OPENSSL_STRING_value( ocsp_list, i ));
         }
         X509_email_free( ocsp_list );
-        _LOG ( "size " << m_urls.size() )
     }
 
     void sendRequest() {
@@ -140,7 +142,7 @@ private:
 
         if ( m_urls.empty() ) {
             _LOG_WARN( "No More URLs To Process" );
-            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
+            postReply( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
@@ -168,11 +170,17 @@ private:
 
         if ( status != CertificateRevocationCheckStatus::UNDEFINED ) {
             m_revocationStatus = status;
-            m_callback( m_revocationStatus );
+            postReply( m_revocationStatus );
+            return;
         }
-        else {
-            sendRequest();
-        }
+
+        sendRequest();
+    }
+
+    void postReply( CertificateRevocationCheckStatus status ) {
+        m_threadManager.execute( [=, callback = std::move( m_asyncCallback )] {
+            callback( status );
+        } );
     }
 
 };
