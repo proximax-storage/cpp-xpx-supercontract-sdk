@@ -30,7 +30,9 @@ private:
 
     // We DO own these objets
     stack_st_X509*  m_chain;
-    OCSP_REQUEST*   m_request;
+    OCSP_REQUEST*   m_request = nullptr;
+
+    // Is Not Freed Up because of calling OCSP_request_add0_id
     OCSP_CERTID*    m_requestId;
 
     std::deque<std::string> m_urls;
@@ -73,13 +75,14 @@ public:
     OCSPVerifier& operator=( const OCSPVerifier& ) = delete;
 
     ~OCSPVerifier() {
-        sk_X509_free(m_chain);
+//        m_ocspChecker.reset();
+//        sk_X509_free(m_chain);
         OCSP_REQUEST_free( m_request );
-        OCSP_CERTID_free( m_requestId );
     }
 
     void run( X509* cert, X509* issuer ) {
         prepareRequest( cert, issuer );
+        prepareURLs( cert );
         sendRequest();
     }
 
@@ -90,6 +93,7 @@ private:
         DBG_MAIN_THREAD
 
         if ( !issuer ) {
+            _LOG_WARN( "Certificate Issuer Is Null" );
             m_callback(  CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -97,18 +101,22 @@ private:
         m_request = OCSP_REQUEST_new();
 
         if ( !m_request ) {
-            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
-            return;
-        }
-
-        if ( !m_requestId ) {
+            _LOG_WARN( "Request Is Null" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         const EVP_MD* certIdMd = EVP_sha1();
         m_requestId = OCSP_cert_to_id( certIdMd, cert, issuer );
+
+        if ( !m_requestId ) {
+            _LOG_WARN( "Request Id Is Null" );
+            m_callback( CertificateRevocationCheckStatus::UNDEFINED );
+            return;
+        }
+
         if ( !OCSP_request_add0_id( m_request, m_requestId )) {
+            _LOG_WARN( "Could Not Add Id To Request" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -123,6 +131,7 @@ private:
             m_urls.emplace_back( sk_OPENSSL_STRING_value( ocsp_list, i ));
         }
         X509_email_free( ocsp_list );
+        _LOG ( "size " << m_urls.size() )
     }
 
     void sendRequest() {
@@ -130,6 +139,7 @@ private:
         DBG_MAIN_THREAD
 
         if ( m_urls.empty() ) {
+            _LOG_WARN( "No More URLs To Process" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -161,7 +171,7 @@ private:
             m_callback( m_revocationStatus );
         }
         else {
-
+            sendRequest();
         }
     }
 

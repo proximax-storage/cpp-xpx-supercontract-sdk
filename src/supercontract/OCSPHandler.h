@@ -41,7 +41,7 @@ private:
 
     // We do not own this object
     OCSP_REQUEST*   m_request;
-    OCSP_CERTID*   m_requestId;
+    OCSP_CERTID*    m_requestId;
     stack_st_X509*  m_chain;
     X509_STORE*     m_store;
 
@@ -84,6 +84,7 @@ public:
             , m_effortsLeft( maxEfforts )
             , m_dbgInfo( debugInfo ) {
         OCSP_parse_url(url.c_str(), &m_host, &m_port, &m_path, &m_ssl );
+        _LOG( "Host " << m_host );
     }
 
     void run() {
@@ -119,6 +120,7 @@ private:
         _ASSERT( m_path )
 
         if ( m_ssl != 0 ) {
+            _LOG_WARN( "SSL In OCSP Query" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -126,6 +128,7 @@ private:
         m_socketBio = BIO_new_connect( m_host );
 
         if ( !m_socketBio ) {
+            _LOG_WARN( "Could Not Create Socket BIO" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -135,17 +138,22 @@ private:
 
         m_ctx = OCSP_sendreq_new( m_socketBio, m_path, nullptr, -1 );
 
+        _LOG( "m_path " << m_path );
+
         if ( !m_ctx ) {
+            _LOG_WARN( "Could Not Create OCSP Context" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         if ( !OCSP_REQ_CTX_add1_header( m_ctx, "Host", m_host ) ) {
+            _LOG_WARN( "Could Not Add OCSP Header" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
 
         if ( !OCSP_REQ_CTX_set1_req( m_ctx, m_request ) ) {
+            _LOG_WARN( "Could Not Add Request To OCSP Context" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -160,12 +168,14 @@ private:
 
         auto rv = BIO_do_connect( m_socketBio );
 
+        _LOG( "RV " << rv );
+
         if ( rv > 0 ) {
             // Successfully connected
             m_effortsLeft = m_maxEfforts;
             read();
         }
-        else if ( rv < 0 && m_effortsLeft > 0 ) {
+        else if ( BIO_should_retry( m_socketBio ) && m_effortsLeft > 0 ) {
             m_effortsLeft--;
             m_retryTimer = m_threadManager.startTimer( m_timerDelayMs, [this] {
                 connect();
@@ -173,6 +183,7 @@ private:
         }
         else {
             // Real error has occurred
+            _LOG_WARN( "Error During The OCSP Connection" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         }
     }
@@ -194,6 +205,7 @@ private:
             });
         }
         else {
+            _LOG_WARN( "Error During Reading OCSP Response" );
             m_callback( CertificateRevocationCheckStatus::UNDEFINED );
             return;
         }
@@ -240,15 +252,18 @@ private:
 
             if ( status == V_OCSP_CERTSTATUS_GOOD ) {
                 revocationStatus = CertificateRevocationCheckStatus::VALID;
+                _LOG( "Valid" );
             }
             else if ( status == V_OCSP_CERTSTATUS_REVOKED ) {
                 revocationStatus = CertificateRevocationCheckStatus::REVOKED;
+                _LOG( "Revoked" );
             }
             else {
                 throw OCSPResponseException( "OCSP Response Invalid Status" );
             }
         }
         catch ( const OCSPResponseException& ex ) {
+            _LOG_WARN( "Error During Parsing OCSP Response " << ex.what() );
             revocationStatus = CertificateRevocationCheckStatus::UNDEFINED;
         }
         OCSP_BASICRESP_free( basicResponse );

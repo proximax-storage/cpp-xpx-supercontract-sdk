@@ -13,6 +13,7 @@ find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thr
 
 include_directories(SYSTEM ${Boost_INCLUDE_DIR})
 
+set(gRPC_SSL_PROVIDER package)
 include(FetchContent)
 FetchContent_Declare(
         grpc

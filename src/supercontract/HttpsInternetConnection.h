@@ -62,6 +62,8 @@ private:
 
     const DebugInfo m_dbgInfo;
 
+    int m_test = 0;
+
 public:
 
     HttpsInternetConnection(
@@ -95,9 +97,9 @@ public:
             return;
         }
 
-        if(  SSL_set_tlsext_host_name( m_stream.native_handle(), m_host.c_str() ) )
-        {
-            c->postReply( false );
+        if ( !SSL_set_tlsext_host_name( m_stream.native_handle(), m_host.c_str() )) {
+            beast::error_code ec{static_cast<int>(::ERR_get_error()), net::error::get_ssl_category()};
+            std::cerr << ec.message() << "\n";
             return;
         }
 
@@ -115,6 +117,7 @@ public:
                 beast::bind_front_handler(
                         [pThisWeak = weak_from_this(), callback] ( beast::error_code ec,
                                                         tcp::resolver::results_type results ) {
+                            LOG ( "resolve closure" );
                             if ( auto pThis = pThisWeak.lock(); pThis ) {
                                 pThis->onHostResolved( ec, results, callback );
                             }
@@ -157,7 +160,7 @@ public:
 
     ~HttpsInternetConnection() override {
 
-        DBG_MAIN_THREAD
+//        DBG_MAIN_THREAD
 
         close();
     }
@@ -165,7 +168,7 @@ public:
 private:
 
     void close() {
-        DBG_MAIN_THREAD
+//        DBG_MAIN_THREAD
 
         m_resolver.cancel();
         m_stream.next_layer().close();
@@ -178,6 +181,8 @@ private:
             std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        _LOG( "resolved" );
 
         m_timeoutTimer.reset();
 
@@ -231,34 +236,23 @@ private:
         }
 
         m_stream.set_verify_callback( [=, pThisWeak = weak_from_this()]( bool p, ssl::verify_context& c ) -> bool {
-            if ( auto pThis = pThisWeak.lock(); pThis ) {
-                auto requestId = utils::generateRandomByteValue<RequestId>();
-                auto* handle = c.native_handle();
 
-                stack_st_X509* chain = X509_STORE_CTX_get1_chain( handle );
+            LOG( "Callback" )
 
-                std::function<void (CertificateRevocationCheckStatus)> f = [=]( CertificateRevocationCheckStatus status ) {
-                    if ( auto pThis = pThisWeak.lock(); pThis ) {
-                        pThis->onOCSPVerified( requestId, status, callback );
-                    }
-                };
+            auto pThis = pThisWeak.lock();
 
-                auto ocspVerifier = std::make_unique<OCSPVerifier>(
-                        X509_STORE_CTX_get0_store( handle ),
-                        X509_STORE_CTX_get1_chain( handle ),
-                        [=] ( CertificateRevocationCheckStatus status ) {
-                            if ( auto pThis = pThisWeak.lock(); pThis ) {
-                                pThis->onOCSPVerified( requestId, status, callback );
-                            }
-                        },
-                        pThis->m_threadManager,
-                        500,
-                        100,
-                        pThis->m_dbgInfo );
-                auto [it, success] = pThis->m_ocspVerifiers.emplace( requestId, std::move(ocspVerifier) );
-                it->second->run( X509_STORE_CTX_get_current_cert(handle), X509_STORE_CTX_get0_current_issuer(handle) );
+            if ( !pThis ) {
+                return false;
             }
-            return p;
+
+            if ( !p ) {
+                return false;
+            }
+
+            pThis->verifyOCSP( c, callback );
+
+            LOG( "return true" );
+            return true;
         } );
 
         m_stream.async_handshake(
@@ -377,15 +371,65 @@ private:
         } );
     }
 
+    void verifyOCSP( ssl::verify_context& c, std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
+
+        DBG_MAIN_THREAD
+
+//        if ( m_test < 3 ) {
+//            m_test++;
+//            return;
+//        }
+
+        auto* handle = c.native_handle();
+
+        auto* cert = X509_STORE_CTX_get_current_cert( handle );
+        auto* issuer = X509_STORE_CTX_get0_current_issuer( handle );
+
+        if ( cert == issuer ) {
+            return;
+        }
+        auto requestId = utils::generateRandomByteValue<RequestId>();
+
+        stack_st_X509* chain = X509_STORE_CTX_get1_chain( handle );
+
+        auto ocspVerifier = std::make_unique<OCSPVerifier>(
+                X509_STORE_CTX_get0_store( handle ),
+                X509_STORE_CTX_get1_chain( handle ),
+                [=, pThisWeak = weak_from_this()]( CertificateRevocationCheckStatus status ) {
+                    if ( auto pThis = pThisWeak.lock(); pThis ) {
+                        pThis->onOCSPVerified( requestId, status, callback );
+                    }
+                },
+                m_threadManager,
+                500,
+                100,
+                m_dbgInfo );
+        auto[it, success] = m_ocspVerifiers.emplace( requestId, std::move( ocspVerifier ));
+        it->second->run( cert, issuer );
+    }
+
     void onOCSPVerified( const RequestId& requestId, CertificateRevocationCheckStatus status, std::weak_ptr<AbstractAsyncQuery<bool>> callback ) {
 
         DBG_MAIN_THREAD
+
+        _LOG( "ON OCSP Verified" );
+
+        auto c = callback.lock();
+
+        if ( !c ) {
+            return;
+        }
 
         auto it = m_ocspVerifiers.find( requestId );
 
         _ASSERT( it != m_ocspVerifiers.end() )
 
         m_ocspVerifiers.erase( it );
+
+        if ( status != CertificateRevocationCheckStatus::VALID ) {
+            c->postReply( false );
+            return;
+        }
 
         if ( m_ocspVerifiers.empty() && m_handshakeReceived ) {
             onExtendedHandshake( callback );

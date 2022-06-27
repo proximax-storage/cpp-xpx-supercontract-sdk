@@ -14,7 +14,7 @@ class InternetConnection {
 
 public:
 
-    virtual ~InternetConnection() = 0;
+    virtual ~InternetConnection() = default;
 
     virtual void open( std::weak_ptr<AbstractAsyncQuery<bool>> ) = 0;
 
