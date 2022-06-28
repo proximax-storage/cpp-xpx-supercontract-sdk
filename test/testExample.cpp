@@ -168,13 +168,12 @@ namespace sirius::contract::test {
     // VirtualMachineMock
     class VirtualMachineMock: public VirtualMachine {
 
-    public:
+    private:
 
         DefaultBatchesManager m_batchesManager;
 
     public:
-        bool status = false;
-        
+
         VirtualMachineMock( DefaultBatchesManager batchesManager )
                 :m_batchesManager(batchesManager) {}
 
@@ -190,7 +189,7 @@ namespace sirius::contract::test {
             callExecutionResult.m_scConsumed = 0;
             callExecutionResult.m_smConsumed = 0;
 
-            status = m_batchesManager.onSuperContractCallExecuted(callExecutionResult);   
+            m_batchesManager.onSuperContractCallExecuted(callExecutionResult);   
         }
     };
 
@@ -205,6 +204,9 @@ namespace sirius::contract::test {
 
         };
     };
+
+    void foo(std::string x){}
+    void foo2(){}
 
     TEST(Example, TEST_NAME) {
         // ContractEnvironment field needed for batchesManager creation
@@ -228,10 +230,10 @@ namespace sirius::contract::test {
         ExecutorEnvironmentMock executorEnv( keyPair, messengerMock, storageMock, executorEventHandlerMock, vmMock, executorConfig );
         DebugInfo debugInfo( "peer", debugThread.threadId() );
 
+        // Create batchesManager and virtual machine object
         DefaultBatchesManager batchesManager( index, contractEnv, executorEnv, debugInfo ); 
         VirtualMachineMock virtualMachine( batchesManager );  
         
-
         // Call request for batchesManager::addCall()
         CallRequest callRequest;
         CallId callId;
@@ -249,33 +251,44 @@ namespace sirius::contract::test {
         Block block;
         block.m_blockHash = blockHash;
         block.m_height = 0;
+        Block block2;
+        block.m_blockHash = blockHash;
+        block.m_height = 1;
+        Block block3;
+        block.m_blockHash = blockHash;
+        block.m_height = 2;
+        Block block4;
+        block.m_blockHash = blockHash;
+        block.m_height = 3;
 
-        // Call addCall and addBlockInfo
+        // Call addCall() and addBlockInfo()
         batchesManager.addCall(callRequest);
         batchesManager.addCall(callRequest);
         batchesManager.addBlockInfo(block);
-        batchesManager.addBlockInfo(block);
-        batchesManager.addBlockInfo(block);
+        batchesManager.addBlockInfo(block2);
+        batchesManager.addBlockInfo(block3);
         batchesManager.addCall(callRequest);
         batchesManager.addCall(callRequest);
-        batchesManager.addBlockInfo(block);
+        batchesManager.addBlockInfo(block4);
         batchesManager.setAutomaticExecutionsEnabledSince(0);
 
         // ThreadManagers
+        ThreadManager threadManagerForQuery;
         ThreadManager threadManager1;
         ThreadManager threadManager2;
 
         StorageObserverMock storageObserver;
 
+        auto path = "/";
+        auto query = std::make_shared<AbstractAsyncQuery<std::string>>(foo, foo2, threadManagerForQuery);
+
         threadManager1.startTimer(1000, [&] {
-            auto path = "/";
-            auto query = std::make_shared<AbstractAsyncQuery<std::string>>();
             storageObserver.getAbsolutePath(path, query);
         });
 
         // srand( time( 0 ) );
         // m_threadManager.startTimer( ( rand()%10000 ), [&] {       
-        threadManager2.startTimer( 3000 , [&] {   
+        threadManager2.startTimer( 1500 , [&] {
             // Create call request for executeCall()
             CallRequest callRequest;
             CallId callId;
@@ -293,8 +306,17 @@ namespace sirius::contract::test {
             //call executeCall
             virtualMachine.executeCall(contractKey, callRequest);
         }); 
-        bool expectedResult = true;
-        ASSERT_EQ(expectedResult, virtualMachine.status);
+
+        std::cout << "Test start" << std::endl;
+        std::cout << "next batch()" << std::endl;
+        auto batch = batchesManager.nextBatch();
+        std::cout << "batch index: " << batch.m_batchIndex << std::endl;
+        std::cout << "has Next :" << batchesManager.hasNextBatch() << std::endl;
+
+        std::cout << "next batch()" << std::endl;
+        auto batch2 = batchesManager.nextBatch();
+        std::cout << "batch index: " << batch2.m_batchIndex << std::endl;
+        std::cout << "has Next :" << batchesManager.hasNextBatch() << std::endl;
 
     }
 }
