@@ -34,6 +34,12 @@ class HttpInternetConnection:
 
 private:
 
+
+    enum class ConnectionState {
+        UNINITIALIZED, INITIALIZED, CLOSED
+    };
+
+
     ThreadManager& m_threadManager;
 
     std::string m_host;
@@ -49,6 +55,8 @@ private:
     int m_timeout;
     std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
 
+    ConnectionState m_state = ConnectionState::UNINITIALIZED;
+
     const DebugInfo m_dbgInfo;
 
 public:
@@ -57,6 +65,7 @@ public:
             ThreadManager& threadManager,
             const std::string& host,
             const std::string& target,
+            int bufferSize,
             int timeout,
             const DebugInfo& debugInfo )
     : m_threadManager( threadManager )
@@ -64,6 +73,7 @@ public:
     , m_target( target )
     , m_resolver( threadManager.context() )
     , m_stream( threadManager.context() )
+    , m_buffer( bufferSize )
     , m_timeout( timeout )
     , m_dbgInfo( debugInfo )
     {
@@ -76,6 +86,8 @@ public:
     void open( std::weak_ptr<AbstractAsyncQuery<bool>> callback ) override {
 
         DBG_MAIN_THREAD
+
+        _ASSERT( m_state == ConnectionState::UNINITIALIZED )
 
         m_req.version( 10 );
         m_req.method( http::verb::get );
@@ -102,13 +114,17 @@ public:
 
     void read( std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback ) override {
 
+        DBG_MAIN_THREAD
+
         auto c = callback.lock();
 
         if ( !c ) {
+            close();
             return;
         }
 
         if ( m_res.is_done()) {
+            close();
             c->postReply( std::vector<uint8_t>());
             return;
         }
@@ -131,22 +147,29 @@ public:
         runTimeoutTimer();
     }
 
-    ~HttpInternetConnection() override {
+    void close() override {
 
         DBG_MAIN_THREAD
 
-        close();
-    }
+        if ( m_state == ConnectionState::CLOSED ) {
+            return;
+        }
 
-private:
-
-    void close() {
-        DBG_MAIN_THREAD
+        m_state = ConnectionState::CLOSED;
 
         m_resolver.cancel();
         m_stream.close();
         m_timeoutTimer.reset();
     }
+
+    ~HttpInternetConnection() override {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( m_state == ConnectionState::CLOSED )
+    }
+
+private:
 
     void
     onHostResolved(
@@ -161,6 +184,7 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            close();
             return;
         }
 
@@ -198,6 +222,7 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            close();
             return;
         }
 
@@ -229,6 +254,7 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            close();
             return;
         }
 
@@ -238,22 +264,25 @@ private:
             return;
         }
 
+        m_state = ConnectionState::INITIALIZED;
         c->postReply( true );
     }
 
     void onRead(
             beast::error_code ec,
             std::size_t bytes_transferred,
-            std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback
-    ) {
+            std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback ) {
 
         DBG_MAIN_THREAD
+
+        _ASSERT( m_state != ConnectionState::UNINITIALIZED )
 
         m_timeoutTimer.reset();
 
         auto c = callback.lock();
 
         if ( !c ) {
+            close();
             return;
         }
 
@@ -294,8 +323,10 @@ private:
 
         _ASSERT( !m_timeoutTimer )
 
-        m_timeoutTimer = m_threadManager.startTimer( m_timeout, [this] {
-            close();
+        m_timeoutTimer = m_threadManager.startTimer( m_timeout, [pThisWeak=weak_from_this()] {
+            if ( auto pThis = pThisWeak.lock(); pThis ) {
+                pThis->close();
+            }
         } );
     }
 };

@@ -32,7 +32,11 @@ private:
     std::string     m_rpcVirtualMachineAddress = "localhost:50051";
     std::string     m_rpcServerAddress = "localhost:50052";
 
+
+    int             m_internetBufferSize = 16 * 1024;
     int             m_internetConnectionTimeoutMilliseconds = 10000;
+    int             m_ocspQueryTimerMilliseconds = 500;
+    int             m_ocspQueryMaxEfforts = 60;
 
 public:
 
@@ -108,12 +112,36 @@ public:
         m_rpcServerAddress = rpcServerAddress;
     }
 
+    int internetBufferSize() const {
+        return m_internetBufferSize;
+    }
+
+    void setInternetBufferSize( int internetBufferSize ) {
+        m_internetBufferSize = internetBufferSize;
+    }
+
     int internetConnectionTimeoutMilliseconds() const {
         return m_internetConnectionTimeoutMilliseconds;
     }
 
     void setInternetConnectionTimeoutMilliseconds( int internetConnectionTimeoutMilliseconds ) {
         m_internetConnectionTimeoutMilliseconds = internetConnectionTimeoutMilliseconds;
+    }
+
+    int ocspQueryTimerMilliseconds() const {
+        return m_ocspQueryTimerMilliseconds;
+    }
+
+    void setOcspQueryTimerMilliseconds( int ocspQueryTimerMilliseconds ) {
+        m_ocspQueryTimerMilliseconds = ocspQueryTimerMilliseconds;
+    }
+
+    int ocspQueryMaxEfforts() const {
+        return m_ocspQueryMaxEfforts;
+    }
+
+    void setOcspQueryMaxEfforts( int ocspQueryMaxEfforts ) {
+        m_ocspQueryMaxEfforts = ocspQueryMaxEfforts;
     }
 };
 

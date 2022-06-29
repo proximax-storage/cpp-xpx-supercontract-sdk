@@ -46,25 +46,33 @@ class HttpsInternetConnection:
 
 private:
 
+    enum class ConnectionState {
+        UNINITIALIZED, INITIALIZED, SHUTDOWN, CLOSED
+    };
+
     ThreadManager& m_threadManager;
 
     std::string m_host;
     std::string m_target;
 
-    tcp::resolver m_resolver;
-    beast::ssl_stream<beast::tcp_stream> m_stream;
-    beast::flat_buffer m_buffer;
-    http::request<http::empty_body> m_req;
-    http::parser<false, http::buffer_body> m_res;
-    std::vector<uint8_t> m_readDataBuffer;
+    tcp::resolver                           m_resolver;
+    beast::ssl_stream<beast::tcp_stream>    m_stream;
+    beast::flat_buffer                      m_buffer;
+    http::request<http::empty_body>         m_req;
+    http::parser<false, http::buffer_body>  m_res;
+    std::vector<uint8_t>                    m_readDataBuffer;
 
     std::map<RequestId, std::unique_ptr<OCSPVerifier>> m_ocspVerifiers;
-    bool m_handshakeReceived = false;
+    bool                                               m_handshakeReceived = false;
 
-    int m_timeout;
+    int m_connectionTimeout;
+    int m_ocspQueryTimerDelay;
+    int m_ocspQueryMaxEfforts;
     std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
 
     RevocationVerificationMode m_revocationVerificationMode;
+
+    ConnectionState m_state = ConnectionState::UNINITIALIZED;
 
     const DebugInfo m_dbgInfo;
 
@@ -75,7 +83,10 @@ public:
             ThreadManager& threadManager,
             const std::string& host,
             const std::string& target,
-            int timeout,
+            int bufferSize,
+            int connectionTimeout,
+            int ocspQueryTimerDelay,
+            int ocspQueryMaxEfforts,
             RevocationVerificationMode mode,
             const DebugInfo& debugInfo )
     : m_threadManager( threadManager )
@@ -83,7 +94,11 @@ public:
     , m_target( target )
     , m_resolver( threadManager.context() )
     , m_stream( threadManager.context(), ctx )
-    , m_timeout( timeout )
+    , m_readDataBuffer( bufferSize )
+    , m_connectionTimeout( connectionTimeout )
+    , m_ocspQueryTimerDelay( ocspQueryTimerDelay )
+    , m_ocspQueryMaxEfforts( ocspQueryMaxEfforts )
+    , m_revocationVerificationMode( mode )
     , m_dbgInfo( debugInfo )
     {
         beast::get_lowest_layer( m_stream ).expires_never();
@@ -96,13 +111,18 @@ public:
 
         DBG_MAIN_THREAD
 
+        _ASSERT( m_state == ConnectionState::UNINITIALIZED )
+
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "Open Https Connection Empty Callback" );
+            close();
             return;
         }
 
         if ( !SSL_set_tlsext_host_name( m_stream.native_handle(), m_host.c_str() )) {
+            _LOG_WARN( "Open Https Connection SSL Set Host Name Error" );
             close();
             c->postReply( false );
             return;
@@ -133,13 +153,27 @@ public:
 
     void read( std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> callback ) override {
 
+        DBG_MAIN_THREAD
+
+        _ASSERT( m_state != ConnectionState::UNINITIALIZED )
+
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "Read Https Connection Empty Callback" );
+            close();
             return;
         }
 
-        if ( m_res.is_done()) {
+        if ( m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED ) {
+            _LOG_WARN( "Read Https Connection Closed" );
+            c->postReply( {} );
+            return;
+        }
+
+        if ( m_res.is_done() ) {
+            _LOG_WARN( "Read Https Connection Finished" );
+            close();
             c->postReply( std::vector<uint8_t>());
             return;
         }
@@ -162,24 +196,42 @@ public:
         runTimeoutTimer();
     }
 
+    void close() override {
+
+        DBG_MAIN_THREAD
+
+        if ( m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED ) {
+            return;
+        }
+
+        m_state = ConnectionState::SHUTDOWN;
+
+        m_ocspVerifiers.clear();
+
+        m_timeoutTimer.reset();
+        m_resolver.cancel();
+        beast::get_lowest_layer( m_stream ).cancel();
+
+        m_stream.async_shutdown( [pThis = shared_from_this()] ( beast::error_code ec ) {
+            pThis->onShutdown( ec );
+        } );
+
+        m_timeoutTimer = m_threadManager.startTimer( m_connectionTimeout, [pThisWeak=weak_from_this()]  {
+            if ( auto pThis = pThisWeak.lock(); pThis ) {
+                // It should cause an error on shutdown
+                beast::get_lowest_layer( pThis->m_stream ).cancel();
+            }
+        });
+    }
+
     ~HttpsInternetConnection() override {
 
         DBG_MAIN_THREAD
 
-        close();
+        _ASSERT( m_state == ConnectionState::CLOSED )
     }
 
 private:
-
-    void close() {
-
-        DBG_MAIN_THREAD
-
-        m_ocspVerifiers.clear();
-        m_resolver.cancel();
-        m_stream.next_layer().close();
-        m_timeoutTimer.reset();
-    }
 
     void onHostResolved(
             beast::error_code ec,
@@ -193,10 +245,13 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnHostResolved Https Connection Empty Callback" );
+            close();
             return;
         }
 
         if ( ec ) {
+            _LOG_WARN( "OnHostResolved Https Connection Error "  << ec.message() );
             close();
             c->postReply( false );
             return;
@@ -230,10 +285,13 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnConnected Https Connection Empty Callback" );
+            close();
             return;
         }
 
         if ( ec ) {
+            _LOG_WARN( "OnConnected Https Connection Error " << ec.message() );
             close();
             c->postReply( false );
             return;
@@ -244,6 +302,11 @@ private:
             auto pThis = pThisWeak.lock();
 
             if ( !pThis ) {
+                return false;
+            }
+
+            if ( pThis->m_state == ConnectionState::SHUTDOWN ) {
+                // Is It Possible?
                 return false;
             }
 
@@ -278,10 +341,14 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnHandshake Https Connection Empty Callback" );
+            close();
             return;
         }
 
         if ( ec ) {
+            _LOG_WARN( "OnHandshake Https Connection Error " << ec.message() );
+            close();
             c->postReply( false );
             return;
         }
@@ -304,15 +371,19 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnWritten Https Connection Empty Callback" );
+            close();
             return;
         }
 
         if ( ec ) {
+            _LOG_WARN( "OnWritten Https Connection Error " << ec.message() );
             close();
             c->postReply( false );
             return;
         }
 
+        m_state = ConnectionState::INITIALIZED;
         c->postReply( true );
     }
 
@@ -328,6 +399,8 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnRead Https Connection Empty Callback" );
+            close();
             return;
         }
 
@@ -336,13 +409,15 @@ private:
         }
 
         if( ec ) {
+            _LOG_WARN( "OnRead Https Connection Error " << ec.message() );
             close();
             c->postReply( {} );
             return;
         }
 
         if ( m_res.is_done() || m_res.get().body().size == 0 ) {
-            auto readSize = m_readDataBuffer.size() - m_res.get().body().size;
+            auto readSize = m_readDataBuffer
+                    .size() - m_res.get().body().size;
             std::vector<uint8_t> data( readSize );
             std::copy( m_readDataBuffer.begin(), m_readDataBuffer.begin() + readSize, data.begin() );
             c->postReply( std::move(data) );
@@ -368,8 +443,10 @@ private:
 
         _ASSERT( !m_timeoutTimer )
 
-        m_timeoutTimer = m_threadManager.startTimer( m_timeout, [this] {
-            close();
+        m_timeoutTimer = m_threadManager.startTimer( m_connectionTimeout, [pThisWeak = weak_from_this()] {
+            if ( auto pThis = pThisWeak.lock(); pThis ) {
+                beast::get_lowest_layer( pThis->m_stream ).cancel();
+            }
         } );
     }
 
@@ -410,6 +487,7 @@ private:
         auto c = callback.lock();
 
         if ( !c ) {
+            _LOG_WARN( "OnOCSPVerified Https Connection Empty Callback" );
             return;
         }
 
@@ -433,6 +511,7 @@ private:
 
 
         if ( !ocspValid ) {
+            _LOG_WARN( "OnOCSPVerified Https Connection OCSP Invalid" );
             close();
             c->postReply( false );
             return;
@@ -453,6 +532,28 @@ private:
                            } ));
 
         runTimeoutTimer();
+    }
+
+    void onShutdown( beast::error_code ec ) {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( m_state == ConnectionState::SHUTDOWN );
+
+        if ( ec == net::error::eof ) {
+
+        }
+
+        if ( ec ) {
+            // Error Is Normal Here
+            _LOG_WARN( "Error During Shutdown: " << ec.message() );
+        }
+
+        m_state = ConnectionState::CLOSED;
+
+        m_timeoutTimer.reset();
+
+        beast::get_lowest_layer( m_stream ).close();
     }
 };
 

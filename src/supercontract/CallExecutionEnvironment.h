@@ -92,6 +92,7 @@ public:
         auto[connectionIt, insertSuccess] = m_internetConnections.insert(
                 {totalConnectionsCreated,
                  std::make_unique<HttpInternetConnection>( m_executorEnvironment.threadManager(), host, target,
+                                                              m_executorEnvironment.executorConfig().internetBufferSize(),
                                                               m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                               m_dbgInfo )} );
         _ASSERT( insertSuccess )
@@ -100,7 +101,10 @@ public:
                                                                          ( bool&& success ) {
             // If the callback is executed, 'this' will always be alive
             if ( !success ) {
-                m_internetConnections.erase( connectionId );
+                auto connectionIt = m_internetConnections.find( connectionId );
+                _ASSERT( connectionIt != m_internetConnections.end() )
+                connectionIt->second->close();
+                m_internetConnections.erase( connectionIt );
                 callback( {} );
             } else {
                 callback( connectionId );
@@ -120,7 +124,7 @@ public:
         _ASSERT( !m_asyncQuery )
 
         auto connectionIt = m_internetConnections.find( connectionId );
-        if ( connectionIt == m_internetConnections.end()) {
+        if ( connectionIt == m_internetConnections.end() ) {
             callback( {} );
         }
 
@@ -147,10 +151,11 @@ public:
         _ASSERT( !m_asyncQuery )
 
         auto connectionIt = m_internetConnections.find( connectionId );
-        if ( connectionIt == m_internetConnections.end()) {
+        if ( connectionIt == m_internetConnections.end() ) {
             callback( false );
         }
 
+        connectionIt->second->close();
         m_internetConnections.erase( connectionIt );
         callback( true );
     }
