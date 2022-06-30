@@ -55,19 +55,22 @@ public:
 
 std::unique_ptr<BaseContractTask> createInitContractTask( AddContractRequest&& request,
                                                           ContractEnvironment& contractEnvironment,
-                                                          ExecutorEnvironment& executorEnvironment );
+                                                          ExecutorEnvironment& executorEnvironment,
+                                                          const DebugInfo& );
 
 std::unique_ptr<BaseContractTask> createBatchExecutionTask( Batch&& batch,
                                                             ContractEnvironment& contractEnvironment,
                                                             ExecutorEnvironment& executorEnvironment,
                                                             std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchInfos,
                                                             std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
-                                                            std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo );
+                                                            std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo,
+                                                            const DebugInfo& );
 
 std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&& storageState,
                                                              ContractEnvironment& contractEnvironment,
-                                                             ExecutorEnvironment& executorEnvironment );
+                                                             ExecutorEnvironment& executorEnvironment,
+                                                             const DebugInfo& );
 
-std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment&, ExecutorEnvironment& );
+std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment&, ExecutorEnvironment&, const DebugInfo& );
 
 }

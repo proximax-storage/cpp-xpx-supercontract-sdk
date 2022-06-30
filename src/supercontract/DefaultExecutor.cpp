@@ -4,6 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 
+#include <boost/beast/ssl.hpp>
+
 #include "Contract.h"
 #include "contract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
@@ -34,10 +36,13 @@ private:
 
     const crypto::KeyPair& m_keyPair;
 
+    boost::asio::ssl::context m_sslContext;
+
+    ThreadManager m_threadManager;
+
     std::map<ContractKey, std::unique_ptr<Contract>>    m_contracts;
     std::map<DriveKey, ContractKey>                     m_contractsDriveKeys;
 
-    ThreadManager m_threadManager;
     DebugInfo     m_dbgInfo;
 
     ExecutorConfig m_config;
@@ -64,6 +69,7 @@ public:
                      const StorageObserver& storageObserver,
                      const std::string& dbgPeerName = "executor")
                      : m_keyPair(keyPair)
+                     , m_sslContext( boost::asio::ssl::context::tlsv12_client )
                      , m_dbgInfo( dbgPeerName, m_threadManager.threadId() )
                      , m_config( config )
                      , m_eventHandler( eventHandler )
@@ -73,6 +79,8 @@ public:
                      , m_virtualMachine(std::make_shared<RPCVirtualMachine>( m_virtualMachineSessionId, storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress(), m_dbgInfo ) )
                      , m_rpcServerServiceManager( m_config.rpcServerAddress(), m_virtualMachineSessionId, m_threadManager, m_dbgInfo ) {
         m_threadManager.execute( [this] {
+            m_sslContext.set_default_verify_paths();
+            m_sslContext.set_verify_mode( boost::asio::ssl::verify_peer );
             m_virtualMachineInternetQueryKeeper = m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>();
             m_rpcServerServiceManager.run();
         } );
@@ -308,6 +316,10 @@ public:
 
     std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
         return m_virtualMachineInternetQueryKeeper;
+    }
+
+    boost::asio::ssl::context& sslContext() override {
+        return m_sslContext;
     }
 
     // endregion

@@ -339,7 +339,7 @@ private:
 
         DBG_MAIN_THREAD
 
-        m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment );
+        m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment, m_dbgInfo );
 
         m_contractRemoveRequest.reset();
 
@@ -352,7 +352,7 @@ private:
 
         _ASSERT( m_contractRemoveRequest )
 
-        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this, m_executorEnvironment );
+        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this, m_executorEnvironment, m_dbgInfo );
 
         m_contractRemoveRequest.reset();
 
@@ -365,7 +365,7 @@ private:
 
         _ASSERT( m_synchronizationRequest )
 
-        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this, m_executorEnvironment );
+        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this, m_executorEnvironment, m_dbgInfo );
 
         m_synchronizationRequest.reset();
 
@@ -402,8 +402,10 @@ private:
         }
 
         m_task = createBatchExecutionTask( std::move( batch ), *this, m_executorEnvironment,
-                                           std::move( successfulEndBatchOpinions ), std::move( unsuccessfulEndBatchOpinions ),
-                                           std::move( publishedInfo ));
+                                           std::move( successfulEndBatchOpinions ),
+                                           std::move( unsuccessfulEndBatchOpinions ),
+                                           std::move( publishedInfo ),
+                                           m_dbgInfo );
         m_task->run();
     }
 

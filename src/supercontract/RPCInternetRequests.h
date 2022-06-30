@@ -43,7 +43,7 @@ public:
             }
 
             if ( pHandler ) {
-                pHandler->openConnection( m_request.url(), "", [this]( const std::optional<uint64_t>& connectionId ) {
+                pHandler->openConnection( m_request.url(), [this]( const std::optional<uint64_t>& connectionId ) {
                     onSuccess( connectionId );
                 }, [this] {
                     onTerminate();
@@ -192,7 +192,7 @@ public:
             }
 
             if ( pHandler ) {
-                pHandler->close( m_request.identifier(), [this]( bool success ) {
+                pHandler->closeConnection( m_request.identifier(), [this]( bool success ) {
                     onSuccess( success );
                     }, [this] {
                     onTerminate();

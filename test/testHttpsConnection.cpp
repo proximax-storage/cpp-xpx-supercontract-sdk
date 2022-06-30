@@ -5,24 +5,14 @@
 */
 
 #include "gtest/gtest.h"
-#include <boost/beast/core.hpp>
-#include <boost/beast/http.hpp>
 #include <boost/beast/ssl.hpp>
-#include <boost/beast/version.hpp>
-#include <boost/asio/strand.hpp>
-#include <cstdlib>
 #include <functional>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <openssl/ssl.h>
-#include <openssl/bio.h>
-#include <openssl/x509_vfy.h>
-#include <openssl/ssl.h>
-#include <openssl/ocsp.h>
-#include <thread>
 
 #include "supercontract/HttpsInternetConnection.h"
+#include "supercontract/InternetUtils.h"
 
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
@@ -42,6 +32,8 @@ namespace sirius::contract::test {
 
 #define TEST_NAME HttpsConnection
 
+namespace sirius::contract::test {
+
 TEST(Internet, ValidRead) {
 
     ThreadManager threadManager;
@@ -51,8 +43,23 @@ TEST(Internet, ValidRead) {
     ctx.set_verify_mode( ssl::verify_peer );
 
     DebugInfo info{ "peer", threadManager.threadId() };
+
+    auto urlDescription = parseURL( "https://example.com" );
+
+    ASSERT_TRUE( urlDescription );
+    ASSERT_TRUE( urlDescription->ssl );
+    ASSERT_EQ( urlDescription->port, "443" );
+
     auto connection =
-            std::make_shared<HttpsInternetConnection>( ctx, threadManager, "example.com", "/", 16 * 1024, 30000, 500, 60,
+            std::make_shared<HttpsInternetConnection>( ctx,
+                                                       threadManager,
+                                                       urlDescription->host,
+                                                       urlDescription->port,
+                                                       urlDescription->target,
+                                                       16 * 1024,
+                                                       30000,
+                                                       500,
+                                                       60,
                                                        RevocationVerificationMode::HARD, info );
 
 
@@ -108,7 +115,7 @@ TEST(Internet, ValidRead) {
         ASSERT_EQ( actual, expected );
         connection->close();
         connection.reset();
-    }, [] {}, threadManager);
+        }, [] {}, threadManager);
     std::function<void(bool&&)> openCallback = [&] (bool&& s) {
         ASSERT_TRUE(s);
         connection->read( readCallback );
@@ -131,8 +138,23 @@ TEST(Internet, ValidCertificate) {
     ctx.set_verify_mode( ssl::verify_peer );
 
     DebugInfo info{ "peer", threadManager.threadId() };
+
+    auto urlDescription = parseURL( "https://example.com" );
+
+    ASSERT_TRUE( urlDescription );
+    ASSERT_TRUE( urlDescription->ssl );
+    ASSERT_EQ( urlDescription->port, "443" );
+
     auto connection =
-            std::make_shared<HttpsInternetConnection>( ctx, threadManager, "example.com", "/", 16 * 1024, 30000, 500, 60,
+            std::make_shared<HttpsInternetConnection>( ctx,
+                                                       threadManager,
+                                                       urlDescription->host,
+                                                       urlDescription->port,
+                                                       urlDescription->target,
+                                                       16 * 1024,
+                                                       30000,
+                                                       500,
+                                                       60,
                                                        RevocationVerificationMode::HARD, info );
 
     std::function<void(bool&&)> openCallback = [&] (bool&& s) {
@@ -158,8 +180,23 @@ TEST(Internet, RevokedCertificate) {
     ctx.set_verify_mode( ssl::verify_peer );
 
     DebugInfo info{ "peer", threadManager.threadId() };
+
+    auto urlDescription = parseURL( "https://revoked.badssl.com" );
+
+    ASSERT_TRUE( urlDescription );
+    ASSERT_TRUE( urlDescription->ssl );
+    ASSERT_EQ( urlDescription->port, "443" );
+
     auto connection =
-            std::make_shared<HttpsInternetConnection>( ctx, threadManager, "revoked.badssl.com", "/", 16 * 1024, 30000, 500, 60,
+            std::make_shared<HttpsInternetConnection>( ctx,
+                                                       threadManager,
+                                                       urlDescription->host,
+                                                       urlDescription->port,
+                                                       urlDescription->target,
+                                                       16 * 1024,
+                                                       30000,
+                                                       500,
+                                                       60,
                                                        RevocationVerificationMode::HARD, info );
 
     std::function<void(bool&&)> f = [&] (bool&& s) {
@@ -173,6 +210,8 @@ TEST(Internet, RevokedCertificate) {
         connection->open(query);
     });
     threadManager.stop();
+}
+
 }
 
 }

@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include <boost/beast/ssl.hpp>
+
 #include "contract/Storage.h"
 #include "contract/Messenger.h"
 #include "contract/ExecutorEventHandler.h"
@@ -40,6 +42,8 @@ public:
     virtual ExecutorConfig& executorConfig() = 0;
 
     virtual std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() = 0;
+
+    virtual boost::asio::ssl::context& sslContext() = 0;
 };
 
 }

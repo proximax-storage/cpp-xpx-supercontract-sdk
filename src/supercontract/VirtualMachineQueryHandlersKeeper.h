@@ -11,6 +11,7 @@
 
 #include "types.h"
 
+#include "log.h"
 #include "DebugInfo.h"
 
 namespace sirius::contract {
@@ -25,16 +26,45 @@ namespace sirius::contract {
 
     public:
 
-        VirtualMachineQueryHandlersKeeper( const DebugInfo& debugInfo );
+        VirtualMachineQueryHandlersKeeper( const DebugInfo& debugInfo )
+        : m_dbgInfo( debugInfo ) {
+            DBG_MAIN_THREAD
+        }
 
-        ~VirtualMachineQueryHandlersKeeper();
+        ~VirtualMachineQueryHandlersKeeper() {
 
-        std::shared_ptr<THandler> getHandler( const CallId& callId ) const;
+            DBG_MAIN_THREAD
 
-        void addHandler( const CallId& callId, std::shared_ptr<THandler> );
+            for (auto& [_, pHandler]: m_handlers) {
+                pHandler->terminate();
+            }
+        }
 
-        void removeHandler( const CallId& callId );
+        std::shared_ptr<THandler> getHandler( const CallId& callId ) const {
 
+            DBG_MAIN_THREAD
+
+            auto it = m_handlers.template find(callId);
+            if (it == m_handlers.end()) {
+                return {};
+            }
+            return it->second;
+        }
+
+        void addHandler( const CallId& callId, std::shared_ptr<THandler> handler ) {
+
+            DBG_MAIN_THREAD
+
+            m_handlers[callId] = std::move( handler );
+        }
+
+        void removeHandler( const CallId& callId ) {
+
+            DBG_MAIN_THREAD
+
+            auto it = m_handlers.template find(callId);
+            m_handlers.erase(it);
+        }
     };
 
 }

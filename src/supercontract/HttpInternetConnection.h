@@ -43,6 +43,7 @@ private:
     ThreadManager& m_threadManager;
 
     std::string m_host;
+    std::string m_port;
     std::string m_target;
 
     tcp::resolver m_resolver;
@@ -64,6 +65,7 @@ public:
     HttpInternetConnection(
             ThreadManager& threadManager,
             const std::string& host,
+            const std::string& port,
             const std::string& target,
             int bufferSize,
             int timeout,
@@ -99,7 +101,7 @@ public:
         // Look up the domain name
         m_resolver.async_resolve(
                 m_host,
-                "80",
+                m_port,
                 beast::bind_front_handler(
                         [pThisWeak = weak_from_this(), callback] ( beast::error_code ec,
                                                         tcp::resolver::results_type results ) {

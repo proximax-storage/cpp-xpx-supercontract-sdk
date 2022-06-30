@@ -10,6 +10,7 @@
 #include "contract/AsyncQuery.h"
 #include "HttpInternetConnection.h"
 #include "HttpsInternetConnection.h"
+#include "InternetUtils.h"
 
 namespace sirius::contract {
 
@@ -28,6 +29,8 @@ private:
 
     uint64_t totalConnectionsCreated = 0;
     std::map<uint64_t, std::unique_ptr<InternetConnection>> m_internetConnections;
+
+    bool m_terminated = false;
 
     const DebugInfo m_dbgInfo;
 
@@ -72,6 +75,12 @@ public:
 
         DBG_MAIN_THREAD
 
+        if ( m_terminated ) {
+            return;
+        }
+
+        m_terminated = true;
+
         if ( m_asyncQuery ) {
             m_asyncQuery->terminate();
         }
@@ -80,21 +89,51 @@ public:
     // region internet
 
     void
-    openConnection( const std::string& host,
-                    const std::string& target,
+    openConnection( const std::string& url,
                     std::function<void( std::optional<uint64_t>&& )>&& callback,
                     std::function<void()>&& terminateCallback ) override {
 
         DBG_MAIN_THREAD
 
+        _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
 
+        auto urlDescription = parseURL( url );
+
+        if ( !urlDescription ) {
+            _LOG_WARN( "Invalid URL: " << url );
+            callback( {} );
+            return;
+        }
+
+        std::unique_ptr<InternetConnection> connection;
+
+        if ( urlDescription->ssl ) {
+            connection = std::make_unique<HttpsInternetConnection>( m_executorEnvironment.sslContext(),
+                                                                    m_executorEnvironment.threadManager(),
+                                                                    urlDescription->host,
+                                                                    urlDescription->port,
+                                                                    urlDescription->target,
+                                                                    m_executorEnvironment.executorConfig().internetBufferSize(),
+                                                                    m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
+                                                                    m_executorEnvironment.executorConfig().ocspQueryTimerMilliseconds(),
+                                                                    m_executorEnvironment.executorConfig().ocspQueryMaxEfforts(),
+                                                                    RevocationVerificationMode::SOFT,
+                                                                    m_dbgInfo );
+        }
+        else {
+            connection = std::make_unique<HttpInternetConnection>( m_executorEnvironment.threadManager(),
+                                                                   urlDescription->host,
+                                                                   urlDescription->port,
+                                                                   urlDescription->target,
+                                                                   m_executorEnvironment.executorConfig().internetBufferSize(),
+                                                                   m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
+                                                                   m_dbgInfo );
+        }
+
         auto[connectionIt, insertSuccess] = m_internetConnections.insert(
-                {totalConnectionsCreated,
-                 std::make_unique<HttpInternetConnection>( m_executorEnvironment.threadManager(), host, target,
-                                                              m_executorEnvironment.executorConfig().internetBufferSize(),
-                                                              m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
-                                                              m_dbgInfo )} );
+                {totalConnectionsCreated, std::move( connection )} );
+
         _ASSERT( insertSuccess )
         auto query = std::make_shared<AbstractAsyncQuery<bool>>( [this, callback = std::move(
                 callback ), connectionId = totalConnectionsCreated]
@@ -121,6 +160,7 @@ public:
 
         DBG_MAIN_THREAD
 
+        _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
 
         auto connectionIt = m_internetConnections.find( connectionId );
@@ -143,11 +183,12 @@ public:
         connectionIt->second->read( query );
     }
 
-    void close( uint64_t connectionId, std::function<void( bool )>&& callback,
+    void closeConnection( uint64_t connectionId, std::function<void( bool )>&& callback,
                 std::function<void()>&& terminateCallback ) override {
 
         DBG_MAIN_THREAD
 
+        _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
 
         auto connectionIt = m_internetConnections.find( connectionId );

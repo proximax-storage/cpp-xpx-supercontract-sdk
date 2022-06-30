@@ -53,6 +53,7 @@ private:
     ThreadManager& m_threadManager;
 
     std::string m_host;
+    std::string m_port;
     std::string m_target;
 
     tcp::resolver                           m_resolver;
@@ -82,6 +83,7 @@ public:
             ssl::context& ctx,
             ThreadManager& threadManager,
             const std::string& host,
+            const std::string& port,
             const std::string& target,
             int bufferSize,
             int connectionTimeout,
@@ -91,6 +93,7 @@ public:
             const DebugInfo& debugInfo )
     : m_threadManager( threadManager )
     , m_host( host )
+    , m_port( port )
     , m_target( target )
     , m_resolver( threadManager.context() )
     , m_stream( threadManager.context(), ctx )
@@ -138,7 +141,7 @@ public:
         // Look up the domain name
         m_resolver.async_resolve(
                 m_host,
-                "443",
+                m_port,
                 beast::bind_front_handler(
                         [pThisWeak = weak_from_this(), callback] ( beast::error_code ec,
                                                         tcp::resolver::results_type results ) {
@@ -473,8 +476,8 @@ private:
                     }
                 },
                 m_threadManager,
-                500,
-                100,
+                m_ocspQueryTimerDelay,
+                m_ocspQueryMaxEfforts,
                 m_dbgInfo );
         auto [it, success] = m_ocspVerifiers.emplace( requestId, std::move( ocspVerifier ));
         it->second->run( cert, issuer );

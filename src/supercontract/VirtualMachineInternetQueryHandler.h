@@ -13,8 +13,7 @@ namespace sirius::contract {
     public:
 
         virtual void openConnection(
-                const std::string& host,
-                const std::string& target,
+                const std::string& url,
                 std::function<void( std::optional<uint64_t>&& )>&& callback,
                 std::function<void()>&& terminateCallback ) = 0;
 
@@ -23,10 +22,12 @@ namespace sirius::contract {
                 std::function<void( std::optional<std::vector<uint8_t>>&& )>&& callback,
                 std::function<void()>&& terminateCallback ) = 0;
 
-        virtual void close(
+        virtual void closeConnection(
                 uint64_t connectionId,
                 std::function<void( bool )>&& callback,
                 std::function<void()>&& terminateCallback ) = 0;
+
+        virtual void terminate() = 0;
 
     };
 
