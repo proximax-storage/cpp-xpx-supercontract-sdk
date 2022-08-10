@@ -23,7 +23,7 @@
 #include "utils/Random.h"
 #include "InternetConnection.h"
 #include "supercontract/ThreadManager.h"
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 #include "DebugInfo.h"
 #include "supercontract/AsyncQuery.h"
 #include "log.h"

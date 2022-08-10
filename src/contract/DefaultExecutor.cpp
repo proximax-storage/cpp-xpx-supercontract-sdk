@@ -20,7 +20,7 @@
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 
 #include "utils/Serializer.h"
 #include "utils/Random.h"

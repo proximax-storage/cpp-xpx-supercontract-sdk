@@ -9,7 +9,7 @@
 #include <map>
 #include <memory>
 
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 
 #include "log.h"
 #include "DebugInfo.h"

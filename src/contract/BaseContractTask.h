@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 #include "supercontract/Requests.h"
 #include "supercontract/Transactions.h"
 #include "supercontract/StorageQueries.h"

@@ -7,7 +7,7 @@
 #pragma once
 
 #include "supercontract/ExecutorConfig.h"
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/Requests.h"

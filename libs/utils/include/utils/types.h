@@ -60,26 +60,6 @@ namespace sirius {
 
     namespace contract {
 
-        // InfoHash
-        using InfoHash  = Hash256;// std::array<uint8_t,32>;
-    
-        struct InfoHashPtrCompare {
-            bool operator() ( const InfoHash* l, const InfoHash* r) const { return *l < *r; }
-        };
-    
-        using InfoHashPtrSet = std::set<const InfoHash*,InfoHashPtrCompare>;
-
-        // Replicator requisites
-        struct ReplicatorInfo
-        {
-            bool operator==(const ReplicatorInfo& ri) const {
-                return ri.m_publicKey == m_publicKey;
-            }
-
-            boost::asio::ip::tcp::endpoint  m_endpoint;
-            Key                             m_publicKey;
-        };
-
 #define DECL_KEY(KeyName) \
         struct KeyName : public Key \
         { \
@@ -94,11 +74,10 @@ namespace sirius {
             template<class Archive> \
             void serialize(Archive &arch) \
             { \
-                std::array<uint8_t,32>& theArray = (std::array<uint8_t,32>&)array(); \
-                arch( theArray ); \
+                arch( m_array ); \
             } \
         };
-    
+
 #define DECL_HASH(HashName) \
         struct HashName : public Hash256 \
         { \
@@ -114,32 +93,9 @@ namespace sirius {
             template<class Archive> \
             void serialize(Archive &arch) \
             { \
-                std::array<uint8_t,32>& theArray = (std::array<uint8_t,32>&)array(); \
-                arch( theArray ); \
+                arch( m_array ); \
             } \
         };
-
-    DECL_KEY( ContractKey );
-    DECL_KEY( DriveKey );
-    DECL_KEY( ExecutorKey );
-    DECL_KEY( CreatorKey );
-    DECL_KEY( CallerKey );
-
-    DECL_HASH( CallId )
-    DECL_HASH( SessionId )
-    DECL_HASH( StorageHash )
-    DECL_HASH( BlockHash )
-    DECL_HASH( TransactionHash )
-    DECL_HASH( RequestId )
-
-    //using ChannelId   = HashArray<std::array<uint8_t,32>>;
-    //using TxHash   = HashArray<std::array<uint8_t,32>>;
-    //using ModifyTxHash   = HashArray<std::array<uint8_t,32>>;
-    //using VerifyTxHash   = HashArray<std::array<uint8_t,32>>;
-
-        using ReplicatorList = std::vector<Key>;
-        using ClientList     = std::vector<std::array<uint8_t,32>>;
-        using Message        = std::vector<uint8_t>;
     }
 }
 

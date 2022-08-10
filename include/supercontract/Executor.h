@@ -13,7 +13,7 @@
 #include "BlockchainEventHandler.h"
 
 
-#include "utils/types.h"
+#include "Identifiers.h"
 
 #include <memory>
 namespace sirius::contract {

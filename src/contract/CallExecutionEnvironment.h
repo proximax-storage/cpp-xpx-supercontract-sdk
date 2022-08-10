@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "utils/types.h"
+#include "supercontract/Identifiers.h"
 
 #include "supercontract/AsyncQuery.h"
 #include "HttpInternetConnection.h"
