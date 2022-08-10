@@ -43,6 +43,7 @@ message ExecuteRequest {
   uint64 poExSecretDataPrefix = 6;
   uint64 scPrepayment = 7;
   uint64 smPrepayment = 8;
+  uint32 contract_mode = 10;
 }
 
 message ExecuteReturns {

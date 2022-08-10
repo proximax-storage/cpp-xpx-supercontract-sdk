@@ -5,7 +5,6 @@
 */
 
 #include "gtest/gtest.h"
-#include "supercontract/HttpInternetConnection.h"
 
 namespace sirius::contract::test {
 
