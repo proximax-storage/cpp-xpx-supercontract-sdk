@@ -1,6 +1,0 @@
-[submodule "cereal"]
-	path = cereal
-	url = https://github.com/USCiLab/cereal/
-[submodule "curlpp"]
-	path = curlpp
-	url = https://github.com/jpbarrette/curlpp
