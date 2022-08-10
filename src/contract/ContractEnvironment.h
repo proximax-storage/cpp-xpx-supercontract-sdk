@@ -6,15 +6,14 @@
 
 #pragma once
 
-#include "contract/Storage.h"
-#include "contract/Messenger.h"
-#include "contract/ExecutorEventHandler.h"
+#include "supercontract/Storage.h"
+#include "supercontract/Messenger.h"
+#include "supercontract/ExecutorEventHandler.h"
 #include "crypto/KeyPair.h"
 
-#include "contract/ThreadManager.h"
+#include "supercontract/ThreadManager.h"
 #include "TaskRequests.h"
 #include "ContractConfig.h"
-#include "VirtualMachineInternetQueryHandler.h"
 
 namespace sirius::contract {
 

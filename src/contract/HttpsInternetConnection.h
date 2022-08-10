@@ -22,10 +22,10 @@
 #include "OCSPVerifier.h"
 #include "utils/Random.h"
 #include "InternetConnection.h"
-#include "contract/ThreadManager.h"
-#include "types.h"
-#include "supercontract/DebugInfo.h"
-#include "contract/AsyncQuery.h"
+#include "supercontract/ThreadManager.h"
+#include "utils/types.h"
+#include "DebugInfo.h"
+#include "supercontract/AsyncQuery.h"
 #include "log.h"
 
 namespace sirius::contract {

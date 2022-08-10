@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 supercontract_sdk_shared_library_target(supercontract)
 
-foreach(_service supercontract_server internet)
+foreach(_service supercontract_server internet blockchain)
 
     # Proto file
     get_filename_component(${_service}_proto "../protos/${_service}.proto" ABSOLUTE)
@@ -45,11 +45,5 @@ foreach(_service supercontract_server internet)
             ${_PROTOBUF_LIBPROTOBUF})
 endforeach()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    add_definitions(-D_GNU_SOURCE)
-
-    target_link_libraries(supercontract contract-crypto)
-#            "-framework CoreFoundation" "-framework SystemConfiguration")
-else()
-	target_link_libraries(supercontract contract-crypto grpc++)
-endif()
+target_include_directories(supercontract PUBLIC ../../include/)
+target_link_libraries(supercontract cereal::cereal contract-crypto grpc++)

@@ -6,9 +6,6 @@
 
 #pragma once
 
-#include "internet.grpc.pb.h"
-#include "RPCInternetRequests.h"
-
 namespace sirius::contract {
 
     class RPCService {

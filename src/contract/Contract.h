@@ -6,20 +6,20 @@
 
 #pragma once
 
-#include <contract/ExecutorConfig.h>
-#include "types.h"
+#include "supercontract/ExecutorConfig.h"
+#include "utils/types.h"
 
-#include "contract/ExecutorEventHandler.h"
-#include "contract/Requests.h"
-#include "contract/Messenger.h"
-#include "contract/Storage.h"
-#include "contract/StorageQueries.h"
-#include "contract/StorageEventHandler.h"
-#include "eventHandlers/ContractStorageEventHandler.h"
-#include "eventHandlers/ContractVirtualMachineEventHandler.h"
-#include "eventHandlers/ContractMessageEventHandler.h"
-#include "eventHandlers/ContractBlockchainEventHandler.h"
-#include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "supercontract/ExecutorEventHandler.h"
+#include "supercontract/Requests.h"
+#include "supercontract/Messenger.h"
+#include "supercontract/Storage.h"
+#include "supercontract/StorageQueries.h"
+#include "supercontract/StorageEventHandler.h"
+#include "ContractStorageEventHandler.h"
+#include "ContractVirtualMachineEventHandler.h"
+#include "ContractMessageEventHandler.h"
+#include "ContractBlockchainEventHandler.h"
+#include "VirtualMachineEventHandler.h"
 #include "VirtualMachine.h"
 #include "ExecutorEnvironment.h"
 #include "DebugInfo.h"

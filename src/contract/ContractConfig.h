@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "contract/ExecutorConfig.h"
+#include "supercontract/ExecutorConfig.h"
 
-#include "types.h"
+#include "utils/types.h"
 
 #include <memory>
 

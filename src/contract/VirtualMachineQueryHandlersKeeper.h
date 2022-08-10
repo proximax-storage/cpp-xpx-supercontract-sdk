@@ -9,7 +9,7 @@
 #include <map>
 #include <memory>
 
-#include "types.h"
+#include "utils/types.h"
 
 #include "log.h"
 #include "DebugInfo.h"

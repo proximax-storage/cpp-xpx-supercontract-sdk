@@ -8,10 +8,10 @@
 
 #include "BatchesManager.h"
 
-#include "supercontract/ExecutorEnvironment.h"
-#include "supercontract/ContractEnvironment.h"
+#include "ExecutorEnvironment.h"
+#include "ContractEnvironment.h"
 
-#include "supercontract/log.h"
+#include "log.h"
 
 namespace sirius::contract {
 
@@ -170,6 +170,8 @@ public:
         _ASSERT ( batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC )
 
         if ( executionResult.m_success && executionResult.m_return == 0 ) {
+            CallReferenceInfo info;
+            info.m_callerKey = CallerKey();
             batchIt->second.m_requests.push_back( CallRequest{
                     CallId{callIt->second.m_blockHash.array()},
                     m_executorEnvironment.executorConfig().automaticExecutionFile(),

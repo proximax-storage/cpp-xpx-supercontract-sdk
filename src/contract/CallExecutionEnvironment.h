@@ -6,15 +6,20 @@
 
 #pragma once
 
-#include "types.h"
-#include "contract/AsyncQuery.h"
+#include "utils/types.h"
+
+#include "supercontract/AsyncQuery.h"
 #include "HttpInternetConnection.h"
 #include "HttpsInternetConnection.h"
 #include "InternetUtils.h"
+#include "VirtualMachineInternetQueryHandler.h"
+#include "VirtualMachineBlockchainQueryHandler.h"
 
 namespace sirius::contract {
 
-class CallExecutionEnvironment : public VirtualMachineInternetQueryHandler {
+class CallExecutionEnvironment
+        : public VirtualMachineInternetQueryHandler
+        , public VirtualMachineBlockchainQueryHandler {
 
 private:
 
@@ -199,6 +204,66 @@ public:
         connectionIt->second->close();
         m_internetConnections.erase( connectionIt );
         callback( true );
+    }
+
+    // endregion
+
+    // region blockchain
+
+    void getCaller( std::function<void( CallerKey )>&& callback, std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( m_callRequest.m_callLevel == CallRequest::CallLevel::AUTOMATIC ||
+                 m_callRequest.m_callLevel == CallRequest::CallLevel::MANUAL )
+
+        _ASSERT( m_callRequest.m_referenceInfo.m_callerKey )
+
+        CallerKey callerKey = *m_callRequest.m_referenceInfo.m_callerKey;
+        callback( std::move( callerKey ) );
+    }
+
+    void
+    getBlockHeight( std::function<void( uint64_t )>&& callback, std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        callback(m_callRequest.m_referenceInfo.m_blockHeight);
+    }
+
+    void
+    getBlockHash( std::function<void( BlockHash)>&& callback, std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        callback(m_callRequest.m_referenceInfo.m_blockHash);
+    }
+
+    void
+    getBlockTime( std::function<void( uint64_t )>&& callback, std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        callback(m_callRequest.m_referenceInfo.m_blockTime);
+    }
+
+    void getBlockGenerationTime( std::function<void( uint64_t )>&& callback,
+                                 std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        callback(m_callRequest.m_referenceInfo.m_blockGenerationTime);
+    }
+
+    void getTransactionHash( std::function<void( TransactionHash )>&& callback,
+                             std::function<void()>&& terminateCallback ) override {
+
+        DBG_MAIN_THREAD
+
+        _ASSERT( m_callRequest.m_callLevel == CallRequest::CallLevel::MANUAL )
+        _ASSERT( m_callRequest.m_referenceInfo.m_transactionHash )
+
+        callback( *m_callRequest.m_referenceInfo.m_transactionHash );
     }
 
     // endregion

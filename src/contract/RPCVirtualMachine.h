@@ -10,10 +10,10 @@
 #include "VirtualMachine.h"
 #include "supercontract_server.grpc.pb.h"
 #include "RPCCall.h"
-#include "contract/StorageObserver.h"
-#include "contract/ThreadManager.h"
-#include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
-#include "contract/AsyncQuery.h"
+#include "supercontract/StorageObserver.h"
+#include "supercontract/ThreadManager.h"
+#include "VirtualMachineEventHandler.h"
+#include "supercontract/AsyncQuery.h"
 #include "DebugInfo.h"
 
 namespace sirius::contract {
@@ -104,6 +104,7 @@ private:
         rpcRequest.set_functiontocall( std::move( request.m_function ));
         rpcRequest.set_scprepayment( request.m_scLimit );
         rpcRequest.set_smprepayment( request.m_smLimit );
+        rpcRequest.set_contract_mode( (uint32_t) request.m_callLevel );
 
         auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler, m_dbgInfo );
 

@@ -7,19 +7,20 @@
 #include <boost/beast/ssl.hpp>
 
 #include "Contract.h"
-#include "contract/ThreadManager.h"
+#include "supercontract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
-#include "supercontract/eventHandlers/VirtualMachineEventHandler.h"
+#include "VirtualMachineEventHandler.h"
 #include "RPCVirtualMachine.h"
 #include "RPCInternetService.h"
+#include "RPCBlockchainService.h"
 #include "VirtualMachineQueryHandlersKeeper.h"
 #include "RPCServerServiceManager.h"
 #include "DebugInfo.h"
 
-#include "contract/Executor.h"
+#include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
-#include "types.h"
+#include "utils/types.h"
 
 #include "utils/Serializer.h"
 #include "utils/Random.h"
