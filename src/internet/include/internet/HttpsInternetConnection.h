@@ -24,9 +24,9 @@
 #include "InternetConnection.h"
 #include "supercontract/ThreadManager.h"
 #include "supercontract/Identifiers.h"
-#include "DebugInfo.h"
+#include "../../contract/DebugInfo.h"
 #include "supercontract/AsyncQuery.h"
-#include "log.h"
+#include "../../contract/log.h"
 
 namespace sirius::contract {
 

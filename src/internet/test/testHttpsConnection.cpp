@@ -11,8 +11,8 @@
 #include <memory>
 #include <string>
 
-#include "contract/HttpsInternetConnection.h"
-#include "contract/InternetUtils.h"
+#include "internet/HttpsInternetConnection.h"
+#include "internet/InternetUtils.h"
 
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>

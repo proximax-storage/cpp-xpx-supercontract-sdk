@@ -46,4 +46,5 @@ foreach(_service supercontract_server internet blockchain)
 endforeach()
 
 target_include_directories(supercontract PUBLIC ../../include/)
-target_link_libraries(supercontract cereal::cereal contract-crypto grpc++)
+target_include_directories(supercontract PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
+target_link_libraries(supercontract cereal::cereal contract-internet spdlog contract-crypto grpc++)

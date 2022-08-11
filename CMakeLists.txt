@@ -10,7 +10,7 @@ set(ABSL_PROPAGATE_CXX_STD ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 ### setup boost
-#find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
+find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
 
 set(gRPC_SSL_PROVIDER package)
 include(FetchContent)

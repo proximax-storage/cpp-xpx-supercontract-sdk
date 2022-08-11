@@ -6,7 +6,7 @@
 
 #include <openssl/ocsp.h>
 
-#include "InternetUtils.h"
+#include "internet/InternetUtils.h"
 //#include "log.h"
 
 namespace sirius::contract {

@@ -5,6 +5,7 @@
 */
 #pragma once
 
+#include <boost/asio.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/high_resolution_timer.hpp>
 #include <thread>

@@ -9,9 +9,9 @@
 #include "supercontract/Identifiers.h"
 
 #include "supercontract/AsyncQuery.h"
-#include "HttpInternetConnection.h"
-#include "HttpsInternetConnection.h"
-#include "InternetUtils.h"
+#include "internet/HttpInternetConnection.h"
+#include "internet/HttpsInternetConnection.h"
+#include "internet/InternetUtils.h"
 #include "VirtualMachineInternetQueryHandler.h"
 #include "VirtualMachineBlockchainQueryHandler.h"
 
