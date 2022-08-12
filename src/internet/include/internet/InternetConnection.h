@@ -8,7 +8,7 @@
 
 #include "supercontract/AsyncQuery.h"
 
-namespace sirius::contract {
+namespace sirius::contract::internet {
 
 class InternetConnection {
 

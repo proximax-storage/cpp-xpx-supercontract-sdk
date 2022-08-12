@@ -33,7 +33,7 @@ private:
     std::shared_ptr<AsyncQuery> m_asyncQuery;
 
     uint64_t totalConnectionsCreated = 0;
-    std::map<uint64_t, std::unique_ptr<InternetConnection>> m_internetConnections;
+    std::map<uint64_t, std::unique_ptr<internet::InternetConnection>> m_internetConnections;
 
     bool m_terminated = false;
 
@@ -111,10 +111,11 @@ public:
             return;
         }
 
-        std::unique_ptr<InternetConnection> connection;
+        std::unique_ptr<internet::InternetConnection> connection;
 
         if ( urlDescription->ssl ) {
-            connection = std::make_unique<HttpsInternetConnection>( m_executorEnvironment.sslContext(),
+            connection = std::make_unique<internet::HttpsInternetConnection>(
+                                                                    m_executorEnvironment.sslContext(),
                                                                     m_executorEnvironment.threadManager(),
                                                                     urlDescription->host,
                                                                     urlDescription->port,
@@ -123,11 +124,11 @@ public:
                                                                     m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                                     m_executorEnvironment.executorConfig().ocspQueryTimerMilliseconds(),
                                                                     m_executorEnvironment.executorConfig().ocspQueryMaxEfforts(),
-                                                                    RevocationVerificationMode::SOFT,
+                                                                    internet::RevocationVerificationMode::SOFT,
                                                                     m_dbgInfo );
         }
         else {
-            connection = std::make_unique<HttpInternetConnection>( m_executorEnvironment.threadManager(),
+            connection = std::make_unique<internet::HttpInternetConnection>( m_executorEnvironment.threadManager(),
                                                                    urlDescription->host,
                                                                    urlDescription->port,
                                                                    urlDescription->target,

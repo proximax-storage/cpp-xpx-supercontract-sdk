@@ -18,17 +18,17 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "OCSPHandler.h"
-#include "OCSPVerifier.h"
+#include "internet/OCSPHandler.h"
+#include "internet/OCSPVerifier.h"
 #include "utils/Random.h"
-#include "InternetConnection.h"
+#include "internet/InternetConnection.h"
 #include "supercontract/ThreadManager.h"
 #include "supercontract/Identifiers.h"
 #include "../../contract/DebugInfo.h"
 #include "supercontract/AsyncQuery.h"
 #include "../../contract/log.h"
 
-namespace sirius::contract {
+namespace sirius::contract::internet {
 
 namespace beast = boost::beast;
 namespace http = beast::http;

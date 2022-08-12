@@ -8,7 +8,7 @@
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 
-namespace sirius::contract {
+namespace sirius::contract::internet {
 
 class OCSPResponseException : public std::runtime_error {
 public :
@@ -19,7 +19,7 @@ public :
 
 };
 
-contract::OCSPHandler::OCSPHandler(
+OCSPHandler::OCSPHandler(
         std::string&& url,
         OCSP_REQUEST* request,
         OCSP_CERTID* requestId,

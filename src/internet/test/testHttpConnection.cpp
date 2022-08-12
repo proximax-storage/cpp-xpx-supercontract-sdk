@@ -6,11 +6,11 @@
 
 #include "gtest/gtest.h"
 
-namespace sirius::contract::test {
+namespace sirius::contract::internet::test {
 
 #define TEST_NAME HttpConnection
 
-TEST(Internet, TEST_NAME) {
+TEST(TEST_NAME, Read) {
 }
 
 }

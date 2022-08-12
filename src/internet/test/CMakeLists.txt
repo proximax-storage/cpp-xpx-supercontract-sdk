@@ -10,6 +10,6 @@ file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
 add_executable(internet-tests ${TEST_FILES})
 enable_testing()
-add_test(supercontract-tests "./test")
+add_test(internet-tests "./test")
 target_link_libraries(internet-tests contract-internet Threads::Threads ${GTEST_LIBRARIES} gtest_main)
 

@@ -18,10 +18,8 @@
 #include <iostream>
 #include <memory>
 #include <string>
-#include "OCSPHandler.h"
-#include "OCSPVerifier.h"
 
-namespace sirius::contract {
+namespace sirius::contract::internet {
 
 namespace beast = boost::beast;
 namespace http = beast::http;

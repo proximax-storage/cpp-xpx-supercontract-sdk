@@ -47,4 +47,4 @@ endforeach()
 
 target_include_directories(supercontract PUBLIC ../../include/)
 target_include_directories(supercontract PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
-target_link_libraries(supercontract cereal::cereal contract-internet spdlog contract-crypto grpc++)
+target_link_libraries(supercontract cereal::cereal contract-internet contract-crypto grpc++)

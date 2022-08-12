@@ -28,13 +28,11 @@ using std::map;
 using std::vector;
 using std::string;
 
-namespace sirius::contract::test {
+namespace sirius::contract::internet{
 
-#define TEST_NAME HttpsConnection
+#define TEST_NAME = HttpsConnection
 
-namespace sirius::contract::test {
-
-TEST(Internet, ValidRead) {
+TEST(HttpsConnection, ValidRead) {
 
     ThreadManager threadManager;
 
@@ -129,7 +127,7 @@ TEST(Internet, ValidRead) {
     threadManager.stop();
 }
 
-TEST(Internet, ValidCertificate) {
+TEST(HttpsConnection, ValidCertificate) {
 
     ThreadManager threadManager;
 
@@ -171,7 +169,7 @@ TEST(Internet, ValidCertificate) {
     threadManager.stop();
 }
 
-TEST(Internet, RevokedCertificate) {
+TEST(HttpsConnection, RevokedCertificate) {
 
     ThreadManager threadManager;
 
@@ -210,8 +208,6 @@ TEST(Internet, RevokedCertificate) {
         connection->open(query);
     });
     threadManager.stop();
-}
-
 }
 
 }

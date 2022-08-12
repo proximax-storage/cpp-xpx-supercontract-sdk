@@ -4,13 +4,4 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "gtest/gtest.h"
-
-namespace sirius::contract::test {
-
-#define TEST_NAME Example
-
-TEST(TEST_NAME, Example) {
-}
-
-}
+#include "logging/Logger.h"
