@@ -28,7 +28,7 @@ public:
 
     void run() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_request.m_batchesExecuted > 0 ) {
             // The corresponding storage is not yet fully controlled by the Contract,
@@ -48,7 +48,7 @@ public:
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         const auto& cosigners = info.m_cosigners;
 

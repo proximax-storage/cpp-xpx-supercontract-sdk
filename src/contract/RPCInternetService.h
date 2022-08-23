@@ -21,14 +21,14 @@ public:
                      ThreadManager& threadManager,
                      const DebugInfo& debugInfo )
                      : RPCServiceImpl( sessionId, handlersExtractor, threadManager, debugInfo ) {
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
     }
 
 private:
 
     void registerCalls() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
         new ReadConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );

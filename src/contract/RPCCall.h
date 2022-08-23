@@ -115,7 +115,7 @@ protected:
 
     void onTerminate() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_status = ResponseStatus::READY_TO_FINISH;
         m_responder.FinishWithError( grpc::Status::CANCELLED, this );

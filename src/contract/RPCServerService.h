@@ -53,7 +53,7 @@ namespace sirius::contract {
 
         void terminate() override {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             m_terminated = true;
             m_handlersExtractor.template reset();
@@ -69,7 +69,7 @@ namespace sirius::contract {
 
         void registerService( grpc::ServerBuilder& builder ) override {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             builder.RegisterService(&m_service);
             m_completionQueue = builder.AddCompletionQueue();
@@ -77,7 +77,7 @@ namespace sirius::contract {
 
         void runService() override {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             registerCalls();
 

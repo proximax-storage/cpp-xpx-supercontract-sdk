@@ -28,14 +28,14 @@ public:
 
     void run() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_contractEnvironment.finishTask();
     }
 
     void terminate() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_contractEnvironment.finishTask();
     }

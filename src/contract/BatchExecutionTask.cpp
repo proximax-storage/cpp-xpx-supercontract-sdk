@@ -57,7 +57,7 @@ public:
 
     void run() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_executorEnvironment.storage().initiateModifications(m_contractEnvironment.driveKey(),
                                                                m_batch.m_batchIndex);
@@ -65,7 +65,7 @@ public:
 
     void terminate() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( auto pInternetHandlerKeeper = m_executorEnvironment.internetHandlerKeeper().lock(); pInternetHandlerKeeper ) {
             pInternetHandlerKeeper->removeHandler(m_call->callId());
@@ -85,7 +85,7 @@ public:
 
     bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_call || m_call->callId() != executionResult.m_callId ) {
             return false;
@@ -107,7 +107,7 @@ public:
 
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( opinion.m_batchIndex != m_batch.m_batchIndex ) {
             return false;
@@ -134,7 +134,7 @@ public:
 
     bool onInitiatedModifications( uint64_t batchIndex ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( batchIndex != m_batch.m_batchIndex ) {
             return false;
@@ -148,7 +148,7 @@ public:
     bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta,
                                                int64_t stateSizeDelta ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_batch.m_batchIndex != batchIndex ) {
             return false;
@@ -177,7 +177,7 @@ public:
     bool onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash,
                                  uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_batch.m_batchIndex != batchIndex ) {
             return false;
@@ -196,7 +196,7 @@ public:
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( info.m_batchIndex != m_batch.m_batchIndex ) {
             return false;
@@ -215,7 +215,7 @@ public:
 
     bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_batch.m_batchIndex != info.m_batchIndex ) {
             return false;
@@ -255,7 +255,7 @@ private:
     void formSuccessfulEndBatchOpinion( const StorageHash& storageHash,
                                         uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_successfulEndBatchOpinion = EndBatchExecutionOpinion();
         m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
@@ -294,7 +294,7 @@ private:
 
     void processPublishedEndBatch() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT(m_publishedEndBatchInfo)
         _ASSERT(m_successfulEndBatchOpinion)
@@ -328,7 +328,7 @@ private:
 
     bool validateOtherBatchInfo( const EndBatchExecutionOpinion& other ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT(m_successfulEndBatchOpinion)
 
@@ -395,7 +395,7 @@ private:
 
     void checkEndBatchTransactionReadiness() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_successfulEndBatchOpinion &&
              2 * m_otherSuccessfulExecutorEndBatchOpinions.size() >= 3 * (m_contractEnvironment.executors().size() + 1)) {
@@ -438,7 +438,7 @@ private:
     createMultisigTransactionInfo( const EndBatchExecutionOpinion& transactionOpinion,
                                    std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherTransactionOpinions ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         EndBatchExecutionTransactionInfo multisigTransactionInfo;
 
@@ -475,14 +475,14 @@ private:
 
     void sendEndBatchTransaction( const EndBatchExecutionTransactionInfo& transactionInfo ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_executorEnvironment.executorEventHandler().endBatchTransactionIsReady( transactionInfo);
     }
 
     void executeNextCall() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_batch.m_callRequests.empty()) {
             m_call = std::make_shared<CallExecutionEnvironment>( std::move(m_batch.m_callRequests.front()), m_executorEnvironment, m_contractEnvironment, m_dbgInfo );
@@ -504,7 +504,7 @@ private:
 
     void onUnsuccessfulExecutionTimerExpiration() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT(m_successfulEndBatchOpinion)
         _ASSERT(!m_unsuccessfulEndBatchOpinion)

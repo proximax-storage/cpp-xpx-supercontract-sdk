@@ -9,4 +9,4 @@ target_include_directories(contract-internet PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 #TEMP!!!!
 target_include_directories(contract-internet PUBLIC ../../contract)
 
-target_link_libraries(contract-internet utils OpenSSL::SSL)
+target_link_libraries(contract-internet contract-logging utils OpenSSL::SSL)

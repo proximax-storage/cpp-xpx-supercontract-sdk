@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "internet/OCSPHandler.h"
+#include "OCSPHandler.h"
 #include <openssl/ssl.h>
 #include <openssl/bio.h>
 
@@ -25,27 +25,25 @@ OCSPHandler::OCSPHandler(
         OCSP_CERTID* requestId,
         stack_st_X509* chain,
         X509_STORE* store,
-        ThreadManager& threadManager,
+        GlobalEnvironment& globalEnvironment,
         std::function<void( CertificateRevocationCheckStatus )> callback,
         int timerDelayMs,
-        int maxEfforts,
-        const DebugInfo& debugInfo )
+        int maxEfforts )
         : m_request( request )
         , m_requestId( requestId )
         , m_chain( chain )
         , m_store( store )
-        , m_threadManager( threadManager )
+        , m_globalEnvironment( globalEnvironment )
         , m_callback( std::move( callback ))
         , m_timerDelayMs( timerDelayMs )
         , m_maxEfforts( maxEfforts )
-        , m_effortsLeft( maxEfforts )
-        , m_dbgInfo( debugInfo ) {
+        , m_effortsLeft( maxEfforts ) {
     OCSP_parse_url( url.c_str(), &m_host, &m_port, &m_path, &m_ssl );
 }
 
 OCSPHandler::~OCSPHandler() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
     // After the timer is reset we are sure that no asynchronous operation will be called
     // And so there will not be asynchronous object access
@@ -65,21 +63,21 @@ OCSPHandler::~OCSPHandler() {
 
 void OCSPHandler::run() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
     sendRequest();
 }
 
 void OCSPHandler::sendRequest() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
-    _ASSERT( m_host )
-    _ASSERT( m_port )
-    _ASSERT( m_path )
+    ASSERT( m_host, m_globalEnvironment.logger() )
+    ASSERT( m_port, m_globalEnvironment.logger() )
+    ASSERT( m_path, m_globalEnvironment.logger() )
 
     if ( m_ssl != 0 ) {
-        _LOG_WARN( "SSL In OCSP Query" );
+        m_globalEnvironment.logger().warn("SSL In OCSP Query");
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -87,7 +85,7 @@ void OCSPHandler::sendRequest() {
     m_socketBio = BIO_new_connect( m_host );
 
     if ( !m_socketBio ) {
-        _LOG_WARN( "Could Not Create Socket BIO" );
+        m_globalEnvironment.logger().warn( "Could Not Create Socket BIO" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -98,19 +96,19 @@ void OCSPHandler::sendRequest() {
     m_ctx = OCSP_sendreq_new( m_socketBio, m_path, nullptr, -1 );
 
     if ( !m_ctx ) {
-        _LOG_WARN( "Could Not Create OCSP Context" );
+        m_globalEnvironment.logger().warn( "Could Not Create OCSP Context" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
 
     if ( !OCSP_REQ_CTX_add1_header( m_ctx, "Host", m_host ) ) {
-        _LOG_WARN( "Could Not Add OCSP Header" );
+        m_globalEnvironment.logger().warn( "Could Not Add OCSP Header" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
 
     if ( !OCSP_REQ_CTX_set1_req( m_ctx, m_request ) ) {
-        _LOG_WARN( "Could Not Add Request To OCSP Context" );
+        m_globalEnvironment.logger().warn( "Could Not Add Request To OCSP Context" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -120,7 +118,7 @@ void OCSPHandler::sendRequest() {
 
 void OCSPHandler::connect() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
     auto rv = BIO_do_connect( m_socketBio );
 
@@ -131,22 +129,22 @@ void OCSPHandler::connect() {
     }
     else if ( BIO_should_retry( m_socketBio ) && m_effortsLeft > 0 ) {
         m_effortsLeft--;
-        m_retryTimer = m_threadManager.startTimer( m_timerDelayMs, [this] {
+        m_retryTimer = m_globalEnvironment.threadManager().startTimer( m_timerDelayMs, [this] {
             connect();
         } );
     }
     else {
         // Real error has occurred
-        _LOG_WARN( "Error During The OCSP Connection" );
+        m_globalEnvironment.logger().warn( "Error During The OCSP Connection to {}:{}", m_host, m_port);
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
     }
 }
 
 void OCSPHandler::read() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
-    _ASSERT( m_ctx )
+    ASSERT( m_ctx, m_globalEnvironment.logger() )
 
     auto rv = OCSP_sendreq_nbio( &m_response, m_ctx );
     if ( rv > 0 ) {
@@ -154,12 +152,12 @@ void OCSPHandler::read() {
     }
     else if ( rv < 0 && m_effortsLeft > 0 ) {
         m_effortsLeft--;
-        m_retryTimer = m_threadManager.startTimer( m_timerDelayMs, [this] {
+        m_retryTimer = m_globalEnvironment.threadManager().startTimer( m_timerDelayMs, [this] {
             read();
         });
     }
     else {
-        _LOG_WARN( "Error During Reading OCSP Response" );
+        m_globalEnvironment.logger().warn("Error During Reading OCSP Response from {}:{}", m_host, m_port);
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -167,7 +165,7 @@ void OCSPHandler::read() {
 
 void OCSPHandler::onResponseReceived() {
 
-    DBG_MAIN_THREAD
+    ASSERT( isSingleThread(), m_globalEnvironment.logger() )
 
     OCSP_BASICRESP* basicResponse = nullptr;
     ASN1_GENERALIZEDTIME* producedAt = nullptr;
@@ -215,7 +213,7 @@ void OCSPHandler::onResponseReceived() {
         }
     }
     catch ( const OCSPResponseException& ex ) {
-        _LOG_WARN( "Error During Parsing OCSP Response " << ex.what() );
+        m_globalEnvironment.logger().warn("Error During Parsing OCSP Response: {}", ex.what());
         revocationStatus = CertificateRevocationCheckStatus::UNDEFINED;
     }
     OCSP_BASICRESP_free( basicResponse );

@@ -68,7 +68,7 @@ public:
 
     void terminate() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_task ) {
             m_task->terminate();
@@ -77,7 +77,7 @@ public:
 
     void addContractCall( const CallRequest& request ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_batchesManager->addCall( request );
         if ( !m_task ) {
@@ -87,7 +87,7 @@ public:
 
     void removeContract( const RemoveRequest& request ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_task ) {
             m_task->terminate();
@@ -98,21 +98,21 @@ public:
 
     void setExecutors( std::set<ExecutorKey>&& executors ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_executors = std::move(executors);
     }
 
     void addBlockInfo( const Block& block ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_batchesManager->addBlockInfo( block );
     }
 
     void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_batchesManager->setAutomaticExecutionsEnabledSince(blockHeight);
     }
@@ -123,7 +123,7 @@ public:
 
     bool onInitiatedModifications( uint64_t batchIndex ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_task ) {
             return false;
@@ -134,7 +134,7 @@ public:
 
     bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_task ) {
             return false;
@@ -147,7 +147,7 @@ public:
     onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
                             uint64_t fileStructureSize ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_task ) {
             return false;
@@ -164,7 +164,7 @@ public:
 
     bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_batchesManager->onSuperContractCallExecuted(executionResult) ) {
             return true;
@@ -185,7 +185,7 @@ public:
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         while ( !m_unknownSuccessfulBatchOpinions.empty()
                 && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
@@ -206,7 +206,7 @@ public:
 
     bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_task ) {
             return false;
@@ -217,7 +217,7 @@ public:
 
     bool onStorageSynchronized( uint64_t batchIndex ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_batchesManager->onStorageSynchronized( batchIndex );
 
@@ -239,7 +239,7 @@ public:
 
     bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( !m_task || !m_task->onEndBatchExecutionOpinionReceived( info )) {
             if ( info.isSuccessful()) {
@@ -260,56 +260,56 @@ public:
 
     const ContractKey& contractKey() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_contractKey;
     }
 
     const std::set<ExecutorKey>& executors() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_executors;
     }
 
     const DriveKey& driveKey() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_driveKey;
     }
 
     uint64_t automaticExecutionsSCLimit() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_automaticExecutionsSCLimit;
     }
 
     uint64_t automaticExecutionsSMLimit() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_automaticExecutionsSMLimit;
     }
 
     const ContractConfig& contractConfig() const override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_contractConfig;
     }
 
     void finishTask() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         runTask();
     }
 
     void addSynchronizationTask( const SynchronizationRequest& request ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_synchronizationRequest = request;
     }
@@ -320,7 +320,7 @@ private:
 
     void runTask() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_task.reset();
 
@@ -337,7 +337,7 @@ private:
 
     void runInitializeContractTask( AddContractRequest&& request ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment, m_dbgInfo );
 
@@ -348,7 +348,7 @@ private:
 
     void runRemoveContractTask() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( m_contractRemoveRequest )
 
@@ -361,7 +361,7 @@ private:
 
     void runSynchronizationTask() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( m_synchronizationRequest )
 
@@ -374,7 +374,7 @@ private:
 
     void runBatchExecutionTask() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT(  m_batchesManager->hasNextBatch() )
 

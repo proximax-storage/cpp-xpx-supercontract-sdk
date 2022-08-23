@@ -29,7 +29,7 @@ public:
 
     bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         const auto& cosigners = info.m_cosigners;
 
@@ -44,7 +44,7 @@ public:
 
     bool onStorageSynchronized( uint64_t ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_contractEnvironment.finishTask();
 
@@ -57,7 +57,7 @@ public:
 
     void run() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), m_request.m_storageHash );
     }
@@ -65,7 +65,7 @@ public:
 
     void terminate() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_contractEnvironment.finishTask();
     }

@@ -38,7 +38,7 @@ namespace sirius::contract {
         template<class TService, class THandler>
         std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> addService() {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             auto handler = std::make_shared<VirtualMachineQueryHandlersKeeper<THandler>>( m_dbgInfo );
             auto service = std::make_unique<TService>( m_sessionId, handler, m_threadManager, m_dbgInfo );
@@ -49,7 +49,7 @@ namespace sirius::contract {
 
         void run() {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             m_server = m_builder->BuildAndStart();
             m_builder.reset();
@@ -60,7 +60,7 @@ namespace sirius::contract {
 
         void terminate() {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             m_server->Shutdown();
             for (auto& service: m_services) {

@@ -5,3 +5,12 @@
 */
 
 #include "logging/Logger.h"
+
+namespace sirius::logging {
+
+//std::mutex Logger::s_creationMutex = std::mutex();
+//std::shared_ptr<spdlog::details::thread_pool> Logger::s_pThreadPool = nullptr;
+//spdlog::sink_ptr Logger::s_pConsoleSink = nullptr;
+
+
+}

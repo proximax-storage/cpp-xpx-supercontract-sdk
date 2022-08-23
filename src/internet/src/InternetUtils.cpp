@@ -21,8 +21,6 @@ std::optional<URLDescription> parseURL( const std::string& url ) {
         return {};
     }
 
-//    ASSERT( ssl == 0 || ssl == 1 )
-
     URLDescription urlDescription = {static_cast<bool>(ssl), std::string( host ), std::string( port ),
                                      std::string( target )};
 

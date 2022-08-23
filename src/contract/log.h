@@ -113,14 +113,15 @@ inline bool gBreakOnError = true;
     }\
 }
 
-#define ASSERT(expr) { \
-    if (!(expr)) {\
-        const std::lock_guard<std::mutex> autolock( gLogMutex ); \
-            std::cerr << __FILE__ << ":" << __LINE__ << " failed: " << #expr << "\n" << std::flush; \
-            std::cerr << "failed assert!!!: " << #expr << "\n" << std::flush; \
-        assert(0); \
-    }\
-}
+//#define ASSERT(expr) \
+//{ \
+//    if (!(expr)) {\
+//        const std::lock_guard<std::mutex> autolock( gLogMutex ); \
+//            std::cerr << __FILE__ << ":" << __LINE__ << " failed: " << #expr << "\n" << std::flush; \
+//            std::cerr << "failed assert!!!: " << #expr << "\n" << std::flush; \
+//        assert(0); \
+//    }\
+//}
 
-#define DBG_MAIN_THREAD { _FUNC_ENTRY(); _ASSERT( m_dbgInfo.m_threadId == std::this_thread::get_id() ); }
+#define DBG_MAIN_THREAD_DEPRECATED { _FUNC_ENTRY(); _ASSERT( m_dbgInfo.m_threadId == std::this_thread::get_id() ); }
 #define DBG_SECONDARY_THREAD { _ASSERT( m_dbgInfo.m_threadId != std::this_thread::get_id() ); }

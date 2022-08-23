@@ -28,16 +28,47 @@
 
 namespace sirius::logging {
 
+#define ASSERT(expr, logger) \
+if (!(expr)) {                 \
+(logger).critical("ASSERT failed: {} at {}:{}", #expr, __FILE__, __LINE__ ); \
+logger.stop();               \
+assert(0);                             \
+}
+
 template<typename... Args>
 using format_string_t = fmt::format_string<Args...>;
 using string_view_t = fmt::basic_string_view<char>;
 using memory_buf_t = fmt::basic_memory_buffer<char, 250>;
 
-namespace {
-    inline std::mutex                                    s_creationMutex;
-    inline std::shared_ptr<spdlog::details::thread_pool> s_pThreadPool;
-    inline spdlog::sink_ptr                              s_pConsoleSink;
-}
+//namespace {
+//    inline std::mutex                                    s_creationMutex;
+//    inline std::shared_ptr<spdlog::details::thread_pool> s_pThreadPool;
+//    inline spdlog::sink_ptr                              s_pConsoleSink;
+//}
+
+class LoggerGlobals {
+public:
+    std::shared_ptr<spdlog::details::thread_pool> m_pThreadPool;
+    spdlog::sink_ptr                              m_pConsoleSink;
+public:
+    static LoggerGlobals& getInstance() {
+        static LoggerGlobals instance;
+        return instance;
+    }
+
+private:
+
+    LoggerGlobals()
+    : m_pThreadPool(std::make_shared<spdlog::details::thread_pool>(8192, 1))
+    , m_pConsoleSink(std::make_shared<spdlog::sinks::stdout_color_sink_mt>()) {}
+    ~LoggerGlobals() = default;
+
+public:
+
+    LoggerGlobals(const LoggerGlobals&)= delete;
+    LoggerGlobals& operator=(const LoggerGlobals&)= delete;
+
+};
 
 class Logger {
 
@@ -55,22 +86,14 @@ public:
             throw std::runtime_error( "Null External Logger" );
         }
         m_externalLogger = std::move( externalLogger );
+        spdlog::thread_pool();
     }
 
     Logger( const LoggerConfig& loggerConfig,
             std::string prefix ) : m_prefix( std::move( prefix ) ) {
-        std::lock_guard<std::mutex> lock( s_creationMutex );
-
-        if ( !s_pThreadPool ) {
-            s_pThreadPool = std::make_shared<spdlog::details::thread_pool>(8192, 1);
-        }
-
         std::vector<spdlog::sink_ptr> sinks;
         if ( loggerConfig.logToConsole() ) {
-            if ( !s_pConsoleSink ) {
-                s_pConsoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-            }
-            sinks.emplace_back( s_pConsoleSink );
+            sinks.emplace_back( LoggerGlobals::getInstance().m_pConsoleSink );
         }
         if ( loggerConfig.logPath() ) {
             sinks.push_back(
@@ -78,8 +101,13 @@ public:
                                                                             loggerConfig.maxLogSize(),
                                                                             loggerConfig.maxLogFiles() ));
         }
-        m_logger = std::make_shared<spdlog::async_logger>( m_prefix, sinks.begin(), sinks.end(), s_pThreadPool,
+        m_logger = std::make_shared<spdlog::async_logger>( m_prefix, sinks.begin(), sinks.end(), LoggerGlobals::getInstance().m_pThreadPool,
                                                            spdlog::async_overflow_policy::block );
+    }
+
+    void stop() {
+        LoggerGlobals::getInstance().m_pThreadPool.reset();
+        spdlog::shutdown();
     }
 
     template<typename... Args>
@@ -222,8 +250,9 @@ private:
         fmt::detail::vformat_to(buf, fmt, fmt::make_format_args(std::forward<Args>(args)...));
         return "[" + m_prefix + "] " + std::string(buf.begin(), buf.end());
     }
+
+
     
 };
-
 
 }

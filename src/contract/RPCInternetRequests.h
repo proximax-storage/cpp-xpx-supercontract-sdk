@@ -28,7 +28,7 @@ public:
 
     void process() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         SessionId sessionId( m_request.session_id() );
         if ( m_status == ResponseStatus::READY_TO_PROCESS && sessionId == m_sessionId ) {
@@ -64,7 +64,7 @@ private:
 
     void onSuccess( const std::optional<uint64_t>& connectionId ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( connectionId.has_value() ) {
             m_reply.set_success( true );
@@ -79,7 +79,7 @@ private:
 
     void addNextToCompletionQueue() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_service->RequestOpenConnection(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }
@@ -102,7 +102,7 @@ public:
 
     void process() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         SessionId sessionId( m_request.session_id() );
         if ( m_status == ResponseStatus::READY_TO_PROCESS && sessionId == m_sessionId ) {
@@ -138,7 +138,7 @@ private:
 
     void onSuccess( std::optional<std::vector<uint8_t>>&& data ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( data.has_value() ) {
             m_reply.set_success( true );
@@ -154,7 +154,7 @@ private:
 
     void addNextToCompletionQueue() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_service->RequestReadConnectionStream(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }
@@ -177,7 +177,7 @@ public:
 
     void process() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         SessionId sessionId( m_request.session_id() );
         if ( m_status == ResponseStatus::READY_TO_PROCESS && sessionId == m_sessionId ) {
@@ -213,7 +213,7 @@ private:
 
     void onSuccess( bool success ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_reply.set_success(success);
         m_status = ResponseStatus::READY_TO_FINISH;
@@ -222,7 +222,7 @@ private:
 
     void addNextToCompletionQueue() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_service->RequestCloseConnection(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }

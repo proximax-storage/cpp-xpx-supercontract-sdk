@@ -50,35 +50,35 @@ public:
 
     const CallId& callId() const {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_callRequest.m_callId;
     }
 
     const CallRequest& callRequest() const {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return m_callRequest;
     }
 
     const CallExecutionResult& callExecutionResult() const {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         return *m_callExecutionResult;
     }
 
     void setCallExecutionResult( const CallExecutionResult& callExecutionResult ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_callExecutionResult = callExecutionResult;
     }
 
     void terminate() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         if ( m_terminated ) {
             return;
@@ -98,7 +98,7 @@ public:
                     std::function<void( std::optional<uint64_t>&& )>&& callback,
                     std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
@@ -124,8 +124,7 @@ public:
                                                                     m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                                     m_executorEnvironment.executorConfig().ocspQueryTimerMilliseconds(),
                                                                     m_executorEnvironment.executorConfig().ocspQueryMaxEfforts(),
-                                                                    internet::RevocationVerificationMode::SOFT,
-                                                                    m_dbgInfo );
+                                                                    internet::RevocationVerificationMode::SOFT);
         }
         else {
             connection = std::make_unique<internet::HttpInternetConnection>( m_executorEnvironment.threadManager(),
@@ -133,8 +132,7 @@ public:
                                                                    urlDescription->port,
                                                                    urlDescription->target,
                                                                    m_executorEnvironment.executorConfig().internetBufferSize(),
-                                                                   m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
-                                                                   m_dbgInfo );
+                                                                   m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds());
         }
 
         auto[connectionIt, insertSuccess] = m_internetConnections.insert(
@@ -164,7 +162,7 @@ public:
     void read( uint64_t connectionId, std::function<void( std::optional<std::vector<uint8_t>>&& )>&& callback,
                std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
@@ -192,7 +190,7 @@ public:
     void closeConnection( uint64_t connectionId, std::function<void( bool )>&& callback,
                 std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( !m_terminated )
         _ASSERT( !m_asyncQuery )
@@ -213,7 +211,7 @@ public:
 
     void getCaller( std::function<void( CallerKey )>&& callback, std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( m_callRequest.m_callLevel == CallRequest::CallLevel::AUTOMATIC ||
                  m_callRequest.m_callLevel == CallRequest::CallLevel::MANUAL )
@@ -227,7 +225,7 @@ public:
     void
     getBlockHeight( std::function<void( uint64_t )>&& callback, std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         callback(m_callRequest.m_referenceInfo.m_blockHeight);
     }
@@ -235,7 +233,7 @@ public:
     void
     getBlockHash( std::function<void( BlockHash)>&& callback, std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         callback(m_callRequest.m_referenceInfo.m_blockHash);
     }
@@ -243,7 +241,7 @@ public:
     void
     getBlockTime( std::function<void( uint64_t )>&& callback, std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         callback(m_callRequest.m_referenceInfo.m_blockTime);
     }
@@ -251,7 +249,7 @@ public:
     void getBlockGenerationTime( std::function<void( uint64_t )>&& callback,
                                  std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         callback(m_callRequest.m_referenceInfo.m_blockGenerationTime);
     }
@@ -259,7 +257,7 @@ public:
     void getTransactionHash( std::function<void( TransactionHash )>&& callback,
                              std::function<void()>&& terminateCallback ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         _ASSERT( m_callRequest.m_callLevel == CallRequest::CallLevel::MANUAL )
         _ASSERT( m_callRequest.m_referenceInfo.m_transactionHash )

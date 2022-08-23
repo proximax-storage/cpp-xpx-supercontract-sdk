@@ -28,12 +28,12 @@ namespace sirius::contract {
 
         VirtualMachineQueryHandlersKeeper( const DebugInfo& debugInfo )
         : m_dbgInfo( debugInfo ) {
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
         }
 
         ~VirtualMachineQueryHandlersKeeper() {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             for (auto& [_, pHandler]: m_handlers) {
                 pHandler->terminate();
@@ -42,7 +42,7 @@ namespace sirius::contract {
 
         std::shared_ptr<THandler> getHandler( const CallId& callId ) const {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             auto it = m_handlers.template find(callId);
             if (it == m_handlers.end()) {
@@ -53,14 +53,14 @@ namespace sirius::contract {
 
         void addHandler( const CallId& callId, std::shared_ptr<THandler> handler ) {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             m_handlers[callId] = std::move( handler );
         }
 
         void removeHandler( const CallId& callId ) {
 
-            DBG_MAIN_THREAD
+            DBG_MAIN_THREAD_DEPRECATED
 
             auto it = m_handlers.template find(callId);
             m_handlers.erase(it);

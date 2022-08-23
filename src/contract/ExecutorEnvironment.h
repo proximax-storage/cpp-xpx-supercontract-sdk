@@ -12,6 +12,7 @@
 #include "supercontract/Messenger.h"
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
+#include "supercontract/GlobalEnvironment.h"
 #include "VirtualMachine.h"
 #include "crypto/KeyPair.h"
 #include "VirtualMachineQueryHandlersKeeper.h"
@@ -21,15 +22,13 @@
 
 namespace sirius::contract {
 
-class ExecutorEnvironment {
+class ExecutorEnvironment: public GlobalEnvironment {
 
 public:
 
     virtual ~ExecutorEnvironment() = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;
-
-    virtual ThreadManager& threadManager() = 0;
 
     virtual Messenger& messenger() = 0;
 

@@ -61,7 +61,7 @@ public:
 
     ~RPCVirtualMachine() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         for ( auto& [_, query]: m_pathQueries ) {
             query->terminate();
@@ -74,7 +74,7 @@ public:
 
     void executeCall( const ContractKey& contractKey, const CallRequest& request ) override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         std::function<void( std::string&& )> call = [=, this, request = request](
                 std::string&& callAbsolutePath ) mutable -> void {
@@ -91,7 +91,7 @@ private:
     onReceivedCallAbsolutePath( const ContractKey& contractKey, CallRequest&& request,
                                 std::string&& callAbsolutePath ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_pathQueries.erase( request.m_callId );
 

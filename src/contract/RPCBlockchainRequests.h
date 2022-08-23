@@ -28,7 +28,7 @@ public:
 
     void process() override {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         SessionId sessionId( m_request.session_id() );
         if ( m_status == ResponseStatus::READY_TO_PROCESS && sessionId == m_sessionId ) {
@@ -64,7 +64,7 @@ private:
 
     void onSuccess( const CallerKey& callerKey ) {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         std::string c = callerKey.toString();
         m_reply.set_buffer( callerKey.toString() );
@@ -74,7 +74,7 @@ private:
 
     void addNextToCompletionQueue() {
 
-        DBG_MAIN_THREAD
+        DBG_MAIN_THREAD_DEPRECATED
 
         m_service->RequestGetCaller(&m_serverContext, &m_request, &m_responder, m_completionQueue, m_completionQueue, this);
     }

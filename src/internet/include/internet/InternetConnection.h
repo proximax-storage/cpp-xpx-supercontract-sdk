@@ -6,22 +6,60 @@
 
 #pragma once
 
+#include <memory>
+#include <boost/asio/ssl/context.hpp>
+#include <boost/asio/ssl/impl/context.ipp>
+
+#include "InternetConnection.h"
+#include "../../src/HttpInternetResource.h"
+#include "../../src/HttpsInternetResource.h"
+
 #include "supercontract/AsyncQuery.h"
+#include "supercontract/SingleThread.h"
+#include "supercontract/GlobalEnvironment.h"
+
 
 namespace sirius::contract::internet {
 
-class InternetConnection {
+class InternetConnection:
+        private SingleThread {
+
+    GlobalEnvironment&            m_environment;
+    InternetResourceContainer     m_resource;
+
+private:
+
+    InternetConnection( GlobalEnvironment& environment,
+                        InternetResourceContainer&& resource );
 
 public:
 
-    virtual ~InternetConnection() = default;
+    ~InternetConnection();
 
-    virtual void open( std::weak_ptr<AbstractAsyncQuery<bool>> ) = 0;
+    InternetConnection( const InternetConnection& ) = delete;
+    InternetConnection( InternetConnection&& other ) noexcept;
+    InternetConnection& operator=( const InternetConnection& ) = delete;
+    InternetConnection& operator=( InternetConnection&& other )  noexcept;
 
-    virtual void read( std::weak_ptr<AbstractAsyncQuery<std::optional<std::vector<uint8_t>>>> ) = 0;
+    static void buildHttpInternetConnection( GlobalEnvironment& globalEnvironment,
+                                             const std::string& host,
+                                             const std::string& port,
+                                             const std::string& target,
+                                             int bufferSize,
+                                             int timeout,
+                                             const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
 
-    virtual void close() = 0;
+    static void buildHttpsInternetConnection( boost::asio::ssl::context& ctx,
+                                              GlobalEnvironment& globalEnvironment,
+                                              const std::string& host,
+                                              const std::string& port,
+                                              const std::string& target,
+                                              int bufferSize,
+                                              int connectionTimeout,
+                                              int ocspQueryTimerDelay,
+                                              int ocspQueryMaxEfforts,
+                                              RevocationVerificationMode mode,
+                                              const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
 
 };
-
 }

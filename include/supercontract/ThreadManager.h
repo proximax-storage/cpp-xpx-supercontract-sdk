@@ -35,10 +35,9 @@ public:
         }
     }
 
-    void execute( const std::function<void()>& task ) {
-        boost::asio::post( m_context, [=] {
-            task();
-        } );
+    template<class Function>
+    void execute( Function&& task ) {
+        boost::asio::post( m_context, std::forward<Function>(task));
     }
 
     std::optional<boost::asio::high_resolution_timer>
