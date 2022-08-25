@@ -12,8 +12,8 @@
 #include "internet/HttpInternetConnection.h"
 #include "internet/HttpsInternetConnection.h"
 #include "internet/InternetUtils.h"
-#include "VirtualMachineInternetQueryHandler.h"
-#include "VirtualMachineBlockchainQueryHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineInternetQueryHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineBlockchainQueryHandler.h"
 
 namespace sirius::contract {
 

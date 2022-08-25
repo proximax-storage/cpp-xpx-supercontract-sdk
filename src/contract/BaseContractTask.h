@@ -18,8 +18,8 @@
 #include "BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "ExecutorEnvironment.h"
-#include "VirtualMachineEventHandler.h"
-#include "VirtualMachine.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachine.h"
 #include "DebugInfo.h"
 #include "log.h"
 

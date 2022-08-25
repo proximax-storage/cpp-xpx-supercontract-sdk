@@ -7,7 +7,7 @@
 #pragma once
 
 #include "supercontract/Identifiers.h"
-#include "VirtualMachineEventHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
 
 namespace sirius::contract {
 

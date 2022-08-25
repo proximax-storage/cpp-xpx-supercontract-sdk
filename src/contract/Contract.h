@@ -19,8 +19,8 @@
 #include "ContractVirtualMachineEventHandler.h"
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
-#include "VirtualMachineEventHandler.h"
-#include "VirtualMachine.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachine.h"
 #include "ExecutorEnvironment.h"
 #include "DebugInfo.h"
 

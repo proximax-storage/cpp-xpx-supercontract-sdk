@@ -13,10 +13,10 @@
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
 #include "supercontract/GlobalEnvironment.h"
-#include "VirtualMachine.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachine.h"
 #include "crypto/KeyPair.h"
-#include "VirtualMachineQueryHandlersKeeper.h"
-#include "VirtualMachineInternetQueryHandler.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineQueryHandlersKeeper.h"
+#include "../virtualMachine/include/virtualMachine/VirtualMachineInternetQueryHandler.h"
 
 #include "supercontract/ThreadManager.h"
 

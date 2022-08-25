@@ -15,7 +15,7 @@ class StorageObserver {
 public:
 
     virtual void
-    getAbsolutePath( const std::string& relativePath, std::weak_ptr<AbstractAsyncQuery<std::string>> callback) const = 0;
+    getAbsolutePath( const std::string& relativePath, std::weak_ptr<AsyncCallback<std::string>> callback) const = 0;
 
 };
 

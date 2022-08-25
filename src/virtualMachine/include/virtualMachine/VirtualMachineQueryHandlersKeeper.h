@@ -14,7 +14,7 @@
 #include "log.h"
 #include "DebugInfo.h"
 
-namespace sirius::contract {
+namespace sirius::contract::vm {
 
     template <class THandler>
     class VirtualMachineQueryHandlersKeeper {

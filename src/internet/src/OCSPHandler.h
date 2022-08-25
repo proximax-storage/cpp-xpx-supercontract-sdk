@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "log.h"
-#include "DebugInfo.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/SingleThread.h"
 

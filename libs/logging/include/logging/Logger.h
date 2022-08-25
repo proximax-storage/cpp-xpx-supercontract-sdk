@@ -28,6 +28,7 @@
 
 namespace sirius::logging {
 
+// TODO correctly stop logger
 #define ASSERT(expr, logger) \
 if (!(expr)) {                 \
 (logger).critical("ASSERT failed: {} at {}:{}", #expr, __FILE__, __LINE__ ); \
