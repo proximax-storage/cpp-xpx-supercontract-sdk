@@ -6,6 +6,10 @@
 
 #pragma once
 
+#include <string>
+#include <optional>
+#include <functional>
+
 namespace sirius::contract {
 
     class VirtualMachineInternetQueryHandler {

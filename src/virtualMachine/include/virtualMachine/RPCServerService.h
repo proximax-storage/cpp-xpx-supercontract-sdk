@@ -6,7 +6,15 @@
 
 #pragma once
 
-namespace sirius::contract {
+#include <grpcpp/server_builder.h>
+#include <supercontract/Identifiers.h>
+#include "supercontract/GlobalEnvironment.h"
+#include "supercontract/SingleThread.h"
+
+#include "virtualMachine/VirtualMachineQueryHandlersKeeper.h"
+#include "RPCCall.h"
+
+namespace sirius::contract::vm {
 
     class RPCService {
 
@@ -23,7 +31,9 @@ namespace sirius::contract {
     };
 
     template <class TService, class THandler>
-    class RPCServiceImpl : public RPCService {
+    class RPCServiceImpl :
+            protected SingleThread,
+            public RPCService {
 
     protected:
 
@@ -32,28 +42,25 @@ namespace sirius::contract {
         std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
         std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_handlersExtractor;
         bool                                         m_terminated = false;
-        const DebugInfo                              m_dbgInfo;
+
+        GlobalEnvironment&  m_environment;
 
     private:
-
-        ThreadManager&      m_threadManager;
         std::thread         m_completionQueueThread;
 
     public:
 
         explicit RPCServiceImpl( const SessionId& sessionId,
                                  const std::shared_ptr<VirtualMachineQueryHandlersKeeper<THandler>>& handlersExtractor,
-                                 ThreadManager& threadManager,
-                                 const DebugInfo& debugInfo )
+                                 GlobalEnvironment& environment )
         : m_sessionId( sessionId )
         , m_handlersExtractor( handlersExtractor )
-        , m_threadManager( threadManager )
-        , m_dbgInfo( debugInfo )
+        , m_environment( environment )
         {}
 
         void terminate() override {
 
-            DBG_MAIN_THREAD_DEPRECATED
+            ASSERT(isSingleThread(), m_environment.logger())
 
             m_terminated = true;
             m_handlersExtractor.template reset();
@@ -69,7 +76,7 @@ namespace sirius::contract {
 
         void registerService( grpc::ServerBuilder& builder ) override {
 
-            DBG_MAIN_THREAD_DEPRECATED
+            ASSERT(isSingleThread(), m_environment.logger())
 
             builder.RegisterService(&m_service);
             m_completionQueue = builder.AddCompletionQueue();
@@ -77,7 +84,7 @@ namespace sirius::contract {
 
         void runService() override {
 
-            DBG_MAIN_THREAD_DEPRECATED
+            ASSERT(isSingleThread(), m_environment.logger())
 
             registerCalls();
 
@@ -92,14 +99,14 @@ namespace sirius::contract {
 
         virtual void handleCalls() {
 
-            DBG_SECONDARY_THREAD
+            ASSERT(!isSingleThread(), m_environment.logger())
 
             void* tag;
             bool ok;
             while (m_completionQueue->Next(&tag, &ok)) {
                 auto* call = static_cast<RPCCall *>(tag);
                 if (ok) {
-                    m_threadManager.execute( [call] {
+                    m_environment.threadManager().execute( [call] {
                         call->process();
                     } );
                 }

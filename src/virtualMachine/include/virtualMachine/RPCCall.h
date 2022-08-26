@@ -7,6 +7,7 @@
 #pragma once
 
 #include <grpcpp/grpcpp.h>
+#include <supercontract_server.pb.h>
 
 #include "VirtualMachineQueryHandlersKeeper.h"
 
@@ -14,7 +15,7 @@
 
 #include "log.h"
 
-namespace sirius::contract {
+namespace sirius::contract::vm {
 
 class RPCCall {
 
@@ -31,9 +32,8 @@ class RPCCallRequest : public RPCCall {
 
 public:
 
-    explicit RPCCallRequest( const TRequest& request, const DebugInfo& debugInfo )
+    explicit RPCCallRequest( const TRequest& request )
     : m_request( request )
-    , m_dbgInfo( debugInfo )
     {}
 
 public:
@@ -48,12 +48,10 @@ public:
 
     std::unique_ptr<grpc::ClientAsyncResponseReader<TReply>> m_response_reader;
 
-    const DebugInfo m_dbgInfo;
-
 };
 
 class ExecuteCallRPCVirtualMachineRequest
-        : public RPCCallRequest<supercontractserver::ExecuteRequest, supercontractserver::ExecuteReturns> {
+        : public RPCCallRequest<supercontractserver::VariantRequest, supercontractserver::VariantReturn> {
 
 private:
 
@@ -62,18 +60,18 @@ private:
 public:
 
     explicit ExecuteCallRPCVirtualMachineRequest(
-            const supercontractserver::ExecuteRequest& request,
-            VirtualMachineEventHandler& virtualMachineEventHandler,
-            const DebugInfo& debugInfo )
-            : RPCCallRequest( request, debugInfo )
+            const supercontractserver::VariantRequest& request,
+            VirtualMachineEventHandler& virtualMachineEventHandler )
+            : RPCCallRequest( request )
             , m_virtualMachineEventHandler( virtualMachineEventHandler )
             {}
 
     void process() override {
 
-        DBG_SECONDARY_THREAD
+//        DBG_SECONDARY_THREAD
 
         if ( m_status.ok() ) {
+            m_request.variant_case()
             auto contractKey = *reinterpret_cast<const ContractKey*>(m_request.contractkey().data());
             auto callId = *reinterpret_cast<const CallId*>(m_request.callid().data());
 
@@ -88,56 +86,6 @@ public:
             m_virtualMachineEventHandler.onSuperContractCallExecuted( contractKey, executionResult );
         }
     }
-
-};
-
-template <class TService, class TRequest, class TReply, class THandler>
-class RPCCallResponse : public RPCCall {
-
-protected:
-
-    enum class ResponseStatus {
-        READY_TO_PROCESS,
-        READY_TO_FINISH
-    };
-
-    const SessionId m_sessionId;
-    ResponseStatus m_status;
-    TService* m_service;
-    grpc::ServerCompletionQueue* m_completionQueue;
-    TRequest m_request;
-    TReply m_reply;
-    grpc::ServerContext m_serverContext;
-    grpc::ServerAsyncResponseWriter<TReply> m_responder;
-    std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> m_pWeakHandlersExtractor;
-    const bool& m_serviceTerminated;
-    const DebugInfo m_dbgInfo;
-
-    void onTerminate() {
-
-        DBG_MAIN_THREAD_DEPRECATED
-
-        m_status = ResponseStatus::READY_TO_FINISH;
-        m_responder.FinishWithError( grpc::Status::CANCELLED, this );
-    }
-
-public:
-
-    RPCCallResponse( const SessionId& sessionId,
-                     TService* service,
-                     grpc::ServerCompletionQueue* completionQueue,
-                     std::weak_ptr<VirtualMachineQueryHandlersKeeper<THandler>> handlersExtractor,
-                     const bool& serviceTerminated,
-                     const DebugInfo& debugInfo )
-            : m_sessionId( sessionId )
-            , m_status( ResponseStatus::READY_TO_PROCESS )
-            , m_service( service )
-            , m_completionQueue( completionQueue )
-            , m_responder( &m_serverContext )
-            , m_pWeakHandlersExtractor( handlersExtractor )
-            , m_serviceTerminated( serviceTerminated )
-            , m_dbgInfo( debugInfo )
-            {}
 
 };
 

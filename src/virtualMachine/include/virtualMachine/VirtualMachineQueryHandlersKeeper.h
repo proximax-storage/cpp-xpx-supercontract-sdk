@@ -40,11 +40,11 @@ namespace sirius::contract::vm {
             }
         }
 
-        std::shared_ptr<THandler> getHandler( const CallId& callId ) const {
+        std::shared_ptr<THandler> getHandler( const CallId& callId ) {
 
-            DBG_MAIN_THREAD_DEPRECATED
+//            DBG_MAIN_THREAD_DEPRECATED
 
-            auto it = m_handlers.template find(callId);
+            auto it = m_handlers.find(callId);
             if (it == m_handlers.end()) {
                 return {};
             }

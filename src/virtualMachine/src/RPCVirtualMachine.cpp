@@ -67,10 +67,11 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath( const ContractKey& contractK
     rpcRequest.set_smprepayment( request.m_smLimit );
     rpcRequest.set_contract_mode( (uint32_t) request.m_callLevel );
 
-    auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler, DebugInfo("", std::thread::id()) );
+    auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler );
 
     call->m_response_reader =
             m_stub->PrepareAsyncExecuteCall( &call->m_context, rpcRequest, &m_completionQueue );
+    m_stub->PrepareAsyncExecuteCall()
 
     call->m_response_reader->StartCall();
     call->m_response_reader->Finish( &call->m_reply, &call->m_status, &call );

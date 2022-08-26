@@ -6,34 +6,27 @@
 
 #pragma once
 
-#include "RPCServerService.h"
 #include "internet.grpc.pb.h"
-#include "RPCInternetRequests.h"
+#include "RPCServerService.h"
+#include "supercontract/GlobalEnvironment.h"
+#include "supercontract/SingleThread.h"
+#include "VirtualMachineInternetQueryHandler.h"
 
-namespace sirius::contract {
+namespace sirius::contract::vm {
 
-class InternetService: public RPCServiceImpl<internet::Internet::AsyncService, VirtualMachineInternetQueryHandler> {
+class InternetService:
+        public RPCServiceImpl<internet::Internet::AsyncService, VirtualMachineInternetQueryHandler> {
 
 public:
 
     InternetService( const SessionId& sessionId,
                      const std::shared_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>>& handlersExtractor,
-                     ThreadManager& threadManager,
-                     const DebugInfo& debugInfo )
-                     : RPCServiceImpl( sessionId, handlersExtractor, threadManager, debugInfo ) {
-        DBG_MAIN_THREAD_DEPRECATED
-    }
+                     GlobalEnvironment& environment );
 
 private:
 
-    void registerCalls() override {
+    void registerCalls() override;
 
-        DBG_MAIN_THREAD_DEPRECATED
-
-        new OpenConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
-        new ReadConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
-        new CloseConnectionRPCInternetRequest( m_sessionId, &m_service, m_completionQueue.get(), m_handlersExtractor, m_terminated, m_dbgInfo );
-    }
 };
 
 }
