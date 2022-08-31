@@ -10,6 +10,7 @@
 #include "Identifiers.h"
 
 #include "GlobalEnvironment.h"
+#include "SingleThread.h"
 
 namespace sirius::contract {
 
@@ -23,7 +24,7 @@ public:
 };
 
 template<class TReply>
-class AsyncCallback {
+class AsyncQueryCallback {
 
 public:
 
@@ -35,10 +36,11 @@ public:
 // TODO If the query is executed on the Main Thread
 // There is no need to use mutex
 template <class TReply, class TCallback, class TTerminateCallback>
-class AsyncQueryHandler:
+class AsyncCallbackAsyncQuery:
+        private SingleThread,
         public AsyncQuery,
-        public AsyncCallback<TReply>,
-        public std::enable_shared_from_this<AsyncQueryHandler<TReply, TCallback, TTerminateCallback>> {
+        public AsyncQueryCallback<TReply>,
+        public std::enable_shared_from_this<AsyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>> {
 
 private:
 
@@ -58,18 +60,20 @@ private:
 
 public:
 
-    AsyncQueryHandler( TCallback&& callback,
-                       TTerminateCallback&& terminateCallback,
-                       GlobalEnvironment& globalEnvironment )
+    AsyncCallbackAsyncQuery( TCallback&& callback,
+                             TTerminateCallback&& terminateCallback,
+                             GlobalEnvironment& globalEnvironment )
                        : m_callback( std::move(callback) )
                        , m_terminateCallback( std::move(terminateCallback) )
                        , m_globalEnvironment( globalEnvironment )
                        {}
 
     void terminate() override {
-        // MAIN THREAD
+
+        ASSERT( isSingleThread(), m_globalEnvironment.logger() )
+
         std::lock_guard<std::mutex> lock( m_statusMutex);
-        if ( m_status != Status::ACTIVE ) {
+        if ( m_status == Status::EXECUTED ) {
             return;
         }
         m_status = Status::TERMINATED;
@@ -77,7 +81,7 @@ public:
     }
 
     void postReply( TReply&& reply ) override {
-        // NOT MAIN THREAD
+        // Any thread is possible
         std::lock_guard<std::mutex> lock( m_statusMutex);
         if ( m_status != Status::ACTIVE ) {
             return;
@@ -85,7 +89,9 @@ public:
 
         // If is not terminated, then it is guaranteed that ThreadManager is valid
         m_globalEnvironment.threadManager().execute([pThis = this->shared_from_this(), reply=std::move(reply)] () mutable {
-            // MAIN THREAD
+
+            ASSERT( pThis->isSingleThread(), pThis->m_globalEnvironment.logger() )
+
             // No mutex is required since the value of m_status can be changed only on the main thread
             if ( pThis->m_status != Status::ACTIVE ) {
                 return;
@@ -103,10 +109,79 @@ public:
 };
 
 template <class TReply, class TCallback, class TTerminateCallback>
-std::shared_ptr<AsyncQueryHandler<TReply, TCallback, TTerminateCallback>> createAsyncQueryHandler(TCallback&& callback,
-                                                                                                  TTerminateCallback&& terminateCallback,
-                                                                                                  GlobalEnvironment& env) {
-    return std::make_shared<AsyncQueryHandler<TReply, TCallback, TTerminateCallback>>(std::forward<TCallback>(callback), std::forward<TTerminateCallback>(terminateCallback), env);
+std::shared_ptr<AsyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>> createAsyncCallbackAsyncQuery( TCallback&& callback,
+                                                                                                               TTerminateCallback&& terminateCallback,
+                                                                                                               GlobalEnvironment& env) {
+    return std::make_shared<AsyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>>( std::forward<TCallback>( callback), std::forward<TTerminateCallback>( terminateCallback), env);
+}
+
+template <class TReply, class TCallback, class TTerminateCallback>
+class SyncCallbackAsyncQuery:
+        private SingleThread,
+        public AsyncQuery,
+        public AsyncQueryCallback<TReply>,
+        public std::enable_shared_from_this<AsyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>> {
+
+private:
+
+    enum class Status {
+        ACTIVE,
+        EXECUTED,
+        TERMINATED
+    };
+
+    GlobalEnvironment& m_globalEnvironment;
+
+    Status m_status = Status::ACTIVE;
+
+    TCallback          m_callback;
+    TTerminateCallback m_terminateCallback;
+
+public:
+
+    SyncCallbackAsyncQuery( TCallback&& callback,
+                             TTerminateCallback&& terminateCallback,
+                             GlobalEnvironment& globalEnvironment )
+                             : m_callback( std::move(callback) )
+                             , m_terminateCallback( std::move(terminateCallback) )
+                             , m_globalEnvironment( globalEnvironment )
+                             {}
+
+                             void terminate() override {
+
+        ASSERT( isSingleThread(), m_globalEnvironment.logger() )
+
+        if ( m_status != Status::ACTIVE ) {
+            return;
+        }
+        m_status = Status::TERMINATED;
+        m_terminateCallback();
+    }
+
+    void postReply( TReply&& reply ) override {
+
+        ASSERT( isSingleThread(), m_globalEnvironment.logger() )
+
+        if ( m_status != Status::ACTIVE ) {
+            return;
+        }
+
+        m_status = Status::EXECUTED;
+        m_callback( std::move( reply ));
+    }
+
+public:
+
+    bool isTerminated() const override {
+        return m_status == Status::TERMINATED;
+    }
+};
+
+template <class TReply, class TCallback, class TTerminateCallback>
+std::shared_ptr<AsyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>> createSyncCallbackAsyncQuery( TCallback&& callback,
+                                                                                                               TTerminateCallback&& terminateCallback,
+                                                                                                               GlobalEnvironment& env) {
+    return std::make_shared<SyncCallbackAsyncQuery<TReply, TCallback, TTerminateCallback>>( std::forward<TCallback>( callback), std::forward<TTerminateCallback>( terminateCallback), env);
 }
 
 }

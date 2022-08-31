@@ -8,31 +8,28 @@
 
 #include <string>
 #include <optional>
-#include <functional>
 
-namespace sirius::contract {
+#include "supercontract/AsyncQuery.h"
 
-    class VirtualMachineInternetQueryHandler {
+namespace sirius::contract::vm {
 
-    public:
+class VirtualMachineInternetQueryHandler {
 
-        virtual void openConnection(
-                const std::string& url,
-                std::function<void( std::optional<uint64_t>&& )>&& callback,
-                std::function<void()>&& terminateCallback ) = 0;
+public:
 
-        virtual void read(
-                uint64_t connectionId,
-                std::function<void( std::optional<std::vector<uint8_t>>&& )>&& callback,
-                std::function<void()>&& terminateCallback ) = 0;
+    virtual void openConnection(
+            const std::string& url,
+            std::shared_ptr<AsyncQueryCallback < std::optional<uint64_t>>> callback ) = 0;
 
-        virtual void closeConnection(
-                uint64_t connectionId,
-                std::function<void( bool )>&& callback,
-                std::function<void()>&& terminateCallback ) = 0;
+    virtual void read(
+            uint64_t connectionId,
+            std::shared_ptr<AsyncQueryCallback < std::optional<std::vector<uint8_t>>>> callback ) = 0;
 
-        virtual void terminate() = 0;
+    virtual void closeConnection(
+            uint64_t connectionId,
+            std::shared_ptr<AsyncQueryCallback < bool>> callback ) = 0;
 
-    };
+    virtual ~VirtualMachineInternetQueryHandler() = default;
+};
 
 }

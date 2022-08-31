@@ -40,6 +40,7 @@ struct CallRequest {
         MANUAL
     };
 
+    ContractKey m_contractKey;
     CallId m_callId;
     std::string m_file;
     std::string m_function;

@@ -32,7 +32,7 @@ HttpInternetResource::~HttpInternetResource() {
     ASSERT( m_state == ConnectionState::CLOSED, m_environment.logger() )
 }
 
-void HttpInternetResource::open( const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) {
+void HttpInternetResource::open( const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
@@ -59,7 +59,7 @@ void HttpInternetResource::open( const std::shared_ptr<AsyncCallback<InternetRes
     runTimeoutTimer();
 }
 
-void HttpInternetResource::read( const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
+void HttpInternetResource::read( const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
@@ -109,7 +109,7 @@ void HttpInternetResource::close() {
 
 void HttpInternetResource::onHostResolved( beast::error_code ec,
                                            const boost::asio::ip::basic_resolver<tcp, boost::asio::executor>::results_type& results,
-                                           const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) {
+                                           const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
@@ -141,7 +141,7 @@ void HttpInternetResource::onHostResolved( beast::error_code ec,
 }
 
 void HttpInternetResource::onConnected( beast::error_code ec, tcp::resolver::results_type::endpoint_type,
-                                        const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) {
+                                        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
@@ -168,7 +168,7 @@ void HttpInternetResource::onConnected( beast::error_code ec, tcp::resolver::res
 }
 
 void HttpInternetResource::onWritten( beast::error_code ec, std::size_t bytes_transferred,
-                                      const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) {
+                                      const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
@@ -190,7 +190,7 @@ void HttpInternetResource::onWritten( beast::error_code ec, std::size_t bytes_tr
 }
 
 void HttpInternetResource::onRead( beast::error_code ec, std::size_t bytes_transferred,
-                                   const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
+                                   const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
 
     ASSERT( isSingleThread(), m_environment.logger() )
 

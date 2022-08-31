@@ -11,7 +11,7 @@
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
-#include "../virtualMachine/include/virtualMachine/RPCVirtualMachine.h"
+#include "../virtualMachine/src/RPCVirtualMachine.h"
 #include "../virtualMachine/include/virtualMachine/RPCInternetService.h"
 #include "../virtualMachine/include/virtualMachine/RPCBlockchainService.h"
 #include "../virtualMachine/include/virtualMachine/VirtualMachineQueryHandlersKeeper.h"
