@@ -145,7 +145,7 @@ void HttpsInternetResource::close() {
 
     m_ocspVerifiers.clear();
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
     m_resolver.cancel();
     beast::get_lowest_layer( m_stream ).cancel();
 
@@ -167,7 +167,7 @@ void HttpsInternetResource::onHostResolved( beast::error_code ec,
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         m_environment.logger().warn("OnHostResolved Https Connection Empty Callback");
@@ -201,7 +201,7 @@ void HttpsInternetResource::onConnected( beast::error_code ec, const boost::asio
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         m_environment.logger().warn("OnConnected Https Connection Empty Callback");
@@ -247,7 +247,7 @@ void HttpsInternetResource::onHandshake( beast::error_code ec,
 
     ASSERT( !m_handshakeReceived, m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         m_environment.logger().warn("OnHandshake Https Connection Empty Callback");
@@ -274,7 +274,7 @@ void HttpsInternetResource::onWritten( beast::error_code ec, std::size_t bytes_t
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         m_environment.logger().warn("OnWritten Https Connection Empty Callback");
@@ -300,7 +300,7 @@ void HttpsInternetResource::onRead( beast::error_code ec, std::size_t bytes_tran
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         m_environment.logger().warn("OnRead Https Connection Empty Callback");
@@ -455,7 +455,7 @@ void HttpsInternetResource::onShutdown( beast::error_code ec ) {
 
     m_state = ConnectionState::CLOSED;
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     beast::get_lowest_layer( m_stream ).close();
 }

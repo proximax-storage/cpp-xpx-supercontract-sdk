@@ -57,7 +57,7 @@ private:
     std::vector<uint8_t> m_readDataBuffer;
 
     int m_timeout;
-    std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
+    Timer m_timeoutTimer;
 
     ConnectionState m_state = ConnectionState::UNINITIALIZED;
 

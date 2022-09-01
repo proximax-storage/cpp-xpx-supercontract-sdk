@@ -10,6 +10,8 @@
 #include <boost/asio/high_resolution_timer.hpp>
 #include <thread>
 
+#include "Timer.h"
+
 namespace sirius::contract {
 
 class ThreadManager {
@@ -40,18 +42,10 @@ public:
         boost::asio::post( m_context, std::forward<Function>(task));
     }
 
-    std::optional<boost::asio::high_resolution_timer>
-    startTimer( int milliseconds, const std::function<void()>& func ) {
-        boost::asio::high_resolution_timer timer( m_context );
-
-        timer.expires_after( std::chrono::milliseconds( milliseconds ));
-        timer.async_wait( [func = func]( boost::system::error_code const& e ) {
-            if ( !e ) {
-                func();
-            }
-        } );
-
-        return timer;
+    template<class Function>
+    Timer
+    startTimer(int milliseconds, Function&& func) {
+        return {m_context, milliseconds, std::forward<Function>(func)};;
     }
 
     boost::asio::io_context& context() {

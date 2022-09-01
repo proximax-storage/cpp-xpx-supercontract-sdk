@@ -104,7 +104,7 @@ void HttpInternetResource::close() {
 
     m_resolver.cancel();
     m_stream.close();
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 }
 
 void HttpInternetResource::onHostResolved( beast::error_code ec,
@@ -113,7 +113,7 @@ void HttpInternetResource::onHostResolved( beast::error_code ec,
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         close();
@@ -145,7 +145,7 @@ void HttpInternetResource::onConnected( beast::error_code ec, tcp::resolver::res
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         close();
@@ -172,7 +172,7 @@ void HttpInternetResource::onWritten( beast::error_code ec, std::size_t bytes_tr
 
     ASSERT( isSingleThread(), m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         close();
@@ -196,7 +196,7 @@ void HttpInternetResource::onRead( beast::error_code ec, std::size_t bytes_trans
 
     ASSERT( m_state != ConnectionState::UNINITIALIZED, m_environment.logger() )
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if ( callback->isTerminated() ) {
         close();

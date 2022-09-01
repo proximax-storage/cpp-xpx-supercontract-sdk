@@ -38,7 +38,7 @@ private:
 
     GlobalEnvironment& m_globalEnvironment;
 
-    std::optional<boost::asio::high_resolution_timer> m_retryTimer;
+    Timer m_retryTimer;
     const int m_timerDelayMs;
     const int m_maxEfforts;
     int m_effortsLeft;

@@ -61,7 +61,7 @@ private:
     int m_connectionTimeout;
     int m_ocspQueryTimerDelay;
     int m_ocspQueryMaxEfforts;
-    std::optional<boost::asio::high_resolution_timer> m_timeoutTimer;
+    Timer m_timeoutTimer;
 
     RevocationVerificationMode m_revocationVerificationMode;
 

@@ -47,7 +47,7 @@ OCSPHandler::~OCSPHandler() {
 
     // After the timer is reset we are sure that no asynchronous operation will be called
     // And so there will not be asynchronous object access
-    m_retryTimer.reset();
+    m_retryTimer.cancel();
 
     if ( m_socketBio ) {
         BIO_set_close( m_socketBio, BIO_CLOSE );
