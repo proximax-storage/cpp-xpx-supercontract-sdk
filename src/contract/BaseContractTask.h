@@ -10,7 +10,6 @@
 #include "supercontract/Requests.h"
 #include "supercontract/Transactions.h"
 #include "supercontract/StorageQueries.h"
-#include "ContractVirtualMachineEventHandler.h"
 #include "ContractStorageEventHandler.h"
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
@@ -18,7 +17,6 @@
 #include "BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "ExecutorEnvironment.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
 #include "../virtualMachine/include/virtualMachine/VirtualMachine.h"
 #include "DebugInfo.h"
 #include "log.h"
@@ -27,7 +25,6 @@ namespace sirius::contract {
 
 class BaseContractTask
         : public ContractStorageEventHandler,
-          public ContractVirtualMachineEventHandler,
           public ContractMessageEventHandler,
           public ContractBlockchainEventHandler {
 protected:

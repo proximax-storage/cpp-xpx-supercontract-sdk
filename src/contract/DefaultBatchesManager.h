@@ -156,9 +156,9 @@ public:
 
     // region virtual machine event handler
 
-    bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
+    bool onSuperContractCallExecuted( const CallId& callId, std::optional<vm::CallExecutionResult>& executionResult ) {
 
-        auto callIt = m_autorunCallInfos.find(executionResult.m_callId);
+        auto callIt = m_autorunCallInfos.find(callId);
 
         if (callIt == m_autorunCallInfos.end()) {
             return false;

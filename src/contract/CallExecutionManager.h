@@ -1,0 +1,51 @@
+/*
+*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Use of this source code is governed by the Apache 2.0
+*** license that can be found in the LICENSE file.
+*/
+
+#pragma once
+
+#include "supercontract/GlobalEnvironment.h"
+
+#include "virtualMachine/VirtualMachine.h"
+
+namespace sirius::contract {
+
+class CallExecutionManager: private SingleThread {
+
+private:
+
+    GlobalEnvironment& m_environment;
+
+    std::weak_ptr<vm::VirtualMachine> m_virtualMachine;
+    int m_repeatTimeout;
+
+    ContractKey m_contractKey;
+    CallRequest m_callRequest;
+
+    std::weak_ptr<vm::VirtualMachineInternetQueryHandler> m_internetQueryHandler;
+    std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
+
+    std::shared_ptr<AsyncQueryCallback<std::optional<vm::CallExecutionResult>>> m_callback;
+
+    std::shared_ptr<AsyncQuery> m_virtualMachineQuery;
+
+    CallExecutionManager(GlobalEnvironment& environment,
+                         std::weak_ptr<vm::VirtualMachine> virtualMachine,
+                         int repeatTimeout,
+                         const ContractKey& contractKey,
+                         const CallRequest& request,
+                         std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
+                         std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                         std::shared_ptr<AsyncQueryCallback<std::optional<vm::CallExecutionResult>>> callback);
+
+    ~CallExecutionManager();
+
+private:
+
+    void start();
+
+};
+
+}
