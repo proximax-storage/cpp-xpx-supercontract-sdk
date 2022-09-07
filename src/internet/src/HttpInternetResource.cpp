@@ -15,6 +15,7 @@ HttpInternetResource::HttpInternetResource( GlobalEnvironment& globalEnvironment
                                                 int bufferSize,
                                                 int timeout )
         : m_environment( globalEnvironment )
+        , m_port(port) // You forgot to initialize the port number
         , m_host( host )
         , m_target( target )
         , m_resolver( globalEnvironment.threadManager().context())
