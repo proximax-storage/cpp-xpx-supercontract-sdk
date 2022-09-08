@@ -150,6 +150,46 @@ namespace sirius::contract::internet::test
         threadManager.stop();
     }
 
+    TEST(HttpConnection, TerminateCall)
+    {
+
+        GlobalEnvironmentImpl globalEnvironment;
+        auto &threadManager = globalEnvironment.threadManager();
+
+        // ssl::context ctx{ssl::context::tlsv12_client};
+        // ctx.set_default_verify_paths();
+        // ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("http://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        bool flag = false;
+
+        auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
+            [&](std::optional<InternetConnection> &&connection)
+            {
+                flag = true;
+                ASSERT_TRUE(connection);
+            },
+            [] {}, globalEnvironment);
+
+        threadManager.execute([&]
+                              { InternetConnection::buildHttpInternetConnection(
+                                    globalEnvironment,
+                                    urlDescription->host,
+                                    urlDescription->port,
+                                    urlDescription->target,
+                                    16 * 1024,
+                                    30000,
+                                    connectionCallback); });
+        connectionCallback->terminate();
+        threadManager.stop();
+        ASSERT_FALSE(flag);
+    }
+
     // I'm not sure whether you want to verify the HTTP certificate cuz you did not set `m_stream.set_verify_callback` in ./src/internet/src/HttpInternetResource.cpp
     // TEST(HttpConnection, RevokedCertificate)
     // {

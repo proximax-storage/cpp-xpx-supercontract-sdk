@@ -150,6 +150,47 @@ TEST(HttpsConnection, ValidCertificate) {
     threadManager.stop();
 }
 
+TEST(HttpsConnection, TerminateCall) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode( ssl::verify_peer );
+
+    auto urlDescription = parseURL( "https://example.com" );
+
+    ASSERT_TRUE( urlDescription );
+    ASSERT_TRUE( urlDescription->ssl );
+    ASSERT_EQ( urlDescription->port, "443" );
+
+    bool flag = false;
+
+    auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
+            [&]( std::optional<InternetConnection>&& connection ) {
+                flag = true;
+                ASSERT_TRUE( connection );
+            }, [] {}, globalEnvironment );
+
+    threadManager.execute([&] {
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback );
+    });
+    connectionCallback->terminate();
+    threadManager.stop();
+    ASSERT_FALSE(flag);
+}
+
 TEST(HttpsConnection, RevokedCertificate) {
 
     GlobalEnvironmentImpl globalEnvironment;
