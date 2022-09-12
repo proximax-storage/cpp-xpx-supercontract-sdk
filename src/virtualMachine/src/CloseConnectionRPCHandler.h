@@ -32,8 +32,6 @@ public:
 
     void process() override;
 
-    ~CloseConnectionRPCHandler() override;
-
 private:
 
     void onResult(bool success);

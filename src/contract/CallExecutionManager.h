@@ -19,7 +19,9 @@ private:
     GlobalEnvironment& m_environment;
 
     std::weak_ptr<vm::VirtualMachine> m_virtualMachine;
-    int m_repeatTimeout;
+
+    Timer   m_repeatTimer;
+    int     m_repeatTimeout;
 
     ContractKey m_contractKey;
     CallRequest m_callRequest;
@@ -44,7 +46,7 @@ private:
 
 private:
 
-    void start();
+    void execute();
 
 };
 

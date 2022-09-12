@@ -34,21 +34,21 @@ TEST(HttpsConnection, ValidRead) {
 
         ssl::context ctx{ssl::context::tlsv12_client};
         ctx.set_default_verify_paths();
-        ctx.set_verify_mode( ssl::verify_peer );
+        ctx.set_verify_mode(ssl::verify_peer);
 
-        auto urlDescription = parseURL( "https://example.com" );
+        auto urlDescription = parseURL("https://example.com");
 
-        ASSERT_TRUE( urlDescription );
-        ASSERT_TRUE( urlDescription->ssl );
-        ASSERT_EQ( urlDescription->port, "443" );
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
 
-        auto connectionCallback = createAsyncCallbackAsyncQuery<std::optional<InternetConnection>>(
-                [&]( std::optional<InternetConnection>&& connection ) {
-                    ASSERT_TRUE( connection );
-                    auto readCallback = createAsyncCallbackAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [connection = std::move( *connection )]( std::optional<std::vector<uint8_t>>&& res ) {
-                                ASSERT_TRUE( res.has_value());
-                                std::string actual( res->begin(), res->end());
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                    auto [_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [connection = std::move(*connection)](std::optional<std::vector<uint8_t>>&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
                                 const std::string expected = "<!doctype html>\n"
                                                              "<html>\n"
                                                              "<head>\n"
@@ -95,11 +95,11 @@ TEST(HttpsConnection, ValidRead) {
                                                              "</div>\n"
                                                              "</body>\n"
                                                              "</html>\n";
-                                ASSERT_EQ( actual, expected );
-                                }, [] {}, globalEnvironment );
-                    },
-                    [] {},
-                    globalEnvironment );
+                                ASSERT_EQ(actual, expected);
+                            }, [] {}, globalEnvironment, false, false);
+                },
+                [] {},
+                globalEnvironment, false, false);
 
         InternetConnection::buildHttpsInternetConnection(ctx,
                                                          globalEnvironment,
@@ -111,7 +111,7 @@ TEST(HttpsConnection, ValidRead) {
                                                          500,
                                                          60,
                                                          RevocationVerificationMode::HARD,
-                                                         connectionCallback );
+                                                         connectionCallback);
     });
     threadManager.stop();
 }
@@ -125,18 +125,18 @@ TEST(HttpsConnection, ValidCertificate) {
 
         ssl::context ctx{ssl::context::tlsv12_client};
         ctx.set_default_verify_paths();
-        ctx.set_verify_mode( ssl::verify_peer );
+        ctx.set_verify_mode(ssl::verify_peer);
 
-        auto urlDescription = parseURL( "https://example.com" );
+        auto urlDescription = parseURL("https://example.com");
 
-        ASSERT_TRUE( urlDescription );
-        ASSERT_TRUE( urlDescription->ssl );
-        ASSERT_EQ( urlDescription->port, "443" );
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
 
-        auto connectionCallback = createAsyncCallbackAsyncQuery<std::optional<InternetConnection>>(
-                [&]( std::optional<InternetConnection>&& connection ) {
-                    ASSERT_TRUE( connection );
-                    }, [] {}, globalEnvironment );
+        auto [_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                }, [] {}, globalEnvironment, false, false);
 
         InternetConnection::buildHttpsInternetConnection(ctx,
                                                          globalEnvironment,
@@ -148,7 +148,7 @@ TEST(HttpsConnection, ValidCertificate) {
                                                          500,
                                                          60,
                                                          RevocationVerificationMode::HARD,
-                                                         connectionCallback );
+                                                         connectionCallback);
     });
     threadManager.stop();
 }
@@ -162,18 +162,18 @@ TEST(HttpsConnection, RevokedCertificate) {
 
         ssl::context ctx{ssl::context::tlsv12_client};
         ctx.set_default_verify_paths();
-        ctx.set_verify_mode( ssl::verify_peer );
+        ctx.set_verify_mode(ssl::verify_peer);
 
-        auto urlDescription = parseURL( "https://revoked.badssl.com/" );
+        auto urlDescription = parseURL("https://revoked.badssl.com/");
 
-        ASSERT_TRUE( urlDescription );
-        ASSERT_TRUE( urlDescription->ssl );
-        ASSERT_EQ( urlDescription->port, "443" );
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
 
-        auto connectionCallback = createAsyncCallbackAsyncQuery<std::optional<InternetConnection>>(
+        auto [_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(!connection);
-                }, [] {}, globalEnvironment);
+                }, [] {}, globalEnvironment, false, false);
 
         InternetConnection::buildHttpsInternetConnection(ctx,
                                                          globalEnvironment,
@@ -185,7 +185,7 @@ TEST(HttpsConnection, RevokedCertificate) {
                                                          500,
                                                          60,
                                                          RevocationVerificationMode::HARD,
-                                                         connectionCallback );
+                                                         connectionCallback);
     });
     threadManager.stop();
 }

@@ -17,13 +17,6 @@ ReadConnectionRPCHandler::ReadConnectionRPCHandler(
         , m_handler(std::move(handler))
         , m_callback(std::move(callback)) {}
 
-ReadConnectionRPCHandler::~ReadConnectionRPCHandler() {
-    ASSERT(isSingleThread(), m_environment.logger())
-    ASSERT(m_query, m_environment.logger())
-
-    m_query->terminate();
-}
-
 void ReadConnectionRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
@@ -36,9 +29,11 @@ void ReadConnectionRPCHandler::process() {
         return;
     }
 
-    auto callback = createAsyncCallbackAsyncQuery<std::optional<std::vector<uint8_t>>>([this](std::optional<std::vector<uint8_t>>&& result) {
+    auto [query, callback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([this](auto&& result) {
         onResult(result);
-    }, [] {}, m_environment);
+    }, [] {}, m_environment, true, true);
+
+    m_query = std::move(query);
 
     handler->read(m_request.identifier(), callback);
 }

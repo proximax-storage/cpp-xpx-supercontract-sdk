@@ -33,8 +33,6 @@ public:
 
     void process() override;
 
-    ~OpenConnectionRPCHandler() override;
-
 private:
 
     void onResult( const std::optional<uint64_t>& connectionId );

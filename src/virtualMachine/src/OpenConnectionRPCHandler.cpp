@@ -17,13 +17,6 @@ OpenConnectionRPCHandler::OpenConnectionRPCHandler(
         , m_handler(std::move(handler))
         , m_callback(std::move(callback)) {}
 
-OpenConnectionRPCHandler::~OpenConnectionRPCHandler() {
-    ASSERT(isSingleThread(), m_environment.logger())
-    ASSERT(m_query, m_environment.logger())
-
-    m_query->terminate();
-}
-
 void OpenConnectionRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
@@ -36,9 +29,11 @@ void OpenConnectionRPCHandler::process() {
         return;
     }
 
-    auto callback = createAsyncCallbackAsyncQuery<std::optional<uint64_t>>([this](std::optional<uint64_t>&& id) {
+    auto [query, callback] = createAsyncQuery<std::optional<uint64_t>>([this](auto&& id) {
         onResult(id);
-    }, [] {}, m_environment);
+    }, [] {}, m_environment, true, true);
+
+    m_query = std::move(query);
 
     handler->openConnection(m_request.url(), callback);
 }

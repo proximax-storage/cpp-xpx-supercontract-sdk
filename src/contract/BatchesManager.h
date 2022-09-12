@@ -26,8 +26,6 @@ class BaseBatchesManager
 
 public:
 
-    virtual ~BaseBatchesManager() = default;
-
     virtual void addCall(const CallRequest&) = 0;
 
     virtual void addBlockInfo( const Block& block ) = 0;

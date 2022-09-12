@@ -24,7 +24,7 @@ CallExecutionManager::CallExecutionManager(GlobalEnvironment& environment,
         , m_internetQueryHandler(std::move(internetQueryHandler))
         , m_blockchainQueryHandler(std::move(blockchainQueryHandler))
         , m_callback(std::move(callback)) {
-    start();
+    execute();
 }
 
 CallExecutionManager::~CallExecutionManager() {
@@ -33,13 +33,22 @@ CallExecutionManager::~CallExecutionManager() {
     }
 }
 
-void CallExecutionManager::start() {
+void CallExecutionManager::execute() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_virtualMachineQuery = createAsyncCallbackAsyncQuery<std::optional<vm::CallExecutionResult>>([this] {
+    ASSERT(!m_virtualMachineQuery, m_environment.logger())
 
-    })
+    auto query = createAsyncCallbackAsyncQuery<std::optional<vm::CallExecutionResult>>([this] (auto&& result) {
+        if (!result) {
+            // We have failed to obtain the result because of some reasons and should try to repeat the effort
+            m_environment.logger().warn("Failed To Obtain The Result Of {} Contract Call", m_callRequest.m_callId);
+            m_virtualMachineQuery.reset();
+            m_repeatTimer = Timer(m_environment.threadManager().context(), m_repeatTimeout, [this] {
+                execute();
+            });
+        }
+    }, [] {}, m_environment);
 }
 
 }

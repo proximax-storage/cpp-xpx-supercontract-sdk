@@ -39,7 +39,6 @@ private:
     std::weak_ptr<VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
 
     std::unique_ptr<RPCResponseHandler> m_responseHandler;
-    std::shared_ptr<AsyncQuery> m_handlerQuery;
 
     std::shared_ptr<AsyncQuery> m_tagQuery;
 

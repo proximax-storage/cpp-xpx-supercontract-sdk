@@ -29,13 +29,7 @@ RPCVirtualMachine::~RPCVirtualMachine() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    for (auto&[_, query]: m_pathQueries) {
-        query->terminate();
-    }
-
-    for (auto&[_, context]: m_callContexts) {
-        context.m_query->terminate();
-    }
+    m_pathQueries.clear();
 
     m_callContexts.clear();
 
@@ -53,7 +47,7 @@ void RPCVirtualMachine::executeCall(const ContractKey& contractKey,
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    auto pathCallback = [=,
+    auto c = [=,
             this,
             request = request,
             internetQueryHandler = std::move(internetQueryHandler),
@@ -65,11 +59,11 @@ void RPCVirtualMachine::executeCall(const ContractKey& contractKey,
                                    std::move(blockchainQueryHandler),
                                    std::move(callback));
     };
-    auto pathQuery = createAsyncCallbackAsyncQuery<std::string>(std::move(pathCallback), [=] {
+    auto [pathQuery, pathCallback] = createAsyncQuery<std::string>(std::move(c), [=] {
         callback->postReply({});
-    }, m_environment);
-    m_pathQueries[request.m_callId] = pathQuery;
-    m_storageObserver.getAbsolutePath(request.m_file, pathQuery);
+    }, m_environment, true, true);
+    m_pathQueries[request.m_callId] = std::move(pathQuery);
+    m_storageObserver.getAbsolutePath(request.m_file, pathCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
@@ -88,11 +82,11 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     request.m_file = callAbsolutePath;
 
-    auto vmCallback = createAsyncCallbackAsyncQuery<std::optional<CallExecutionResult>>(
+    auto [vmQuery, vmCallback] = createAsyncQuery<std::optional<CallExecutionResult>>(
             [=, this](std::optional<CallExecutionResult>&& result) {
                 callback->postReply(std::move(result));
                 onCallExecuted(callId);
-            }, [=] { callback->postReply({}); }, m_environment);
+            }, [=] { callback->postReply({}); }, m_environment, true, false);
 
     auto call = ExecuteCallRPCRequest(m_environment,
                                       std::move(request),
@@ -102,7 +96,7 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
                                       std::move(blockchainQueryHandler),
                                       std::move(vmCallback));
 
-    m_callContexts.emplace(callId, CallContext(std::move(call), vmCallback));
+    m_callContexts.emplace(callId, CallContext(std::move(call), vmQuery));
 }
 
 void RPCVirtualMachine::waitForRPCResponse() {

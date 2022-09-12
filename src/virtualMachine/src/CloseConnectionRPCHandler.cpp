@@ -17,13 +17,6 @@ CloseConnectionRPCHandler::CloseConnectionRPCHandler(
         , m_handler(std::move(handler))
         , m_callback(std::move(callback)) {}
 
-CloseConnectionRPCHandler::~CloseConnectionRPCHandler() {
-    ASSERT(isSingleThread(), m_environment.logger())
-    ASSERT(m_query, m_environment.logger())
-
-    m_query->terminate();
-}
-
 void CloseConnectionRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
@@ -36,9 +29,11 @@ void CloseConnectionRPCHandler::process() {
         return;
     }
 
-    auto callback = createAsyncCallbackAsyncQuery<bool>([this](bool success) {
+    auto [query, callback] = createAsyncQuery<bool>([this](bool success) {
         onResult(success);
-    }, [] {}, m_environment);
+    }, [] {}, m_environment, true, true);
+
+    m_query = std::move(query);
 
     handler->closeConnection(m_request.identifier(), callback);
 }

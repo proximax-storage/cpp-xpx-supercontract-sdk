@@ -32,8 +32,6 @@ public:
 
     void process() override;
 
-    ~ReadConnectionRPCHandler() override;
-
 private:
 
     void onResult(const std::optional<std::vector<uint8_t>>& result);
