@@ -39,10 +39,9 @@ RPCVirtualMachine::~RPCVirtualMachine() {
     }
 }
 
-void RPCVirtualMachine::executeCall(const ContractKey& contractKey,
-                                    const CallRequest& request,
-                                    std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
-                                    std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+void RPCVirtualMachine::executeCall(const CallRequest& request,
+                                    std::weak_ptr<VirtualMachineInternetQueryHandler> internetQueryHandler,
+                                    std::weak_ptr<VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                                     std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())

@@ -55,10 +55,9 @@ public:
 
     ~RPCVirtualMachine() override;
 
-    void executeCall(const ContractKey& contractKey,
-                     const CallRequest& request,
-                     std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
-                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+    void executeCall(const CallRequest& request,
+                     std::weak_ptr<VirtualMachineInternetQueryHandler> internetQueryHandler,
+                     std::weak_ptr<VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                      std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> callback) override;
 
 private:

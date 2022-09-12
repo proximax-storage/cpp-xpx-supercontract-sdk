@@ -22,10 +22,9 @@ public:
 
     virtual ~VirtualMachine() = default;
 
-    virtual void executeCall(const ContractKey&,
-                             const CallRequest&,
-                             std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
-                             std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+    virtual void executeCall(const CallRequest&,
+                             std::weak_ptr<VirtualMachineInternetQueryHandler> internetQueryHandler,
+                             std::weak_ptr<VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                              std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> callback) = 0;
 
 };
