@@ -30,6 +30,7 @@ TEST(HttpsConnection, ValidRead) {
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
 
+    static bool read = false;
     ssl::context ctx{ssl::context::tlsv12_client};
     ctx.set_default_verify_paths();
     ctx.set_verify_mode( ssl::verify_peer );
@@ -42,6 +43,7 @@ TEST(HttpsConnection, ValidRead) {
 
     auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
             [&]( std::optional<InternetConnection>&& connection ) {
+                read = true;
                 ASSERT_TRUE( connection );
 
                 auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
@@ -116,6 +118,7 @@ TEST(HttpsConnection, ValidRead) {
                                                          connectionCallback );
     });
     threadManager.stop();
+    ASSERT_TRUE(read);
 }
 
 TEST(HttpsConnection, ValidCertificate) {
@@ -243,6 +246,7 @@ TEST(HttpsConnection, NonExistingTarget)
     ssl::context ctx{ssl::context::tlsv12_client};
     ctx.set_default_verify_paths();
     ctx.set_verify_mode(ssl::verify_peer);
+    static bool read = false;
 
     auto urlDescription = parseURL("https://www.google.com/eg");
 
@@ -257,6 +261,7 @@ TEST(HttpsConnection, NonExistingTarget)
                 auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                 auto readCallback = createAsyncQueryHandler<std::optional<std::vector<uint8_t>>>([connection = std::move(*connection)](std::optional<std::vector<uint8_t>> &&res)
                                                                                                  {
+                    read = true;
                     ASSERT_FALSE( res.has_value() );
                     // std::string actual(res->begin(), res->end());
                     // const std::string expected = "<!DOCTYPE html>\n"
@@ -292,6 +297,7 @@ TEST(HttpsConnection, NonExistingTarget)
                                                          connectionCallback );
     });
     threadManager.stop();
+    ASSERT_TRUE(read);
 }
 
 TEST(HttpsConnection, RevokedCertificate) {

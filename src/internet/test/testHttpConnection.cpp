@@ -33,6 +33,7 @@ namespace sirius::contract::internet::test
         GlobalEnvironmentImpl globalEnvironment;
         auto &threadManager = globalEnvironment.threadManager();
 
+        static bool read = false;
         // ssl::context ctx{ssl::context::tlsv12_client};
         // ctx.set_default_verify_paths();
         // ctx.set_verify_mode(ssl::verify_peer);
@@ -46,7 +47,9 @@ namespace sirius::contract::internet::test
         auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
             [&](std::optional<InternetConnection> &&connection)
             {
+                read = true;
                 ASSERT_TRUE(connection);
+
 
                 auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
@@ -120,6 +123,7 @@ namespace sirius::contract::internet::test
                                     30000,
                                     connectionCallback); });
         threadManager.stop();
+        ASSERT_TRUE(read);
     }
 
     TEST(HttpConnection, ValidCertificate)
@@ -241,6 +245,7 @@ namespace sirius::contract::internet::test
         // ssl::context ctx{ssl::context::tlsv12_client};
         // ctx.set_default_verify_paths();
         // ctx.set_verify_mode(ssl::verify_peer);
+        static bool read = false;
 
         auto urlDescription = parseURL("http://www.google.com/eg");
 
@@ -255,6 +260,7 @@ namespace sirius::contract::internet::test
                 auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                 auto readCallback = createAsyncQueryHandler<std::optional<std::vector<uint8_t>>>([connection = std::move(*connection)](std::optional<std::vector<uint8_t>> &&res)
                                                                                                  {
+                    read = true;
                     ASSERT_FALSE( res.has_value() );
                     // std::string actual(res->begin(), res->end());
                     // const std::string expected = "<!DOCTYPE html>\n"
@@ -286,6 +292,7 @@ namespace sirius::contract::internet::test
                                     30000,
                                     connectionCallback); });
         threadManager.stop();
+        ASSERT_TRUE(read);
     }
 
 }
