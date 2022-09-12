@@ -10,8 +10,10 @@ namespace sirius::contract::internet {
 
 InternetConnection::InternetConnection( GlobalEnvironment& environment,
                                         InternetResourceContainer&& resource )
-        : m_environment( environment ),
-        m_resource( std::move( resource )) {}
+        : m_environment( environment )
+        , m_resource( std::move( resource )) {
+
+}
 
 InternetConnection::~InternetConnection() {
 
@@ -34,6 +36,14 @@ InternetConnection& InternetConnection::operator=( InternetConnection&& other ) 
     m_resource = std::move( other.m_resource );
     return *this;
 };
+
+void InternetConnection::read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger());
+
+    ASSERT(m_resource, m_environment.logger());
+
+    m_resource->read(callback);
+}
 
 void InternetConnection::buildHttpInternetConnection( GlobalEnvironment& globalEnvironment, const std::string& host,
                                                       const std::string& port, const std::string& target,
@@ -88,9 +98,4 @@ void InternetConnection::buildHttpsInternetConnection( ssl::context& ctx,
                 }, [] {}, globalEnvironment );
     resource->open( openCallback );
 }
-
-InternetResourceContainer InternetConnection::getContainer() {
-    return m_resource;
-}
-
 }

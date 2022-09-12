@@ -31,10 +31,11 @@ enum class RevocationVerificationMode {
     SOFT, HARD
 };
 
-class HttpsInternetResource:
-        private SingleThread,
-        public InternetResource,
-        public std::enable_shared_from_this<HttpsInternetResource> {
+class HttpsInternetResource
+        :
+                private SingleThread,
+                public InternetResource,
+                public std::enable_shared_from_this<HttpsInternetResource> {
 
 private:
 
@@ -48,15 +49,15 @@ private:
     std::string m_port;
     std::string m_target;
 
-    tcp::resolver                           m_resolver;
-    beast::ssl_stream<beast::tcp_stream>    m_stream;
-    beast::flat_buffer                      m_buffer;
-    http::request<http::empty_body>         m_req;
-    http::parser<false, http::buffer_body>  m_res;
-    std::vector<uint8_t>                    m_readDataBuffer;
+    tcp::resolver m_resolver;
+    beast::ssl_stream<beast::tcp_stream> m_stream;
+    beast::flat_buffer m_buffer;
+    http::request<http::empty_body> m_req;
+    http::parser<false, http::buffer_body> m_res;
+    std::vector<uint8_t> m_readDataBuffer;
 
     std::map<RequestId, std::unique_ptr<OCSPVerifier>> m_ocspVerifiers;
-    bool                                               m_handshakeReceived = false;
+    bool m_handshakeReceived = false;
 
     int m_connectionTimeout;
     int m_ocspQueryTimerDelay;
@@ -79,13 +80,13 @@ public:
             int connectionTimeout,
             int ocspQueryTimerDelay,
             int ocspQueryMaxEfforts,
-            RevocationVerificationMode mode );
+            RevocationVerificationMode mode);
 
 public:
 
-    void open( const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) override;
+    void open(std::shared_ptr<AsyncCallback<InternetResourceContainer>> callback) override;
 
-    void read( const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback ) override;
+    void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback) override;
 
     void close() override;
 
@@ -96,33 +97,34 @@ private:
     void onHostResolved(
             beast::error_code ec,
             const tcp::resolver::results_type& results,
-            const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+            const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
     void
-    onConnected( beast::error_code ec,
-                 const tcp::resolver::results_type::endpoint_type&,
-                 const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    onConnected(beast::error_code ec,
+                const tcp::resolver::results_type::endpoint_type&,
+                const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onHandshake( beast::error_code ec, const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void onHandshake(beast::error_code ec, const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onWritten( beast::error_code ec,
-                    std::size_t bytes_transferred,
-                    const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void onWritten(beast::error_code ec,
+                   std::size_t bytes_transferred,
+                   const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
     void onRead(
             beast::error_code ec,
             std::size_t bytes_transferred,
-            const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback );
+            const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback);
 
     void runTimeoutTimer();
 
-    void verifyOCSP( ssl::verify_context& c, const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void verifyOCSP(ssl::verify_context& c, const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onOCSPVerified( const RequestId& requestId, CertificateRevocationCheckStatus status, const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void onOCSPVerified(const RequestId& requestId, CertificateRevocationCheckStatus status,
+                        const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onExtendedHandshake( const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void onExtendedHandshake(const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onShutdown( beast::error_code ec );
+    void onShutdown(beast::error_code ec);
 };
 
 }

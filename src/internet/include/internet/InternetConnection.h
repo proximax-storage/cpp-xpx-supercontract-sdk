@@ -21,46 +21,50 @@
 
 namespace sirius::contract::internet {
 
-class InternetConnection:
-        private SingleThread {
+class InternetConnection
+        :
+                private SingleThread {
 
-    GlobalEnvironment&            m_environment;
-    InternetResourceContainer     m_resource;
+    GlobalEnvironment& m_environment;
+    InternetResourceContainer m_resource;
 
 private:
 
-    InternetConnection( GlobalEnvironment& environment,
-                        InternetResourceContainer&& resource );
+    InternetConnection(GlobalEnvironment& environment,
+                       InternetResourceContainer&& resource);
 
 public:
 
     ~InternetConnection();
 
-    InternetConnection( const InternetConnection& ) = delete;
-    InternetConnection( InternetConnection&& other ) noexcept;
-    InternetConnection& operator=( const InternetConnection& ) = delete;
-    InternetConnection& operator=( InternetConnection&& other )  noexcept;
+    InternetConnection(const InternetConnection&) = delete;
 
-    static void buildHttpInternetConnection( GlobalEnvironment& globalEnvironment,
+    InternetConnection(InternetConnection&& other) noexcept;
+
+    InternetConnection& operator=(const InternetConnection&) = delete;
+
+    InternetConnection& operator=(InternetConnection&& other) noexcept;
+
+    void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback);
+
+    static void buildHttpInternetConnection(GlobalEnvironment& globalEnvironment,
+                                            const std::string& host,
+                                            const std::string& port,
+                                            const std::string& target,
+                                            int bufferSize,
+                                            int timeout,
+                                            const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
+
+    static void buildHttpsInternetConnection(boost::asio::ssl::context& ctx,
+                                             GlobalEnvironment& globalEnvironment,
                                              const std::string& host,
                                              const std::string& port,
                                              const std::string& target,
                                              int bufferSize,
-                                             int timeout,
+                                             int connectionTimeout,
+                                             int ocspQueryTimerDelay,
+                                             int ocspQueryMaxEfforts,
+                                             RevocationVerificationMode mode,
                                              const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
-
-    static void buildHttpsInternetConnection( boost::asio::ssl::context& ctx,
-                                              GlobalEnvironment& globalEnvironment,
-                                              const std::string& host,
-                                              const std::string& port,
-                                              const std::string& target,
-                                              int bufferSize,
-                                              int connectionTimeout,
-                                              int ocspQueryTimerDelay,
-                                              int ocspQueryMaxEfforts,
-                                              RevocationVerificationMode mode,
-                                              const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
-    
-    InternetResourceContainer getContainer();
 };
 }
