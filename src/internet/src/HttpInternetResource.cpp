@@ -15,7 +15,7 @@ HttpInternetResource::HttpInternetResource(GlobalEnvironment& globalEnvironment,
                                            int bufferSize,
                                            int timeout)
         : m_environment(globalEnvironment)
-        , m_port(port) // You forgot to initialize the port number
+        , m_port(port)
         , m_host(host)
         , m_target(target)
         , m_resolver(globalEnvironment.threadManager().context())
@@ -34,7 +34,7 @@ HttpInternetResource::~HttpInternetResource() {
     ASSERT(m_state == ConnectionState::CLOSED, m_environment.logger())
 }
 
-void HttpInternetResource::open(std::shared_ptr<AsyncCallback<InternetResourceContainer>> callback) {
+void HttpInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -61,7 +61,7 @@ void HttpInternetResource::open(std::shared_ptr<AsyncCallback<InternetResourceCo
     runTimeoutTimer();
 }
 
-void HttpInternetResource::read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback) {
+void HttpInternetResource::read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -106,16 +106,16 @@ void HttpInternetResource::close() {
 
     m_resolver.cancel();
     m_stream.close();
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 }
 
 void HttpInternetResource::onHostResolved(beast::error_code ec,
                                           const boost::asio::ip::basic_resolver<tcp, boost::asio::executor>::results_type& results,
-                                          const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback) {
+                                           const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
         close();
@@ -143,11 +143,11 @@ void HttpInternetResource::onHostResolved(beast::error_code ec,
 }
 
 void HttpInternetResource::onConnected(beast::error_code ec, tcp::resolver::results_type::endpoint_type,
-                                       const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback) {
+                                        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
         close();
@@ -170,11 +170,11 @@ void HttpInternetResource::onConnected(beast::error_code ec, tcp::resolver::resu
 }
 
 void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_transferred,
-                                     const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback) {
+                                      const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
         close();
@@ -192,13 +192,13 @@ void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tra
 }
 
 void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transferred,
-                                  const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback) {
+                                   const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     ASSERT(m_state != ConnectionState::UNINITIALIZED, m_environment.logger())
 
-    m_timeoutTimer.reset();
+    m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
         close();

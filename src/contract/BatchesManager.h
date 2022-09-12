@@ -12,7 +12,6 @@
 
 #include "supercontract/Requests.h"
 
-#include "ContractVirtualMachineEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
 
 namespace sirius::contract {
@@ -23,12 +22,9 @@ struct Batch {
 };
 
 class BaseBatchesManager
-        : public ContractVirtualMachineEventHandler
-        , public ContractBlockchainEventHandler {
+        : public ContractBlockchainEventHandler {
 
 public:
-
-    virtual ~BaseBatchesManager() = default;
 
     virtual void addCall(const CallRequest&) = 0;
 

@@ -53,7 +53,7 @@ public:
                                             const std::string& target,
                                             int bufferSize,
                                             int timeout,
-                                            const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
+                                             const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>&);
 
     static void buildHttpsInternetConnection(boost::asio::ssl::context& ctx,
                                              GlobalEnvironment& globalEnvironment,
@@ -65,6 +65,6 @@ public:
                                              int ocspQueryTimerDelay,
                                              int ocspQueryMaxEfforts,
                                              RevocationVerificationMode mode,
-                                             const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
+                                             const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>&);
 };
 }

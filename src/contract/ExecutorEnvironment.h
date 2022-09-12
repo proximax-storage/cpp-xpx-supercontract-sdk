@@ -13,10 +13,10 @@
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
 #include "supercontract/GlobalEnvironment.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachine.h"
+#include "virtualMachine/VirtualMachine.h"
 #include "crypto/KeyPair.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineQueryHandlersKeeper.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineInternetQueryHandler.h"
+#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
+#include "virtualMachine/VirtualMachine.h"
 
 #include "supercontract/ThreadManager.h"
 
@@ -36,11 +36,9 @@ public:
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 
-    virtual std::weak_ptr<VirtualMachine> virtualMachine() = 0;
+    virtual std::weak_ptr<vm::VirtualMachine> virtualMachine() = 0;
 
     virtual ExecutorConfig& executorConfig() = 0;
-
-    virtual std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() = 0;
 
     virtual boost::asio::ssl::context& sslContext() = 0;
 };

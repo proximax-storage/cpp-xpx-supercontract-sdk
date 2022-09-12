@@ -10,12 +10,7 @@
 #include "supercontract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineEventHandler.h"
-#include "../virtualMachine/include/virtualMachine/RPCVirtualMachine.h"
-#include "../virtualMachine/include/virtualMachine/RPCInternetService.h"
-#include "../virtualMachine/include/virtualMachine/RPCBlockchainService.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineQueryHandlersKeeper.h"
-#include "../virtualMachine/include/virtualMachine/RPCServerServiceManager.h"
+#include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "DebugInfo.h"
 
 #include "supercontract/Executor.h"
@@ -30,7 +25,6 @@ namespace sirius::contract {
 
 class DefaultExecutor
         : public Executor,
-          public VirtualMachineEventHandler,
           public ExecutorEnvironment {
 
 private:
@@ -54,10 +48,7 @@ private:
 
     const SessionId m_virtualMachineSessionId;
 
-    std::shared_ptr<VirtualMachine> m_virtualMachine;
-
-    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> m_virtualMachineInternetQueryKeeper;
-    RPCServerServiceManager m_rpcServerServiceManager;
+    std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 
 public:
 

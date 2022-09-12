@@ -4,91 +4,127 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "virtualMachine/RPCVirtualMachine.h"
+#include "RPCVirtualMachine.h"
+
+#include "RPCTag.h"
+#include "ExecuteCallRPCRequest.h"
+
+#include "supercontract_server.grpc.pb.h"
+#include <grpcpp/create_channel.h>
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine( const SessionId& sessionId,
-                                      const StorageObserver& storageObserver,
-                                      GlobalEnvironment& environment,
-                                      VirtualMachineEventHandler& virtualMachineEventHandler,
-                                      const std::string& serverAddress )
-                                      : m_sessionId( sessionId )
-                                      , m_storageObserver( storageObserver )
-                                      , m_environment( environment )
-                                      , m_virtualMachineEventHandler( virtualMachineEventHandler )
-                                      , m_stub( std::move( supercontractserver::SupercontractServer::NewStub( grpc::CreateChannel(
-                                              serverAddress, grpc::InsecureChannelCredentials()))))
-                                              , m_completionQueueThread( [this] {
-                                                  waitForRPCResponse();
-                                              } ) {}
+RPCVirtualMachine::RPCVirtualMachine(const StorageObserver& storageObserver,
+                                     GlobalEnvironment& environment,
+                                     const std::string& serverAddress)
+        : m_storageObserver(storageObserver)
+        , m_environment(environment)
+        , m_stub(std::move(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
+                serverAddress, grpc::InsecureChannelCredentials()))))
+        , m_completionQueueThread([this] {
+            waitForRPCResponse();
+        }) {}
 
-                                              RPCVirtualMachine::~RPCVirtualMachine() {
+RPCVirtualMachine::~RPCVirtualMachine() {
 
-    ASSERT( isSingleThread(), m_environment.logger() )
+    ASSERT(isSingleThread(), m_environment.logger())
 
-    for ( auto&[_, query]: m_pathQueries ) {
-        query->terminate();
-    }
+    m_pathQueries.clear();
+
+    m_callContexts.clear();
+
     m_completionQueue.Shutdown();
-    if ( m_completionQueueThread.joinable()) {
+    if (m_completionQueueThread.joinable()) {
         m_completionQueueThread.join();
     }
 }
 
-void RPCVirtualMachine::executeCall( const ContractKey& contractKey, const CallRequest& request ) {
+void RPCVirtualMachine::executeCall(const ContractKey& contractKey,
+                                    const CallRequest& request,
+                                    std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
+                                    std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                                    std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> callback) {
 
-    ASSERT( isSingleThread(), m_environment.logger() )
+    ASSERT(isSingleThread(), m_environment.logger())
 
-    std::function<void( std::string&& )> call = [=, this, request = request](
-            std::string&& callAbsolutePath ) mutable -> void {
-        onReceivedCallAbsolutePath( contractKey, std::move( request ), std::move( callAbsolutePath ));
+    auto c = [=,
+            this,
+            request = request,
+            internetQueryHandler = std::move(internetQueryHandler),
+            blockchainQueryHandler = std::move(blockchainQueryHandler)](
+            std::string&& callAbsolutePath) mutable -> void {
+        onReceivedCallAbsolutePath(std::move(request),
+                                   std::move(callAbsolutePath),
+                                   std::move(internetQueryHandler),
+                                   std::move(blockchainQueryHandler),
+                                   std::move(callback));
     };
-    auto callback = createAsyncQueryHandler<std::string>( std::move(call), [] {}, m_environment );
-    m_pathQueries[request.m_callId] = callback;
-    m_storageObserver.getAbsolutePath( request.m_file, callback );
+    auto [pathQuery, pathCallback] = createAsyncQuery<std::string>(std::move(c), [=] {
+        callback->postReply({});
+    }, m_environment, true, true);
+    m_pathQueries[request.m_callId] = std::move(pathQuery);
+    m_storageObserver.getAbsolutePath(request.m_file, pathCallback);
 }
 
-void RPCVirtualMachine::onReceivedCallAbsolutePath( const ContractKey& contractKey, CallRequest&& request,
-                                                    std::string&& callAbsolutePath ) {
+void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
+                                                   std::string&& callAbsolutePath,
+                                                   std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
+                                                   std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                                                   std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback) {
 
-    ASSERT( isSingleThread(), m_environment.logger() )
+    ASSERT(isSingleThread(), m_environment.logger())
 
-    m_pathQueries.erase( request.m_callId );
+    auto callId = request.m_callId;
+
+    ASSERT(!m_callContexts.contains(callId), m_environment.logger());
+
+    m_pathQueries.erase(request.m_callId);
 
     request.m_file = callAbsolutePath;
 
-    supercontractserver::ExecuteRequest rpcRequest;
-    rpcRequest.set_contractkey( std::string( contractKey.begin(), contractKey.end()));
-    rpcRequest.set_callid( std::string( request.m_callId.begin(), request.m_callId.end()));
-    rpcRequest.set_filetocall( std::move( request.m_file ));
-    rpcRequest.set_functiontocall( std::move( request.m_function ));
-    rpcRequest.set_scprepayment( request.m_scLimit );
-    rpcRequest.set_smprepayment( request.m_smLimit );
-    rpcRequest.set_contract_mode( (uint32_t) request.m_callLevel );
+    auto [vmQuery, vmCallback] = createAsyncQuery<std::optional<CallExecutionResult>>(
+            [=, this](std::optional<CallExecutionResult>&& result) {
+                callback->postReply(std::move(result));
+                onCallExecuted(callId);
+            }, [=] { callback->postReply({}); }, m_environment, true, false);
 
-    auto* call = new ExecuteCallRPCVirtualMachineRequest( rpcRequest, m_virtualMachineEventHandler, DebugInfo("", std::thread::id()) );
+    auto call = ExecuteCallRPCRequest(m_environment,
+                                      std::move(request),
+                                      *m_stub,
+                                      m_completionQueue,
+                                      std::move(internetQueryHandler),
+                                      std::move(blockchainQueryHandler),
+                                      std::move(vmCallback));
 
-    call->m_response_reader =
-            m_stub->PrepareAsyncExecuteCall( &call->m_context, rpcRequest, &m_completionQueue );
-
-    call->m_response_reader->StartCall();
-    call->m_response_reader->Finish( &call->m_reply, &call->m_status, &call );
+    m_callContexts.emplace(callId, CallContext(std::move(call), vmQuery));
 }
 
 void RPCVirtualMachine::waitForRPCResponse() {
 
-    ASSERT( !isSingleThread(), m_environment.logger() )
+    ASSERT(!isSingleThread(), m_environment.logger())
 
     void* pTag;
     bool ok;
-    while ( m_completionQueue.Next( &pTag, &ok )) {
-        auto* pQuery = static_cast<RPCCall*>(pTag);
-        if ( ok ) {
-            pQuery->process();
-        }
+    while (m_completionQueue.Next(&pTag, &ok)) {
+        auto* pQuery = static_cast<RPCTag*>(pTag);
+        pQuery->process(ok);
         delete pQuery;
     }
 }
+
+void RPCVirtualMachine::onCallExecuted(const CallId& callId) {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    auto it = m_callContexts.find(callId);
+
+    ASSERT(it != m_callContexts.end(), m_environment.logger())
+
+    m_callContexts.erase(it);
+}
+
+RPCVirtualMachine::CallContext::CallContext(ExecuteCallRPCRequest&& request, std::shared_ptr<AsyncQuery> query)
+        : m_request(std::move(request))
+        , m_query(std::move(query)) {}
 
 }

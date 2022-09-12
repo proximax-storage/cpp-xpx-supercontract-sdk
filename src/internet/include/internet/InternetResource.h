@@ -20,9 +20,9 @@ public:
 
     virtual ~InternetResource() = default;
 
-    virtual void open(std::shared_ptr<AsyncCallback<InternetResourceContainer>>) = 0;
+    virtual void open(std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>) = 0;
 
-    virtual void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>) = 0;
+    virtual void read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>) = 0;
 
     virtual void close() = 0;
 

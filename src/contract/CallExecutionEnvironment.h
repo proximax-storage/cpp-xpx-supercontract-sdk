@@ -9,11 +9,10 @@
 #include "supercontract/Identifiers.h"
 
 #include "supercontract/AsyncQuery.h"
-#include "internet/HttpInternetConnection.h"
-#include "internet/HttpsInternetConnection.h"
+#include "internet/InternetConnection.h"
 #include "internet/InternetUtils.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineInternetQueryHandler.h"
-#include "../virtualMachine/include/virtualMachine/VirtualMachineBlockchainQueryHandler.h"
+#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
+#include "virtualMachine/VirtualMachineBlockchainQueryHandler.h"
 
 namespace sirius::contract {
 

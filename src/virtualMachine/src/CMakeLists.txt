@@ -4,10 +4,10 @@ find_package(OpenSSL REQUIRED)
 
 supercontract_sdk_shared_library_target(contract-virtualMachine)
 
-foreach(_service supercontract_server internet blockchain)
+foreach(_service supercontract_server)
 
     # Proto file
-    get_filename_component(${_service}_proto "../protos/${_service}.proto" ABSOLUTE)
+    get_filename_component(${_service}_proto "../protobuf/supercontract/${_service}.proto" ABSOLUTE)
     get_filename_component(${_service}_proto_path "${${_service}_proto}" PATH)
 
     # Generated sources
@@ -48,8 +48,5 @@ endforeach()
 
 target_include_directories(contract-virtualMachine PUBLIC ../include ../../../include)
 target_include_directories(contract-virtualMachine PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
-
-#TEMP
-target_include_directories(contract-virtualMachine PUBLIC ../../contract/)
 
 target_link_libraries(contract-virtualMachine contract-logging utils OpenSSL::SSL)
