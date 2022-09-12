@@ -93,7 +93,6 @@ void InternetConnection::buildHttpsInternetConnection( ssl::context& ctx,
                     callback->postReply({});
                     return;
                 }
-                globalEnvironment.logger().info("I am here");
                 InternetConnection connection( globalEnvironment, std::move( resource ));
                 callback->postReply( std::move( connection ) );
                 }, [] {}, globalEnvironment );
