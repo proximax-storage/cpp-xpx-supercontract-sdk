@@ -45,7 +45,7 @@ public:
 
     InternetConnection& operator=(InternetConnection&& other) noexcept;
 
-    void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback);
+    void read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback);
 
     static void buildHttpInternetConnection(GlobalEnvironment& globalEnvironment,
                                             const std::string& host,

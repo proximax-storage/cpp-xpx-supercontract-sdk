@@ -35,7 +35,7 @@ InternetConnection& InternetConnection::operator=(InternetConnection&& other) no
     return *this;
 };
 
-void InternetConnection::read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback) {
+void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger());
 
     ASSERT(m_resource, m_environment.logger());

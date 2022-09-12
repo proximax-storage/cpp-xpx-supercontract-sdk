@@ -48,7 +48,7 @@ TEST(HttpsConnection, ValidRead) {
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    auto [_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [connection = sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
                                 ASSERT_TRUE(res.has_value());
                                 std::string actual(res->begin(), res->end());
@@ -137,7 +137,7 @@ TEST(HttpsConnection, ValidCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto [_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(connection);
                 }, [] {}, globalEnvironment, false, false);
@@ -162,25 +162,26 @@ TEST(HttpsConnection, TerminateCall) {
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
 
-    ssl::context ctx{ssl::context::tlsv12_client};
-    ctx.set_default_verify_paths();
-    ctx.set_verify_mode( ssl::verify_peer );
-
-    auto urlDescription = parseURL( "https://example.com" );
-
-    ASSERT_TRUE( urlDescription );
-    ASSERT_TRUE( urlDescription->ssl );
-    ASSERT_EQ( urlDescription->port, "443" );
-
     bool flag = false;
 
-    auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
-            [&]( std::optional<InternetConnection>&& connection ) {
-                flag = true;
-                ASSERT_TRUE( connection );
-            }, [] {}, globalEnvironment );
-
     threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[query, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    flag = true;
+                    ASSERT_TRUE(connection);
+                }, [] {}, globalEnvironment, false, false);
+
         InternetConnection::buildHttpsInternetConnection(ctx,
                                                          globalEnvironment,
                                                          urlDescription->host,
@@ -191,9 +192,9 @@ TEST(HttpsConnection, TerminateCall) {
                                                          500,
                                                          60,
                                                          RevocationVerificationMode::HARD,
-                                                         connectionCallback );
+                                                         connectionCallback);
+        query->terminate();
     });
-    connectionCallback->terminate();
     threadManager.stop();
     ASSERT_FALSE(flag);
 }
@@ -215,7 +216,7 @@ TEST(HttpsConnection, RevokedCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto [_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
