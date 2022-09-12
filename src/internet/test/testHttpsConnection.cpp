@@ -94,6 +94,7 @@ TEST(HttpsConnection, ValidRead) {
                                                  "</html>\n";
                     ASSERT_EQ( actual, expected );
                     }, [] {}, globalEnvironment);
+                    connection->getContainer()->read(readCallback);
             },
             [] {},
             globalEnvironment );

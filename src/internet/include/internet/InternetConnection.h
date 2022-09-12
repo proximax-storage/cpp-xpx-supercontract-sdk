@@ -60,6 +60,7 @@ public:
                                               int ocspQueryMaxEfforts,
                                               RevocationVerificationMode mode,
                                               const std::shared_ptr<AsyncCallback<std::optional<InternetConnection>>>&);
-
+    
+    InternetResourceContainer getContainer();
 };
 }

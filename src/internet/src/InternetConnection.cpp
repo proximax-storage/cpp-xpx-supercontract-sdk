@@ -89,4 +89,8 @@ void InternetConnection::buildHttpsInternetConnection( ssl::context& ctx,
     resource->open( openCallback );
 }
 
+InternetResourceContainer InternetConnection::getContainer() {
+    return m_resource;
+}
+
 }

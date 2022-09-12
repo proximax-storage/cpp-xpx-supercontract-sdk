@@ -47,7 +47,6 @@ namespace sirius::contract::internet::test
             [&](std::optional<InternetConnection> &&connection)
             {
                 ASSERT_TRUE(connection);
-                // This useless, the HTTP connection won't call the readCallback at all
                 auto readCallback = createAsyncQueryHandler<std::optional<std::vector<uint8_t>>>([connection = std::move(*connection)](std::optional<std::vector<uint8_t>> &&res)
                                                                                                  {
                     ASSERT_TRUE( res.has_value() );
@@ -100,6 +99,7 @@ namespace sirius::contract::internet::test
                                                  "</html>\n";
                     ASSERT_EQ( actual, expected ); },
                                                                                                  [] {}, globalEnvironment);
+                    connection->getContainer()->read(readCallback);
             },
             [] {},
             globalEnvironment);
