@@ -43,7 +43,10 @@ TEST(HttpsConnection, ValidRead) {
     auto connectionCallback = createAsyncQueryHandler<std::optional<InternetConnection>>(
             [&]( std::optional<InternetConnection>&& connection ) {
                 ASSERT_TRUE( connection );
-                auto readCallback = createAsyncQueryHandler<std::optional<std::vector<uint8_t>>>([connection = std::move(*connection)] (std::optional<std::vector<uint8_t>>&& res) {
+
+                auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                auto readCallback = createAsyncQueryHandler<std::optional<std::vector<uint8_t>>>([connection = sharedConnection] (std::optional<std::vector<uint8_t>>&& res) {
                     ASSERT_TRUE( res.has_value() );
                     std::string actual(res->begin(), res->end());
                     const std::string expected = "<!doctype html>\n"
@@ -94,7 +97,7 @@ TEST(HttpsConnection, ValidRead) {
                                                  "</html>\n";
                     ASSERT_EQ( actual, expected );
                     }, [] {}, globalEnvironment);
-                    connection->getContainer()->read(readCallback);
+                sharedConnection->read(readCallback);
             },
             [] {},
             globalEnvironment );

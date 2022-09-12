@@ -11,6 +11,7 @@
 namespace sirius::contract::internet {
 
 class InternetResource;
+
 using InternetResourceContainer = std::shared_ptr<InternetResource>;
 
 class InternetResource {
@@ -19,9 +20,9 @@ public:
 
     virtual ~InternetResource() = default;
 
-    virtual void open( const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& ) = 0;
+    virtual void open(std::shared_ptr<AsyncCallback<InternetResourceContainer>>) = 0;
 
-    virtual void read( const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& ) = 0;
+    virtual void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>) = 0;
 
     virtual void close() = 0;
 

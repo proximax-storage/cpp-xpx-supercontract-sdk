@@ -30,10 +30,11 @@ namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
 
-class HttpInternetResource:
-        private SingleThread,
-        public InternetResource,
-        public std::enable_shared_from_this<HttpInternetResource> {
+class HttpInternetResource
+        :
+                private SingleThread,
+                public InternetResource,
+                public std::enable_shared_from_this<HttpInternetResource> {
 
 private:
 
@@ -73,9 +74,9 @@ public:
 
     ~HttpInternetResource() override;
 
-    void open( const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback ) override;
+    void open(std::shared_ptr<AsyncCallback<InternetResourceContainer>> callback) override;
 
-    void read( const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback ) override;
+    void read(std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>> callback) override;
 
     void close() override;
 
@@ -85,21 +86,21 @@ private:
     onHostResolved(
             beast::error_code ec,
             const tcp::resolver::results_type& results,
-            const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+            const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
     void
-    onConnected( beast::error_code ec,
-                 tcp::resolver::results_type::endpoint_type,
-                 const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    onConnected(beast::error_code ec,
+                tcp::resolver::results_type::endpoint_type,
+                const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
-    void onWritten( beast::error_code ec,
-                    std::size_t bytes_transferred,
-                    const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback );
+    void onWritten(beast::error_code ec,
+                   std::size_t bytes_transferred,
+                   const std::shared_ptr<AsyncCallback<InternetResourceContainer>>& callback);
 
     void onRead(
             beast::error_code ec,
             std::size_t bytes_transferred,
-            const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback );
+            const std::shared_ptr<AsyncCallback<std::optional<std::vector<uint8_t>>>>& callback);
 
     void runTimeoutTimer();
 };
