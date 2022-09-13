@@ -25,18 +25,18 @@ using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 namespace sirius::contract::internet::test {
 
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
-std::string exec_http(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}
+// std::string exec_http(const char* cmd) {
+//     std::array<char, 128> buffer;
+//     std::string result;
+//     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+//     if (!pipe) {
+//         throw std::runtime_error("popen() failed!");
+//     }
+//     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+//         result += buffer.data();
+//     }
+//     return result;
+// }
 
 #define TEST_NAME HttpConnection
 
@@ -257,43 +257,44 @@ TEST(HttpConnection, NonExistingTarget) {
     ASSERT_TRUE(read);
 }
 
-TEST(HttpConnection, NetworkAdapterDown) {
+// Looks like this is not a good way to simulate the broken network adapter situation, I'll comment out first
+// TEST(HttpConnection, NetworkAdapterDown) {
 
-    GlobalEnvironmentImpl globalEnvironment;
-    auto& threadManager = globalEnvironment.threadManager();
+//     GlobalEnvironmentImpl globalEnvironment;
+//     auto& threadManager = globalEnvironment.threadManager();
 
-    ssl::context ctx{ssl::context::tlsv12_client};
-    ctx.set_default_verify_paths();
-    ctx.set_verify_mode(ssl::verify_peer);
+//     ssl::context ctx{ssl::context::tlsv12_client};
+//     ctx.set_default_verify_paths();
+//     ctx.set_verify_mode(ssl::verify_peer);
 
-    auto urlDescription = parseURL("http://example.com");
+//     auto urlDescription = parseURL("http://example.com");
 
-    ASSERT_TRUE(urlDescription);
-    ASSERT_FALSE(urlDescription->ssl);
-    ASSERT_EQ(urlDescription->port, "80");
+//     ASSERT_TRUE(urlDescription);
+//     ASSERT_FALSE(urlDescription->ssl);
+//     ASSERT_EQ(urlDescription->port, "80");
 
-    exec_http("sudo ifconfig eth0 down");
+//     exec_http("sudo ifconfig eth0 down");
 
-    threadManager.execute([&] {
+//     threadManager.execute([&] {
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_FALSE(connection);
-                },
-                [] {}, globalEnvironment, false, false);
+//         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+//                 [&](std::optional<InternetConnection>&& connection) {
+//                     ASSERT_FALSE(connection);
+//                 },
+//                 [] {}, globalEnvironment, false, false);
 
-        InternetConnection::buildHttpInternetConnection(
-                globalEnvironment,
-                urlDescription->host,
-                urlDescription->port,
-                urlDescription->target,
-                16 * 1024,
-                30000,
-                connectionCallback);
-    });
-    threadManager.stop();
-    exec_http("sudo ifconfig eth0 up");
-}
+//         InternetConnection::buildHttpInternetConnection(
+//                 globalEnvironment,
+//                 urlDescription->host,
+//                 urlDescription->port,
+//                 urlDescription->target,
+//                 16 * 1024,
+//                 30000,
+//                 connectionCallback);
+//     });
+//     threadManager.stop();
+//     exec_http("sudo ifconfig eth0 up");
+// }
 
 TEST(HttpConnection, ConnectingHttpsURL) {
 

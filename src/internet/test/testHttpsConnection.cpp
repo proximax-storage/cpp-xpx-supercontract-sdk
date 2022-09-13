@@ -24,18 +24,18 @@ using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace sirius::contract::internet::test {
 
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
-std::string exec_https(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
-}
+// std::string exec_https(const char* cmd) {
+//     std::array<char, 128> buffer;
+//     std::string result;
+//     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+//     if (!pipe) {
+//         throw std::runtime_error("popen() failed!");
+//     }
+//     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+//         result += buffer.data();
+//     }
+//     return result;
+// }
 
 #define TEST_NAME = HttpsConnection
 
@@ -612,46 +612,47 @@ TEST(HttpsConnection, WeakSignature) {
     threadManager.stop();
 }
 
-TEST(HttpsConnection, NetworkAdapterDown) {
+// Looks like this is not a good way to simulate the broken network adapter situation, I'll comment out first
+// TEST(HttpsConnection, NetworkAdapterDown) {
 
-    GlobalEnvironmentImpl globalEnvironment;
-    auto& threadManager = globalEnvironment.threadManager();
+//     GlobalEnvironmentImpl globalEnvironment;
+//     auto& threadManager = globalEnvironment.threadManager();
 
-    ssl::context ctx{ssl::context::tlsv12_client};
-    ctx.set_default_verify_paths();
-    ctx.set_verify_mode(ssl::verify_peer);
+//     ssl::context ctx{ssl::context::tlsv12_client};
+//     ctx.set_default_verify_paths();
+//     ctx.set_verify_mode(ssl::verify_peer);
 
-    auto urlDescription = parseURL("https://example.com");
+//     auto urlDescription = parseURL("https://example.com");
 
-    ASSERT_TRUE(urlDescription);
-    ASSERT_TRUE(urlDescription->ssl);
-    ASSERT_EQ(urlDescription->port, "443");
+//     ASSERT_TRUE(urlDescription);
+//     ASSERT_TRUE(urlDescription->ssl);
+//     ASSERT_EQ(urlDescription->port, "443");
 
-    exec_https("sudo ifconfig eth0 down");
+//     exec_https("sudo ifconfig eth0 down");
 
-    threadManager.execute([&] {
+//     threadManager.execute([&] {
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_FALSE(connection);
-                },
-                [] {}, globalEnvironment, false, false);
+//         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+//                 [&](std::optional<InternetConnection>&& connection) {
+//                     ASSERT_FALSE(connection);
+//                 },
+//                 [] {}, globalEnvironment, false, false);
 
-        InternetConnection::buildHttpsInternetConnection(ctx,
-                                                         globalEnvironment,
-                                                         urlDescription->host,
-                                                         urlDescription->port,
-                                                         urlDescription->target,
-                                                         16 * 1024,
-                                                         30000,
-                                                         500,
-                                                         60,
-                                                         RevocationVerificationMode::HARD,
-                                                         connectionCallback);
-    });
-    threadManager.stop();
-    exec_https("sudo ifconfig eth0 up");
-}
+//         InternetConnection::buildHttpsInternetConnection(ctx,
+//                                                          globalEnvironment,
+//                                                          urlDescription->host,
+//                                                          urlDescription->port,
+//                                                          urlDescription->target,
+//                                                          16 * 1024,
+//                                                          30000,
+//                                                          500,
+//                                                          60,
+//                                                          RevocationVerificationMode::HARD,
+//                                                          connectionCallback);
+//     });
+//     threadManager.stop();
+//     exec_https("sudo ifconfig eth0 up");
+// }
 
 TEST(HttpsConnection, ConnectingNonHttpsURL) {
 
