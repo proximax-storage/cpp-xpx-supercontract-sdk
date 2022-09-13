@@ -58,7 +58,11 @@ void HttpInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetResou
                     })
     );
 
-    runTimeoutTimer();
+    m_timeoutTimer = m_environment.threadManager().startTimer(m_timeout, [pThisWeak = weak_from_this(), callback] {
+        if (auto pThis = pThisWeak.lock(); pThis) {
+            pThis->onHostResolved(boost::asio::error::operation_aborted, {}, callback);
+        }
+    });
 }
 
 void HttpInternetResource::read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
@@ -104,7 +108,6 @@ void HttpInternetResource::close() {
 
     m_state = ConnectionState::CLOSED;
 
-    m_resolver.cancel();
     m_stream.close();
     m_timeoutTimer.cancel();
 }
@@ -116,6 +119,11 @@ void HttpInternetResource::onHostResolved(beast::error_code ec,
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_timeoutTimer.cancel();
+
+    if (m_state == ConnectionState::CLOSED) {
+        // The resolve has already been canceled by the timer
+        return;
+    }
 
     if (callback->isTerminated()) {
         close();
@@ -196,7 +204,7 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    ASSERT(m_state != ConnectionState::UNINITIALIZED, m_environment.logger())
+    ASSERT(m_state >= ConnectionState::INITIALIZED, m_environment.logger())
 
     m_timeoutTimer.cancel();
 
