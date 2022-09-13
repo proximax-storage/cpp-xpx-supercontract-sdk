@@ -594,4 +594,58 @@ TEST(HttpsConnection, WeakSignature) {
     threadManager.stop();
 }
 
+std::string exec(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
+TEST(HttpsConnection, NetworkAdapterDown) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode(ssl::verify_peer);
+
+    auto urlDescription = parseURL("https://example.com");
+
+    ASSERT_TRUE(urlDescription);
+    ASSERT_TRUE(urlDescription->ssl);
+    ASSERT_EQ(urlDescription->port, "443");
+
+    exec("sudo ifconfig eth0 down");
+
+    threadManager.execute([&] {
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_FALSE(connection);
+                },
+                [] {}, globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    exec("sudo ifconfig eth0 up");
+}
+
 }
