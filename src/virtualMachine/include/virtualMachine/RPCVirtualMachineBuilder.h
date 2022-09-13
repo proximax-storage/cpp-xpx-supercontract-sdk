@@ -13,7 +13,9 @@ namespace sirius::contract::vm {
 
 class RPCVirtualMachineBuilder {
 
-    std::unique_ptr<VirtualMachine> build(const StorageObserver& storageObserver,
+public:
+
+    std::shared_ptr<VirtualMachine> build(const StorageObserver& storageObserver,
                                           GlobalEnvironment& environment,
                                           const std::string& serverAddress);
 

@@ -11,6 +11,8 @@
 #include "ExecutorEnvironment.h"
 #include "ContractEnvironment.h"
 
+#include "CallExecutionManager.h"
+
 #include "log.h"
 
 namespace sirius::contract {
@@ -33,7 +35,7 @@ private:
     struct AutorunCallInfo {
         uint64_t m_batchIndex;
         BlockHash m_blockHash;
-        std::shared_ptr<AsyncQuery> m_query;
+        std::unique_ptr<CallExecutionManager> m_manager;
     };
 
     ContractEnvironment& m_contractEnvironment;

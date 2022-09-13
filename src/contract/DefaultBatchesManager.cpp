@@ -61,19 +61,18 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
     if (!m_automaticExecutionsEnabledSince || m_automaticExecutionsEnabledSince < block.m_height) {
         // Automatic Executions Are Disabled For This Block
 
-        if ( m_batches.empty() ) {
+        if (m_batches.empty()) {
             return;
         }
 
         auto batchIt = --m_batches.end();
 
-        if ( batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::MANUAL ) {
+        if (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::MANUAL) {
             batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
         }
-    }
-    else {
-        if ( m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
-        DraftBatch::BatchFormationStatus::MANUAL ) {
+    } else {
+        if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
+                                 DraftBatch::BatchFormationStatus::MANUAL) {
             m_batches[m_nextDraftBatchIndex++] = DraftBatch();
         }
 
@@ -88,17 +87,28 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
 
         m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash};
 
-        if ( auto pVirtualMachine = m_executorEnvironment.virtualMachine().lock(); pVirtualMachine ) {
-            CallRequest request{m_contractEnvironment.contractKey(),
-                                callId,
-                                m_executorEnvironment.executorConfig().autorunFile(),
-                                m_executorEnvironment.executorConfig().autorunFunction(),
-                                {},
-                                m_executorEnvironment.executorConfig().autorunSCLimit(),
-                                0,
-                                CallRequest::CallLevel::AUTORUN};
+        CallRequest request{m_contractEnvironment.contractKey(),
+                            callId,
+                            m_executorEnvironment.executorConfig().autorunFile(),
+                            m_executorEnvironment.executorConfig().autorunFunction(),
+                            {},
+                            m_executorEnvironment.executorConfig().autorunSCLimit(),
+                            0,
+                            CallRequest::CallLevel::AUTORUN};
 
-        }
+        auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this] (auto&& result) {
+            onSuperContractCallExecuted(request.m_callId, std::forward<decltype(result)>(result));
+        }, [] {}, m_executorEnvironment, false, false);
+
+        auto manager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
+                                                              m_executorEnvironment.virtualMachine(),
+                                                              m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
+                                                              request,
+                                                              std::weak_ptr<vm::VirtualMachineInternetQueryHandler>(),
+                                                              std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler>(),
+                                                              callback);
+
+        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(manager)};
     }
 }
 
@@ -114,7 +124,8 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     auto batchIt = m_batches.find(callIt->second.m_batchIndex);
 
     ASSERT(batchIt != m_batches.end(), m_executorEnvironment.logger())
-    ASSERT (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC, m_executorEnvironment.logger())
+    ASSERT (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC,
+            m_executorEnvironment.logger())
 
     if (executionResult.m_success && executionResult.m_return == 0) {
         CallReferenceInfo info;

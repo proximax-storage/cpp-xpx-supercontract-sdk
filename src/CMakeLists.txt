@@ -2,4 +2,4 @@ cmake_minimum_required(VERSION 3.9)
 
 add_subdirectory(internet)
 add_subdirectory(virtualMachine)
-add_subdirectory(contract)
+#add_subdirectory(contract)

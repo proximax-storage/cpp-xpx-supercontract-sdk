@@ -33,7 +33,7 @@ void CallExecutionManager::execute() {
 
     auto [query, callback] = createAsyncQuery<std::optional<vm::CallExecutionResult>>([this] (auto&& result) {
         if (result) {
-            m_callback->postReply(*result);
+            m_callback->postReply(std::move(*result));
         }
         else {
             runTimer();

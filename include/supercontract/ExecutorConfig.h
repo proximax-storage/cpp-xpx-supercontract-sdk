@@ -32,6 +32,7 @@ private:
     std::string     m_rpcVirtualMachineAddress = "localhost:50051";
     std::string     m_rpcServerAddress = "localhost:50052";
 
+    int             m_virtualMachineRepeatTimeoutMs = 5000;
 
     int             m_internetBufferSize = 16 * 1024;
     int             m_internetConnectionTimeoutMilliseconds = 10000;
@@ -142,6 +143,14 @@ public:
 
     void setOcspQueryMaxEfforts( int ocspQueryMaxEfforts ) {
         m_ocspQueryMaxEfforts = ocspQueryMaxEfforts;
+    }
+
+    int virtualMachineRepeatTimeoutMs() const {
+        return m_virtualMachineRepeatTimeoutMs;
+    }
+
+    void setVirtualMachineRepeatTimeoutMs(int virtualMachineRepeatTimeoutMs) {
+        m_virtualMachineRepeatTimeoutMs = virtualMachineRepeatTimeoutMs;
     }
 };
 

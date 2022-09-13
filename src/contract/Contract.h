@@ -44,10 +44,9 @@ public:
 
 };
 
-std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
-                                                 AddContractRequest&& addContractRequest,
-                                                 ExecutorEnvironment& contractContext,
-                                                 const ExecutorConfig& executorConfig,
-                                                 const DebugInfo& debugInfo );
+std::unique_ptr<Contract> createDefaultContract(const ContractKey& contractKey,
+                                                AddContractRequest&& addContractRequest,
+                                                ExecutorEnvironment& contractContext,
+                                                const ExecutorConfig& executorConfig);
 
 }

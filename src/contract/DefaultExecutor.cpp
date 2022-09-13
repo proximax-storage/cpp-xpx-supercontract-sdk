@@ -24,139 +24,132 @@
 namespace sirius::contract {
 
 class DefaultExecutor
-        : public Executor,
+        : private SingleThread,
+          public Executor,
           public ExecutorEnvironment {
 
 private:
 
     const crypto::KeyPair& m_keyPair;
 
+    std::shared_ptr<ThreadManager> m_pThreadManager;
+    logging::Logger logger;
+
     boost::asio::ssl::context m_sslContext;
 
-    ThreadManager m_threadManager;
-
-    std::map<ContractKey, std::unique_ptr<Contract>>    m_contracts;
-    std::map<DriveKey, ContractKey>                     m_contractsDriveKeys;
-
-    DebugInfo     m_dbgInfo;
+    std::map<ContractKey, std::unique_ptr<Contract>> m_contracts;
+    std::map<DriveKey, ContractKey> m_contractsDriveKeys;
 
     ExecutorConfig m_config;
 
-    ExecutorEventHandler& m_eventHandler;
+    std::unique_ptr<ExecutorEventHandler> m_eventHandler;
     Messenger& m_messenger;
     Storage& m_storage;
-
-    const SessionId m_virtualMachineSessionId;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 
 public:
 
-    DefaultExecutor( const crypto::KeyPair& keyPair,
-                     const SessionId& sessionId,
-                     const ExecutorConfig config,
-                     ExecutorEventHandler& eventHandler,
-                     Messenger& messenger,
-                     Storage& storage,
-                     const StorageObserver& storageObserver,
-                     const std::string& dbgPeerName = "executor")
-                     : m_keyPair(keyPair)
-                     , m_sslContext( boost::asio::ssl::context::tlsv12_client )
-                     , m_dbgInfo( dbgPeerName, m_threadManager.threadId() )
-                     , m_config( config )
-                     , m_eventHandler( eventHandler )
-                     , m_messenger( messenger )
-                     , m_storage( storage )
-                     , m_virtualMachineSessionId( utils::generateRandomByteValue<SessionId>() )
-                     , m_virtualMachine(std::make_shared<RPCVirtualMachine>( m_virtualMachineSessionId, storageObserver, m_threadManager, *this, m_config.rpcVirtualMachineAddress(), m_dbgInfo ) )
-                     , m_rpcServerServiceManager( m_config.rpcServerAddress(), m_virtualMachineSessionId, m_threadManager, m_dbgInfo ) {
-        m_threadManager.execute( [this] {
-            m_sslContext.set_default_verify_paths();
-            m_sslContext.set_verify_mode( boost::asio::ssl::verify_peer );
-            m_virtualMachineInternetQueryKeeper = m_rpcServerServiceManager.addService<InternetService, VirtualMachineInternetQueryHandler>();
-            m_rpcServerServiceManager.run();
-        } );
+    DefaultExecutor(const crypto::KeyPair& keyPair,
+                    std::shared_ptr<ThreadManager> pThreadManager,
+                    const ExecutorConfig& config,
+                    std::unique_ptr<ExecutorEventHandler> eventHandler,
+                    Messenger& messenger,
+                    Storage& storage,
+                    const StorageObserver& storageObserver,
+                    const std::string& dbgPeerName = "executor")
+            : m_keyPair(keyPair)
+            , m_pThreadManager(std::move(pThreadManager))
+            , m_sslContext(boost::asio::ssl::context::tlsv12_client)
+            , m_config(config)
+            , m_eventHandler(std::move(eventHandler))
+            , m_messenger(messenger)
+            , m_storage(storage)
+            , m_virtualMachine(
+                    vm::RPCVirtualMachineBuilder().build(storageObserver, *this, m_config.rpcVirtualMachineAddress())) {
+        m_sslContext.set_default_verify_paths();
+        m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
     }
 
     ~DefaultExecutor() override {
-        m_threadManager.execute([this] {
-            for (auto& [_, contract] : m_contracts) {
+        m_pThreadManager->execute([this] {
+            for (auto&[_, contract] : m_contracts) {
                 contract->terminate();
             }
         });
 
-        m_threadManager.stop();
+        m_pThreadManager->stop();
     }
 
-    void addContract( const ContractKey& key, AddContractRequest&& request ) override {
-        m_threadManager.execute( [=, this, request = std::move( request )]() mutable {
-            if ( m_contracts.contains( key )) {
+    void addContract(const ContractKey& key, AddContractRequest&& request) override {
+        m_pThreadManager->execute([=, this, request = std::move(request)]() mutable {
+            if (m_contracts.contains(key)) {
                 return;
             }
 
-            auto it = request.m_executors.find( m_keyPair.publicKey());
+            auto it = request.m_executors.find(m_keyPair.publicKey());
 
-            if ( it == request.m_executors.end()) {
-                _LOG_ERR( "The Executor Is Not In List" )
+            if (it == request.m_executors.end()) {
+                _LOG_ERR("The Executor Is Not In List")
                 return;
             }
 
-            request.m_executors.erase( it );
+            request.m_executors.erase(it);
 
-            m_contracts[key] = createDefaultContract( key, std::move( request ), *this, m_config, m_dbgInfo );
-        } );
+            m_contracts[key] = createDefaultContract(key, std::move(request), *this, m_config);
+        });
     }
 
-    void addContractCall( const ContractKey& key, CallRequest&& request ) override {
-        m_threadManager.execute( [=, this, request = std::move( request )] {
+    void addContractCall(const ContractKey& key, CallRequest&& request) override {
+        m_pThreadManager->execute([=, this, request = std::move(request)] {
 
-            auto contractIt = m_contracts.find( key );
+            auto contractIt = m_contracts.find(key);
 
-            if ( contractIt == m_contracts.end()) {
-                _LOG_ERR( "Add Call to Non-Existing Contract " << key );
+            if (contractIt == m_contracts.end()) {
+                _LOG_ERR("Add Call to Non-Existing Contract " << key);
                 return;
             }
 
-            contractIt->second->addContractCall( request );
-        } );
+            contractIt->second->addContractCall(request);
+        });
     }
 
-    void addBlockInfo( const ContractKey& key, Block&& block ) override {
-        m_threadManager.execute( [=, this, request = std::move( block )] {
+    void addBlockInfo(const ContractKey& key, Block&& block) override {
+        m_pThreadManager->execute([=, this, request = std::move(block)] {
 
-            auto contractIt = m_contracts.find( key );
+            auto contractIt = m_contracts.find(key);
 
-            if ( contractIt == m_contracts.end()) {
-                _LOG_ERR( "Add Block to Non-Existing Contract " << key );
+            if (contractIt == m_contracts.end()) {
+                _LOG_ERR("Add Block to Non-Existing Contract " << key);
                 return;
             }
 
-            contractIt->second->addBlockInfo( block );
-        } );
+            contractIt->second->addBlockInfo(block);
+        });
     }
 
-    void removeContract( const ContractKey& key, RemoveRequest&& request ) override {
-        m_threadManager.execute( [=, this, request = std::move( request )] {
+    void removeContract(const ContractKey& key, RemoveRequest&& request) override {
+        m_pThreadManager->execute([=, this, request = std::move(request)] {
 
-            auto contractIt = m_contracts.find( key );
+            auto contractIt = m_contracts.find(key);
 
-            if ( contractIt == m_contracts.end()) {
-                _LOG_ERR( "Remove Non-Existing Contract " << key );
+            if (contractIt == m_contracts.end()) {
+                _LOG_ERR("Remove Non-Existing Contract " << key);
                 return;
             }
 
-            contractIt->second->removeContract( request );
-        } );
+            contractIt->second->removeContract(request);
+        });
     }
 
-    void setExecutors( const ContractKey& key, std::set<ExecutorKey>&& executors ) override {
-        m_threadManager.execute([=, this, executors=std::move(executors)] () mutable {
+    void setExecutors(const ContractKey& key, std::set<ExecutorKey>&& executors) override {
+        m_pThreadManager->execute([=, this, executors = std::move(executors)]() mutable {
 
             auto contractIt = m_contracts.find(key);
 
             auto executorIt = executors.find(m_keyPair.publicKey());
 
-            if ( executorIt == executors.end() ) {
+            if (executorIt == executors.end()) {
                 _LOG_ERR("The Executor Is Not In List")
                 return;
             }
@@ -171,17 +164,17 @@ public:
 
     // region storage event handler
 
-    void onInitiatedModifications( const DriveKey& driveKey, uint64_t batchIndex ) override {
-        m_threadManager.execute([=, this] {
+    void onInitiatedModifications(const DriveKey& driveKey, uint64_t batchIndex) override {
+        m_pThreadManager->execute([=, this] {
             auto driveIt = m_contractsDriveKeys.find(driveKey);
 
-            if ( driveIt == m_contractsDriveKeys.end()) {
+            if (driveIt == m_contractsDriveKeys.end()) {
                 return;
             }
 
             auto contractIt = m_contracts.find(driveIt->second);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
@@ -191,64 +184,50 @@ public:
         });
     }
 
-    void onAppliedSandboxStorageModifications( const DriveKey& driveKey, uint64_t batchIndex, bool success,
-                                               int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
-        m_threadManager.execute([=, this] {
+    void onAppliedSandboxStorageModifications(const DriveKey& driveKey, uint64_t batchIndex, bool success,
+                                              int64_t sandboxSizeDelta, int64_t stateSizeDelta) override {
+        m_pThreadManager->execute([=, this] {
             auto driveIt = m_contractsDriveKeys.find(driveKey);
 
-            if ( driveIt == m_contractsDriveKeys.end()) {
+            if (driveIt == m_contractsDriveKeys.end()) {
                 return;
             }
 
             auto contractIt = m_contracts.find(driveIt->second);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
             }
 
-            contractIt->second->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta, stateSizeDelta);
+            contractIt->second->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta,
+                                                                     stateSizeDelta);
         });
     }
 
     void
-    onStorageHashEvaluated( const DriveKey& driveKey, uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize,
-                            uint64_t metaFilesSize, uint64_t fileStructureSize ) override {
-        m_threadManager.execute([=, this] {
+    onStorageHashEvaluated(const DriveKey& driveKey, uint64_t batchIndex, const StorageHash& storageHash,
+                           uint64_t usedDriveSize,
+                           uint64_t metaFilesSize, uint64_t fileStructureSize) override {
+        m_pThreadManager->execute([=, this] {
             auto driveIt = m_contractsDriveKeys.find(driveKey);
 
-            if ( driveIt == m_contractsDriveKeys.end()) {
+            if (driveIt == m_contractsDriveKeys.end()) {
                 return;
             }
 
             auto contractIt = m_contracts.find(driveIt->second);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
             }
 
-            contractIt->second->onStorageHashEvaluated( batchIndex, storageHash, usedDriveSize, metaFilesSize,
-                                                        fileStructureSize );
+            contractIt->second->onStorageHashEvaluated(batchIndex, storageHash, usedDriveSize, metaFilesSize,
+                                                       fileStructureSize);
         });
-    }
-
-    // endregion
-
-public:
-
-    // region virtual machine event handler
-
-    void
-    onSuperContractCallExecuted( const ContractKey& contractKey, const CallExecutionResult& executionResult ) override {
-        m_threadManager.execute( [=, this] {
-
-            if ( auto it = m_contracts.find( contractKey ); it != m_contracts.end()) {
-                it->second->onSuperContractCallExecuted( executionResult );
-            }
-        } );
     }
 
     // endregion
@@ -257,19 +236,33 @@ public:
 
     // region message event handler
 
-    void onMessageReceived( const std::string& tag, const std::string& msg ) override {
-        m_threadManager.execute( [=, this] {
+    void onMessageReceived(const std::string& tag, const std::string& msg) override {
+        m_pThreadManager->execute([=, this] {
             try {
-                if ( tag == "end_batch" ) {
-                    auto info = utils::deserialize<EndBatchExecutionOpinion>( msg );
-                    onEndBatchExecutionOpinionReceived( info );
+                if (tag == "end_batch") {
+                    auto info = utils::deserialize<EndBatchExecutionOpinion>(msg);
+                    onEndBatchExecutionOpinionReceived(info);
                     return true;
                 }
             } catch (...) {
-                _LOG_WARN( "onMessageReceived: invalid message format: query=" << tag );
+                logger().warn("onMessageReceived: invalid message format: query={}", tag);
             }
             return false;
-        } );
+        });
+    }
+
+    // endregion
+
+public:
+
+    // region global environment
+
+    ThreadManager& threadManager() override {
+        return *m_pThreadManager;
+    }
+
+    logging::Logger& logger() override {
+        return <#initializer#>;
     }
 
     // endregion
@@ -282,10 +275,6 @@ public:
         return m_keyPair;
     }
 
-    ThreadManager& threadManager() override {
-        return m_threadManager;
-    }
-
     Messenger& messenger() override {
         return m_messenger;
     }
@@ -295,19 +284,15 @@ public:
     }
 
     ExecutorEventHandler& executorEventHandler() override {
-        return m_eventHandler;
+        return *m_eventHandler;
     }
 
-    std::weak_ptr<VirtualMachine> virtualMachine() override {
+    std::weak_ptr<vm::VirtualMachine> virtualMachine() override {
         return m_virtualMachine;
     }
 
     ExecutorConfig& executorConfig() override {
         return m_config;
-    }
-
-    std::weak_ptr<VirtualMachineQueryHandlersKeeper<VirtualMachineInternetQueryHandler>> internetHandlerKeeper() override {
-        return m_virtualMachineInternetQueryKeeper;
     }
 
     boost::asio::ssl::context& sslContext() override {
@@ -320,11 +305,11 @@ public:
 
     // region blockchain event handler
 
-    void onEndBatchExecutionPublished( PublishedEndBatchExecutionTransactionInfo&& info ) override {
-        m_threadManager.execute([this, info = std::move(info)] {
+    void onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&& info) override {
+        m_pThreadManager->execute([this, info = std::move(info)] {
             auto contractIt = m_contracts.find(info.m_contractKey);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
@@ -335,11 +320,11 @@ public:
     }
 
     void onEndBatchExecutionSingleTransactionPublished(
-            PublishedEndBatchExecutionSingleTransactionInfo&& info ) override {
-        m_threadManager.execute([this, info = std::move(info)] {
+            PublishedEndBatchExecutionSingleTransactionInfo&& info) override {
+        m_pThreadManager->execute([this, info = std::move(info)] {
             auto contractIt = m_contracts.find(info.m_contractKey);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
@@ -349,19 +334,19 @@ public:
         });
     }
 
-    void onEndBatchExecutionFailed( FailedEndBatchExecutionTransactionInfo&& info ) override {
-        m_threadManager.execute([this, info = std::move(info)] {
+    void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) override {
+        m_pThreadManager->execute([this, info = std::move(info)] {
             auto contractIt = m_contracts.find(info.m_contractKey);
 
             contractIt->second->onEndBatchExecutionFailed(info);
         });
     }
 
-    void onStorageSynchronized( const ContractKey& contractKey, uint64_t batchIndex ) override {
-        m_threadManager.execute([=, this] {
+    void onStorageSynchronized(const ContractKey& contractKey, uint64_t batchIndex) override {
+        m_pThreadManager->execute([=, this] {
             auto contractIt = m_contracts.find(contractKey);
 
-            if ( contractIt == m_contracts.end() ) {
+            if (contractIt == m_contracts.end()) {
 
                 // TODO maybe error?
                 return;
@@ -376,21 +361,23 @@ public:
 private:
 
     void terminate() {
-        m_rpcServerServiceManager.terminate();
+        
+        ASSERT
+        
         m_virtualMachine.reset();
-        for ( auto&[_, contract]: m_contracts ) {
+        for (auto&[_, contract]: m_contracts) {
             contract->terminate();
         }
     }
 
-    void onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& opinion ) {
+    void onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
         if (!opinion.hasValidForm() || !opinion.verify()) {
             return;
         }
 
         auto contractIt = m_contracts.find(opinion.m_contractKey);
-        if ( contractIt == m_contracts.end() ) {
-            contractIt->second->onEndBatchExecutionOpinionReceived( opinion );
+        if (contractIt == m_contracts.end()) {
+            contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
         }
     }
 };

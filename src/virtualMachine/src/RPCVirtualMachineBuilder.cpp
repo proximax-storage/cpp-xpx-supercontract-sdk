@@ -9,12 +9,12 @@
 
 namespace sirius::contract::vm {
 
-std::unique_ptr<VirtualMachine>
+std::shared_ptr<VirtualMachine>
 RPCVirtualMachineBuilder::build(const StorageObserver& storageObserver,
                                 GlobalEnvironment& environment,
                                 const std::string& serverAddress) {
 
-    return std::make_unique<RPCVirtualMachine>(storageObserver, environment, serverAddress);
+    return std::make_shared<RPCVirtualMachine>(storageObserver, environment, serverAddress);
 }
 
 }
