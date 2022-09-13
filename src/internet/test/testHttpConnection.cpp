@@ -24,6 +24,20 @@ using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 
 namespace sirius::contract::internet::test {
 
+// https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
+std::string exec_http(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
+
 #define TEST_NAME HttpConnection
 
 TEST(TEST_NAME, ValidRead) {
@@ -126,16 +140,19 @@ TEST(TEST_NAME, TerminateCall) {
     ASSERT_FALSE(urlDescription->ssl);
     ASSERT_EQ(urlDescription->port, "80");
 
-    bool flag = false;
+    bool read_flag = false;
+    bool terminate_flag = false;
 
     threadManager.execute([&] {
 
         auto[query, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
-                    flag = true;
+                    read_flag = true;
                     ASSERT_TRUE(connection);
                 },
-                [] {}, globalEnvironment, false, false);
+                [&]() {
+                    terminate_flag = true;
+                }, globalEnvironment, false, false);
 
         InternetConnection::buildHttpInternetConnection(
                 globalEnvironment,
@@ -149,7 +166,8 @@ TEST(TEST_NAME, TerminateCall) {
         query->terminate();
     });
     threadManager.stop();
-    ASSERT_FALSE(flag);
+    ASSERT_FALSE(read_flag);
+    ASSERT_TRUE(terminate_flag);
 }
 
 TEST(HttpConnection, NonExisting) {
@@ -190,7 +208,7 @@ TEST(HttpConnection, NonExistingTarget) {
 
     threadManager.execute([&] {
 
-        static bool read = false;
+        bool read = false;
 
         auto urlDescription = parseURL("http://www.google.com/eg");
 
@@ -203,7 +221,7 @@ TEST(HttpConnection, NonExistingTarget) {
                     ASSERT_TRUE(connection);
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [connection = std::move(*connection)](std::optional<std::vector<uint8_t>>&& res) {
+                            [&read, connection = std::move(*connection)](std::optional<std::vector<uint8_t>>&& res) {
                                 read = true;
                                 ASSERT_FALSE(res.has_value());
                                 // std::string actual(res->begin(), res->end());
@@ -237,6 +255,79 @@ TEST(HttpConnection, NonExistingTarget) {
     });
     threadManager.stop();
     ASSERT_TRUE(read);
+}
+
+TEST(HttpConnection, NetworkAdapterDown) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode(ssl::verify_peer);
+
+    auto urlDescription = parseURL("http://example.com");
+
+    ASSERT_TRUE(urlDescription);
+    ASSERT_FALSE(urlDescription->ssl);
+    ASSERT_EQ(urlDescription->port, "80");
+
+    exec_http("sudo ifconfig eth0 down");
+
+    threadManager.execute([&] {
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_FALSE(connection);
+                },
+                [] {}, globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    exec_http("sudo ifconfig eth0 up");
+}
+
+TEST(HttpConnection, ConnectingHttpsURL) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode(ssl::verify_peer);
+
+    auto urlDescription = parseURL("https://example.com");
+
+    ASSERT_TRUE(urlDescription);
+    ASSERT_TRUE(urlDescription->ssl);
+    ASSERT_EQ(urlDescription->port, "443");
+
+    threadManager.execute([&] {
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                },
+                [] {}, globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
 }
 
 }
