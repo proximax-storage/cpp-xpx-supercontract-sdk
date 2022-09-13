@@ -673,7 +673,7 @@ TEST(HttpsConnection, ConnectingNonHttpsURL) {
 
         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_TRUE(connection);
+                    ASSERT_FALSE(connection);
                 },
                 [] {}, globalEnvironment, false, false);
 
