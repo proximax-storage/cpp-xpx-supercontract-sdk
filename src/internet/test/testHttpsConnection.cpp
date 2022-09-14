@@ -135,6 +135,19 @@ TEST(HttpsConnection, ValidRead) {
     threadManager.stop();
 }
 
+void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+    std::cout << "Debug" << std::endl;
+    read_flag = true;
+    if (!res.has_value()) {return;};
+    // std::string temp(res->begin(), res->end());
+    actual_vec.insert(actual_vec.end(), res->begin(), res->end());
+    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&](std::optional<std::vector<uint8_t>>&& res) {
+        readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+    },
+        [] {}, globalEnvironment, false, false);
+    sharedConnection->read(readCallback);
+}
+
 TEST(HttpsConnection, ReadBigWebsite) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -159,12 +172,13 @@ TEST(HttpsConnection, ReadBigWebsite) {
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
+                    std::vector<uint8_t> actual_vec;
+
                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&read_flag, connection = sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                read_flag = true;
-                                ASSERT_TRUE(res.has_value());
-                                std::string actual(res->begin(), res->end());
+                            [&](std::optional<std::vector<uint8_t>>&& res) {
+                                readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                std::string actual(actual_vec.begin(), actual_vec.end());
                                 std::string expected;
                                 std::ifstream myfile("../../src/internet/test/Byzantine_Empire.txt");
                                 std::stringstream buffer;
@@ -176,8 +190,6 @@ TEST(HttpsConnection, ReadBigWebsite) {
                             [] {}, globalEnvironment, false, false);
 
                     sharedConnection->read(readCallback);
-                    // sharedConnection->read(readCallback);
-                    // sharedConnection->read(readCallback);
                 },
                 [] {},
                 globalEnvironment, false, false);
