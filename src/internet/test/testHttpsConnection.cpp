@@ -157,7 +157,7 @@ void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::v
     }
 
     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-        readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+        readFunc(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
     },
         [] {}, globalEnvironment, false, true);
     sharedConnection->read(readCallback);
