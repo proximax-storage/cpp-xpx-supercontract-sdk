@@ -136,16 +136,23 @@ TEST(HttpsConnection, ValidRead) {
 }
 
 void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
-    std::cout << "Debug" << std::endl;
+    // std::cout << "Debug" << std::endl;
     read_flag = true;
     if (!res.has_value()) {
         return;
     }
-    // std::string temp(res->begin(), res->end());
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
 
     if (res->empty()) {
         // TODO connection is read to the end, let's do something
+        std::string actual(actual_vec.begin(), actual_vec.end());
+        std::string expected;
+        std::ifstream myfile("../../src/internet/test/Byzantine_Empire.txt");
+        std::stringstream buffer;
+        buffer << myfile.rdbuf();
+        expected = buffer.str();
+        // std::cout << actual << std::endl;
+        // ASSERT_EQ(actual, expected);
         return;
     }
 
@@ -182,20 +189,10 @@ TEST(HttpsConnection, ReadBigWebsite) {
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-
-
                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
                                 readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-//                                std::string actual(actual_vec.begin(), actual_vec.end());
-//                                std::string expected;
-//                                std::ifstream myfile("../../src/internet/test/Byzantine_Empire.txt");
-//                                std::stringstream buffer;
-//                                buffer << myfile.rdbuf();
-//                                expected = buffer.str();
-//                                // std::cout << actual << std::endl;
-//                                ASSERT_EQ(actual, expected);
                             },
                             [] {}, globalEnvironment, false, true);
 
