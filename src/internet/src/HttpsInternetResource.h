@@ -124,6 +124,8 @@ private:
 
     void onExtendedHandshake( const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback );
 
+    void closeDuringInitialization();
+
     void onShutdown(beast::error_code ec);
 };
 

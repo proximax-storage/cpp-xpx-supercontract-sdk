@@ -58,13 +58,20 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
 
     if (callback->isTerminated()) {
         m_environment.logger().warn("Open Https Connection Empty Callback");
-        close();
+        closeDuringInitialization();
         return;
     }
 
     if (!SSL_set_tlsext_host_name(m_stream.native_handle(), m_host.c_str())) {
         m_environment.logger().warn("Open Https Connection SSL Set Host Name Error");
-        close();
+        closeDuringInitialization();
+        callback->postReply({});
+        return;
+    }
+
+    if (SSL_set1_host(m_stream.native_handle(), m_host.c_str()) == 0) {
+        m_environment.logger().warn("Open Https Connection SSL Set Host Error");
+        closeDuringInitialization();
         callback->postReply({});
         return;
     }
@@ -87,7 +94,11 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
                     })
     );
 
-    runTimeoutTimer();
+    m_timeoutTimer = m_environment.threadManager().startTimer(m_connectionTimeout, [pThisWeak = weak_from_this(), callback] {
+        if (auto pThis = pThisWeak.lock(); pThis) {
+            pThis->onHostResolved(boost::asio::error::operation_aborted, {}, callback);
+        }
+    });
 }
 
 void HttpsInternetResource::read(
@@ -95,11 +106,10 @@ void HttpsInternetResource::read(
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    ASSERT(m_state != ConnectionState::UNINITIALIZED, m_environment.logger())
+    ASSERT(m_state >= ConnectionState::INITIALIZED, m_environment.logger())
 
     if (callback->isTerminated()) {
         m_environment.logger().warn("Read Https Connection Empty Callback");
-        close();
         return;
     }
 
@@ -110,8 +120,7 @@ void HttpsInternetResource::read(
     }
 
     if (m_res.is_done()) {
-        m_environment.logger().warn("Read Https Connection Finished");
-        close();
+        m_environment.logger().info("Read Https Connection Finished");
         callback->postReply(std::vector<uint8_t>());
         return;
     }
@@ -123,12 +132,10 @@ void HttpsInternetResource::read(
             m_stream,
             m_buffer,
             m_res,
-            beast::bind_front_handler([pThisWeak = weak_from_this(), callback](
+            beast::bind_front_handler([pThis = shared_from_this(), callback](
                     beast::error_code ec,
                     std::size_t bytes_transferred) {
-                if (auto pThis = pThisWeak.lock(); pThis) {
-                    pThis->onRead(ec, bytes_transferred, callback);
-                }
+                pThis->onRead(ec, bytes_transferred, callback);
             }));
 
     runTimeoutTimer();
@@ -146,8 +153,6 @@ void HttpsInternetResource::close() {
 
     m_ocspVerifiers.clear();
 
-    m_timeoutTimer.cancel();
-    m_resolver.cancel();
     beast::get_lowest_layer(m_stream).cancel();
 
     m_stream.async_shutdown([pThis = shared_from_this()](beast::error_code ec) {
@@ -164,21 +169,26 @@ void HttpsInternetResource::close() {
 
 void HttpsInternetResource::onHostResolved(beast::error_code ec,
                                            const boost::asio::ip::basic_resolver<tcp, boost::asio::executor>::results_type& results,
-                                            const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                           const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_timeoutTimer.cancel();
 
+    if (m_state != ConnectionState::UNINITIALIZED) {
+        // The resolve has already been canceled by the timer
+        return;
+    }
+
     if (callback->isTerminated()) {
         m_environment.logger().warn("OnHostResolved Https Connection Empty Callback");
-        close();
+        closeDuringInitialization();
         return;
     }
 
     if (ec) {
         m_environment.logger().warn("OnHostResolved Https Connection Error: {}", ec.message());
-        close();
+        closeDuringInitialization();
         callback->postReply({});
         return;
     }
@@ -198,7 +208,7 @@ void HttpsInternetResource::onHostResolved(beast::error_code ec,
 }
 
 void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio::ip::basic_endpoint<tcp>&,
-                                         const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -206,13 +216,13 @@ void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio:
 
     if (callback->isTerminated()) {
         m_environment.logger().warn("OnConnected Https Connection Empty Callback");
-        close();
+        closeDuringInitialization();
         return;
     }
 
     if (ec) {
         m_environment.logger().warn("OnConnected Https Connection Error: {}", ec.message());
-        close();
+        closeDuringInitialization();
         callback->postReply({});
         return;
     }
@@ -242,7 +252,7 @@ void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio:
 }
 
 void HttpsInternetResource::onHandshake(beast::error_code ec,
-                                         const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -252,13 +262,13 @@ void HttpsInternetResource::onHandshake(beast::error_code ec,
 
     if (callback->isTerminated()) {
         m_environment.logger().warn("OnHandshake Https Connection Empty Callback");
-        close();
+        closeDuringInitialization();
         return;
     }
 
     if (ec) {
         m_environment.logger().warn("OnHandshake Https Connection Error {}", ec.message());
-        close();
+        closeDuringInitialization();
         callback->postReply({});
         return;
     }
@@ -271,7 +281,7 @@ void HttpsInternetResource::onHandshake(beast::error_code ec,
 }
 
 void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_transferred,
-                                       const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                      const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -292,12 +302,11 @@ void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tr
 
     m_state = ConnectionState::INITIALIZED;
     m_environment.logger().info("Established Connection With {}:{}", m_host, m_port);
-    auto h = shared_from_this();
     callback->postReply(shared_from_this());
 }
 
 void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_transferred,
-                                    const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
+                                   const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -305,7 +314,6 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
 
     if (callback->isTerminated()) {
         m_environment.logger().warn("OnRead Https Connection Empty Callback");
-        close();
         return;
     }
 
@@ -315,7 +323,6 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
 
     if (ec) {
         m_environment.logger().warn("OnRead Https Connection Error {}", ec.message());
-        close();
         callback->postReply({});
         return;
     }
@@ -331,12 +338,10 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
                 m_stream,
                 m_buffer,
                 m_res,
-                beast::bind_front_handler([pThisWeak = weak_from_this(), callback](
+                beast::bind_front_handler([pThis = shared_from_this(), callback](
                         beast::error_code ec,
                         std::size_t bytes_transferred) {
-                    if (auto pThis = pThisWeak.lock(); pThis) {
-                        pThis->onRead(ec, bytes_transferred, callback);
-                    }
+                    pThis->onRead(ec, bytes_transferred, callback);
                 }));
         runTimeoutTimer();
     }
@@ -356,7 +361,7 @@ void HttpsInternetResource::runTimeoutTimer() {
 }
 
 void HttpsInternetResource::verifyOCSP(ssl::verify_context& c,
-                                        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                       const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -373,10 +378,8 @@ void HttpsInternetResource::verifyOCSP(ssl::verify_context& c,
     auto ocspVerifier = std::make_unique<OCSPVerifier>(
             X509_STORE_CTX_get0_store(handle),
             X509_STORE_CTX_get1_chain(handle),
-            [=, pThisWeak = weak_from_this()](CertificateRevocationCheckStatus status) {
-                if (auto pThis = pThisWeak.lock(); pThis) {
-                    pThis->onOCSPVerified(requestId, status, callback);
-                }
+            [=, pThis = shared_from_this()](CertificateRevocationCheckStatus status) {
+                pThis->onOCSPVerified(requestId, status, callback);
             },
             m_environment,
             m_ocspQueryTimerDelay,
@@ -386,7 +389,7 @@ void HttpsInternetResource::verifyOCSP(ssl::verify_context& c,
 }
 
 void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, CertificateRevocationCheckStatus status,
-                                            const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+                                           const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -416,7 +419,7 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
 
     if (!ocspValid) {
         m_environment.logger().warn("OnOCSPVerified Https Connection OCSP Invalid");
-        close();
+        closeDuringInitialization();
         callback->postReply({});
         return;
     }
@@ -427,16 +430,29 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
 }
 
 void HttpsInternetResource::onExtendedHandshake(
-        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback ) {
+        const std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>>& callback) {
     http::async_write(m_stream, m_req,
-                      beast::bind_front_handler([pThisWeak = weak_from_this(), callback](beast::error_code ec,
-                                                                                         std::size_t bytes_transferred) {
-                          if (auto pThis = pThisWeak.lock(); pThis) {
-                              pThis->onWritten(ec, bytes_transferred, callback);
-                          }
+                      beast::bind_front_handler([pThis = shared_from_this(), callback](beast::error_code ec,
+                                                                                       std::size_t bytes_transferred) {
+                          pThis->onWritten(ec, bytes_transferred, callback);
                       }));
 
     runTimeoutTimer();
+}
+
+void HttpsInternetResource::closeDuringInitialization() {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    if (m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED) {
+        return;
+    }
+
+    m_ocspVerifiers.clear();
+
+    m_state = ConnectionState::SHUTDOWN;
+
+    onShutdown({});
 }
 
 void HttpsInternetResource::onShutdown(beast::error_code ec) {

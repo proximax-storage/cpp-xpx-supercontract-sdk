@@ -70,12 +70,10 @@ void HttpInternetResource::read(std::shared_ptr<AsyncQueryCallback<std::optional
     ASSERT(isSingleThread(), m_environment.logger())
 
     if (callback->isTerminated()) {
-        close();
         return;
     }
 
     if (m_res.is_done()) {
-        close();
         callback->postReply(std::vector<uint8_t>());
         return;
     }
@@ -209,7 +207,6 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
-        close();
         return;
     }
 
@@ -218,7 +215,7 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
     }
 
     if (ec) {
-        close();
+        m_environment.logger().warn("Failed To Read from {}: {}", m_host, ec.message());
         callback->postReply({});
         return;
     }
