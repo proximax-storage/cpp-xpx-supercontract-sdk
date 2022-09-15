@@ -13,8 +13,6 @@
 
 #include "CallExecutionManager.h"
 
-#include "log.h"
-
 namespace sirius::contract {
 
 class DefaultBatchesManager

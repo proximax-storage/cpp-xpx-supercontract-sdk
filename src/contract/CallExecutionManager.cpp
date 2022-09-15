@@ -12,8 +12,8 @@ CallExecutionManager::CallExecutionManager(GlobalEnvironment& environment,
                                            std::weak_ptr<vm::VirtualMachine> virtualMachine,
                                            int repeatTimeout,
                                            const CallRequest& request,
-                                           std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
-                                           std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                                           std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
+                                           std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                                            std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback)
         : m_environment(environment)
         , m_virtualMachine(std::move(virtualMachine))

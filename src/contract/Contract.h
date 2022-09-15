@@ -20,14 +20,12 @@
 #include "ContractBlockchainEventHandler.h"
 #include "virtualMachine/VirtualMachine.h"
 #include "ExecutorEnvironment.h"
-#include "DebugInfo.h"
 
 namespace sirius::contract {
 
 class Contract
-        : public ContractStorageEventHandler,
-          public ContractMessageEventHandler,
-          public ContractBlockchainEventHandler {
+          : public ContractMessageEventHandler
+          , public ContractBlockchainEventHandler {
 public:
 
     virtual void addContractCall( const CallRequest& ) = 0;

@@ -104,8 +104,8 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
                                                               m_executorEnvironment.virtualMachine(),
                                                               m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
                                                               request,
-                                                              std::weak_ptr<vm::VirtualMachineInternetQueryHandler>(),
-                                                              std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler>(),
+                                                              nullptr,
+                                                              nullptr,
                                                               callback);
 
         m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(manager)};

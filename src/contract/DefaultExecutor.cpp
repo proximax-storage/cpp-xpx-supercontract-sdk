@@ -11,15 +11,12 @@
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
-#include "DebugInfo.h"
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
 #include "supercontract/Identifiers.h"
 
 #include "utils/Serializer.h"
-#include "utils/Random.h"
-#include "log.h"
 
 namespace sirius::contract {
 
@@ -33,7 +30,7 @@ private:
     const crypto::KeyPair& m_keyPair;
 
     std::shared_ptr<ThreadManager> m_pThreadManager;
-    logging::Logger logger;
+    logging::Logger m_logger;
 
     boost::asio::ssl::context m_sslContext;
 
@@ -44,7 +41,7 @@ private:
 
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
     Messenger& m_messenger;
-    Storage& m_storage;
+    storage::Storage& m_storage;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 
@@ -55,11 +52,12 @@ public:
                     const ExecutorConfig& config,
                     std::unique_ptr<ExecutorEventHandler> eventHandler,
                     Messenger& messenger,
-                    Storage& storage,
+                    storage::Storage& storage,
                     const StorageObserver& storageObserver,
                     const std::string& dbgPeerName = "executor")
             : m_keyPair(keyPair)
             , m_pThreadManager(std::move(pThreadManager))
+            , m_logger(config.loggerConfig(), dbgPeerName)
             , m_sslContext(boost::asio::ssl::context::tlsv12_client)
             , m_config(config)
             , m_eventHandler(std::move(eventHandler))
@@ -90,7 +88,7 @@ public:
             auto it = request.m_executors.find(m_keyPair.publicKey());
 
             if (it == request.m_executors.end()) {
-                _LOG_ERR("The Executor Is Not In List")
+                m_logger.critical("The executor is not in the list of {} contract", key);
                 return;
             }
 
@@ -106,7 +104,7 @@ public:
             auto contractIt = m_contracts.find(key);
 
             if (contractIt == m_contracts.end()) {
-                _LOG_ERR("Add Call to Non-Existing Contract " << key);
+                m_logger.critical("Added call to non-existing contract {}", key);
                 return;
             }
 
@@ -120,7 +118,7 @@ public:
             auto contractIt = m_contracts.find(key);
 
             if (contractIt == m_contracts.end()) {
-                _LOG_ERR("Add Block to Non-Existing Contract " << key);
+                m_logger.critical("Added block info to non-existing contract {}", key);
                 return;
             }
 
@@ -134,7 +132,7 @@ public:
             auto contractIt = m_contracts.find(key);
 
             if (contractIt == m_contracts.end()) {
-                _LOG_ERR("Remove Non-Existing Contract " << key);
+                m_logger.critical("Remove non-existing contract {}", key);
                 return;
             }
 
@@ -150,7 +148,7 @@ public:
             auto executorIt = executors.find(m_keyPair.publicKey());
 
             if (executorIt == executors.end()) {
-                _LOG_ERR("The Executor Is Not In List")
+                m_logger.critical("Executor is not in the updated list of contract executors", key);
                 return;
             }
 
@@ -159,78 +157,6 @@ public:
             contractIt->second->setExecutors(std::move(executors));
         });
     }
-
-public:
-
-    // region storage event handler
-
-    void onInitiatedModifications(const DriveKey& driveKey, uint64_t batchIndex) override {
-        m_pThreadManager->execute([=, this] {
-            auto driveIt = m_contractsDriveKeys.find(driveKey);
-
-            if (driveIt == m_contractsDriveKeys.end()) {
-                return;
-            }
-
-            auto contractIt = m_contracts.find(driveIt->second);
-
-            if (contractIt == m_contracts.end()) {
-
-                // TODO maybe error?
-                return;
-            }
-
-            contractIt->second->onInitiatedModifications(batchIndex);
-        });
-    }
-
-    void onAppliedSandboxStorageModifications(const DriveKey& driveKey, uint64_t batchIndex, bool success,
-                                              int64_t sandboxSizeDelta, int64_t stateSizeDelta) override {
-        m_pThreadManager->execute([=, this] {
-            auto driveIt = m_contractsDriveKeys.find(driveKey);
-
-            if (driveIt == m_contractsDriveKeys.end()) {
-                return;
-            }
-
-            auto contractIt = m_contracts.find(driveIt->second);
-
-            if (contractIt == m_contracts.end()) {
-
-                // TODO maybe error?
-                return;
-            }
-
-            contractIt->second->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta,
-                                                                     stateSizeDelta);
-        });
-    }
-
-    void
-    onStorageHashEvaluated(const DriveKey& driveKey, uint64_t batchIndex, const StorageHash& storageHash,
-                           uint64_t usedDriveSize,
-                           uint64_t metaFilesSize, uint64_t fileStructureSize) override {
-        m_pThreadManager->execute([=, this] {
-            auto driveIt = m_contractsDriveKeys.find(driveKey);
-
-            if (driveIt == m_contractsDriveKeys.end()) {
-                return;
-            }
-
-            auto contractIt = m_contracts.find(driveIt->second);
-
-            if (contractIt == m_contracts.end()) {
-
-                // TODO maybe error?
-                return;
-            }
-
-            contractIt->second->onStorageHashEvaluated(batchIndex, storageHash, usedDriveSize, metaFilesSize,
-                                                       fileStructureSize);
-        });
-    }
-
-    // endregion
 
 public:
 
@@ -262,7 +188,7 @@ public:
     }
 
     logging::Logger& logger() override {
-        return <#initializer#>;
+        return m_logger;
     }
 
     // endregion
@@ -279,7 +205,7 @@ public:
         return m_messenger;
     }
 
-    Storage& storage() override {
+    storage::Storage& storage() override {
         return m_storage;
     }
 
@@ -362,7 +288,7 @@ private:
 
     void terminate() {
         
-        ASSERT
+        ASSERT(isSingleThread(), m_logger);
         
         m_virtualMachine.reset();
         for (auto&[_, contract]: m_contracts) {

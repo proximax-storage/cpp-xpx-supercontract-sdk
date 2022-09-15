@@ -25,19 +25,21 @@ private:
 
     CallRequest m_callRequest;
 
-    std::weak_ptr<vm::VirtualMachineInternetQueryHandler> m_internetQueryHandler;
-    std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
+    std::shared_ptr<vm::VirtualMachineInternetQueryHandler> m_internetQueryHandler;
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
 
     std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> m_callback;
 
     std::shared_ptr<AsyncQuery> m_virtualMachineQuery;
 
+public:
+
     CallExecutionManager(GlobalEnvironment& environment,
                          std::weak_ptr<vm::VirtualMachine> virtualMachine,
                          int repeatTimeout,
                          const CallRequest& request,
-                         std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
-                         std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                         std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
+                         std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback);
 
 private:

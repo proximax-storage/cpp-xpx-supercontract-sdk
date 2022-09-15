@@ -8,6 +8,8 @@
 
 #include "Requests.h"
 
+#include "logging/LoggerConfig.h"
+
 #include "Identifiers.h"
 
 #include <memory>
@@ -18,26 +20,28 @@ class ExecutorConfig {
 
 private:
 
-    int             m_unsuccessfulExecutionDelayMs = 10 * 1000;
-    int             m_successfulExecutionDelayMs = 10 * 1000;
+    int                     m_unsuccessfulExecutionDelayMs = 10 * 1000;
+    int                     m_successfulExecutionDelayMs = 10 * 1000;
 
-    uint64_t        m_autorunSCLimit = 50;
+    uint64_t                m_autorunSCLimit = 50;
 
-    std::string     m_autorunFile = "autorun.wasm";
-    std::string     m_autorunFunction = "main";
+    std::string             m_autorunFile = "autorun.wasm";
+    std::string             m_autorunFunction = "main";
 
-    std::string     m_automaticExecutionFile = "default.wasm";
-    std::string     m_automaticExecutionFunction = "main";
+    std::string             m_automaticExecutionFile = "default.wasm";
+    std::string             m_automaticExecutionFunction = "main";
 
-    std::string     m_rpcVirtualMachineAddress = "localhost:50051";
-    std::string     m_rpcServerAddress = "localhost:50052";
+    std::string             m_rpcVirtualMachineAddress = "localhost:50051";
+    std::string             m_rpcServerAddress = "localhost:50052";
 
-    int             m_virtualMachineRepeatTimeoutMs = 5000;
+    int                     m_virtualMachineRepeatTimeoutMs = 5000;
 
-    int             m_internetBufferSize = 16 * 1024;
-    int             m_internetConnectionTimeoutMilliseconds = 10000;
-    int             m_ocspQueryTimerMilliseconds = 500;
-    int             m_ocspQueryMaxEfforts = 60;
+    int                     m_internetBufferSize = 16 * 1024;
+    int                     m_internetConnectionTimeoutMilliseconds = 10000;
+    int                     m_ocspQueryTimerMilliseconds = 500;
+    int                     m_ocspQueryMaxEfforts = 60;
+
+    logging::LoggerConfig   m_loggerConfig;
 
 public:
 
@@ -151,6 +155,14 @@ public:
 
     void setVirtualMachineRepeatTimeoutMs(int virtualMachineRepeatTimeoutMs) {
         m_virtualMachineRepeatTimeoutMs = virtualMachineRepeatTimeoutMs;
+    }
+
+    const logging::LoggerConfig& loggerConfig() const {
+        return m_loggerConfig;
+    }
+
+    void setLoggerConfig(const logging::LoggerConfig& loggerConfig) {
+        m_loggerConfig = loggerConfig;
     }
 };
 

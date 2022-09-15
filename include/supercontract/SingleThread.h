@@ -17,7 +17,7 @@ protected:
 
     SingleThread(): m_threadId(std::this_thread::get_id()) {}
 
-    bool isSingleThread() {
+    bool isSingleThread() const {
         return m_threadId == std::this_thread::get_id();
     }
 

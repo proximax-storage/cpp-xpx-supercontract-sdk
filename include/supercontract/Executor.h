@@ -19,7 +19,6 @@
 namespace sirius::contract {
 
 class Executor :
-        public StorageEventHandler,
         public MessengerEventHandler,
         public BlockchainEventHandler {
 

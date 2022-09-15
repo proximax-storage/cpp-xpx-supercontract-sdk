@@ -8,7 +8,8 @@
 
 namespace sirius::contract {
 
-class RemoveContractTask : public BaseContractTask {
+class RemoveContractTask
+        : public BaseContractTask {
 
 private:
 
@@ -19,31 +20,32 @@ public:
     RemoveContractTask(
             RemoveRequest&& request,
             ContractEnvironment& contractEnvironment,
-            ExecutorEnvironment& executorEnvironment,
-            const DebugInfo& debugInfo )
-            : BaseContractTask( executorEnvironment, contractEnvironment, debugInfo )
-            , m_request( std::move( request )) {}
+            ExecutorEnvironment& executorEnvironment)
+            : BaseContractTask(executorEnvironment, contractEnvironment)
+            , m_request(std::move(request)) {}
 
 public:
 
     void run() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_contractEnvironment.finishTask();
     }
 
     void terminate() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_contractEnvironment.finishTask();
     }
 
 };
 
-std::unique_ptr<BaseContractTask> createRemoveContractTask( RemoveRequest&& request, ContractEnvironment& contractEnvironment, ExecutorEnvironment& executorEnvironment, const DebugInfo& debugInfo ) {
-    return std::make_unique<RemoveContractTask>( std::move(request), contractEnvironment, executorEnvironment, debugInfo );
+std::unique_ptr<BaseContractTask>
+createRemoveContractTask(RemoveRequest&& request, ContractEnvironment& contractEnvironment,
+                         ExecutorEnvironment& executorEnvironment) {
+    return std::make_unique<RemoveContractTask>(std::move(request), contractEnvironment, executorEnvironment);
 }
 
 }

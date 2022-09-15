@@ -8,41 +8,40 @@
 #include "BatchesManager.h"
 #include "ContractEnvironment.h"
 #include "BaseContractTask.h"
-#include "supercontract/ThreadManager.h"
 #include "ProofOfExecution.h"
 #include "ContractConfig.h"
 #include "ExecutorEnvironment.h"
 #include "TaskRequests.h"
 #include "DefaultBatchesManager.h"
-#include "DebugInfo.h"
 
 namespace sirius::contract {
 
-class DefaultContract : public Contract, public ContractEnvironment {
+class DefaultContract
+        : private SingleThread
+        , public Contract
+        , public ContractEnvironment {
 
 private:
 
-    ContractKey                                 m_contractKey;
+    ContractKey m_contractKey;
 
-    DriveKey                                    m_driveKey;
-    std::set<ExecutorKey>                       m_executors;
+    DriveKey m_driveKey;
+    std::set<ExecutorKey> m_executors;
 
-    uint64_t                                    m_automaticExecutionsSCLimit;
-    uint64_t                                    m_automaticExecutionsSMLimit;
+    uint64_t m_automaticExecutionsSCLimit;
+    uint64_t m_automaticExecutionsSMLimit;
 
-    ExecutorEnvironment&                        m_executorEnvironment;
-    ContractConfig                              m_contractConfig;
+    ExecutorEnvironment& m_executorEnvironment;
+    ContractConfig m_contractConfig;
 
-    ProofOfExecution                            m_proofOfExecution;
-
-    const DebugInfo                             m_dbgInfo;
+    ProofOfExecution m_proofOfExecution;
 
     // Requests
-    std::unique_ptr<BaseBatchesManager>         m_batchesManager;
-    std::optional<SynchronizationRequest>       m_synchronizationRequest;
-    std::optional<RemoveRequest>                m_contractRemoveRequest;
+    std::unique_ptr<BaseBatchesManager> m_batchesManager;
+    std::optional<SynchronizationRequest> m_synchronizationRequest;
+    std::optional<RemoveRequest> m_contractRemoveRequest;
 
-    std::unique_ptr<BaseContractTask>           m_task;
+    std::unique_ptr<BaseContractTask> m_task;
 
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
@@ -50,182 +49,119 @@ private:
 
 public:
 
-    DefaultContract( const ContractKey& contractKey,
-                     AddContractRequest&& addContractRequest,
-                     ExecutorEnvironment& contractContext,
-                     const DebugInfo& debugInfo )
-            : m_contractKey( contractKey )
-            , m_driveKey( addContractRequest.m_driveKey )
-            , m_executors( std::move(addContractRequest.m_executors) )
-            , m_automaticExecutionsSCLimit( addContractRequest.m_automaticExecutionsSCLimit )
-            , m_automaticExecutionsSMLimit( addContractRequest.m_automaticExecutionsSMLimit )
-            , m_executorEnvironment( contractContext)
+    DefaultContract(const ContractKey& contractKey,
+                    AddContractRequest&& addContractRequest,
+                    ExecutorEnvironment& contractContext)
+            : m_contractKey(contractKey)
+            , m_driveKey(addContractRequest.m_driveKey)
+            , m_executors(std::move(addContractRequest.m_executors))
+            , m_automaticExecutionsSCLimit(addContractRequest.m_automaticExecutionsSCLimit)
+            , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
+            , m_executorEnvironment(contractContext)
             , m_contractConfig()
-            , m_dbgInfo( debugInfo )
-            , m_batchesManager( std::make_unique<DefaultBatchesManager>( addContractRequest.m_batchesExecuted, *this, m_executorEnvironment, m_dbgInfo ) ) {
+            , m_batchesManager(std::make_unique<DefaultBatchesManager>(addContractRequest.m_batchesExecuted, *this,
+                                                                       m_executorEnvironment)) {
         runInitializeContractTask(std::move(addContractRequest));
     }
 
     void terminate() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        if ( m_task ) {
+        if (m_task) {
             m_task->terminate();
         }
     }
 
-    void addContractCall( const CallRequest& request ) override {
+    void addContractCall(const CallRequest& request) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        m_batchesManager->addCall( request );
-        if ( !m_task ) {
+        m_batchesManager->addCall(request);
+        if (!m_task) {
             runTask();
         }
     }
 
-    void removeContract( const RemoveRequest& request ) override {
+    void removeContract(const RemoveRequest& request) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        if ( m_task ) {
+        if (m_task) {
             m_task->terminate();
         } else {
             runTask();
         }
     }
 
-    void setExecutors( std::set<ExecutorKey>&& executors ) override {
+    void setExecutors(std::set<ExecutorKey>&& executors) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_executors = std::move(executors);
     }
 
-    void addBlockInfo( const Block& block ) override {
+    void addBlockInfo(const Block& block) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        m_batchesManager->addBlockInfo( block );
+        m_batchesManager->addBlockInfo(block);
     }
 
-    void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) override {
+    void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_batchesManager->setAutomaticExecutionsEnabledSince(blockHeight);
     }
 
 public:
 
-    // region storage event handler
-
-    bool onInitiatedModifications( uint64_t batchIndex ) override {
-
-        DBG_MAIN_THREAD_DEPRECATED
-
-        if ( !m_task ) {
-            return false;
-        }
-
-        return m_task->onInitiatedModifications( batchIndex );
-    }
-
-    bool onAppliedSandboxStorageModifications( uint64_t batchIndex, bool success, int64_t sandboxSizeDelta, int64_t stateSizeDelta ) override {
-
-        DBG_MAIN_THREAD_DEPRECATED
-
-        if ( !m_task ) {
-            return false;
-        }
-
-        return m_task->onAppliedSandboxStorageModifications(batchIndex, success, sandboxSizeDelta, stateSizeDelta);
-    }
-
-    bool
-    onStorageHashEvaluated( uint64_t batchIndex, const StorageHash& storageHash, uint64_t usedDriveSize, uint64_t metaFilesSize,
-                            uint64_t fileStructureSize ) override {
-
-        DBG_MAIN_THREAD_DEPRECATED
-
-        if ( !m_task ) {
-            return false;
-        }
-
-        return m_task->onStorageHashEvaluated( batchIndex, storageHash, usedDriveSize, metaFilesSize, fileStructureSize );
-    }
-
-    // endregion
-
-public:
-
-    // region virtual machine event handler
-
-    bool onSuperContractCallExecuted( const CallExecutionResult& executionResult ) override {
-
-        DBG_MAIN_THREAD_DEPRECATED
-
-        if ( m_batchesManager->onSuperContractCallExecuted(executionResult) ) {
-            return true;
-        }
-
-        if (m_task && m_task->onSuperContractCallExecuted(executionResult)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    // endregion
-
-public:
-
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        while ( !m_unknownSuccessfulBatchOpinions.empty()
-                && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
-            m_unknownSuccessfulBatchOpinions.erase( m_unknownSuccessfulBatchOpinions.begin());
+        while (!m_unknownSuccessfulBatchOpinions.empty()
+               && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
+            m_unknownSuccessfulBatchOpinions.erase(m_unknownSuccessfulBatchOpinions.begin());
         }
 
-        while ( !m_unknownUnsuccessfulBatchOpinions.empty()
-                && m_unknownUnsuccessfulBatchOpinions.begin()->first <= info.m_batchIndex ) {
-            m_unknownUnsuccessfulBatchOpinions.erase( m_unknownUnsuccessfulBatchOpinions.begin());
+        while (!m_unknownUnsuccessfulBatchOpinions.empty()
+               && m_unknownUnsuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
+            m_unknownUnsuccessfulBatchOpinions.erase(m_unknownUnsuccessfulBatchOpinions.begin());
         }
 
-        if ( !m_task || !m_task->onEndBatchExecutionPublished( info )) {
+        if (!m_task || !m_task->onEndBatchExecutionPublished(info)) {
             m_unknownPublishedEndBatchTransactions[info.m_batchIndex] = info;
         }
 
         return true;
     }
 
-    bool onEndBatchExecutionFailed( const FailedEndBatchExecutionTransactionInfo& info ) override {
+    bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        if ( !m_task ) {
+        if (!m_task) {
             return false;
         }
 
         return m_task->onEndBatchExecutionFailed(info);
     }
 
-    bool onStorageSynchronized( uint64_t batchIndex ) override {
+    bool onStorageSynchronized(uint64_t batchIndex) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        m_batchesManager->onStorageSynchronized( batchIndex );
+        m_batchesManager->onStorageSynchronized(batchIndex);
 
-        if ( !m_task ) {
+        if (!m_task) {
             return false;
         }
 
-        m_task->onStorageSynchronized( batchIndex );
+        m_task->onStorageSynchronized(batchIndex);
 
         // TODO should we always return true?
         return true;
@@ -237,12 +173,12 @@ public:
 
     // region message event handler
 
-    bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& info ) override {
+    bool onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& info) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        if ( !m_task || !m_task->onEndBatchExecutionOpinionReceived( info )) {
-            if ( info.isSuccessful()) {
+        if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
+            if (info.isSuccessful()) {
                 m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
             } else {
                 m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
@@ -260,56 +196,56 @@ public:
 
     const ContractKey& contractKey() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_contractKey;
     }
 
     const std::set<ExecutorKey>& executors() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_executors;
     }
 
     const DriveKey& driveKey() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_driveKey;
     }
 
     uint64_t automaticExecutionsSCLimit() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_automaticExecutionsSCLimit;
     }
 
     uint64_t automaticExecutionsSMLimit() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_automaticExecutionsSMLimit;
     }
 
     const ContractConfig& contractConfig() const override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         return m_contractConfig;
     }
 
     void finishTask() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         runTask();
     }
 
-    void addSynchronizationTask( const SynchronizationRequest& request ) override {
+    void addSynchronizationTask(const SynchronizationRequest& request) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_synchronizationRequest = request;
     }
@@ -320,26 +256,24 @@ private:
 
     void runTask() {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_task.reset();
 
-        if ( m_contractRemoveRequest ) {
+        if (m_contractRemoveRequest) {
             runRemoveContractTask();
-        }
-        else if ( m_synchronizationRequest ) {
+        } else if (m_synchronizationRequest) {
             runSynchronizationTask();
-        }
-        else if ( m_batchesManager->hasNextBatch() ) {
+        } else if (m_batchesManager->hasNextBatch()) {
             runBatchExecutionTask();
         }
     }
 
-    void runInitializeContractTask( AddContractRequest&& request ) {
+    void runInitializeContractTask(AddContractRequest&& request) {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        m_task = createInitContractTask( std::move(request), *this, m_executorEnvironment, m_dbgInfo );
+        m_task = createInitContractTask(std::move(request), *this, m_executorEnvironment);
 
         m_contractRemoveRequest.reset();
 
@@ -348,11 +282,11 @@ private:
 
     void runRemoveContractTask() {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        _ASSERT( m_contractRemoveRequest )
+        ASSERT(m_contractRemoveRequest, m_executorEnvironment.logger())
 
-        m_task = createRemoveContractTask( std::move(*m_contractRemoveRequest), *this, m_executorEnvironment, m_dbgInfo );
+        m_task = createRemoveContractTask(std::move(*m_contractRemoveRequest), *this, m_executorEnvironment);
 
         m_contractRemoveRequest.reset();
 
@@ -361,11 +295,11 @@ private:
 
     void runSynchronizationTask() {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        _ASSERT( m_synchronizationRequest )
+        ASSERT(m_synchronizationRequest, m_executorEnvironment.logger())
 
-        m_task = createSynchronizationTask( std::move(*m_synchronizationRequest), *this, m_executorEnvironment, m_dbgInfo );
+        m_task = createSynchronizationTask(std::move(*m_synchronizationRequest), *this, m_executorEnvironment);
 
         m_synchronizationRequest.reset();
 
@@ -374,48 +308,46 @@ private:
 
     void runBatchExecutionTask() {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        _ASSERT(  m_batchesManager->hasNextBatch() )
+        ASSERT(m_batchesManager->hasNextBatch(), m_executorEnvironment.logger())
 
         auto batch = m_batchesManager->nextBatch();
 
         std::map<ExecutorKey, EndBatchExecutionOpinion> successfulEndBatchOpinions;
-        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find( batch.m_batchIndex );
-        if ( successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
-            successfulEndBatchOpinions = std::move( successfulExecutorsEndBatchOpinionsIt->second );
-            m_unknownSuccessfulBatchOpinions.erase( successfulExecutorsEndBatchOpinionsIt );
+        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batch.m_batchIndex);
+        if (successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
+            successfulEndBatchOpinions = std::move(successfulExecutorsEndBatchOpinionsIt->second);
+            m_unknownSuccessfulBatchOpinions.erase(successfulExecutorsEndBatchOpinionsIt);
         }
 
         std::map<ExecutorKey, EndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
-        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find( batch.m_batchIndex );
-        if ( unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
-            unsuccessfulEndBatchOpinions = std::move( unsuccessfulExecutorsEndBatchOpinionsIt->second );
-            m_unknownUnsuccessfulBatchOpinions.erase( unsuccessfulExecutorsEndBatchOpinionsIt );
+        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batch.m_batchIndex);
+        if (unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
+            unsuccessfulEndBatchOpinions = std::move(unsuccessfulExecutorsEndBatchOpinionsIt->second);
+            m_unknownUnsuccessfulBatchOpinions.erase(unsuccessfulExecutorsEndBatchOpinionsIt);
         }
 
         std::optional<PublishedEndBatchExecutionTransactionInfo> publishedInfo;
-        auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find( batch.m_batchIndex );
-        if ( publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
-            publishedInfo = std::move( publishedTransactionInfoIt->second );
-            m_unknownPublishedEndBatchTransactions.erase( publishedTransactionInfoIt );
+        auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batch.m_batchIndex);
+        if (publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
+            publishedInfo = std::move(publishedTransactionInfoIt->second);
+            m_unknownPublishedEndBatchTransactions.erase(publishedTransactionInfoIt);
         }
 
-        m_task = createBatchExecutionTask( std::move( batch ), *this, m_executorEnvironment,
-                                           std::move( successfulEndBatchOpinions ),
-                                           std::move( unsuccessfulEndBatchOpinions ),
-                                           std::move( publishedInfo ),
-                                           m_dbgInfo );
+        m_task = createBatchExecutionTask(std::move(batch), *this, m_executorEnvironment,
+                                          std::move(successfulEndBatchOpinions),
+                                          std::move(unsuccessfulEndBatchOpinions),
+                                          std::move(publishedInfo));
         m_task->run();
     }
 
 };
 
-std::unique_ptr<Contract> createDefaultContract( const ContractKey& contractKey,
-                                                 AddContractRequest&& addContractRequest,
-                                                 ExecutorEnvironment& contractContext,
-                                                 const DebugInfo& debugInfo ) {
-    return std::make_unique<DefaultContract>( contractKey, std::move(addContractRequest), contractContext, debugInfo );
+std::unique_ptr<Contract> createDefaultContract(const ContractKey& contractKey,
+                                                AddContractRequest&& addContractRequest,
+                                                ExecutorEnvironment& contractContext) {
+    return std::make_unique<DefaultContract>(contractKey, std::move(addContractRequest), contractContext);
 }
 
 }

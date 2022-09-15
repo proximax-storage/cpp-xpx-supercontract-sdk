@@ -32,7 +32,7 @@ public:
 
     virtual Messenger& messenger() = 0;
 
-    virtual Storage& storage() = 0;
+    virtual storage::Storage& storage() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

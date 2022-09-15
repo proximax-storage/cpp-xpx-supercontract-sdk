@@ -7,7 +7,8 @@
 #include "BaseContractTask.h"
 
 namespace sirius::contract {
-class SynchronizationTask : public BaseContractTask {
+class SynchronizationTask
+        : public BaseContractTask {
 
 private:
 
@@ -15,26 +16,25 @@ private:
 
 public:
 
-    SynchronizationTask( SynchronizationRequest&& synchronizationRequest,
-                         ContractEnvironment& contractEnvironment,
-                         ExecutorEnvironment& executorEnvironment,
-                         const DebugInfo& debugInfo )
-                         : BaseContractTask( executorEnvironment, contractEnvironment, debugInfo )
-                         , m_request( std::move(synchronizationRequest) )
-                         {}
+    SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+                        ContractEnvironment& contractEnvironment,
+                        ExecutorEnvironment& executorEnvironment)
+            : BaseContractTask(executorEnvironment, contractEnvironment)
+            , m_request(std::move(synchronizationRequest)) {}
 
 public:
 
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished( const PublishedEndBatchExecutionTransactionInfo& info ) override {
+    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         const auto& cosigners = info.m_cosigners;
 
-        if ( std::find( cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) == cosigners.end() ) {
-            m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), info.m_driveState );
+        if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
+            cosigners.end()) {
+            m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), info.m_driveState);
         }
 
         // TODO What if we are among the cosigners? Is it possible?
@@ -42,9 +42,9 @@ public:
         return true;
     }
 
-    bool onStorageSynchronized( uint64_t ) override {
+    bool onStorageSynchronized(uint64_t) override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_contractEnvironment.finishTask();
 
@@ -57,26 +57,25 @@ public:
 
     void run() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-        m_executorEnvironment.storage().synchronizeStorage( m_contractEnvironment.driveKey(), m_request.m_storageHash );
+        m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), m_request.m_storageHash);
     }
 
 
     void terminate() override {
 
-        DBG_MAIN_THREAD_DEPRECATED
+        ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_contractEnvironment.finishTask();
     }
 };
 
-std::unique_ptr<BaseContractTask> createSynchronizationTask( SynchronizationRequest&& synchronizationRequest,
-                                                             ContractEnvironment& contractEnvironment,
-                                                             ExecutorEnvironment& executorEnvironment,
-                                                             const DebugInfo& debugInfo ) {
-    return std::make_unique<SynchronizationTask>( std::move( synchronizationRequest ), contractEnvironment,
-                                                  executorEnvironment, debugInfo );
+std::unique_ptr<BaseContractTask> createSynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+                                                            ContractEnvironment& contractEnvironment,
+                                                            ExecutorEnvironment& executorEnvironment) {
+    return std::make_unique<SynchronizationTask>(std::move(synchronizationRequest), contractEnvironment,
+                                                 executorEnvironment);
 }
 
 }
