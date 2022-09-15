@@ -14,8 +14,6 @@
 #include "supercontract/Messenger.h"
 #include "supercontract/Storage.h"
 #include "supercontract/StorageQueries.h"
-#include "supercontract/StorageEventHandler.h"
-#include "ContractStorageEventHandler.h"
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
 #include "virtualMachine/VirtualMachine.h"

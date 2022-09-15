@@ -10,7 +10,6 @@
 #include "supercontract/Requests.h"
 #include "supercontract/Transactions.h"
 #include "supercontract/StorageQueries.h"
-#include "ContractStorageEventHandler.h"
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
 #include "TaskRequests.h"

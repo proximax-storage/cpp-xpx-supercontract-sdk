@@ -8,7 +8,6 @@
 
 #include "Requests.h"
 #include "ExecutorConfig.h"
-#include "StorageEventHandler.h"
 #include "MessengerEventHandler.h"
 #include "BlockchainEventHandler.h"
 
