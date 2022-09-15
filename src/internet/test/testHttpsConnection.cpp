@@ -10,6 +10,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <sstream>
 #include <fstream>
 
 #include "internet/InternetConnection.h"
@@ -25,18 +26,18 @@ using tcp = boost::asio::ip::tcp;       // from <boost/asio/ip/tcp.hpp>
 namespace sirius::contract::internet::test {
 
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
-// std::string exec_https(const char* cmd) {
-//     std::array<char, 128> buffer;
-//     std::string result;
-//     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-//     if (!pipe) {
-//         throw std::runtime_error("popen() failed!");
-//     }
-//     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-//         result += buffer.data();
-//     }
-//     return result;
-// }
+std::string exec_https(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
 
 #define TEST_NAME = HttpsConnection
 
@@ -136,7 +137,6 @@ TEST(HttpsConnection, ValidRead) {
 }
 
 void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
-    // std::cout << "Debug" << std::endl;
     read_flag = true;
     if (!res.has_value()) {
         return;
@@ -144,15 +144,10 @@ void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::v
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
 
     if (res->empty()) {
-        // TODO connection is read to the end, let's do something
         std::string actual(actual_vec.begin(), actual_vec.end());
-        std::string expected;
-        std::ifstream myfile("../../src/internet/test/Byzantine_Empire.txt");
-        std::stringstream buffer;
-        buffer << myfile.rdbuf();
-        expected = buffer.str();
-        // std::cout << actual << std::endl;
-        // ASSERT_EQ(actual, expected);
+        std::string expected = "</html>";
+        std::size_t found = actual.find(expected);
+        if (found==std::string::npos) {throw found;}
         return;
     }
 
@@ -215,6 +210,70 @@ TEST(HttpsConnection, ReadBigWebsite) {
     });
     threadManager.stop();
     ASSERT_TRUE(read_flag);
+}
+
+TEST(HttpsConnection, ReadWhenDisconnected) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+    std::string default_interface = exec_https("ip r | grep -oP 'default .* \\K.+'");
+    std::string interface(default_interface.begin(), default_interface.end() - 2);
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    std::ostringstream ss;
+                    ss << "sudo ip link set " << interface << " down";
+                    // std::cout << ss.str() << std::endl;
+                    exec_https(ss.str().c_str());
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    ASSERT_TRUE(read_flag);
+    std::ostringstream ss;
+    ss << "sudo ip link set " << interface << " up";
+    // std::cout << ss.str() << std::endl;
+    exec_https(ss.str().c_str());
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
 
 TEST(HttpsConnection, ValidCertificate) {

@@ -28,18 +28,18 @@ using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 namespace sirius::contract::internet::test {
 
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
-// std::string exec_http(const char* cmd) {
-//     std::array<char, 128> buffer;
-//     std::string result;
-//     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-//     if (!pipe) {
-//         throw std::runtime_error("popen() failed!");
-//     }
-//     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-//         result += buffer.data();
-//     }
-//     return result;
-// }
+std::string exec_http(const char* cmd) {
+    std::array<char, 128> buffer;
+    std::string result;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
+    if (!pipe) {
+        throw std::runtime_error("popen() failed!");
+    }
+    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+        result += buffer.data();
+    }
+    return result;
+}
 
 #define TEST_NAME HttpConnection
 
@@ -441,10 +441,33 @@ TEST(HttpConnection, ConnectingToRouter) {
     threadManager.stop();
 }
 
+void readFuncHttp(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+    read_flag = true;
+    if (!res.has_value()) {
+        return;
+    }
+    actual_vec.insert(actual_vec.end(), res->begin(), res->end());
+
+    if (res->empty()) {
+        std::string actual(actual_vec.begin(), actual_vec.end());
+        std::string expected = "</html>";
+        std::size_t found = actual.find(expected);
+        if (found==std::string::npos) {throw found;}
+        return;
+    }
+
+    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+        readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+    },
+        [] {}, globalEnvironment, false, true);
+    sharedConnection->read(readCallback);
+}
+
 TEST(TEST_NAME, ReadBigWebsite) {
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
+    std::vector<uint8_t> actual_vec;
     bool read_flag = false;
 
     threadManager.execute([&] {
@@ -458,25 +481,16 @@ TEST(TEST_NAME, ReadBigWebsite) {
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(connection);
 
-                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    // auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&read_flag, connection = sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                read_flag = true;
-//                                ASSERT_TRUE(res.has_value());
-//                                std::string actual(res->begin(), res->end());
-//                                std::string expected;
-//                                std::ifstream myfile("../../src/internet/test/Byzantine_Empire.txt");
-//                                std::stringstream buffer;
-//                                buffer << myfile.rdbuf();
-//                                expected = buffer.str();
-//                                // std::cout << actual << std::endl;
-//                                ASSERT_EQ(actual, expected);
-                            },
-                            [] {}, globalEnvironment, false, false);
+                    // // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                    // auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                    //         [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    //             readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                    //         },
+                    //         [] {}, globalEnvironment, false, true);
 
-                    sharedConnection->read(readCallback);
+                    // sharedConnection->read(readCallback);
                 },
                 [] {},
                 globalEnvironment, false, false);
@@ -492,6 +506,62 @@ TEST(TEST_NAME, ReadBigWebsite) {
     });
     threadManager.stop();
     ASSERT_TRUE(read_flag);
+}
+
+TEST(TEST_NAME, ReadWhenDisconnected) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+    std::string default_interface = exec_http("ip r | grep -oP 'default .* \\K.+'");
+    std::string interface(default_interface.begin(), default_interface.end() - 2);
+
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    // auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    // std::ostringstream ss;
+                    // ss << "sudo ip link set " << interface << " down";
+                    // std::cout << ss.str() << std::endl;
+                    // exec_http(ss.str().c_str());
+                    // // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                    // auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                    //         [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    //             readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                    //         },
+                    //         [] {}, globalEnvironment, false, true);
+
+                    // sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    ASSERT_TRUE(read_flag);
+    // std::ostringstream ss;
+    // ss << "sudo ip link set " << interface << " up";
+    // std::cout << ss.str() << std::endl;
+    // exec_http(ss.str().c_str());
+    // std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
 
 }
