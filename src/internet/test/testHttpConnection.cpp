@@ -481,16 +481,16 @@ TEST(TEST_NAME, ReadBigWebsite) {
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(connection);
 
-                    // auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    // // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-                    // auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                    //         [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                    //             readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-                    //         },
-                    //         [] {}, globalEnvironment, false, true);
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
 
-                    // sharedConnection->read(readCallback);
+                    sharedConnection->read(readCallback);
                 },
                 [] {},
                 globalEnvironment, false, false);
@@ -514,8 +514,8 @@ TEST(TEST_NAME, ReadWhenDisconnected) {
     auto& threadManager = globalEnvironment.threadManager();
     std::vector<uint8_t> actual_vec;
     bool read_flag = false;
-    std::string default_interface = exec_http("ip r | grep -oP 'default .* \\K.+'");
-    std::string interface(default_interface.begin(), default_interface.end() - 2);
+    std::string default_interface = exec_http("route | grep '^default' | grep -o '[^ ]*$'");
+    std::string interface(default_interface.begin(), default_interface.end() - 1);
 
     threadManager.execute([&] {
         auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
@@ -528,20 +528,20 @@ TEST(TEST_NAME, ReadWhenDisconnected) {
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_TRUE(connection);
 
-                    // auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    // std::ostringstream ss;
-                    // ss << "sudo ip link set " << interface << " down";
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                    std::ostringstream ss;
+                    ss << "sudo ip link set " << interface << " down";
                     // std::cout << ss.str() << std::endl;
-                    // exec_http(ss.str().c_str());
-                    // // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-                    // auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                    //         [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                    //             readFuncHttp(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-                    //         },
-                    //         [] {}, globalEnvironment, false, true);
-
-                    // sharedConnection->read(readCallback);
+                    exec_http(ss.str().c_str());
                 },
                 [] {},
                 globalEnvironment, false, false);
@@ -557,11 +557,11 @@ TEST(TEST_NAME, ReadWhenDisconnected) {
     });
     threadManager.stop();
     ASSERT_TRUE(read_flag);
-    // std::ostringstream ss;
-    // ss << "sudo ip link set " << interface << " up";
+    std::ostringstream ss;
+    ss << "sudo ip link set " << interface << " up";
     // std::cout << ss.str() << std::endl;
-    // exec_http(ss.str().c_str());
-    // std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
+    exec_http(ss.str().c_str());
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
 
 }

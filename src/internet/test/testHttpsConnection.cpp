@@ -240,10 +240,6 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    std::ostringstream ss;
-                    ss << "sudo ip link set " << interface << " down";
-                    // std::cout << ss.str() << std::endl;
-                    exec_https(ss.str().c_str());
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
                                 readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
@@ -251,6 +247,10 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
                             [] {}, globalEnvironment, false, true);
 
                     sharedConnection->read(readCallback);
+                    std::ostringstream ss;
+                    ss << "sudo ip link set " << interface << " down";
+                    // std::cout << ss.str() << std::endl;
+                    exec_https(ss.str().c_str());
                 },
                 [] {},
                 globalEnvironment, false, false);
