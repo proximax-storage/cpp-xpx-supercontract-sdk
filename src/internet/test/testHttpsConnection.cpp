@@ -136,11 +136,9 @@ TEST(HttpsConnection, ValidRead) {
     threadManager.stop();
 }
 
-void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncNormally(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
     read_flag = true;
-    if (!res.has_value()) {
-        return;
-    }
+    ASSERT_TRUE(res);
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
 
     if (res->empty()) {
@@ -152,7 +150,7 @@ void readFunc(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::v
     }
 
     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-        readFunc(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+        readFuncNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
     },
         [] {}, globalEnvironment, false, true);
     sharedConnection->read(readCallback);
@@ -187,7 +185,7 @@ TEST(HttpsConnection, ReadBigWebsite) {
                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                readFuncNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
 
@@ -212,6 +210,24 @@ TEST(HttpsConnection, ReadBigWebsite) {
     ASSERT_TRUE(read_flag);
 }
 
+void readFuncDisconneted(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+    read_flag = true;
+    if (!res.has_value()) {
+        return;
+    }
+    actual_vec.insert(actual_vec.end(), res->begin(), res->end());
+
+    if (res->empty()) {
+        return;
+    }
+
+    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+        readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+    },
+        [] {}, globalEnvironment, false, true);
+    sharedConnection->read(readCallback);
+}
+
 TEST(HttpsConnection, ReadWhenDisconnected) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -220,6 +236,7 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
     std::vector<uint8_t> actual_vec;
     bool read_flag = false;
     std::string default_interface = exec_https("route | grep '^default' | grep -o '[^ ]*$'");
+    ASSERT_NE(default_interface.length(), 0);
     std::string interface(default_interface.begin(), default_interface.end() - 1);
 
     threadManager.execute([&] {
@@ -242,7 +259,7 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
 
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                readFunc(std::move(*res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
 
@@ -753,48 +770,6 @@ TEST(HttpsConnection, WeakSignature) {
     });
     threadManager.stop();
 }
-
-// Looks like this is not a good way to simulate the broken network adapter situation, I'll comment out first
-// TEST(HttpsConnection, NetworkAdapterDown) {
-
-//     GlobalEnvironmentImpl globalEnvironment;
-//     auto& threadManager = globalEnvironment.threadManager();
-
-//     ssl::context ctx{ssl::context::tlsv12_client};
-//     ctx.set_default_verify_paths();
-//     ctx.set_verify_mode(ssl::verify_peer);
-
-//     auto urlDescription = parseURL("https://example.com");
-
-//     ASSERT_TRUE(urlDescription);
-//     ASSERT_TRUE(urlDescription->ssl);
-//     ASSERT_EQ(urlDescription->port, "443");
-
-//     exec_https("sudo ifconfig eth0 down");
-
-//     threadManager.execute([&] {
-
-//         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-//                 [&](std::optional<InternetConnection>&& connection) {
-//                     ASSERT_FALSE(connection);
-//                 },
-//                 [] {}, globalEnvironment, false, false);
-
-//         InternetConnection::buildHttpsInternetConnection(ctx,
-//                                                          globalEnvironment,
-//                                                          urlDescription->host,
-//                                                          urlDescription->port,
-//                                                          urlDescription->target,
-//                                                          16 * 1024,
-//                                                          30000,
-//                                                          500,
-//                                                          60,
-//                                                          RevocationVerificationMode::HARD,
-//                                                          connectionCallback);
-//     });
-//     threadManager.stop();
-//     exec_https("sudo ifconfig eth0 up");
-// }
 
 TEST(HttpsConnection, ConnectingNonHttpsURL) {
 
