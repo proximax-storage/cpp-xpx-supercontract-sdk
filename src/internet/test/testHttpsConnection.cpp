@@ -219,8 +219,8 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
 
     std::vector<uint8_t> actual_vec;
     bool read_flag = false;
-    std::string default_interface = exec_https("ip r | grep -oP 'default .* \\K.+'");
-    std::string interface(default_interface.begin(), default_interface.end() - 2);
+    std::string default_interface = exec_https("route | grep '^default' | grep -o '[^ ]*$'");
+    std::string interface(default_interface.begin(), default_interface.end() - 1);
 
     threadManager.execute([&] {
 
