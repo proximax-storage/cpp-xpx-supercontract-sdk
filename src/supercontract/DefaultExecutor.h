@@ -44,7 +44,7 @@ public:
     DefaultExecutor(const crypto::KeyPair& keyPair,
                     std::shared_ptr<ThreadManager> pThreadManager,
                     const ExecutorConfig& config,
-                    std::unique_ptr<ExecutorEventHandler> eventHandler,
+                    std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                     Messenger& messenger,
                     storage::Storage& storage,
                     const StorageObserver& storageObserver,

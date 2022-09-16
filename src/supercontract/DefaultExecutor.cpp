@@ -8,7 +8,6 @@
 
 #include <boost/beast/ssl.hpp>
 
-#include "Contract.h"
 #include "supercontract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
@@ -26,7 +25,7 @@ namespace sirius::contract {
 DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
                                  std::shared_ptr<ThreadManager> pThreadManager,
                                  const ExecutorConfig& config,
-                                 std::unique_ptr<ExecutorEventHandler> eventHandler,
+                                 std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                                  Messenger& messenger,
                                  storage::Storage& storage,
                                  const StorageObserver& storageObserver,
