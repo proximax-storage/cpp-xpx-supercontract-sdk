@@ -79,6 +79,8 @@ public:
 
         m_callManager.reset();
 
+        m_storageQuery.reset();
+
         m_unsuccessfulExecutionTimer.cancel();
         m_successfulApprovalExpectationTimer.cancel();
         m_unsuccessfulApprovalExpectationTimer.cancel();
