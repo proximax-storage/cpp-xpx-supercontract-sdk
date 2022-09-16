@@ -13,6 +13,7 @@
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
+#include "DefaultContract.h"
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -69,7 +70,7 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
 
         request.m_executors.erase(it);
 
-        m_contracts[key] = createDefaultContract(key, std::move(request), *this, m_config);
+        m_contracts[key] = std::make_unique<DefaultContract>(key, std::move(request), *this);
     });
 }
 

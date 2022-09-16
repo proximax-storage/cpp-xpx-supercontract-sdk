@@ -1,0 +1,65 @@
+syntax = "proto3";
+
+package supercontractserver;
+
+message GetTransactionBlockHeight {
+  bytes hash = 3;
+}
+
+message GetResponseTransactionHash {
+  bytes hash = 3;
+}
+
+message GetTransactionContent {
+  bytes hash = 3;
+}
+
+message BufferReturn {
+  bytes buffer = 1;
+}
+
+message HeightReturn {
+  uint64 height = 1;
+}
+
+message HashReturn {
+  bytes hash = 1;
+}
+
+message TimestampReturn {
+  uint64 timestamp = 1;
+}
+
+message PublicKeyReturn {
+  bytes public_key = 1;
+}
+
+message PaymentAmountReturn {
+  uint64 payment_amount = 1;
+}
+
+message GetBlockHeight {
+}
+
+message GetServicePayment {
+}
+
+message GetBlockHash {
+}
+
+message GetBlockTime {
+}
+
+message GetBlockGenerationTime {
+}
+
+message GetCallerPublicKey {
+}
+
+message GetTransactionHash {
+}
+
+message AddTransaction {
+  string name = 3;
+  string parameters = 4;
+}

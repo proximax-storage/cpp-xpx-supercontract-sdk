@@ -1,0 +1,88 @@
+syntax = "proto3";
+
+package supercontractserver;
+
+message Empty {
+
+}
+
+message OpenFile {
+  string path = 3;
+  string mode = 4;
+}
+
+message OpenFileReturn {
+  bool success = 1;
+  int64 identifier = 2;
+}
+
+message WriteFileReturn {
+  bool success = 1;
+  uint64 num_bytes_written = 2;
+}
+
+message WriteFileStream {
+  int64 identifier = 3;
+  bytes buffer = 4;
+}
+
+message FileReadBufferReturn {
+  bool success = 1;
+  bytes buffer = 2;
+}
+
+message MoveFile {
+  string old_path = 3;
+  string new_path = 4;
+}
+
+message ReadFileStream {
+  int64 identifier = 3;
+}
+
+message CloseFile {
+  int64 identifier = 3;
+}
+
+
+message Flush {
+  int64 identifier = 3;
+}
+
+
+message FileOperationReturn {
+  bool success = 1;
+}
+
+message RemoveFile {
+  string path = 3;
+}
+
+message ListDir {
+  string path = 4;
+}
+
+message ListDirReturn {
+  bool success = 1;
+  string entries = 2;
+}
+
+message PathExist {
+  string path = 4;
+}
+
+message PathExistReturn {
+  bool exist = 1;
+}
+
+message IsFile {
+  string path = 4;
+}
+
+message IsFIleReturn {
+  bool is_file = 1;
+}
+
+message CreatDir {
+  string path = 4;
+}

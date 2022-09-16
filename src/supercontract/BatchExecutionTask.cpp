@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "BaseContractTask.h"
+#include "BatchExecutionTask.h"
 #include "ProofOfExecution.h"
 #include "CallExecutionEnvironment.h"
 #include "utils/Serializer.h"
@@ -13,38 +13,7 @@
 
 namespace sirius::contract {
 
-class BatchExecutionTask
-        : public BaseContractTask {
-
-private:
-
-    Batch m_batch;
-
-    std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
-
-    std::unique_ptr<CallExecutionManager> m_callManager;
-
-    std::shared_ptr<AsyncQuery> m_storageQuery;
-
-    std::optional<EndBatchExecutionOpinion> m_successfulEndBatchOpinion;
-    std::optional<EndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
-
-    std::optional<PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
-
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
-
-    Timer m_unsuccessfulExecutionTimer;
-
-    Timer m_successfulApprovalExpectationTimer;
-    Timer m_unsuccessfulApprovalExpectationTimer;
-
-    bool m_successfulEndBatchSent = false;
-    bool m_unsuccessfulEndBatchSent = false;
-
-public:
-
-    BatchExecutionTask(Batch&& batch,
+BatchExecutionTask::BatchExecutionTask(Batch&& batch,
                        ContractEnvironment& contractEnvironment,
                        ExecutorEnvironment& executorEnvironment,
                        std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
@@ -58,7 +27,7 @@ public:
             , m_otherUnsuccessfulExecutorEndBatchOpinions(
                     std::move(otherSuccessfulExecutorEndBatchOpinions)) {}
 
-    void run() override {
+    void BatchExecutionTask::run() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -73,7 +42,7 @@ public:
                                                               callback);
     }
 
-    void terminate() override {
+    void BatchExecutionTask::terminate() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger());
 
@@ -88,10 +57,7 @@ public:
         m_contractEnvironment.finishTask();
     }
 
-
-private:
-
-    bool onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult) {
+    bool BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -114,11 +80,9 @@ private:
         return true;
     }
 
-public:
-
     // region message event handler
 
-    bool onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) override {
+    bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -141,9 +105,7 @@ public:
 
     // endregion
 
-public:
-
-    void onInitiatedModifications() {
+    void BatchExecutionTask::onInitiatedModifications() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -154,7 +116,7 @@ public:
         executeNextCall();
     }
 
-    void onAppliedSandboxStorageModifications(const CallId& callId,
+    void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& callId,
                                               vm::CallExecutionResult&& executionResult,
                                               storage::SandboxModificationDigest&& digest) {
 
@@ -184,7 +146,7 @@ public:
         executeNextCall();
     }
 
-    void onStorageHashEvaluated(storage::StorageState&& storageState) {
+    void BatchExecutionTask::onStorageHashEvaluated(storage::StorageState&& storageState) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger());
 
@@ -198,11 +160,9 @@ public:
                                       storageState.m_fileStructureSize);
     }
 
-public:
-
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override {
+    bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -221,7 +181,7 @@ public:
         return true;
     }
 
-    bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override {
+    bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -258,9 +218,7 @@ public:
 
     // endregion
 
-private:
-
-    void formSuccessfulEndBatchOpinion(const StorageHash& storageHash,
+    void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storageHash,
                                        uint64_t usedDriveSize, uint64_t metaFilesSize, uint64_t fileStructureSize) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -301,7 +259,7 @@ private:
         }
     }
 
-    void processPublishedEndBatch() {
+    void BatchExecutionTask::processPublishedEndBatch() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -335,7 +293,7 @@ private:
         }
     }
 
-    bool validateOtherBatchInfo(const EndBatchExecutionOpinion& other) {
+    bool BatchExecutionTask::validateOtherBatchInfo(const EndBatchExecutionOpinion& other) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -402,7 +360,7 @@ private:
         return true;
     }
 
-    void checkEndBatchTransactionReadiness() {
+    void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -445,7 +403,7 @@ private:
     }
 
     EndBatchExecutionTransactionInfo
-    createMultisigTransactionInfo(const EndBatchExecutionOpinion& transactionOpinion,
+    BatchExecutionTask::createMultisigTransactionInfo(const EndBatchExecutionOpinion& transactionOpinion,
                                   std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherTransactionOpinions) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -483,14 +441,14 @@ private:
         return multisigTransactionInfo;
     }
 
-    void sendEndBatchTransaction(const EndBatchExecutionTransactionInfo& transactionInfo) {
+    void BatchExecutionTask::sendEndBatchTransaction(const EndBatchExecutionTransactionInfo& transactionInfo) {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
         m_executorEnvironment.executorEventHandler().endBatchTransactionIsReady(transactionInfo);
     }
 
-    void executeNextCall() {
+    void BatchExecutionTask::executeNextCall() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -533,7 +491,7 @@ private:
         }
     }
 
-    void onUnsuccessfulExecutionTimerExpiration() {
+    void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
 
         ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -553,23 +511,7 @@ private:
         }
     }
 
-    void computeProofOfExecution() {
+    void BatchExecutionTask::computeProofOfExecution() {
 
     }
-};
-
-std::unique_ptr<BaseContractTask> createBatchExecutionTask(Batch&& batch,
-                                                           ContractEnvironment& contractEnvironment,
-                                                           ExecutorEnvironment& executorEnvironment,
-                                                           std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchInfos,
-                                                           std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchInfos,
-                                                           std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo) {
-    return std::make_unique<BatchExecutionTask>(std::move(batch),
-                                                contractEnvironment,
-                                                executorEnvironment,
-                                                std::move(otherSuccessfulExecutorEndBatchInfos),
-                                                std::move(otherUnsuccessfulExecutorEndBatchInfos),
-                                                std::move(publishedEndBatchInfo));
-}
-
 }
