@@ -3,21 +3,21 @@
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
-#include "CloseConnectionRPCHandler.h"
+#include "OpenConnectionRPCHandler.h"
 
 namespace sirius::contract::vm {
 
-CloseConnectionRPCHandler::CloseConnectionRPCHandler(
+OpenConnectionRPCHandler::OpenConnectionRPCHandler(
         GlobalEnvironment& environment,
-        const supercontractserver::CloseConnection& request,
+        const supercontractserver::OpenConnection& request,
         std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionSuccess>>> callback)
+        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturn>>> callback)
         : m_environment(environment)
         , m_request(request)
         , m_handler(std::move(handler))
         , m_callback(std::move(callback)) {}
 
-void CloseConnectionRPCHandler::process() {
+void OpenConnectionRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -29,23 +29,27 @@ void CloseConnectionRPCHandler::process() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](bool success) {
-        onResult(success);
+    auto [query, callback] = createAsyncQuery<std::optional<uint64_t>>([this](auto&& id) {
+        onResult(id);
     }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
 
-    handler->closeConnection(m_request.identifier(), callback);
+    handler->openConnection(m_request.url(), callback);
 }
 
-void CloseConnectionRPCHandler::onResult(bool success) {
+void OpenConnectionRPCHandler::onResult(const std::optional<uint64_t>& connectionId) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    supercontractserver::CloseConnectionSuccess status;
+    supercontractserver::OpenConnectionReturn status;
 
-    status.set_success(success);
-
+    if (connectionId.has_value()) {
+        status.set_success(true);
+        status.set_identifier(*connectionId);
+    } else {
+        status.set_success(false);
+    }
     m_callback->postReply(std::move(status));
 }
 

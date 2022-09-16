@@ -21,7 +21,7 @@ class OpenConnectionRPCHandler
     GlobalEnvironment& m_environment;
     supercontractserver::OpenConnection m_request;
     std::weak_ptr<VirtualMachineInternetQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturnStatus>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturn>>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
@@ -29,7 +29,7 @@ public:
     OpenConnectionRPCHandler( GlobalEnvironment& environment,
                                       const supercontractserver::OpenConnection& request,
                                       std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-                                      std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturnStatus>>> callback );
+                                      std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturn>>> callback );
 
     void process() override;
 

@@ -11,7 +11,7 @@ ReadConnectionRPCHandler::ReadConnectionRPCHandler(
         GlobalEnvironment& environment,
         const supercontractserver::ReadConnectionStream& request,
         std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReturnedReadBuffer>>> callback)
+        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReadBufferReturn>>> callback)
         : m_environment(environment)
         , m_request(request)
         , m_handler(std::move(handler))
@@ -42,7 +42,7 @@ void ReadConnectionRPCHandler::onResult(const std::optional<std::vector<uint8_t>
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    supercontractserver::InternetReturnedReadBuffer response;
+    supercontractserver::InternetReadBufferReturn response;
 
     if (result.has_value()) {
         response.set_success(true);

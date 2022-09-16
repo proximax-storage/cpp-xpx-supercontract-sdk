@@ -14,27 +14,27 @@
 
 namespace sirius::contract::vm {
 
-class ReadConnectionRPCHandler
+class CloseConnectionRPCHandler
         : public RPCResponseHandler, private SingleThread {
 
     GlobalEnvironment& m_environment;
-    supercontractserver::ReadConnectionStream m_request;
+    supercontractserver::CloseConnection m_request;
     std::weak_ptr<VirtualMachineInternetQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReturnedReadBuffer>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionReturn>>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
 
-    ReadConnectionRPCHandler(GlobalEnvironment& environment,
-                             const supercontractserver::ReadConnectionStream& request,
-                             std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-                             std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReturnedReadBuffer>>> callback);
+    CloseConnectionRPCHandler(GlobalEnvironment& environment,
+                              const supercontractserver::CloseConnection& request,
+                              std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
+                              std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionReturn>>> callback);
 
     void process() override;
 
 private:
 
-    void onResult(const std::optional<std::vector<uint8_t>>& result);
+    void onResult(bool success);
 
 };
 
