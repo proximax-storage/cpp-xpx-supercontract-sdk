@@ -46,9 +46,7 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
 
 DefaultExecutor::~DefaultExecutor() {
     m_pThreadManager->execute([this] {
-        for (auto&[_, contract] : m_contracts) {
-            contract->terminate();
-        }
+        terminate();
     });
 
     m_pThreadManager->stop();
@@ -255,10 +253,11 @@ void DefaultExecutor::terminate() {
 
     ASSERT(isSingleThread(), m_logger);
 
-    m_virtualMachine.reset();
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();
     }
+
+    m_virtualMachine.reset();
 }
 
 void DefaultExecutor::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
