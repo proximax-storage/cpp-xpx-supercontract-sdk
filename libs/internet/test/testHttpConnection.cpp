@@ -425,6 +425,7 @@ void readFuncHttpDisconnected(std::optional<std::vector<uint8_t>>&& res, bool& r
         return;
     }
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
+    std::cout << actual_vec.data() << std::endl;
 
     if (res->empty()) {
         return;
@@ -437,62 +438,62 @@ void readFuncHttpDisconnected(std::optional<std::vector<uint8_t>>&& res, bool& r
     sharedConnection->read(readCallback);
 }
 
-// TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
+TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
 
-//     GlobalEnvironmentImpl globalEnvironment;
-//     auto& threadManager = globalEnvironment.threadManager();
-//     std::vector<uint8_t> actual_vec;
-//     bool read_flag = false;
-//     std::string default_interface = exec_http("route | grep '^default' | grep -o '[^ ]*$'");
-//     ASSERT_NE(default_interface.length(), 0);
-//     std::string interface(default_interface.begin(), default_interface.end() - 1);
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+    std::string default_interface = exec_http("route | grep '^default' | grep -o '[^ ]*$'");
+    ASSERT_NE(default_interface.length(), 0);
+    std::string interface(default_interface.begin(), default_interface.end() - 1);
 
-//     threadManager.execute([&] {
-//         auto urlDescription = parseURL("http://news.baidu.com/");
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://news.baidu.com/");
 
-//         ASSERT_TRUE(urlDescription);
-//         ASSERT_FALSE(urlDescription->ssl);
-//         ASSERT_EQ(urlDescription->port, "80");
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
 
-//         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-//                 [&](std::optional<InternetConnection>&& connection) {
-//                     ASSERT_TRUE(connection);
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
 
-//                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-//                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-//                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-//                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-//                                 readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-//                             },
-//                             [] {}, globalEnvironment, false, true);
+                    // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
 
-//                     sharedConnection->read(readCallback);
-//                     std::ostringstream ss;
-//                     ss << "sudo ip link set " << interface << " down";
-//                     // std::cout << ss.str() << std::endl;
-//                     exec_http(ss.str().c_str());
-//                 },
-//                 [] {},
-//                 globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                    std::ostringstream ss;
+                    ss << "sudo ip link set " << interface << " down";
+                    // std::cout << ss.str() << std::endl;
+                    exec_http(ss.str().c_str());
+                },
+                [] {},
+                globalEnvironment, false, false);
 
-//         InternetConnection::buildHttpInternetConnection(
-//                 globalEnvironment,
-//                 urlDescription->host,
-//                 urlDescription->port,
-//                 urlDescription->target,
-//                 16 * 1024,
-//                 30000,
-//                 connectionCallback);
-//     });
-//     threadManager.stop();
-//     ASSERT_TRUE(read_flag);
-//     std::ostringstream ss;
-//     ss << "sudo ip link set " << interface << " up";
-//     // std::cout << ss.str() << std::endl;
-//     exec_http(ss.str().c_str());
-//     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
-// }
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    ASSERT_TRUE(read_flag);
+    std::ostringstream ss;
+    ss << "sudo ip link set " << interface << " up";
+    // std::cout << ss.str() << std::endl;
+    exec_http(ss.str().c_str());
+    std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
+}
 
 TEST(TEST_NAME, ConnectWhenBlockingConnection) {
 
@@ -511,41 +512,6 @@ TEST(TEST_NAME, ConnectWhenBlockingConnection) {
         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
                     ASSERT_FALSE(connection);
-                },
-                [] {},
-                globalEnvironment, false, false);
-
-        InternetConnection::buildHttpInternetConnection(
-                globalEnvironment,
-                urlDescription->host,
-                urlDescription->port,
-                urlDescription->target,
-                16 * 1024,
-                30000,
-                connectionCallback);
-    });
-    threadManager.stop();
-    exec_http("sudo iptables -D INPUT 1");
-    exec_http("sudo ip6tables -D INPUT 1");
-}
-
-TEST(TEST_NAME, ConnectWhenRejectingConnection) {
-
-    GlobalEnvironmentImpl globalEnvironment;
-    auto& threadManager = globalEnvironment.threadManager();
-
-    exec_http("sudo iptables -A INPUT -s 93.184.216.34 -j RETURN");
-    exec_http("sudo ip6tables -A INPUT -s 2606:2800:220:1:248:1893:25c8:1946 -j RETURN");
-    threadManager.execute([&] {
-        auto urlDescription = parseURL("http://example.com");
-
-        ASSERT_TRUE(urlDescription);
-        ASSERT_FALSE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "80");
-
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_TRUE(connection);
                 },
                 [] {},
                 globalEnvironment, false, false);
@@ -591,50 +557,6 @@ TEST(TEST_NAME, ReadWhenBlockingConnection) {
 
                     sharedConnection->read(readCallback);
                     exec_http("sudo iptables -A INPUT -s 103.235.46.122 -j DROP");
-                },
-                [] {},
-                globalEnvironment, false, false);
-
-        InternetConnection::buildHttpInternetConnection(
-                globalEnvironment,
-                urlDescription->host,
-                urlDescription->port,
-                urlDescription->target,
-                16 * 1024,
-                30000,
-                connectionCallback);
-    });
-    threadManager.stop();
-    exec_http("sudo iptables -D INPUT 1");
-}
-
-TEST(TEST_NAME, ReadWhenRejectingConnection) {
-
-    GlobalEnvironmentImpl globalEnvironment;
-    auto& threadManager = globalEnvironment.threadManager();
-
-    std::vector<uint8_t> actual_vec;
-    bool read_flag = false;
-
-    threadManager.execute([&] {
-        auto urlDescription = parseURL("http://news.baidu.com/");
-
-        ASSERT_TRUE(urlDescription);
-        ASSERT_FALSE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "80");
-
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_TRUE(connection);
-                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-                            },
-                            [] {}, globalEnvironment, false, true);
-
-                    sharedConnection->read(readCallback);
-                    exec_http("sudo iptables -A INPUT -s 103.235.46.122 -j RETURN");
                 },
                 [] {},
                 globalEnvironment, false, false);
