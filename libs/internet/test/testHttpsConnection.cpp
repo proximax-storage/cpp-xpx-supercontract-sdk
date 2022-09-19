@@ -136,6 +136,43 @@ TEST(HttpsConnection, ValidRead) {
     threadManager.stop();
 }
 
+TEST(HttpsConnection, ConnectingLocalhost) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    ssl::context ctx{ssl::context::tlsv12_client};
+    ctx.set_default_verify_paths();
+    ctx.set_verify_mode(ssl::verify_peer);
+
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://localhost");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_FALSE(connection);
+                },
+                [] {}, globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
 void readFuncNormally(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
     read_flag = true;
     ASSERT_TRUE(res);
@@ -229,6 +266,7 @@ void readFuncDisconneted(std::optional<std::vector<uint8_t>>&& res, bool& read_f
     sharedConnection->read(readCallback);
 }
 
+#ifdef __linux__
 TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -293,7 +331,9 @@ TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
     exec_https(ss.str().c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
+#endif
 
+#ifdef __linux__
 TEST(HttpsConnection, ConnectWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -334,7 +374,9 @@ TEST(HttpsConnection, ConnectWhenBlockingConnection) {
     exec_https("sudo iptables -D INPUT 1");
     exec_https("sudo ip6tables -D INPUT 1");
 }
+#endif
 
+#ifdef __linux__
 TEST(HttpsConnection, ReadWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -387,6 +429,7 @@ TEST(HttpsConnection, ReadWhenBlockingConnection) {
     exec_https("sudo iptables -D INPUT 1");
     exec_https("sudo ip6tables -D INPUT 1");
 }
+#endif
 
 TEST(HttpsConnection, ValidCertificate) {
 
