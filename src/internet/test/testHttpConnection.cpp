@@ -259,54 +259,6 @@ TEST(HttpConnection, NonExistingTarget) {
     ASSERT_TRUE(read_flag);
 }
 
-TEST(HttpConnection, ConnectingHttpsURL) {
-
-    GlobalEnvironmentImpl globalEnvironment;
-    auto& threadManager = globalEnvironment.threadManager();
-    bool read_flag = false;
-
-    // ssl::context ctx{ssl::context::tlsv12_client};
-    // ctx.set_default_verify_paths();
-    // ctx.set_verify_mode(ssl::verify_peer);
-
-
-    threadManager.execute([&] {
-        auto urlDescription = parseURL("https://example.com");
-
-        ASSERT_TRUE(urlDescription);
-        ASSERT_TRUE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "443");
-
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
-                    ASSERT_TRUE(connection);
-
-                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
-
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&read_flag, connection = sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
-                                read_flag = true;
-                                ASSERT_TRUE(res.has_value());
-                            },
-                            [] {}, globalEnvironment, false, false);
-
-                    sharedConnection->read(readCallback);
-                },
-                [] {}, globalEnvironment, false, false);
-
-        InternetConnection::buildHttpInternetConnection(
-                globalEnvironment,
-                urlDescription->host,
-                urlDescription->port,
-                urlDescription->target,
-                16 * 1024,
-                30000,
-                connectionCallback);
-    });
-    threadManager.stop();
-    ASSERT_TRUE(read_flag);
-}
-
 TEST(HttpConnection, ConnectingLocalhost) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -430,11 +382,11 @@ TEST(TEST_NAME, ReadBigWebsite) {
     bool read_flag = false;
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+        auto urlDescription = parseURL("http://news.baidu.com/");
 
         ASSERT_TRUE(urlDescription);
-        ASSERT_TRUE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "443");
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
 
         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
@@ -442,12 +394,11 @@ TEST(TEST_NAME, ReadBigWebsite) {
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                     auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
                             [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
                                 readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
-                            [] {}, globalEnvironment, false, true);
+                            [] {}, globalEnvironment, false, false);
 
                     sharedConnection->read(readCallback);
                 },
@@ -485,7 +436,7 @@ void readFuncHttpDisconnected(std::optional<std::vector<uint8_t>>&& res, bool& r
     sharedConnection->read(readCallback);
 }
 
-TEST(TEST_NAME, ReadWhenDisconnected) {
+TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
@@ -496,11 +447,11 @@ TEST(TEST_NAME, ReadWhenDisconnected) {
     std::string interface(default_interface.begin(), default_interface.end() - 1);
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+        auto urlDescription = parseURL("http://news.baidu.com/");
 
         ASSERT_TRUE(urlDescription);
-        ASSERT_TRUE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "443");
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
 
         auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
                 [&](std::optional<InternetConnection>&& connection) {
@@ -540,6 +491,160 @@ TEST(TEST_NAME, ReadWhenDisconnected) {
     // std::cout << ss.str() << std::endl;
     exec_http(ss.str().c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
+}
+
+TEST(TEST_NAME, ConnectWhenBlockingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    exec_http("sudo iptables -A INPUT -s 93.184.216.34 -j DROP");
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_FALSE(connection);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    exec_http("sudo iptables -D INPUT 1");
+}
+
+TEST(TEST_NAME, ConnectWhenRejectingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    exec_http("sudo iptables -A INPUT -s 93.184.216.34 -j RETURN");
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    exec_http("sudo iptables -D INPUT 1");
+}
+
+TEST(TEST_NAME, ReadWhenBlockingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://news.baidu.com/");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                    exec_http("sudo iptables -A INPUT -s 103.102.166.224 -j DROP");
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    exec_http("sudo iptables -D INPUT 1");
+}
+
+TEST(TEST_NAME, ReadWhenRejectingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+
+    threadManager.execute([&] {
+        auto urlDescription = parseURL("http://news.baidu.com/");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                    exec_http("sudo iptables -A INPUT -s 103.102.166.224 -j RETURN");
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpInternetConnection(
+                globalEnvironment,
+                urlDescription->host,
+                urlDescription->port,
+                urlDescription->target,
+                16 * 1024,
+                30000,
+                connectionCallback);
+    });
+    threadManager.stop();
+    exec_http("sudo iptables -D INPUT 1");
 }
 
 }

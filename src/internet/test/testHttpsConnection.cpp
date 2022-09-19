@@ -228,7 +228,7 @@ void readFuncDisconneted(std::optional<std::vector<uint8_t>>&& res, bool& read_f
     sharedConnection->read(readCallback);
 }
 
-TEST(HttpsConnection, ReadWhenDisconnected) {
+TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
@@ -291,6 +291,187 @@ TEST(HttpsConnection, ReadWhenDisconnected) {
     // std::cout << ss.str() << std::endl;
     exec_https(ss.str().c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
+}
+
+TEST(HttpsConnection, ConnectWhenBlockingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    exec_https("sudo iptables -A INPUT -s 93.184.216.34 -j DROP");
+    threadManager.execute([&] {
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+        auto urlDescription = parseURL("https://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_FALSE(connection);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    exec_https("sudo iptables -D INPUT 1");
+}
+
+TEST(HttpsConnection, ConnectWhenRejectingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    exec_https("sudo iptables -A INPUT -s 93.184.216.34 -j RETURN");
+    threadManager.execute([&] {
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://example.com");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    exec_https("sudo iptables -D INPUT 1");
+}
+
+TEST(HttpsConnection, ReadWhenBlockingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+
+    threadManager.execute([&] {
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                    exec_https("sudo iptables -A INPUT -s 103.102.166.224 -j DROP");
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    exec_https("sudo iptables -D INPUT 1");
+}
+
+TEST(HttpsConnection, ReadWhenRejectingConnection) {
+
+    GlobalEnvironmentImpl globalEnvironment;
+    auto& threadManager = globalEnvironment.threadManager();
+
+    std::vector<uint8_t> actual_vec;
+    bool read_flag = false;
+
+    threadManager.execute([&] {
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://en.wikipedia.org/wiki/Byzantine_Empire");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
+                [&](std::optional<InternetConnection>&& connection) {
+                    ASSERT_TRUE(connection);
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                                readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            },
+                            [] {}, globalEnvironment, false, true);
+
+                    sharedConnection->read(readCallback);
+                    exec_https("sudo iptables -A INPUT -s 103.102.166.224 -j RETURN");
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+    exec_https("sudo iptables -D INPUT 1");
 }
 
 TEST(HttpsConnection, ValidCertificate) {
