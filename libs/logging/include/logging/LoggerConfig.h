@@ -16,7 +16,7 @@ class LoggerConfig {
 
 private:
 
-    bool                    m_logToConsole;
+    bool                    m_logToConsole = true;
     std::optional<fs::path> m_logPath;
     int                     m_maxLogSize = 10 * 1024 * 1024;
     int                     m_maxLogFiles = 3;

@@ -9,8 +9,6 @@
 
 namespace sirius::contract {
 
-//#define DBG_MAIN_THREAD // { _FUNC_ENTRY(); ASSERT( m_threadId == std::this_thread::get_id() ); }
-
 class SingleThread {
 
 protected:
@@ -19,7 +17,7 @@ protected:
 
     SingleThread(): m_threadId(std::this_thread::get_id()) {}
 
-    bool isSingleThread() {
+    bool isSingleThread() const {
         return m_threadId == std::this_thread::get_id();
     }
 

@@ -8,7 +8,6 @@
 
 #include "Requests.h"
 #include "ExecutorConfig.h"
-#include "StorageEventHandler.h"
 #include "MessengerEventHandler.h"
 #include "BlockchainEventHandler.h"
 
@@ -19,7 +18,6 @@
 namespace sirius::contract {
 
 class Executor :
-        public StorageEventHandler,
         public MessengerEventHandler,
         public BlockchainEventHandler {
 
@@ -37,17 +35,5 @@ public:
 
     virtual void setExecutors( const ContractKey&, std::set<ExecutorKey>&& executors ) = 0;
 };
-
-//std::unique_ptr<Executor> createDefaultExecutor(
-//        const crypto::KeyPair&,
-//        std::string&&  address,
-//        std::string&&  port,
-//        std::string&&  storageDirectory,
-//        std::string&&  sandboxDirectory,
-//        const std::vector<ReplicatorInfo>&  bootstraps,
-//        bool           useTcpSocket, // use TCP socket (instead of uTP)
-//        ReplicatorEventHandler&,
-//        DbgReplicatorEventHandler*  dbgEventHandler = nullptr,
-//        const char*    dbgReplicatorName = ""
 
 }
