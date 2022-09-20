@@ -17,11 +17,13 @@ TEST(VirtualMachine, Example) {
 
     StorageObserverMock storageObserver;
 
+    std::shared_ptr<VirtualMachine> pVirtualMachine;
+
     threadManager.execute([&] {
         // TODO Fill in the address
         std::string address;
         RPCVirtualMachineBuilder builder;
-        auto pVirtualMachine = builder.build(storageObserver, environment, address);
+        pVirtualMachine = builder.build(storageObserver, environment, address);
 
         // TODO fill in the callRequest fields
         CallRequest callRequest;
@@ -34,7 +36,7 @@ TEST(VirtualMachine, Example) {
                                      std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
     });
 
-    threadManager.stop();
+    sleep(1000000);
 }
 
 }
