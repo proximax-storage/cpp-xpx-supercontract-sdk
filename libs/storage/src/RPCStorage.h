@@ -19,8 +19,7 @@ namespace rpc = ::storage;
 namespace sirius::contract::storage {
 
 class RPCStorage
-        : private SingleThread
-        , public Storage {
+        : private SingleThread, public Storage {
 
 private:
 
@@ -37,17 +36,22 @@ public:
             GlobalEnvironment& environment,
             const std::string& serverAddress);
 
-    void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash) override;
+    void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+                            std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
 
-    void initiateModifications(const DriveKey& driveKey, std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
+    void initiateModifications(const DriveKey& driveKey,
+                               std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
 
-    void applySandboxStorageModifications(const DriveKey& driveKey, bool success,
+    void applySandboxStorageModifications(const DriveKey& driveKey,
+                                          bool success,
                                           std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback) override;
 
     void
-    evaluateStorageHash(const DriveKey& driveKey, std::shared_ptr<AsyncQueryCallback<StorageState>> callback) override;
+    evaluateStorageHash(const DriveKey& driveKey,
+                        std::shared_ptr<AsyncQueryCallback<std::optional<StorageState>>> callback) override;
 
-    void applyStorageModifications(const DriveKey& driveKey, bool success) override;
+    void applyStorageModifications(const DriveKey& driveKey, bool success,
+                                   std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
 
 private:
 

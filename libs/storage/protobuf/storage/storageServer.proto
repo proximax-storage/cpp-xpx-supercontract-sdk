@@ -26,6 +26,8 @@ service StorageServer {
   rpc ApplySandboxStorageModifications(ApplySandboxModificationsRequest) returns (ApplySandboxModificationsResponse) {}
 
   rpc EvaluateStorageHash(EvaluateStorageHashRequest) returns (EvaluateStorageHashResponse) {}
+
+  rpc ApplyStorageModifications(ApplyStorageModificationsRequest) returns (ApplyStorageModificationsResponse) {}
 }
 
 message AbsolutePathRequest {
@@ -65,12 +67,21 @@ message ApplySandboxModificationsResponse {
 }
 
 message EvaluateStorageHashRequest {
-  bytes driveKey = 1;
+  bytes drive_key = 1;
 }
 
 message EvaluateStorageHashResponse {
-  bytes storageHash = 1;
+  bytes storage_hash = 1;
   uint64 used_drive_size = 2;
   uint64 meta_files_size = 3;
   uint64 file_structure_size = 4;
+}
+
+message ApplyStorageModificationsRequest {
+  bytes drive_key = 1;
+  bool success = 2;
+}
+
+message ApplyStorageModificationsResponse {
+  bool status = 1;
 }

@@ -17,9 +17,8 @@ public:
 
     virtual ~Storage() = default;
 
-    virtual void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash) = 0;
-
-//    virtual void cancelStorageSynchronization( const DriveKey& driveKey ) = 0;
+    virtual void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+                                    std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) = 0;
 
     virtual void
     initiateModifications(const DriveKey& driveKey,
@@ -28,10 +27,13 @@ public:
     virtual void applySandboxStorageModifications(const DriveKey& driveKey,
                                                   bool success,
                                                   std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback);
-    virtual void
-    evaluateStorageHash(const DriveKey& driveKey, std::shared_ptr<AsyncQueryCallback<StorageState>> callback) = 0;
 
-    virtual void applyStorageModifications(const DriveKey& driveKey, bool success) = 0;
+    virtual void
+    evaluateStorageHash(const DriveKey& driveKey,
+                        std::shared_ptr<AsyncQueryCallback<std::optional<StorageState>>> callback) = 0;
+
+    virtual void applyStorageModifications(const DriveKey& driveKey, bool success,
+                                           std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) = 0;
 };
 
 }

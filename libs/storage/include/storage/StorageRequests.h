@@ -6,6 +6,8 @@
 
 #pragma once
 
+#include "supercontract/Identifiers.h"
+
 namespace sirius::contract::storage {
 
 struct StorageState {

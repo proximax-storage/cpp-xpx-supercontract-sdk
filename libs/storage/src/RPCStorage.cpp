@@ -10,6 +10,9 @@
 #include "RPCTag.h"
 #include "InitiateModificationsTag.h"
 #include "ApplySandboxStorageModificationsTag.h"
+#include "EvaluateStorageHashTag.h"
+#include "SynchronizeStorageTag.h"
+#include "ApplyStorageModificationsTag.h"
 
 namespace sirius::contract::storage {
 
@@ -33,8 +36,15 @@ void RPCStorage::waitForRPCResponse() {
     }
 }
 
-void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash) {
+void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+                                    std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger());
 
+    rpc::SynchronizeStorageRequest request;
+    request.set_drive_key(driveKey.toString());
+    auto* tag = new SynchronizeStorageTag(m_environment, std::move(request), *m_stub, m_completionQueue,
+                                          std::move(callback));
+    tag->start();
 }
 
 void RPCStorage::initiateModifications(const DriveKey& driveKey,
@@ -64,12 +74,27 @@ void RPCStorage::applySandboxStorageModifications(const DriveKey& driveKey,
 }
 
 void
-RPCStorage::evaluateStorageHash(const DriveKey& driveKey, std::shared_ptr<AsyncQueryCallback<StorageState>> callback) {
+RPCStorage::evaluateStorageHash(const DriveKey& driveKey,
+                                std::shared_ptr<AsyncQueryCallback<std::optional<StorageState>>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger());
 
+    rpc::EvaluateStorageHashRequest request;
+    request.set_drive_key(driveKey.toString());
+    auto* tag = new EvaluateStorageHashTag(m_environment, std::move(request), *m_stub, m_completionQueue,
+                                           std::move(callback));
+    tag->start();
 }
 
-void RPCStorage::applyStorageModifications(const DriveKey& driveKey, bool success) {
+void RPCStorage::applyStorageModifications(const DriveKey& driveKey, bool success,
+                                           std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger());
 
+    rpc::ApplyStorageModificationsRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_success(success);
+    auto* tag = new ApplyStorageModificationsTag(m_environment, std::move(request), *m_stub, m_completionQueue,
+                                           std::move(callback));
+    tag->start();
 }
 
 }
