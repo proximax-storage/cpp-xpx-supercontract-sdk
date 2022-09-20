@@ -46,6 +46,8 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    m_environment.logger().info("Call {} execution requested", request.m_callId);
+
     auto c = [=,
             this,
             request = request,
@@ -72,6 +74,8 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
                                                    std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    m_environment.logger().info("Resolved path for call {}", request.m_callId);
 
     auto callId = request.m_callId;
 

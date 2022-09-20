@@ -40,6 +40,8 @@ void ExecuteCallRPCHandler::start() {
     ASSERT(!m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
 
+    m_environment.logger().info("Starting the Call {}", m_request.m_callId);
+
     auto[query, callback] = createAsyncQuery<bool>([this](bool&& ok) { onStarted(ok); }, [] {},
                                                    m_environment, true, true);
     m_tagQuery = std::move(query);
@@ -53,6 +55,8 @@ void ExecuteCallRPCHandler::onStarted(bool ok) {
 
     ASSERT(m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
+
+    m_environment.logger().info("Started the Call {}. Status: {}", m_request.m_callId, ok);
 
     m_tagQuery.reset();
 
@@ -82,6 +86,8 @@ void ExecuteCallRPCHandler::onWritten(bool ok) {
     ASSERT(m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
 
+    m_environment.logger().info("Written message to vm server. Status: {}", ok);
+
     m_tagQuery.reset();
 
     if (!ok) {
@@ -98,6 +104,11 @@ void ExecuteCallRPCHandler::onWritten(bool ok) {
 }
 
 void ExecuteCallRPCHandler::writeRequest(supercontractserver::Request&& requestWrapper) {
+
+    ASSERT(isSingleThread(), m_environment.logger());
+
+    m_environment.logger().info("Writing message to vm server");
+
     auto [query, callback] = createAsyncQuery<bool>([this](bool&& ok) { onWritten(ok); }, [] {},
                                                         m_environment, true, true);
     auto* writer = new ExecuteCallRPCWriter(m_environment, callback);
