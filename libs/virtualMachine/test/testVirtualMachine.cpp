@@ -19,11 +19,14 @@ TEST(VirtualMachine, Example) {
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
+    std::promise<void> p;
+    auto barrier = p.get_future();
+
     threadManager.execute([&] {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder;
-        auto pVirtualMachine = builder.build(storageObserver, environment, address);
+        pVirtualMachine = builder.build(storageObserver, environment, address);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -46,8 +49,9 @@ TEST(VirtualMachine, Example) {
 }
         };
 
-        auto[_, callback] = createAsyncQuery<std::optional<CallExecutionResult>>([] (auto&& res) {
+        auto[_, callback] = createAsyncQuery<std::optional<CallExecutionResult>>([&] (auto&& res) {
             // TODO on call executed
+            p.set_value();
             ASSERT_TRUE(res);
         }, [] {}, environment, false, false);
 
@@ -55,7 +59,13 @@ TEST(VirtualMachine, Example) {
                                      std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
     });
 
-    sleep(1000000);
+    barrier.get();
+
+    threadManager.execute([&] {
+        pVirtualMachine.reset();
+    });
+
+    threadManager.stop();
 }
 
 }
