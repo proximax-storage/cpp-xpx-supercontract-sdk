@@ -132,7 +132,7 @@ void ExecuteCallRPCHandler::processExecuteCallResponse(
 
 void ExecuteCallRPCHandler::onRead(std::optional<supercontractserver::Response>&& response) {
 
-    ASSERT(!isSingleThread(), m_environment.logger())
+    ASSERT(isSingleThread(), m_environment.logger())
 
     ASSERT(m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
