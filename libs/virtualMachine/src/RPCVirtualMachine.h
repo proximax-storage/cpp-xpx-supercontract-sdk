@@ -7,13 +7,13 @@
 #pragma once
 
 #include "virtualMachine/VirtualMachine.h"
-#include "supercontract/StorageObserver.h"
 #include "supercontract/AsyncQuery.h"
 
 #include "supercontract/SingleThread.h"
 #include "virtualMachine/VirtualMachineInternetQueryHandler.h"
 #include "virtualMachine/VirtualMachineBlockchainQueryHandler.h"
 #include "ExecuteCallRPCRequest.h"
+#include <storage/StorageObserver.h>
 
 namespace sirius::contract::vm {
 
@@ -33,7 +33,7 @@ private:
         CallContext& operator=(CallContext&& other) noexcept = default;
     };
 
-    const StorageObserver& m_storageObserver;
+    std::weak_ptr<storage::StorageObserver> m_storageObserver;
 
     GlobalEnvironment& m_environment;
 
@@ -49,7 +49,7 @@ private:
 public:
 
     RPCVirtualMachine(
-            const StorageObserver& storageObserver,
+            std::weak_ptr<storage::StorageObserver> storageObserver,
             GlobalEnvironment& environment,
             const std::string& serverAddress);
 

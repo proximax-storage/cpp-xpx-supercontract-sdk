@@ -6,9 +6,9 @@
 
 #pragma once
 
-#include "AsyncQuery.h"
+#include "supercontract/AsyncQuery.h"
 
-namespace sirius::contract {
+namespace sirius::contract::storage {
 
 class StorageObserver {
 

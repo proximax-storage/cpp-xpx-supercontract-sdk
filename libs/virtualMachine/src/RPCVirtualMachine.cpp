@@ -14,10 +14,10 @@
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine(const StorageObserver& storageObserver,
+RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageObserver> storageObserver,
                                      GlobalEnvironment& environment,
                                      const std::string& serverAddress)
-        : m_storageObserver(storageObserver)
+        : m_storageObserver(std::move(storageObserver))
         , m_environment(environment)
         , m_stub(std::move(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
                 serverAddress, grpc::InsecureChannelCredentials()))))
@@ -46,6 +46,13 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    auto storageObserver = m_storageObserver.lock();
+
+    if (!storageObserver) {
+        callback->postReply({});
+        return;
+    }
+
     auto c = [=,
             this,
             request = request,
@@ -62,7 +69,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
         callback->postReply({});
     }, m_environment, true, true);
     m_pathQueries[request.m_callId] = std::move(pathQuery);
-    m_storageObserver.getAbsolutePath(request.m_file, pathCallback);
+    storageObserver->getAbsolutePath(request.m_file, pathCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,

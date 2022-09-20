@@ -10,7 +10,7 @@
 namespace sirius::contract::vm {
 
 std::shared_ptr<VirtualMachine>
-RPCVirtualMachineBuilder::build(const StorageObserver& storageObserver,
+RPCVirtualMachineBuilder::build(std::weak_ptr<storage::StorageObserver> storageObserver,
                                 GlobalEnvironment& environment,
                                 const std::string& serverAddress) {
 
