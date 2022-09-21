@@ -26,7 +26,7 @@ public:
 
     virtual void applySandboxStorageModifications(const DriveKey& driveKey,
                                                   bool success,
-                                                  std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback);
+                                                  std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback) = 0;
 
     virtual void
     evaluateStorageHash(const DriveKey& driveKey,
@@ -34,6 +34,11 @@ public:
 
     virtual void applyStorageModifications(const DriveKey& driveKey, bool success,
                                            std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) = 0;
+
+    virtual void
+    getAbsolutePath(const DriveKey& driveKey, const std::string& relativePath,
+                    std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>> callback) = 0;
+
 };
 
 }

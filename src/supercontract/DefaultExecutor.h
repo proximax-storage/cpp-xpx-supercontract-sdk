@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <storage/StorageObserver.h>
+#include <storage/StorageContentManager.h>
 #include "supercontract/SingleThread.h"
 #include "supercontract/Executor.h"
 #include "ExecutorEnvironment.h"
@@ -36,7 +36,7 @@ private:
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
     std::shared_ptr<Messenger> m_messenger;
     std::shared_ptr<storage::Storage> m_storage;
-    std::shared_ptr<storage::StorageObserver> m_storageObserver;
+    std::shared_ptr<storage::StorageContentManager> m_storageContentManager;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 

@@ -21,6 +21,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(grpc)
 
 FetchContent_Declare(
+        expected
+        GIT_REPOSITORY https://github.com/TartanLlama/expected
+        GIT_TAG        v1.0.0)
+FetchContent_MakeAvailable(expected)
+
+FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
         GIT_TAG        v1.3.2)

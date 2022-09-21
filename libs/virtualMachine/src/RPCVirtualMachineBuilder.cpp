@@ -10,11 +10,11 @@
 namespace sirius::contract::vm {
 
 std::shared_ptr<VirtualMachine>
-RPCVirtualMachineBuilder::build(std::weak_ptr<storage::StorageObserver> storageObserver,
+RPCVirtualMachineBuilder::build(std::weak_ptr<storage::StorageContentManager> storageContentManager,
                                 GlobalEnvironment& environment,
                                 const std::string& serverAddress) {
 
-    return std::make_shared<RPCVirtualMachine>(storageObserver, environment, serverAddress);
+    return std::make_shared<RPCVirtualMachine>(storageContentManager, environment, serverAddress);
 }
 
 }

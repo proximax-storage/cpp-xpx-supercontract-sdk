@@ -14,10 +14,10 @@
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageObserver> storageObserver,
+RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageContentManager> storageContentManager,
                                      GlobalEnvironment& environment,
                                      const std::string& serverAddress)
-        : m_storageObserver(std::move(storageObserver))
+        : m_storageContentManager(std::move(storageContentManager))
         , m_environment(environment)
         , m_stub(std::move(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
                 serverAddress, grpc::InsecureChannelCredentials()))))
@@ -46,30 +46,32 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    auto storageObserver = m_storageObserver.lock();
+    auto storageContentManager = m_storageContentManager.lock();
 
-    if (!storageObserver) {
+    if (!storageContentManager) {
         callback->postReply({});
         return;
     }
 
-    auto c = [=,
-            this,
-            request = request,
-            internetQueryHandler = std::move(internetQueryHandler),
-            blockchainQueryHandler = std::move(blockchainQueryHandler)](
-            std::string&& callAbsolutePath) mutable -> void {
-        onReceivedCallAbsolutePath(std::move(request),
-                                   std::move(callAbsolutePath),
-                                   std::move(internetQueryHandler),
-                                   std::move(blockchainQueryHandler),
-                                   std::move(callback));
-    };
-    auto [pathQuery, pathCallback] = createAsyncQuery<std::string>(std::move(c), [=] {
-        callback->postReply({});
-    }, m_environment, true, true);
+    auto[pathQuery, pathCallback] = createAsyncQuery<std::optional<std::string>>(
+            [=, this, request = request, internetQueryHandler = std::move(
+                    internetQueryHandler), blockchainQueryHandler = std::move(blockchainQueryHandler)](
+                    auto&& callAbsolutePath) mutable -> void {
+
+                if (!callAbsolutePath) {
+                    callback->postReply({});
+                }
+
+//                onReceivedCallAbsolutePath(std::move(request),
+//                                           std::move(callAbsolutePath),
+//                                           std::move(internetQueryHandler),
+//                                           std::move(blockchainQueryHandler),
+//                                           std::move(callback));
+            }, [=] {
+                callback->postReply({});
+            }, m_environment, true, true);
     m_pathQueries[request.m_callId] = std::move(pathQuery);
-    storageObserver->getAbsolutePath(request.m_file, pathCallback);
+    storageContentManager->getAbsolutePath(DriveKey(), request.m_file, pathCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
@@ -88,7 +90,7 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     request.m_file = callAbsolutePath;
 
-    auto [vmQuery, vmCallback] = createAsyncQuery<std::optional<CallExecutionResult>>(
+    auto[vmQuery, vmCallback] = createAsyncQuery<std::optional<CallExecutionResult>>(
             [=, this](std::optional<CallExecutionResult>&& result) {
                 callback->postReply(std::move(result));
                 onCallExecuted(callId);

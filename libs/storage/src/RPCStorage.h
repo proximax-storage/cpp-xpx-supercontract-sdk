@@ -36,6 +36,8 @@ public:
             GlobalEnvironment& environment,
             const std::string& serverAddress);
 
+    ~RPCStorage() override;
+
     void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
                             std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
 

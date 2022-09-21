@@ -17,8 +17,6 @@ syntax = "proto3";
 package storage;
 
 service StorageServer {
-  rpc GetAbsolutePath(AbsolutePathRequest) returns (AbsolutePathResponse) {}
-
   rpc SynchronizeStorage(SynchronizeStorageRequest) returns (SynchronizeStorageResponse) {}
 
   rpc InitiateModifications(InitModificationsRequest) returns (InitModificationsResponse) {}
@@ -28,14 +26,6 @@ service StorageServer {
   rpc EvaluateStorageHash(EvaluateStorageHashRequest) returns (EvaluateStorageHashResponse) {}
 
   rpc ApplyStorageModifications(ApplyStorageModificationsRequest) returns (ApplyStorageModificationsResponse) {}
-}
-
-message AbsolutePathRequest {
-  string relative_path = 1;
-}
-
-message AbsolutePathResponse {
-  string absolute_path = 1;
 }
 
 message SynchronizeStorageRequest {

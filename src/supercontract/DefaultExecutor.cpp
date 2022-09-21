@@ -35,9 +35,9 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
         , m_eventHandler(std::move(eventHandler))
         // TODO Init pointers
         , m_storage(nullptr)
-        , m_storageObserver(nullptr)
+        , m_storageContentManager(nullptr)
         , m_virtualMachine(
-                vm::RPCVirtualMachineBuilder().build(m_storageObserver, *this, m_config.rpcVirtualMachineAddress())) {
+                vm::RPCVirtualMachineBuilder().build(m_storageContentManager, *this, m_config.rpcVirtualMachineAddress())) {
     m_sslContext.set_default_verify_paths();
     m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
 }

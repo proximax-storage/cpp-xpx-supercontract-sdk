@@ -10,12 +10,16 @@
 
 namespace sirius::contract::storage {
 
-class StorageObserver {
+class StorageContentManager {
 
 public:
 
+    virtual ~StorageContentManager() = default;
+
     virtual void
-    getAbsolutePath( const std::string& relativePath, std::shared_ptr<AsyncQueryCallback<std::string>> callback) const = 0;
+    getAbsolutePath(const DriveKey& driveKey,
+                    const std::string& relativePath,
+                    std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>> callback) = 0;
 
 };
 

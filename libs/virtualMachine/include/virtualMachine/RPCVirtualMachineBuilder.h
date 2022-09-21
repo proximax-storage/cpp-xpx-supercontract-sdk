@@ -7,7 +7,7 @@
 #pragma once
 
 #include <virtualMachine/VirtualMachine.h>
-#include "storage/StorageObserver.h"
+#include "storage/StorageContentManager.h"
 
 namespace sirius::contract::vm {
 
@@ -15,7 +15,7 @@ class RPCVirtualMachineBuilder {
 
 public:
 
-    std::shared_ptr<VirtualMachine> build(std::weak_ptr<storage::StorageObserver> storageObserver,
+    std::shared_ptr<VirtualMachine> build(std::weak_ptr<storage::StorageContentManager> storageContentManager,
                                           GlobalEnvironment& environment,
                                           const std::string& serverAddress);
 

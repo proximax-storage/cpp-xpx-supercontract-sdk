@@ -24,6 +24,17 @@ RPCStorage::RPCStorage(GlobalEnvironment& environment, const std::string& server
             waitForRPCResponse();
         }) {}
 
+RPCStorage::~RPCStorage() {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_completionQueue.Shutdown();
+
+    if (m_completionQueueThread.joinable()) {
+        m_completionQueueThread.join();
+    }
+}
+
 void RPCStorage::waitForRPCResponse() {
     ASSERT(!isSingleThread(), m_environment.logger())
 
@@ -93,7 +104,7 @@ void RPCStorage::applyStorageModifications(const DriveKey& driveKey, bool succes
     request.set_drive_key(driveKey.toString());
     request.set_success(success);
     auto* tag = new ApplyStorageModificationsTag(m_environment, std::move(request), *m_stub, m_completionQueue,
-                                           std::move(callback));
+                                                 std::move(callback));
     tag->start();
 }
 
