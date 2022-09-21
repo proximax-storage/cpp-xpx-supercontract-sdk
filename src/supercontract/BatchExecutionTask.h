@@ -54,7 +54,7 @@ public:
 
 private:
 
-    bool onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult);
+    void onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult);
 
 public:
 
@@ -106,6 +106,10 @@ private:
     void onUnsuccessfulExecutionTimerExpiration();
 
     void computeProofOfExecution();
+
+    void onStorageUnavailable();
+
+    void onAppliedStorageModifications();
 };
 
 }

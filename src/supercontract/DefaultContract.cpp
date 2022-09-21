@@ -108,6 +108,10 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
         m_unknownPublishedEndBatchTransactions[info.m_batchIndex] = info;
     }
 
+    ASSERT(info.m_batchIndex > m_lastKnownStorageState.m_batchIndex, m_executorEnvironment.logger())
+
+    m_lastKnownStorageState = {info.m_batchIndex, info.m_driveState};
+
     return true;
 }
 
@@ -210,11 +214,11 @@ void DefaultContract::finishTask() {
     runTask();
 }
 
-void DefaultContract::addSynchronizationTask(const SynchronizationRequest& request) {
+void DefaultContract::addSynchronizationTask() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_synchronizationRequest = request;
+    m_synchronizationRequest = {m_lastKnownStorageState.m_storageHash};
 }
 
 // endregion

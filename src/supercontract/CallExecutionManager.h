@@ -8,7 +8,7 @@
 
 #include "supercontract/GlobalEnvironment.h"
 
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachine.h>
 
 namespace sirius::contract {
 

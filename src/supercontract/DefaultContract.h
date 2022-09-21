@@ -11,8 +11,14 @@
 #include "ProofOfExecution.h"
 #include "BatchesManager.h"
 #include "BaseContractTask.h"
+#include "supercontract/Identifiers.h"
 
 namespace sirius::contract {
+
+struct KnownStorageState {
+    uint64_t m_batchIndex = 0;
+    StorageHash m_storageHash;
+};
 
 class DefaultContract
         : private SingleThread
@@ -34,12 +40,16 @@ private:
 
     ProofOfExecution m_proofOfExecution;
 
+    KnownStorageState m_lastKnownStorageState;
+
     // Requests
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
     std::optional<SynchronizationRequest> m_synchronizationRequest;
     std::optional<RemoveRequest> m_contractRemoveRequest;
 
     std::unique_ptr<BaseContractTask> m_task;
+
+
 
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
@@ -101,7 +111,7 @@ public:
 
     void finishTask() override;
 
-    void addSynchronizationTask(const SynchronizationRequest& request) override;
+    void addSynchronizationTask() override;
 
     // endregion
 

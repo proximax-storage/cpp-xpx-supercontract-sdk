@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "supercontract/Storage.h"
+#include <storage/Storage.h>
 #include "supercontract/Messenger.h"
 #include "supercontract/ExecutorEventHandler.h"
 #include "crypto/KeyPair.h"
@@ -14,6 +14,7 @@
 #include "supercontract/ThreadManager.h"
 #include "TaskRequests.h"
 #include "ContractConfig.h"
+#include "Batch.h"
 
 namespace sirius::contract {
 
@@ -37,7 +38,9 @@ public:
 
     virtual void finishTask() = 0;
 
-    virtual void addSynchronizationTask( const SynchronizationRequest& ) = 0;
+    virtual void addSynchronizationTask() = 0;
+
+    virtual void delayBatchExecution(Batch&& batch);
 
 };
 

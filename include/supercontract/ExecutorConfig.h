@@ -32,7 +32,7 @@ private:
     std::string             m_automaticExecutionFunction = "main";
 
     std::string             m_rpcVirtualMachineAddress = "localhost:50051";
-    std::string             m_rpcServerAddress = "localhost:50052";
+    std::string             m_rpcStorageAddress = "localhost:50052";
 
     int                     m_virtualMachineRepeatTimeoutMs = 5000;
 
@@ -109,12 +109,12 @@ public:
         m_rpcVirtualMachineAddress = rpcVirtualMachineAddress;
     }
 
-    const std::string& rpcServerAddress() const {
-        return m_rpcServerAddress;
+    const std::string& rpcStorageAddress() const {
+        return m_rpcStorageAddress;
     }
 
-    void setRpcServerAddress( const std::string& rpcServerAddress ) {
-        m_rpcServerAddress = rpcServerAddress;
+    void setRpcStorageAddress( const std::string& rpcStorageAddress ) {
+        m_rpcStorageAddress = rpcStorageAddress;
     }
 
     int internetBufferSize() const {

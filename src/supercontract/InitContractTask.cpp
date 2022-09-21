@@ -8,6 +8,8 @@
 
 namespace sirius::contract {
 
+// TODO The class is not fully implemented
+
 InitContractTask::InitContractTask(
         AddContractRequest&& request,
         ContractEnvironment& contractEnvironment,
@@ -44,9 +46,10 @@ bool InitContractTask::onEndBatchExecutionPublished(const PublishedEndBatchExecu
         // We are in the actual state from the point of blockchain view
         // At the same time storage actually may not be in the actual state
         // So we should try to synchronize storage without expecting approval in the blockchain
-        m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), info.m_driveState);
+        // TODO Synchronize
+//        m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), info.m_driveState);
     } else {
-        m_contractEnvironment.addSynchronizationTask(SynchronizationRequest{info.m_driveState});
+        m_contractEnvironment.addSynchronizationTask();
     }
 
     m_contractEnvironment.finishTask();

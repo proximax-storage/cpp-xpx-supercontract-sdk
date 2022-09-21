@@ -10,8 +10,8 @@
 
 #include "supercontract/AsyncQuery.h"
 
-#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
-#include "virtualMachine/VirtualMachineBlockchainQueryHandler.h"
+#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
+#include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
 #include "internet/InternetConnection.h"
 #include "ExecutorEnvironment.h"
 #include "ContractEnvironment.h"

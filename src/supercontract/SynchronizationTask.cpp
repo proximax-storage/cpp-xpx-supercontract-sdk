@@ -6,6 +6,8 @@
 
 #include "SynchronizationTask.h"
 
+// TODO The class is not fully implemented
+
 namespace sirius::contract {
 
 SynchronizationTask::SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
@@ -24,7 +26,9 @@ bool SynchronizationTask::onEndBatchExecutionPublished(const PublishedEndBatchEx
 
     if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
         cosigners.end()) {
-        m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), info.m_driveState);
+        m_request = {info.m_driveState};
+
+        run();
     }
 
     // TODO What if we are among the cosigners? Is it possible?
@@ -47,7 +51,25 @@ void SynchronizationTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), m_request.m_storageHash);
+    ASSERT(!m_storageQuery, m_executorEnvironment.logger());
+
+    auto storage = m_executorEnvironment.storage().lock();
+
+    if (!storage) {
+
+    }
+
+    auto [query, callback] = createAsyncQuery<std::optional<bool>>([this](auto&& res) {
+
+        if (!res) {
+            onStorageUnavailable();
+            return;
+        }
+
+        onStorageStateSynchronized();
+    }, [] {}, m_executorEnvironment, true, true);
+
+    storage->synchronizeStorage(m_contractEnvironment.driveKey(), m_request.m_storageHash, callback);
 }
 
 void SynchronizationTask::terminate() {
@@ -55,6 +77,19 @@ void SynchronizationTask::terminate() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_contractEnvironment.finishTask();
+}
+
+void SynchronizationTask::onStorageUnavailable() {
+
+    m_storageQuery.reset();
+
+    m_storageTimer = Timer(m_executorEnvironment.threadManager().context(), 5000, [this] {
+        run();
+    });
+}
+
+void SynchronizationTask::onStorageStateSynchronized() {
+
 }
 
 }

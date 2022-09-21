@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "virtualMachine/CallExecutionResult.h"
+#include <virtualMachine/CallExecutionResult.h>
 #include "ExecuteCallRPCHandler.h"
 
 #include "OpenConnectionRPCHandler.h"

@@ -14,17 +14,11 @@ DefaultExecutorBuilder::build(const crypto::KeyPair& keyPair,
                               std::shared_ptr<ThreadManager> pThreadManager,
                               const ExecutorConfig& config,
                               std::unique_ptr<ExecutorEventHandler>&& eventHandler,
-                              Messenger& messenger,
-                              storage::Storage& storage,
-                              const StorageObserver& storageObserver,
                               const std::string& dbgPeerName) {
     return std::make_unique<DefaultExecutor>(keyPair,
                                              pThreadManager,
                                              config,
                                              std::move(eventHandler),
-                                             messenger,
-                                             storage,
-                                             storageObserver,
                                              dbgPeerName);
 }
 

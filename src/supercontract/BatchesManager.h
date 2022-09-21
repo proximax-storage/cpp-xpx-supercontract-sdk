@@ -10,16 +10,11 @@
 #include <list>
 #include <vector>
 
-#include "supercontract/Requests.h"
+#include "Batch.h"
 
 #include "ContractBlockchainEventHandler.h"
 
 namespace sirius::contract {
-
-struct Batch {
-    const uint64_t m_batchIndex;
-    std::deque<CallRequest> m_callRequests;
-};
 
 class BaseBatchesManager
         : public ContractBlockchainEventHandler {

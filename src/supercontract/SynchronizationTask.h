@@ -17,6 +17,10 @@ private:
 
     SynchronizationRequest m_request;
 
+    std::shared_ptr<AsyncQuery> m_storageQuery;
+
+    Timer m_storageTimer;
+
 public:
 
     SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
@@ -38,6 +42,12 @@ public:
     void run() override;
 
     void terminate() override;
+
+private:
+
+    void onStorageUnavailable();
+
+    void onStorageStateSynchronized();
 };
 
 }

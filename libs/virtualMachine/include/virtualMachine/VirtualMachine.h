@@ -8,7 +8,7 @@
 
 #include "supercontract/Requests.h"
 #include "supercontract/AsyncQuery.h"
-#include "virtualMachine/CallExecutionResult.h"
+#include <virtualMachine/CallExecutionResult.h>
 #include "VirtualMachineInternetQueryHandler.h"
 #include "VirtualMachineBlockchainQueryHandler.h"
 

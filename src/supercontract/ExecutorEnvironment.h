@@ -8,15 +8,15 @@
 
 #include <boost/beast/ssl.hpp>
 
-#include "supercontract/Storage.h"
+#include <storage/Storage.h>
 #include "supercontract/Messenger.h"
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
 #include "supercontract/GlobalEnvironment.h"
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachine.h>
 #include "crypto/KeyPair.h"
-#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
+#include <virtualMachine/VirtualMachine.h>
 
 #include "supercontract/ThreadManager.h"
 
@@ -32,7 +32,7 @@ public:
 
     virtual Messenger& messenger() = 0;
 
-    virtual storage::Storage& storage() = 0;
+    virtual std::weak_ptr<storage::Storage> storage() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

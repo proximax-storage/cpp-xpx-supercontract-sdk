@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include <supercontract/StorageObserver.h>
+#include <storage/StorageObserver.h>
 #include "supercontract/SingleThread.h"
 #include "supercontract/Executor.h"
 #include "ExecutorEnvironment.h"
@@ -34,8 +34,9 @@ private:
     ExecutorConfig m_config;
 
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
-    Messenger& m_messenger;
-    storage::Storage& m_storage;
+    std::shared_ptr<Messenger> m_messenger;
+    std::shared_ptr<storage::Storage> m_storage;
+    std::shared_ptr<storage::StorageObserver> m_storageObserver;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 
@@ -45,9 +46,6 @@ public:
                     std::shared_ptr<ThreadManager> pThreadManager,
                     const ExecutorConfig& config,
                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
-                    Messenger& messenger,
-                    storage::Storage& storage,
-                    const StorageObserver& storageObserver,
                     const std::string& dbgPeerName = "executor");
 
     ~DefaultExecutor() override;
@@ -88,7 +86,7 @@ public:
 
     Messenger& messenger() override;
 
-    storage::Storage& storage() override;
+    std::weak_ptr<storage::Storage> storage() override;
 
     ExecutorEventHandler& executorEventHandler() override;
 

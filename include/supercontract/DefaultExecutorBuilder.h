@@ -10,9 +10,6 @@
 #include "Executor.h"
 #include "ExecutorEventHandler.h"
 #include "ThreadManager.h"
-#include "Messenger.h"
-#include "Storage.h"
-#include "StorageObserver.h"
 
 namespace sirius::contract {
 
@@ -26,9 +23,6 @@ public:
                                     std::shared_ptr<ThreadManager> pThreadManager,
                                     const ExecutorConfig& config,
                                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
-                                    Messenger& messenger,
-                                    storage::Storage& storage,
-                                    const StorageObserver& storageObserver,
                                     const std::string& dbgPeerName = "executor");
 
 };

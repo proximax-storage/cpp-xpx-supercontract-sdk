@@ -12,11 +12,10 @@
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/Requests.h"
 #include "supercontract/Messenger.h"
-#include "supercontract/Storage.h"
-#include "supercontract/StorageQueries.h"
+#include <storage/Storage.h>
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachine.h>
 #include "ExecutorEnvironment.h"
 
 namespace sirius::contract {

@@ -6,12 +6,12 @@
 
 #pragma once
 
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachine.h>
 #include "supercontract/AsyncQuery.h"
 
 #include "supercontract/SingleThread.h"
-#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
-#include "virtualMachine/VirtualMachineBlockchainQueryHandler.h"
+#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
+#include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
 #include "ExecuteCallRPCRequest.h"
 #include <storage/StorageObserver.h>
 

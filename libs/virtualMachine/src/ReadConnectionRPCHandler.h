@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "virtualMachine/VirtualMachineInternetQueryHandler.h"
+#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include "supercontract_server.pb.h"
 #include "supercontract/AsyncQuery.h"
 #include "supercontract/SingleThread.h"

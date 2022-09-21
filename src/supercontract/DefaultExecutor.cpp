@@ -11,7 +11,7 @@
 #include "supercontract/ThreadManager.h"
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
-#include "virtualMachine/RPCVirtualMachineBuilder.h"
+#include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "DefaultContract.h"
 
 #include "supercontract/Executor.h"
@@ -26,9 +26,6 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
                                  std::shared_ptr<ThreadManager> pThreadManager,
                                  const ExecutorConfig& config,
                                  std::unique_ptr<ExecutorEventHandler>&& eventHandler,
-                                 Messenger& messenger,
-                                 storage::Storage& storage,
-                                 const StorageObserver& storageObserver,
                                  const std::string& dbgPeerName)
         : m_keyPair(keyPair)
         , m_pThreadManager(std::move(pThreadManager))
@@ -36,10 +33,11 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
         , m_sslContext(boost::asio::ssl::context::tlsv12_client)
         , m_config(config)
         , m_eventHandler(std::move(eventHandler))
-        , m_messenger(messenger)
-        , m_storage(storage)
+        // TODO Init pointers
+        , m_storage(nullptr)
+        , m_storageObserver(nullptr)
         , m_virtualMachine(
-                vm::RPCVirtualMachineBuilder().build(storageObserver, *this, m_config.rpcVirtualMachineAddress())) {
+                vm::RPCVirtualMachineBuilder().build(m_storageObserver, *this, m_config.rpcVirtualMachineAddress())) {
     m_sslContext.set_default_verify_paths();
     m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
 }
@@ -169,10 +167,10 @@ const crypto::KeyPair& DefaultExecutor::keyPair() const {
 }
 
 Messenger& DefaultExecutor::messenger() {
-    return m_messenger;
+    return *m_messenger;
 }
 
-storage::Storage& DefaultExecutor::storage() {
+std::weak_ptr<storage::Storage> DefaultExecutor::storage() {
     return m_storage;
 }
 

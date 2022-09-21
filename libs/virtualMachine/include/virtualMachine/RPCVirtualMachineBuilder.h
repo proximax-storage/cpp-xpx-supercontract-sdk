@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "virtualMachine/VirtualMachine.h"
+#include <virtualMachine/VirtualMachine.h>
 #include "storage/StorageObserver.h"
 
 namespace sirius::contract::vm {

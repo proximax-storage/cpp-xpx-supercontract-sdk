@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "virtualMachine/RPCVirtualMachineBuilder.h"
+#include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "RPCVirtualMachine.h"
 
 namespace sirius::contract::vm {
