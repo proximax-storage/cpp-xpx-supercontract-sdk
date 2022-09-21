@@ -58,15 +58,11 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
                     internetQueryHandler), blockchainQueryHandler = std::move(blockchainQueryHandler)](
                     auto&& callAbsolutePath) mutable -> void {
 
-                if (!callAbsolutePath) {
-                    callback->postReply({});
-                }
-
-//                onReceivedCallAbsolutePath(std::move(request),
-//                                           std::move(callAbsolutePath),
-//                                           std::move(internetQueryHandler),
-//                                           std::move(blockchainQueryHandler),
-//                                           std::move(callback));
+                onReceivedCallAbsolutePath(std::move(request),
+                                           std::move(callAbsolutePath),
+                                           std::move(internetQueryHandler),
+                                           std::move(blockchainQueryHandler),
+                                           std::move(callback));
             }, [=] {
                 callback->postReply({});
             }, m_environment, true, true);
@@ -75,7 +71,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
-                                                   std::string&& callAbsolutePath,
+                                                   std::optional<std::string>&& callAbsolutePath,
                                                    std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                                    std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
                                                    std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback) {
@@ -88,7 +84,25 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     m_pathQueries.erase(request.m_callId);
 
-    request.m_file = callAbsolutePath;
+    if (!callAbsolutePath) {
+        callback->postReply({});
+        return;
+    }
+
+    if (callAbsolutePath->empty()) {
+        // TODO This means that the path does not exist, need std::expected
+        CallExecutionResult executionResult;
+        executionResult.m_success = false;
+        executionResult.m_return = 0;
+        executionResult.m_scConsumed = 0;
+        executionResult.m_smConsumed = 0;
+
+        callback->postReply(executionResult);
+
+        return;
+    }
+
+    request.m_file = *callAbsolutePath;
 
     auto[vmQuery, vmCallback] = createAsyncQuery<std::optional<CallExecutionResult>>(
             [=, this](std::optional<CallExecutionResult>&& result) {

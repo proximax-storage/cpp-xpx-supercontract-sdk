@@ -64,7 +64,7 @@ private:
 
     void
     onReceivedCallAbsolutePath(CallRequest&& request,
-                               std::string&& callAbsolutePath,
+                               std::optional<std::string>&& callAbsolutePath,
                                std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
                                std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback);

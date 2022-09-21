@@ -8,6 +8,7 @@
 #include <grpcpp/security/credentials.h>
 #include "RPCStorageContentManager.h"
 #include "RPCTag.h"
+#include "AbsolutePathTag.h"
 
 namespace sirius::contract::storage {
 
@@ -49,6 +50,12 @@ void RPCStorageContentManager::getAbsolutePath(const DriveKey& driveKey,
     ASSERT(isSingleThread(), m_environment.logger());
 
     rpc::AbsolutePathRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_relative_path(relativePath);
+
+    auto* tag = new AbsolutePathTag(m_environment, std::move(request), *m_stub, m_completionQueue,
+                                    std::move(callback));
+    tag->start();
 }
 
 }

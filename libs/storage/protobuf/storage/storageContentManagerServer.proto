@@ -29,7 +29,8 @@ service StorageContentManagerServer {
 }
 
 message AbsolutePathRequest {
-  string relative_path = 1;
+  bytes drive_key = 1;
+  string relative_path = 2;
 }
 
 message AbsolutePathResponse {
