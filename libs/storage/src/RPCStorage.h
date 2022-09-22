@@ -39,21 +39,21 @@ public:
     ~RPCStorage() override;
 
     void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
-                            std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
+                            std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
     void initiateModifications(const DriveKey& driveKey,
-                               std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
+                               std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
     void applySandboxStorageModifications(const DriveKey& driveKey,
                                           bool success,
-                                          std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback) override;
+                                          std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) override;
 
     void
     evaluateStorageHash(const DriveKey& driveKey,
-                        std::shared_ptr<AsyncQueryCallback<std::optional<StorageState>>> callback) override;
+                        std::shared_ptr<AsyncQueryCallback<StorageState>> callback) override;
 
     void applyStorageModifications(const DriveKey& driveKey, bool success,
-                                   std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) override;
+                                   std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
 private:
 

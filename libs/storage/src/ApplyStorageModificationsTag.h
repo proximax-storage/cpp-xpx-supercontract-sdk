@@ -24,7 +24,7 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
 
     rpc::ApplyStorageModificationsRequest  m_request;
     rpc::ApplyStorageModificationsResponse m_response;
@@ -42,7 +42,7 @@ public:
                         rpc::ApplyStorageModificationsRequest&& request,
                         rpc::StorageServer::Stub& stub,
                         grpc::CompletionQueue& completionQueue,
-                        std::shared_ptr<AsyncQueryCallback<std::optional<bool>>>&& callback);
+                        std::shared_ptr<AsyncQueryCallback<bool>>&& callback);
 
     void start();
 

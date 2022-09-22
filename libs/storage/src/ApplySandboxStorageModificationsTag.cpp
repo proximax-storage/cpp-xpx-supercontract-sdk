@@ -13,7 +13,7 @@ ApplySandboxStorageModificationsTag::ApplySandboxStorageModificationsTag(
         rpc::ApplySandboxModificationsRequest&& request,
         rpc::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncApplySandboxStorageModifications(&m_context, m_request, &completionQueue))

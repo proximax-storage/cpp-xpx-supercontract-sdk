@@ -11,7 +11,7 @@ CloseConnectionRPCHandler::CloseConnectionRPCHandler(
         GlobalEnvironment& environment,
         const supercontractserver::CloseConnection& request,
         std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionReturn>>> callback)
+        std::shared_ptr<AsyncQueryCallback<supercontractserver::CloseConnectionReturn>> callback)
         : m_environment(environment)
         , m_request(request)
         , m_handler(std::move(handler))
@@ -25,12 +25,12 @@ void CloseConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult({});
+        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](bool success) {
-        onResult(success);
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) {
+        onResult(res);
     }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
@@ -38,13 +38,13 @@ void CloseConnectionRPCHandler::process() {
     handler->closeConnection(m_request.identifier(), callback);
 }
 
-void CloseConnectionRPCHandler::onResult(bool success) {
+void CloseConnectionRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     supercontractserver::CloseConnectionReturn status;
 
-    status.set_success(success);
+    status.set_success(res.has_value());
 
     m_callback->postReply(std::move(status));
 }

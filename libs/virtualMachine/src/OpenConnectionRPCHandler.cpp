@@ -11,7 +11,7 @@ OpenConnectionRPCHandler::OpenConnectionRPCHandler(
         GlobalEnvironment& environment,
         const supercontractserver::OpenConnection& request,
         std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::OpenConnectionReturn>>> callback)
+        std::shared_ptr<AsyncQueryCallback<supercontractserver::OpenConnectionReturn>> callback)
         : m_environment(environment)
         , m_request(request)
         , m_handler(std::move(handler))
@@ -25,11 +25,11 @@ void OpenConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult({});
+        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<std::optional<uint64_t>>([this](auto&& id) {
+    auto [query, callback] = createAsyncQuery<uint64_t>([this](auto&& id) {
         onResult(id);
     }, [] {}, m_environment, true, true);
 
@@ -38,7 +38,7 @@ void OpenConnectionRPCHandler::process() {
     handler->openConnection(m_request.url(), callback);
 }
 
-void OpenConnectionRPCHandler::onResult(const std::optional<uint64_t>& connectionId) {
+void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& connectionId) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 

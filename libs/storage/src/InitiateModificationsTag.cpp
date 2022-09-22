@@ -12,7 +12,7 @@ InitiateModificationsTag::InitiateModificationsTag(GlobalEnvironment& environmen
                                                    rpc::InitModificationsRequest&& request,
                                                    rpc::StorageServer::Stub& stub,
                                                    grpc::CompletionQueue& completionQueue,
-                                                   std::shared_ptr<AsyncQueryCallback<std::optional<bool>>>&& callback)
+                                                   std::shared_ptr<AsyncQueryCallback<bool>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncInitiateModifications(&m_context, m_request, &completionQueue))

@@ -20,7 +20,7 @@ class ReadConnectionRPCHandler
     GlobalEnvironment& m_environment;
     supercontractserver::ReadConnectionStream m_request;
     std::weak_ptr<VirtualMachineInternetQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReadBufferReturn>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::InternetReadBufferReturn>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
@@ -28,13 +28,13 @@ public:
     ReadConnectionRPCHandler(GlobalEnvironment& environment,
                              const supercontractserver::ReadConnectionStream& request,
                              std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-                             std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReadBufferReturn>>> callback);
+                             std::shared_ptr<AsyncQueryCallback<supercontractserver::InternetReadBufferReturn>> callback);
 
     void process() override;
 
 private:
 
-    void onResult(const std::optional<std::vector<uint8_t>>& result);
+    void onResult(const expected<std::vector<uint8_t>>& result);
 
 };
 

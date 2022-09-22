@@ -18,7 +18,6 @@
 #include "internet/InternetConnection.h"
 #include "internet/InternetUtils.h"
 #include "TestUtils.h"
-#include "../../../cmake-build-debug/_deps/expected-src/include/tl/expected.hpp"
 
 namespace beast = boost::beast;   // from <boost/beast.hpp>
 namespace http = beast::http;     // from <boost/beast/http.hpp>
@@ -356,7 +355,7 @@ TEST(HttpConnection, ConnectingToIPAddress) {
 //     threadManager.stop();
 // }
 
-void readFuncHttpNormally(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
     read_flag = true;
     ASSERT_TRUE(res);
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());

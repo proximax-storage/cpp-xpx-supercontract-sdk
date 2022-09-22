@@ -13,7 +13,7 @@ OpenFileTag::OpenFileTag(
         rpc::OpenFileRequest&& request,
         rpc::StorageContentManagerServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::optional<int64_t>>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<int64_t>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue))

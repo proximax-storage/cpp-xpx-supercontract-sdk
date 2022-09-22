@@ -20,8 +20,7 @@
 namespace sirius::contract::vm {
 
 class ExecuteCallRPCHandler
-        : private SingleThread
-        , public std::enable_shared_from_this<ExecuteCallRPCHandler> {
+        : private SingleThread, public std::enable_shared_from_this<ExecuteCallRPCHandler> {
 
 private:
 
@@ -33,9 +32,9 @@ private:
 
     std::unique_ptr<grpc::ClientAsyncReaderWriter<supercontractserver::Request, supercontractserver::Response>> m_stream;
 
-    std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<CallExecutionResult>> m_callback;
 
-    std::weak_ptr<VirtualMachineInternetQueryHandler>   m_internetQueryHandler;
+    std::weak_ptr<VirtualMachineInternetQueryHandler> m_internetQueryHandler;
     std::weak_ptr<VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
 
     std::unique_ptr<RPCResponseHandler> m_responseHandler;
@@ -51,7 +50,7 @@ public:
             grpc::CompletionQueue& completionQueue,
             std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
             std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-            std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback );
+            std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     void start();
 
@@ -59,17 +58,17 @@ public:
 
 private:
 
-    void onStarted(bool ok);
+    void onStarted(expected<void>&&);
 
-    void writeRequest( supercontractserver::Request&& );
+    void writeRequest(supercontractserver::Request&&);
 
-    void onWritten(bool ok);
+    void onWritten(expected<void>&&);
 
-    void onRead(std::optional<supercontractserver::Response>&& response);
+    void onRead(expected<supercontractserver::Response>&& response);
 
     void processExecuteCallResponse(const supercontractserver::ExecuteReturns& executeCallResponse);
 
-    void postResponse( std::optional<CallExecutionResult>&& executionResult );
+    void postResponse(expected<CallExecutionResult>&& result);
 
     void onFinished(grpc::Status&&);
 

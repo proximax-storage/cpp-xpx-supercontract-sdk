@@ -13,7 +13,7 @@ ExecuteCallRPCRequest::ExecuteCallRPCRequest(GlobalEnvironment& environment, Cal
                                              grpc::CompletionQueue& completionQueue,
                                              std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                              std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-                                             std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback)
+                                             std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback)
         : m_environment(environment)
         , m_handler(std::make_shared<ExecuteCallRPCHandler>(
                 environment, std::move(callRequest), stub, completionQueue, std::move(internetQueryHandler),

@@ -14,13 +14,14 @@
 
 namespace sirius::contract::vm {
 
-class ExecuteCallRPCReader:
-        private SingleThread,
-        public RPCTag {
+class ExecuteCallRPCReader
+        :
+                private SingleThread,
+                public RPCTag {
 
 private:
 
-    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::Response>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::Response>> m_callback;
 
     GlobalEnvironment& m_environment;
 
@@ -32,9 +33,9 @@ public:
 
     explicit ExecuteCallRPCReader(
             GlobalEnvironment&,
-            std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::Response>>>);
+            std::shared_ptr<AsyncQueryCallback<supercontractserver::Response>>);
 
-    void process( bool ok ) override;
+    void process(bool ok) override;
 };
 
 }

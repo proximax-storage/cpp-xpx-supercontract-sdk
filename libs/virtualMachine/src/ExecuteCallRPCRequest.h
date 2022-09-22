@@ -26,7 +26,7 @@ public:
                           grpc::CompletionQueue& completionQueue,
                           std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                           std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-                          std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback);
+                          std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     ExecuteCallRPCRequest(const ExecuteCallRPCRequest&) = delete;
     ExecuteCallRPCRequest(ExecuteCallRPCRequest&&) noexcept;

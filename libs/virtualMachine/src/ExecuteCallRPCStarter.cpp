@@ -10,15 +10,21 @@ namespace sirius::contract::vm {
 
 ExecuteCallRPCStarter::ExecuteCallRPCStarter(
         GlobalEnvironment& environment,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback )
-        : m_environment( environment )
-        , m_callback( std::move(callback) ) {}
+        std::shared_ptr<AsyncQueryCallback<void>> callback)
+        : m_environment(environment)
+        , m_callback(std::move(callback)) {}
 
-void ExecuteCallRPCStarter::process( bool ok ) {
+void ExecuteCallRPCStarter::process(bool ok) {
 
     ASSERT(!isSingleThread(), m_environment.logger());
 
-    m_callback->postReply(std::move(ok));
+    if (!ok) {
+        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::bad_file_descriptor));
+        m_callback->postReply(error);
+    }
+    else {
+        m_callback->postReply(expected<void>());
+    }
 }
 
 }

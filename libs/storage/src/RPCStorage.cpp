@@ -48,7 +48,7 @@ void RPCStorage::waitForRPCResponse() {
 }
 
 void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
-                                    std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) {
+                                    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     ASSERT(isSingleThread(), m_environment.logger());
 
     rpc::SynchronizeStorageRequest request;
@@ -59,7 +59,7 @@ void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash&
 }
 
 void RPCStorage::initiateModifications(const DriveKey& driveKey,
-                                       std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) {
+                                       std::shared_ptr<AsyncQueryCallback<bool>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger());
 
@@ -72,7 +72,7 @@ void RPCStorage::initiateModifications(const DriveKey& driveKey,
 
 void RPCStorage::applySandboxStorageModifications(const DriveKey& driveKey,
                                                   bool success,
-                                                  std::shared_ptr<AsyncQueryCallback<std::optional<SandboxModificationDigest>>> callback) {
+                                                  std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger());
 
@@ -86,7 +86,7 @@ void RPCStorage::applySandboxStorageModifications(const DriveKey& driveKey,
 
 void
 RPCStorage::evaluateStorageHash(const DriveKey& driveKey,
-                                std::shared_ptr<AsyncQueryCallback<std::optional<StorageState>>> callback) {
+                                std::shared_ptr<AsyncQueryCallback<StorageState>> callback) {
     ASSERT(isSingleThread(), m_environment.logger());
 
     rpc::EvaluateStorageHashRequest request;
@@ -97,7 +97,7 @@ RPCStorage::evaluateStorageHash(const DriveKey& driveKey,
 }
 
 void RPCStorage::applyStorageModifications(const DriveKey& driveKey, bool success,
-                                           std::shared_ptr<AsyncQueryCallback<std::optional<bool>>> callback) {
+                                           std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     ASSERT(isSingleThread(), m_environment.logger());
 
     rpc::ApplyStorageModificationsRequest request;

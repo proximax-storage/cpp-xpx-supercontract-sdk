@@ -58,16 +58,16 @@ public:
     void executeCall(const CallRequest& request,
                      std::weak_ptr<VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                     std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>> callback) override;
+                     std::shared_ptr<AsyncQueryCallback<CallExecutionResult>> callback) override;
 
 private:
 
     void
     onReceivedCallAbsolutePath(CallRequest&& request,
-                               std::optional<std::string>&& callAbsolutePath,
+                               expected<std::string>&& callAbsolutePath,
                                std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-                               std::shared_ptr<AsyncQueryCallback<std::optional<CallExecutionResult>>>&& callback);
+                               std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     void waitForRPCResponse();
 

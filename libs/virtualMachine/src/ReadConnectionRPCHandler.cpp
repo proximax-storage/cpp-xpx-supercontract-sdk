@@ -11,7 +11,7 @@ ReadConnectionRPCHandler::ReadConnectionRPCHandler(
         GlobalEnvironment& environment,
         const supercontractserver::ReadConnectionStream& request,
         std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-        std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::InternetReadBufferReturn>>> callback)
+        std::shared_ptr<AsyncQueryCallback<supercontractserver::InternetReadBufferReturn>> callback)
         : m_environment(environment)
         , m_request(request)
         , m_handler(std::move(handler))
@@ -25,11 +25,11 @@ void ReadConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult({});
+        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([this](auto&& result) {
+    auto [query, callback] = createAsyncQuery<std::vector<uint8_t>>([this](auto&& result) {
         onResult(result);
     }, [] {}, m_environment, true, true);
 
@@ -38,7 +38,7 @@ void ReadConnectionRPCHandler::process() {
     handler->read(m_request.identifier(), callback);
 }
 
-void ReadConnectionRPCHandler::onResult(const std::optional<std::vector<uint8_t>>& result) {
+void ReadConnectionRPCHandler::onResult(const expected<std::vector<uint8_t>>& result) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 

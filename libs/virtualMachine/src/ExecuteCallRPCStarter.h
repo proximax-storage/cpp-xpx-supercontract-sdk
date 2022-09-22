@@ -14,12 +14,13 @@
 
 namespace sirius::contract::vm {
 
-class ExecuteCallRPCStarter:
-        private SingleThread,
-        public RPCTag {
+class ExecuteCallRPCStarter
+        :
+                private SingleThread,
+                public RPCTag {
 
 private:
-    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
     GlobalEnvironment& m_environment;
 
@@ -27,9 +28,9 @@ public:
 
     explicit ExecuteCallRPCStarter(
             GlobalEnvironment& environment,
-            std::shared_ptr<AsyncQueryCallback<bool>> callback );
+            std::shared_ptr<AsyncQueryCallback<void>> callback);
 
-    void process( bool ok ) override;
+    void process(bool ok) override;
 };
 
 }

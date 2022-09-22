@@ -20,7 +20,7 @@ class CloseConnectionRPCHandler
     GlobalEnvironment& m_environment;
     supercontractserver::CloseConnection m_request;
     std::weak_ptr<VirtualMachineInternetQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionReturn>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::CloseConnectionReturn>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
@@ -28,13 +28,13 @@ public:
     CloseConnectionRPCHandler(GlobalEnvironment& environment,
                               const supercontractserver::CloseConnection& request,
                               std::weak_ptr<VirtualMachineInternetQueryHandler> handler,
-                              std::shared_ptr<AsyncQueryCallback<std::optional<supercontractserver::CloseConnectionReturn>>> callback);
+                              std::shared_ptr<AsyncQueryCallback<supercontractserver::CloseConnectionReturn>> callback);
 
     void process() override;
 
 private:
 
-    void onResult(bool success);
+    void onResult(const expected<void>& res);
 
 };
 

@@ -39,7 +39,7 @@ public:
     void getAbsolutePath(
             const DriveKey& driveKey,
             const std::string& relativePath,
-            std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>> callback) override;
+            std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
 
 private:
 

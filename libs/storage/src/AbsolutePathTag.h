@@ -24,7 +24,7 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
 
     rpc::AbsolutePathRequest   m_request;
     rpc::AbsolutePathResponse  m_response;
@@ -42,7 +42,7 @@ public:
                                         rpc::AbsolutePathRequest&& request,
                                         rpc::StorageContentManagerServer::Stub& stub,
                                         grpc::CompletionQueue& completionQueue,
-                                        std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>>&& callback);
+                                        std::shared_ptr<AsyncQueryCallback<std::string>>&& callback);
 
     void start();
 

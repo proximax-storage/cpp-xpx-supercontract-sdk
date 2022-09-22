@@ -13,7 +13,7 @@ AbsolutePathTag::AbsolutePathTag(
         rpc::AbsolutePathRequest&& request,
         rpc::StorageContentManagerServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<std::string>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncGetAbsolutePath(&m_context, m_request, &completionQueue))

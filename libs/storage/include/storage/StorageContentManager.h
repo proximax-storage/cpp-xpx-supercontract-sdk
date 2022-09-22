@@ -19,7 +19,7 @@ public:
     virtual void
     getAbsolutePath(const DriveKey& driveKey,
                     const std::string& relativePath,
-                    std::shared_ptr<AsyncQueryCallback<std::optional<std::string>>> callback) = 0;
+                    std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
 
 };
 

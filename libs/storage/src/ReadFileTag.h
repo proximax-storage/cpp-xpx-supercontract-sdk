@@ -24,7 +24,7 @@
 //
 //    GlobalEnvironment& m_environment;
 //
-//    std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> m_callback;
+//    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> m_callback;
 //
 //    rpc::ReadFileRequest   m_request;
 //    rpc::ReadFileResponse  m_response;
@@ -42,7 +42,7 @@
 //                                        rpc::ReadFileRequest&& request,
 //                                        rpc::StorageContentManagerServer::Stub& stub,
 //                                        grpc::CompletionQueue& completionQueue,
-//                                        std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>&& callback);
+//                                        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>>&& callback);
 //
 //    void start();
 //

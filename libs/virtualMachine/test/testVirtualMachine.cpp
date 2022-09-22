@@ -15,7 +15,7 @@ TEST(VirtualMachine, Example) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    StorageObserverMock storageObserver;
+    auto storageObserver = std::make_shared<StorageContentManagerMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -49,7 +49,7 @@ TEST(VirtualMachine, Example) {
 }
         };
 
-        auto[_, callback] = createAsyncQuery<std::optional<CallExecutionResult>>([&] (auto&& res) {
+        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&] (auto&& res) {
             // TODO on call executed
             p.set_value();
             ASSERT_TRUE(res);

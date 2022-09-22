@@ -7,6 +7,7 @@
 #pragma once
 
 #include <memory>
+#include <system_error>
 #include "Identifiers.h"
 
 #include "GlobalEnvironment.h"
@@ -14,6 +15,9 @@
 #include <tl/expected.hpp>
 
 namespace sirius::contract {
+
+template<class T>
+using expected = tl::expected<T, std::error_code>;
 
 class QueryStatusManager {
 

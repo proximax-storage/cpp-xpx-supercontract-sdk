@@ -12,11 +12,12 @@
 
 namespace sirius::contract::vm {
 
-class ExecuteCallRPCWriter:
-        private SingleThread,
-        public RPCTag {
+class ExecuteCallRPCWriter
+        :
+                private SingleThread,
+                public RPCTag {
 
-    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
     GlobalEnvironment& m_environment;
 
@@ -24,9 +25,9 @@ public:
 
     explicit ExecuteCallRPCWriter(
             GlobalEnvironment& environment,
-            std::shared_ptr<AsyncQueryCallback<bool>> callback );
+            std::shared_ptr<AsyncQueryCallback<void>> callback);
 
-    void process( bool ok ) override;
+    void process(bool ok) override;
 };
 
 }
