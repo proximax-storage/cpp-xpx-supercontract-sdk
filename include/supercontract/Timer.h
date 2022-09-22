@@ -45,10 +45,8 @@ private:
 
         void run(int milliseconds) override {
             m_timer.expires_after(std::chrono::milliseconds(milliseconds));
-            std::cout << "timer expires after " << milliseconds << std::endl;
             m_timer.async_wait([pThisWeak = TimerCallback::weak_from_this()](boost::system::error_code const& ec) {
                 if (auto pThis = pThisWeak.lock(); pThis) {
-                    std::cout << "timer expired " << std::endl;
                     pThis->onTimeout(ec);
                 }
             });

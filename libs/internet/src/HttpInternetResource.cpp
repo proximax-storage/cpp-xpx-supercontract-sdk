@@ -124,11 +124,13 @@ void HttpInternetResource::onHostResolved(beast::error_code ec,
     }
 
     if (callback->isTerminated()) {
+        m_environment.logger().warn("OnHostResolved Http Connection Empty Callback");
         close();
         return;
     }
 
     if (ec) {
+        m_environment.logger().warn("OnHostResolved Http Connection Error: {}", ec.message());
         close();
         callback->postReply({});
         return;
@@ -156,11 +158,13 @@ void HttpInternetResource::onConnected(beast::error_code ec, tcp::resolver::resu
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
+        m_environment.logger().warn("Open Http Connection Empty Callback");
         close();
         return;
     }
 
     if (ec) {
+        m_environment.logger().warn("OnConnected Http Connection Error: {}", ec.message());
         close();
         callback->postReply({});
         return;
@@ -183,11 +187,13 @@ void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tra
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
+        m_environment.logger().warn("OnWritten Http Connection Empty Callback");
         close();
         return;
     }
 
     if (ec) {
+        m_environment.logger().warn("OnWritten Http Connection Error: {}", ec.message());
         close();
         callback->postReply({});
         return;
@@ -207,6 +213,7 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
+        m_environment.logger().warn("OnRead Http Connection Empty Callback");
         return;
     }
 
@@ -215,7 +222,7 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
     }
 
     if (ec) {
-        m_environment.logger().warn("Failed To Read from {}: {}", m_host, ec.message());
+        m_environment.logger().warn("OnRead Http Connection Error {}", ec.message());
         callback->postReply({});
         return;
     }
