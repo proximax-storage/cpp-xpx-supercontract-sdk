@@ -16,6 +16,7 @@
 #include "internet/InternetConnection.h"
 #include "internet/InternetUtils.h"
 #include "TestUtils.h"
+#include "../../../cmake-build-debug/_deps/expected-src/include/tl/expected.hpp"
 
 namespace beast = boost::beast;         // from <boost/beast.hpp>
 namespace http = beast::http;           // from <boost/beast/http.hpp>
@@ -58,14 +59,14 @@ TEST(HttpsConnection, ValidRead) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[connectionQuery, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [connection = sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection](auto&& res) {
                                 ASSERT_TRUE(res.has_value());
                                 std::string actual(res->begin(), res->end());
                                 const std::string expected = "<!doctype html>\n"
@@ -152,8 +153,8 @@ TEST(HttpsConnection, ConnectingLocalhost) {
         ASSERT_FALSE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "80");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_FALSE(connection);
                 },
                 [] {}, globalEnvironment, false, false);
@@ -173,7 +174,7 @@ TEST(HttpsConnection, ConnectingLocalhost) {
     threadManager.stop();
 }
 
-void readFuncNormally(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncNormally(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
     read_flag = true;
     ASSERT_TRUE(res);
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
@@ -186,7 +187,7 @@ void readFuncNormally(std::optional<std::vector<uint8_t>>&& res, bool& read_flag
         return;
     }
 
-    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
         readFuncNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
     },
         [] {}, globalEnvironment, false, true);
@@ -213,15 +214,15 @@ TEST(HttpsConnection, ReadBigWebsite) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [&, sharedConnection](auto&& res) {
                                 readFuncNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
@@ -247,7 +248,7 @@ TEST(HttpsConnection, ReadBigWebsite) {
     ASSERT_TRUE(read_flag);
 }
 
-void readFuncDisconneted(std::optional<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncDisconneted(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
     read_flag = true;
     if (!res.has_value()) {
         return;
@@ -259,7 +260,7 @@ void readFuncDisconneted(std::optional<std::vector<uint8_t>>&& res, bool& read_f
         return;
     }
 
-    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>([&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
         readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
     },
         [] {}, globalEnvironment, false, true);
@@ -290,14 +291,14 @@ TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
 
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
 
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [&, sharedConnection](auto&& res) {
                                 readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
@@ -351,8 +352,8 @@ TEST(HttpsConnection, ConnectWhenBlockingConnection) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_FALSE(connection);
                 },
                 [] {},
@@ -396,12 +397,12 @@ TEST(HttpsConnection, ReadWhenBlockingConnection) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&, sharedConnection](std::optional<std::vector<uint8_t>>&& res) {
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [&, sharedConnection](auto&& res) {
                                 readFuncDisconneted(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
@@ -448,8 +449,8 @@ TEST(HttpsConnection, ValidCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -488,8 +489,8 @@ TEST(HttpsConnection, TerminateCall) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[query, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[query, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     read_flag = true;
                     ASSERT_TRUE(connection);
                 }, [&]() {
@@ -531,8 +532,8 @@ TEST(HttpsConnection, NonExisting) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_FALSE(connection);
                 },
                 [] {}, globalEnvironment, false, false);
@@ -570,12 +571,12 @@ TEST(HttpsConnection, NonExistingTarget) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(connection);
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
-                    auto[_, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
-                            [&read_flag, connection = std::move(*connection)](std::optional<std::vector<uint8_t>>&& res) {
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [&read_flag, connection = std::move(*connection)](auto&& res) {
                                 read_flag = true;
                                 ASSERT_FALSE(res.has_value());
                                 // std::string actual(res->begin(), res->end());
@@ -631,8 +632,8 @@ TEST(HttpsConnection, RevokedCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -668,8 +669,8 @@ TEST(HttpsConnection, ExpiredCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -704,8 +705,8 @@ TEST(HttpsConnection, UntrustedRootCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -741,8 +742,8 @@ TEST(HttpsConnection, SelfSignedCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -778,8 +779,8 @@ TEST(HttpsConnection, WrongHostCertificate) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -815,8 +816,8 @@ TEST(HttpsConnection, PinningTest) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -852,8 +853,8 @@ TEST(HttpsConnection, ClientCertMissing) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -889,8 +890,8 @@ TEST(HttpsConnection, WeakSignature) {
         ASSERT_TRUE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "443");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_TRUE(!connection);
                 }, [] {}, globalEnvironment, false, false);
 
@@ -925,8 +926,8 @@ TEST(HttpsConnection, ConnectingNonHttpsURL) {
         ASSERT_FALSE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "80");
 
-        auto[_, connectionCallback] = createAsyncQuery<std::optional<InternetConnection>>(
-                [&](std::optional<InternetConnection>&& connection) {
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
                     ASSERT_FALSE(connection);
                 },
                 [] {}, globalEnvironment, false, false);

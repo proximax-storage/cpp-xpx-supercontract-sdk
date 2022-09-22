@@ -11,6 +11,7 @@
 
 #include "GlobalEnvironment.h"
 #include "SingleThread.h"
+#include <tl/expected.hpp>
 
 namespace sirius::contract {
 
@@ -127,7 +128,7 @@ class AsyncQueryCallback {
 
 public:
 
-    virtual void postReply(TReply&&) = 0;
+    virtual void postReply(tl::expected<TReply, std::error_code>&&) = 0;
 
     virtual bool isTerminated() const = 0;
 };
@@ -155,7 +156,7 @@ public:
             , m_statusManager(std::move(statusManager))
             , m_globalEnvironment(globalEnvironment) {}
 
-    void postReply(TReply&& reply) override {
+    void postReply(tl::expected<TReply, std::error_code>&& reply) override {
         // Any thread is possible
         std::lock_guard<std::mutex> lock(m_statusManager->statusMutex());
         if (m_statusManager->status() != QueryStatusManager::Status::ACTIVE) {
@@ -205,7 +206,7 @@ public:
             , m_statusManager(std::move(statusManager))
             , m_globalEnvironment(globalEnvironment) {}
 
-    void postReply(TReply&& reply) override {
+    void postReply(tl::expected<TReply, std::error_code>&& reply) override {
 
         ASSERT(isSingleThread(), m_globalEnvironment.logger())
 

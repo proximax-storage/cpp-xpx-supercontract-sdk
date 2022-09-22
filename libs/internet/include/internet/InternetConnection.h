@@ -45,7 +45,7 @@ public:
 
     InternetConnection& operator=(InternetConnection&& other) noexcept;
 
-    void read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback);
+    void read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback);
 
     static void buildHttpInternetConnection(GlobalEnvironment& globalEnvironment,
                                             const std::string& host,
@@ -53,7 +53,7 @@ public:
                                             const std::string& target,
                                             int bufferSize,
                                             int timeout,
-                                             const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>&);
+                                             const std::shared_ptr<AsyncQueryCallback<InternetConnection>>&);
 
     static void buildHttpsInternetConnection(boost::asio::ssl::context& ctx,
                                              GlobalEnvironment& globalEnvironment,
@@ -65,6 +65,6 @@ public:
                                              int ocspQueryTimerDelay,
                                              int ocspQueryMaxEfforts,
                                              RevocationVerificationMode mode,
-                                             const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>&);
+                                             const std::shared_ptr<AsyncQueryCallback<InternetConnection>>&);
 };
 }

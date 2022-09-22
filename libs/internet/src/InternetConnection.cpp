@@ -35,7 +35,7 @@ InternetConnection& InternetConnection::operator=(InternetConnection&& other) no
     return *this;
 };
 
-void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
+void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger());
 
     ASSERT(m_resource, m_environment.logger());
@@ -46,18 +46,20 @@ void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::optional<s
 void InternetConnection::buildHttpInternetConnection(GlobalEnvironment& globalEnvironment, const std::string& host,
                                                      const std::string& port, const std::string& target,
                                                      int bufferSize, int timeout,
-                                                     const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>& callback) {
+                                                     const std::shared_ptr<AsyncQueryCallback<InternetConnection>>& callback) {
 
     auto resource = std::make_shared<HttpInternetResource>(globalEnvironment, host, port, target, bufferSize,
                                                            timeout);
 
     auto[_, openCallback] = createAsyncQuery<InternetResourceContainer>(
-            [&globalEnvironment, callback](InternetResourceContainer&& resource) {
+            [&globalEnvironment, callback](auto&& resource) {
+
                 if (!resource) {
-                    callback->postReply({});
+                    callback->postReply(tl::unexpected(std::move(resource.error())));
                     return;
                 }
-                InternetConnection connection(globalEnvironment, std::move(resource));
+
+                InternetConnection connection(globalEnvironment, std::move(*resource));
                 callback->postReply(std::move(connection));
             }, [] {}, globalEnvironment, false, true);
     resource->open(openCallback);
@@ -73,7 +75,7 @@ void InternetConnection::buildHttpsInternetConnection(ssl::context& ctx,
                                                       int ocspQueryTimerDelay,
                                                       int ocspQueryMaxEfforts,
                                                       RevocationVerificationMode mode,
-                                                      const std::shared_ptr<AsyncQueryCallback<std::optional<InternetConnection>>>& callback) {
+                                                      const std::shared_ptr<AsyncQueryCallback<InternetConnection>>& callback) {
     auto resource = std::make_shared<HttpsInternetResource>(ctx,
                                                             globalEnvironment,
                                                             host,
@@ -86,12 +88,14 @@ void InternetConnection::buildHttpsInternetConnection(ssl::context& ctx,
                                                             mode);
 
     auto[_, openCallback] = createAsyncQuery<InternetResourceContainer>(
-            [&globalEnvironment, callback](InternetResourceContainer&& resource) {
+            [&globalEnvironment, callback](auto&& resource) {
+
                 if (!resource) {
-                    callback->postReply({});
+                    callback->postReply(tl::unexpected(std::move(resource.error())));
                     return;
                 }
-                InternetConnection connection(globalEnvironment, std::move(resource));
+
+                InternetConnection connection(globalEnvironment, std::move(*resource));
                 callback->postReply(std::move(connection));
             }, [] {}, globalEnvironment, false, true);
     resource->open(openCallback);

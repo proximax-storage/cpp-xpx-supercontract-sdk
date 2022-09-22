@@ -19,11 +19,11 @@ package storage;
 service StorageContentManagerServer {
   rpc GetAbsolutePath(AbsolutePathRequest) returns (AbsolutePathResponse) {}
 
-  rpc OpenFile(OpenFileRequest) returns (OpenFileReturn) {}
+  rpc OpenFile(OpenFileRequest) returns (OpenFileResponse) {}
 
-  rpc ReadFromFile(ReadFromFileRequest) returns (ReadFromFileResponse) {}
+  rpc ReadFile(ReadFileRequest) returns (ReadFileResponse) {}
 
-  rpc WriteToFile(WriteToFileRequest) returns (WriteToFileResponse) {}
+  rpc WriteFile(WriteFileRequest) returns (WriteFileResponse) {}
 
   rpc CloseFile(CloseFileRequest) returns (CloseFileResponse) {}
 }
@@ -48,27 +48,27 @@ message OpenFileRequest {
   OpenFileMode mode = 3;
 }
 
-message OpenFileReturn {
+message OpenFileResponse {
   bool success = 1;
   uint64 id = 2;
 }
 
-message ReadFromFileRequest {
+message ReadFileRequest {
   bytes drive_key = 1;
   uint64 file_id = 2;
 }
 
-message ReadFromFileResponse {
+message ReadFileResponse {
   optional bytes buffer = 1;
 }
 
-message WriteToFileRequest {
+message WriteFileRequest {
   bytes drive_key = 1;
   uint64 file_id = 2;
   bytes buffer = 3;
 }
 
-message WriteToFileResponse {
+message WriteFileResponse {
   bool success = 1;
 }
 

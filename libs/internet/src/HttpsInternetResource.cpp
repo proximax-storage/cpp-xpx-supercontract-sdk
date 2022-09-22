@@ -9,7 +9,6 @@
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <boost/asio/strand.hpp>
-#include <boost/beast/ssl.hpp>
 #include <cstdlib>
 #include <functional>
 #include <memory>
@@ -19,6 +18,7 @@
 #include "utils/Random.h"
 #include "supercontract/Identifiers.h"
 #include "supercontract/AsyncQuery.h"
+#include <openssl/sslerr.h>
 
 namespace sirius::contract::internet {
 
@@ -62,19 +62,9 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
         return;
     }
 
-    if (!SSL_set_tlsext_host_name(m_stream.native_handle(), m_host.c_str())) {
-        m_environment.logger().warn("Open Https Connection SSL Set Host Name Error");
-        closeDuringInitialization();
-        callback->postReply({});
-        return;
-    }
+    ASSERT (SSL_set_tlsext_host_name(m_stream.native_handle(), m_host.c_str()), m_environment.logger());
 
-    if (SSL_set1_host(m_stream.native_handle(), m_host.c_str()) == 0) {
-        m_environment.logger().warn("Open Https Connection SSL Set Host Error");
-        closeDuringInitialization();
-        callback->postReply({});
-        return;
-    }
+    ASSERT(SSL_set1_host(m_stream.native_handle(), m_host.c_str()), m_environment.logger());
 
     m_req.version(10);
     m_req.method(http::verb::get);
@@ -102,7 +92,7 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
 }
 
 void HttpsInternetResource::read(
-        std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
+        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -115,7 +105,7 @@ void HttpsInternetResource::read(
 
     if (m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED) {
         m_environment.logger().warn("Read Https Connection Closed");
-        callback->postReply({});
+        callback->postReply(tl::unexpected(std::make_error_code(std::errc::bad_file_descriptor)));
         return;
     }
 
@@ -189,7 +179,7 @@ void HttpsInternetResource::onHostResolved(beast::error_code ec,
     if (ec) {
         m_environment.logger().warn("OnHostResolved Https Connection Error: {}", ec.message());
         closeDuringInitialization();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -223,7 +213,7 @@ void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio:
     if (ec) {
         m_environment.logger().warn("OnConnected Https Connection Error: {}", ec.message());
         closeDuringInitialization();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -267,9 +257,9 @@ void HttpsInternetResource::onHandshake(beast::error_code ec,
     }
 
     if (ec) {
-        m_environment.logger().warn("OnHandshake Https Connection Error {}", ec.message());
+        m_environment.logger().warn("OnHandshake Https Connection Error {}",  ec.message());
         closeDuringInitialization();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -296,7 +286,7 @@ void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tr
     if (ec) {
         m_environment.logger().warn("OnWritten Https Connection Error: {}", ec.message());
         close();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -306,7 +296,7 @@ void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tr
 }
 
 void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_transferred,
-                                   const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback) {
+                                   const std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>>& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -323,7 +313,7 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
 
     if (ec) {
         m_environment.logger().warn("OnRead Https Connection Error {}", ec.message());
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -420,7 +410,8 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
     if (!ocspValid) {
         m_environment.logger().warn("OnOCSPVerified Https Connection OCSP Invalid");
         closeDuringInitialization();
-        callback->postReply({});
+        auto ec = beast::error_code(SSL_R_CERTIFICATE_VERIFY_FAILED, boost::asio::error::get_ssl_category());
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 

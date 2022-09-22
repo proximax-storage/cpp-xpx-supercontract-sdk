@@ -49,4 +49,4 @@ endforeach()
 target_include_directories(contract-storage PUBLIC ../include ../../../include)
 target_include_directories(contract-storage PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(contract-storage contract-logging utils OpenSSL::SSL)
+target_link_libraries(contract-storage expected contract-logging utils OpenSSL::SSL)

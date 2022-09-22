@@ -76,7 +76,7 @@ public:
 
     void open(std::shared_ptr<AsyncQueryCallback<InternetResourceContainer>> callback) override;
 
-    void read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) override;
+    void read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
 
     void close() override;
 
@@ -100,7 +100,7 @@ private:
     void onRead(
             beast::error_code ec,
             std::size_t bytes_transferred,
-            const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback );
+            const std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>>& callback );
 
     void runTimeoutTimer();
 };

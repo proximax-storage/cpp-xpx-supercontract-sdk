@@ -65,7 +65,7 @@ void HttpInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetResou
     });
 }
 
-void HttpInternetResource::read(std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
+void HttpInternetResource::read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -132,7 +132,7 @@ void HttpInternetResource::onHostResolved(beast::error_code ec,
     if (ec) {
         m_environment.logger().warn("OnHostResolved Http Connection Error: {}", ec.message());
         close();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -166,7 +166,7 @@ void HttpInternetResource::onConnected(beast::error_code ec, tcp::resolver::resu
     if (ec) {
         m_environment.logger().warn("OnConnected Http Connection Error: {}", ec.message());
         close();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -195,7 +195,7 @@ void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tra
     if (ec) {
         m_environment.logger().warn("OnWritten Http Connection Error: {}", ec.message());
         close();
-        callback->postReply({});
+        callback->postReply(tl::unexpected(ec));
         return;
     }
 
@@ -204,7 +204,7 @@ void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tra
 }
 
 void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transferred,
-                                   const std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>>& callback ) {
+                                   const std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>>& callback ) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -223,8 +223,7 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
 
     if (ec) {
         m_environment.logger().warn("OnRead Http Connection Error {}", ec.message());
-        callback->postReply({});
-        return;
+        callback->postReply(tl::unexpected(ec));        return;
     }
 
     if (m_res.is_done() || m_res.get().body().size == 0) {
