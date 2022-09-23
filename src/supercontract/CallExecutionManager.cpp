@@ -31,11 +31,12 @@ void CallExecutionManager::execute() {
 
     ASSERT(!m_virtualMachineQuery, m_environment.logger())
 
-    auto [query, callback] = createAsyncQuery<std::optional<vm::CallExecutionResult>>([this] (auto&& result) {
+    auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([this] (auto&& result) {
         if (result) {
-            m_callback->postReply(std::move(*result));
+            m_callback->postReply(std::move(result));
         }
         else {
+            ASSERT(result.error() == std::errc::connection_aborted, m_environment.logger());
             runTimer();
         }
     }, [] {}, m_environment, true, true);

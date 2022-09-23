@@ -19,7 +19,7 @@ void ExecuteCallRPCStarter::process(bool ok) {
     ASSERT(!isSingleThread(), m_environment.logger());
 
     if (!ok) {
-        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::bad_file_descriptor));
+        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted));
         m_callback->postReply(error);
     }
     else {

@@ -30,11 +30,15 @@ void AbsolutePathTag::process(bool ok) {
 
     ASSERT(ok, m_environment.logger())
 
-    if (m_status.ok()) {
-        m_callback->postReply(m_response.absolute_path());
-    } else {
+    if (!m_status.ok()) {
         m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
-        m_callback->postReply({});
+        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted));
+        m_callback->postReply(error);
+    } else if (m_response.absolute_path().empty()) {
+        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory));
+        m_callback->postReply(error);
+    } else {
+        m_callback->postReply(m_response.absolute_path());
     }
 }
 

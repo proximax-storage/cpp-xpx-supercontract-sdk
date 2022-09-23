@@ -97,7 +97,8 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
                             CallRequest::CallLevel::AUTORUN};
 
         auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this] (auto&& result) {
-            onSuperContractCallExecuted(request.m_callId, std::forward<decltype(result)>(result));
+            ASSERT(result, m_executorEnvironment.logger())
+            onSuperContractCallExecuted(request.m_callId, std::move(*result));
         }, [] {}, m_executorEnvironment, false, false);
 
         auto manager = std::make_unique<CallExecutionManager>(m_executorEnvironment,

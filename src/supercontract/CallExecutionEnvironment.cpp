@@ -18,7 +18,7 @@ CallExecutionEnvironment::CallExecutionEnvironment(const CallRequest& request,
         , m_contractEnvironment(contractEnvironment) {}
 
 void CallExecutionEnvironment::openConnection(const std::string& url,
-                                              std::shared_ptr<AsyncQueryCallback<std::optional<uint64_t>>> callback) {
+                                              std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger());
 
@@ -38,7 +38,7 @@ void CallExecutionEnvironment::openConnection(const std::string& url,
     m_executorEnvironment.logger().info("Contract call {} requested to open connection to {}, connection id: {}",
                                         m_callRequest.m_callId, url, connectionId);
 
-    auto[query, connectionCallback] = createAsyncQuery<std::optional<internet::InternetConnection>>(
+    auto[query, connectionCallback] = createAsyncQuery<internet::InternetConnection>(
             [this, callback, connectionId]
                     (auto&& connection) {
                 // If the callback is executed, 'this' will always be alive
@@ -80,7 +80,7 @@ void CallExecutionEnvironment::openConnection(const std::string& url,
 }
 
 void CallExecutionEnvironment::read(uint64_t connectionId,
-                                    std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) {
+                                    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger());
 
@@ -94,9 +94,9 @@ void CallExecutionEnvironment::read(uint64_t connectionId,
     m_executorEnvironment.logger().info("Contract call {} requested to read from internet connection {}",
                                         m_callRequest.m_callId, connectionId);
 
-    auto[query, readCallback] = createAsyncQuery<std::optional<std::vector<uint8_t>>>(
+    auto[query, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
             [this, callback]
-                    (std::optional<std::vector<uint8_t>>&& data) {
+                    (auto&& data) {
                 // If the callback is executed, 'this' will always be alive
                 callback->postReply(std::move(data));
                 m_asyncQuery.reset();
@@ -109,7 +109,7 @@ void CallExecutionEnvironment::read(uint64_t connectionId,
 }
 
 void
-CallExecutionEnvironment::closeConnection(uint64_t connectionId, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+CallExecutionEnvironment::closeConnection(uint64_t connectionId, std::shared_ptr<AsyncQueryCallback<void>> callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -120,11 +120,11 @@ CallExecutionEnvironment::closeConnection(uint64_t connectionId, std::shared_ptr
 
     auto connectionIt = m_internetConnections.find(connectionId);
     if (connectionIt == m_internetConnections.end()) {
-        callback->postReply(false);
+        callback->postReply(tl::make_unexpected(std::make_error_code(std::errc::bad_file_descriptor)));
     }
 
     m_internetConnections.erase(connectionIt);
-    callback->postReply(true);
+    callback->postReply(expected<void>());
 }
 
 }

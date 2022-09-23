@@ -21,7 +21,7 @@ void ExecuteCallRPCReader::process(bool ok) {
     if (ok) {
         m_callback->postReply(std::move(m_response));
     } else {
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::bad_file_descriptor)));
+        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
     }
 }
 

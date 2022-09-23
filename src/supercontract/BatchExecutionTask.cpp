@@ -31,7 +31,7 @@ void BatchExecutionTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto[query, callback] = createAsyncQuery<std::optional<bool>>([this](auto&& success) {
+    auto[query, callback] = createAsyncQuery<bool>([this](auto&& success) {
         if (!success.has_value()) {
             onStorageUnavailable();
             return;
@@ -78,7 +78,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 
     auto success = executionResult.m_success;
 
-    auto[query, callback] = createAsyncQuery<std::optional<storage::SandboxModificationDigest>>(
+    auto[query, callback] = createAsyncQuery<storage::SandboxModificationDigest>(
             [this, callId, result = std::move(executionResult)](auto&& digest) mutable {
 
                 if (!digest) {
@@ -312,7 +312,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
             return;
         }
 
-        auto[query, callback] = createAsyncQuery<std::optional<bool>>([this](auto&& res) {
+        auto[query, callback] = createAsyncQuery<bool>([this](auto&& res) {
             if (!res) {
                 onStorageUnavailable();
                 return;
@@ -506,7 +506,8 @@ void BatchExecutionTask::executeNextCall() {
 
         auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
                 [this, callId = callRequest.m_callId](auto&& res) {
-                    onSuperContractCallExecuted(callId, std::forward<decltype(res)>(res));
+                    ASSERT(res, m_executorEnvironment.logger());
+                    onSuperContractCallExecuted(callId, std::move(*res));
                 }, [] {}, m_executorEnvironment, false, false);
 
         m_callManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
@@ -529,7 +530,7 @@ void BatchExecutionTask::executeNextCall() {
 
         computeProofOfExecution();
 
-        auto[query, callback] = createAsyncQuery<std::optional<storage::StorageState>>([this](auto&& state) {
+        auto[query, callback] = createAsyncQuery<storage::StorageState>([this](auto&& state) {
 
             if (!state) {
                 onStorageUnavailable();

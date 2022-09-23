@@ -59,7 +59,7 @@ void SynchronizationTask::run() {
 
     }
 
-    auto [query, callback] = createAsyncQuery<std::optional<bool>>([this](auto&& res) {
+    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) {
 
         if (!res) {
             onStorageUnavailable();

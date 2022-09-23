@@ -24,7 +24,7 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<int64_t>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<uint64_t>> m_callback;
 
     rpc::OpenFileRequest   m_request;
     rpc::OpenFileResponse  m_response;
@@ -42,7 +42,7 @@ public:
                                         rpc::OpenFileRequest&& request,
                                         rpc::StorageContentManagerServer::Stub& stub,
                                         grpc::CompletionQueue& completionQueue,
-                                        std::shared_ptr<AsyncQueryCallback<int64_t>>&& callback);
+                                        std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback);
 
     void start();
 

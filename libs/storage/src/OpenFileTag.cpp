@@ -13,7 +13,7 @@ OpenFileTag::OpenFileTag(
         rpc::OpenFileRequest&& request,
         rpc::StorageContentManagerServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<int64_t>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue))
@@ -30,16 +30,14 @@ void OpenFileTag::process(bool ok) {
 
     ASSERT(ok, m_environment.logger())
 
-    if (m_status.ok()) {
-        if (m_response.success()) {
-            // TODO Use std::expected to handle unsuccessful result
-            m_callback->postReply(m_response.id());
-        } else{
-            m_callback->postReply(-1);
-        }
-    } else {
+    if (!m_status.ok()) {
         m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
-        m_callback->postReply({});
+        m_callback->postReply(
+                tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory)));
+    } else if (!m_response.success()) {
+        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
+    } else {
+        m_callback->postReply(m_response.id());
     }
 }
 

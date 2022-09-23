@@ -75,13 +75,13 @@ public:
 
     void
     openConnection(const std::string& url,
-                   std::shared_ptr<AsyncQueryCallback<std::optional<uint64_t>>> callback) override;
+                   std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
     void read(uint64_t connectionId,
-              std::shared_ptr<AsyncQueryCallback<std::optional<std::vector<uint8_t>>>> callback) override;
+              std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
 
     void closeConnection(uint64_t connectionId,
-                         std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+                         std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
 //    // endregion
 //

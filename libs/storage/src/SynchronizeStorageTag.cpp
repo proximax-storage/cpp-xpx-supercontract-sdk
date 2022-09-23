@@ -34,7 +34,7 @@ void SynchronizeStorageTag::process(bool ok) {
         m_callback->postReply(m_response.status());
     } else {
         m_environment.logger().warn("Failed To Synchronize Storage: {}", m_status.error_message());
-        m_callback->postReply({});
+        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
     }
 }
 
