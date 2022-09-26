@@ -9,21 +9,24 @@
 #include "TestUtils.h"
 #include "MockInternetHandler.h"
 
-namespace sirius::contract::vm::test {
+namespace sirius::contract::vm::test
+{
 
-TEST(VirtualMachine, SimpleContract) {
+    TEST(VirtualMachine, SimpleContract)
+    {
 
-    GlobalEnvironmentMock environment;
-    auto& threadManager = environment.threadManager();
+        GlobalEnvironmentMock environment;
+        auto &threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+        auto storageObserver = std::make_shared<StorageContentManagerMock>();
 
-    std::shared_ptr<VirtualMachine> pVirtualMachine;
+        std::shared_ptr<VirtualMachine> pVirtualMachine;
 
-    std::promise<void> p;
-    auto barrier = p.get_future();
+        std::promise<void> p;
+        auto barrier = p.get_future();
 
-    threadManager.execute([&] {
+        threadManager.execute([&]
+                              {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder;
@@ -67,31 +70,31 @@ TEST(VirtualMachine, SimpleContract) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
-    });
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback); });
 
-    barrier.get();
+        barrier.get();
 
-    threadManager.execute([&] {
-        pVirtualMachine.reset();
-    });
+        threadManager.execute([&]
+                              { pVirtualMachine.reset(); });
 
-    threadManager.stop();
-}
+        threadManager.stop();
+    }
 
-TEST(VirtualMachine, InternetRead) {
+    TEST(VirtualMachine, InternetRead)
+    {
 
-    GlobalEnvironmentMock environment;
-    auto& threadManager = environment.threadManager();
+        GlobalEnvironmentMock environment;
+        auto &threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+        auto storageObserver = std::make_shared<StorageContentManagerMock>();
 
-    std::shared_ptr<VirtualMachine> pVirtualMachine;
+        std::shared_ptr<VirtualMachine> pVirtualMachine;
 
-    std::promise<void> p;
-    auto barrier = p.get_future();
+        std::promise<void> p;
+        auto barrier = p.get_future();
 
-    threadManager.execute([&] {
+        threadManager.execute([&]
+                              {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder;
@@ -102,7 +105,7 @@ TEST(VirtualMachine, InternetRead) {
         CallRequest callRequest = {
             ContractKey(),
             CallId(),
-            "../../../rust-xpx-supercontract-client-sdk/pkg/internet_read.wasm",
+            "../../../rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
             "run",
             params,
             52000000,
@@ -124,16 +127,10 @@ TEST(VirtualMachine, InternetRead) {
             // TODO on call executed
             p.set_value();
             ASSERT_TRUE(res);
-            /*
-                #[no_mangle]
-                pub unsafe extern "C" fn run() -> u32 {
-                    return 1 + 1;
-                }
-            */
-           std::cout << res->m_success << std::endl;
-           std::cout << res->m_return << std::endl;
-           std::cout << res->m_scConsumed << std::endl;
-           std::cout << res->m_smConsumed << std::endl;
+            std::cout << res->m_success << std::endl;
+            std::cout << res->m_return << std::endl;
+            std::cout << res->m_scConsumed << std::endl;
+            std::cout << res->m_smConsumed << std::endl;
             // ASSERT_EQ(res->m_success, true);
             // ASSERT_EQ(res->m_return, 1 + 1);
             // ASSERT_EQ(res->m_scConsumed, 92);
@@ -141,16 +138,14 @@ TEST(VirtualMachine, InternetRead) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
-    });
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback); });
 
-    barrier.get();
+        barrier.get();
 
-    threadManager.execute([&] {
-        pVirtualMachine.reset();
-    });
+        threadManager.execute([&]
+                              { pVirtualMachine.reset(); });
 
-    threadManager.stop();
-}
+        threadManager.stop();
+    }
 
 }
