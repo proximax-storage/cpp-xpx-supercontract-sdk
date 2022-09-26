@@ -248,12 +248,12 @@ TEST(HttpsConnection, ReadBigWebsite) {
 }
 
 void readFuncDisconneted(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
-    read_flag = true;
     if (!res.has_value()) {
+        read_flag = true;   
         return;
     }
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
-    std::cout << actual_vec.data() << std::endl;
+    // std::cout << actual_vec.data() << std::endl;
 
     if (res->empty()) {
         return;
@@ -564,7 +564,7 @@ TEST(HttpsConnection, NonExistingTarget) {
         ctx.set_default_verify_paths();
         ctx.set_verify_mode(ssl::verify_peer);
 
-        auto urlDescription = parseURL("https://www.google.com/eg");
+        auto urlDescription = parseURL("https://google.com/eg");
 
         ASSERT_TRUE(urlDescription);
         ASSERT_TRUE(urlDescription->ssl);
