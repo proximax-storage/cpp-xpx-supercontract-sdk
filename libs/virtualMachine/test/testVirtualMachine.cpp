@@ -53,6 +53,16 @@ TEST(VirtualMachine, Example) {
             // TODO on call executed
             p.set_value();
             ASSERT_TRUE(res);
+            /*
+                #[no_mangle]
+                pub unsafe extern "C" fn run() -> u32 {
+                    return 1 + 1;
+                }
+            */
+            ASSERT_EQ(res->m_success, true);
+            ASSERT_EQ(res->m_return, 1 + 1);
+            ASSERT_EQ(res->m_scConsumed, 92);
+            ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
