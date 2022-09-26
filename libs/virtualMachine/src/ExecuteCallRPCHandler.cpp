@@ -269,6 +269,8 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractserver::ReadConnectionStream& request) {
@@ -294,6 +296,8 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractserver::CloseConnection& request) {
@@ -319,6 +323,8 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 }
