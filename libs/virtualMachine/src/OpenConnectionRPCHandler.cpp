@@ -21,6 +21,8 @@ void OpenConnectionRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    m_environment.logger().info("Calling OpenConnectionRPCHandler::process");
+
     auto handler = m_handler.lock();
 
     if (!handler) {
@@ -41,6 +43,8 @@ void OpenConnectionRPCHandler::process() {
 void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& connectionId) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    m_environment.logger().info("Calling OpenConnectionRPCHandler::onResult");
 
     supercontractserver::OpenConnectionReturn status;
 
