@@ -105,7 +105,7 @@ namespace sirius::contract::vm::test
         CallRequest callRequest = {
             ContractKey(),
             CallId(),
-            "../../../rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+            "../../../rust-xpx-supercontract-client-sdk/pkg/internet_read.wasm",
             "run",
             params,
             52000000,
@@ -127,14 +127,14 @@ namespace sirius::contract::vm::test
             // TODO on call executed
             p.set_value();
             ASSERT_TRUE(res);
-            std::cout << res->m_success << std::endl;
-            std::cout << res->m_return << std::endl;
-            std::cout << res->m_scConsumed << std::endl;
-            std::cout << res->m_smConsumed << std::endl;
-            // ASSERT_EQ(res->m_success, true);
-            // ASSERT_EQ(res->m_return, 1 + 1);
-            // ASSERT_EQ(res->m_scConsumed, 92);
-            // ASSERT_EQ(res->m_smConsumed, 0);
+            // std::cout << res->m_success << std::endl;
+            // std::cout << res->m_return << std::endl;
+            // std::cout << res->m_scConsumed << std::endl;
+            // std::cout << res->m_smConsumed << std::endl;
+            ASSERT_EQ(res->m_success, true);
+            ASSERT_EQ(res->m_return, 1);
+            ASSERT_EQ(res->m_scConsumed, 20578109322);
+            ASSERT_EQ(res->m_smConsumed, 10240);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
