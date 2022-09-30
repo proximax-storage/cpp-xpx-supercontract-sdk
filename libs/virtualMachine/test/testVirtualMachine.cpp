@@ -90,6 +90,8 @@ namespace sirius::contract::vm::test
 
         std::shared_ptr<VirtualMachine> pVirtualMachine;
 
+        std::shared_ptr<MockVirtualMachineInternetQueryHandler> internetHandler;
+
         std::promise<void> p;
         auto barrier = p.get_future();
 
@@ -108,9 +110,11 @@ namespace sirius::contract::vm::test
             "../../../rust-xpx-supercontract-client-sdk/pkg/internet_read.wasm",
             "run",
             params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
+            25000000000,
+            // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
+            // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
+            26 * 1024,
+            CallRequest::CallLevel::MANUAL,
             CallReferenceInfo {
                 {},
                 0,
@@ -121,7 +125,7 @@ namespace sirius::contract::vm::test
             }
         };
 
-        auto internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
+        internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&] (auto&& res) {
             // TODO on call executed
