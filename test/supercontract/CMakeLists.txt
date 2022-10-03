@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.2)
+
+# include_directories(${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src)
+
+project(supercontract-tests)
+
+set(CMAKE_CXX_STANDARD 20)
+
+find_package(GTest REQUIRED)
+
+file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
+
+add_executable(supercontract-tests ${TEST_FILES})
+enable_testing()
+add_test(supercontract-tests "./test")
+target_include_directories(supercontract-tests PRIVATE ../../src)
+target_link_libraries(supercontract-tests contract-crypto Threads::Threads ${GTEST_LIBRARIES} gtest_main)
+
+
+
