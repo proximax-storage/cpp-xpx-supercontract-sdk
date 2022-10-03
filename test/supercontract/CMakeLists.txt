@@ -14,7 +14,7 @@ add_executable(supercontract-tests ${TEST_FILES})
 enable_testing()
 add_test(supercontract-tests "./test")
 target_include_directories(supercontract-tests PRIVATE ../../src)
-target_link_libraries(supercontract-tests contract-crypto Threads::Threads ${GTEST_LIBRARIES} gtest_main)
+target_link_libraries(supercontract-tests supercontract contract-crypto Threads::Threads ${GTEST_LIBRARIES} gtest_main)
 
 
 
