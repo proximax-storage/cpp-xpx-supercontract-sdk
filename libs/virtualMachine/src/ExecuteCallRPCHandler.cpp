@@ -233,6 +233,7 @@ void ExecuteCallRPCHandler::finish() {
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_tagQuery.reset();
+    m_responseHandler.reset();
 
     m_context.TryCancel();
 
