@@ -226,7 +226,10 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
 void ExecuteCallRPCHandler::postResponse(expected<CallExecutionResult>&& result) {
     ASSERT(isSingleThread(), m_environment.logger())
 
+    ASSERT(m_callback, m_environment.logger())
+
     m_callback->postReply(std::move(result));
+    m_callback.reset();
 }
 
 void ExecuteCallRPCHandler::finish() {
@@ -235,7 +238,9 @@ void ExecuteCallRPCHandler::finish() {
     m_tagQuery.reset();
     m_responseHandler.reset();
 
-    m_context.TryCancel();
+    if (m_callback) {
+        m_context.TryCancel();
+    }
 
     // TODO According to grpc docs finish should not be called concurrently with other operations but for now we do not see any problems with it
     auto[query, callback] = createAsyncQuery<grpc::Status>([pThis = shared_from_this()](auto&& status) {
