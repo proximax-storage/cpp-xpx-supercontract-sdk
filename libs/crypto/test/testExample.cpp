@@ -18,10 +18,10 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, Add)
     {
-        sirius::Hash512 h;
+        sirius::Hash256 h;
         ge_p3 A;
 
-        h[31] = 5;
+        h[0] = 5;
 
         ge_scalarmult_base(&A, h.data());
 
@@ -30,8 +30,8 @@ namespace sirius::contract::test
         ge_p3_tobytes(expected.data(), &A);
 
         ge_p3 B;
-        sirius::Hash512 h2;
-        h2[31] = 3;
+        sirius::Hash256 h2;
+        h2[0] = 3;
 
         ge_scalarmult_base(&B, h2.data());
         std::vector<unsigned char> b_bytes;
@@ -39,8 +39,8 @@ namespace sirius::contract::test
         ge_p3_tobytes(b_bytes.data(), &B);
 
         ge_p3 C;
-        sirius::Hash512 h3;
-        h3[31] = 2;
+        sirius::Hash256 h3;
+        h3[0] = 2;
 
         ge_scalarmult_base(&C, h3.data());
 
@@ -61,10 +61,10 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, Subtract)
     {
-        sirius::Hash512 h;
+        sirius::Hash256 h;
         ge_p3 A;
 
-        h[31] = 2;
+        h[0] = 2;
 
         ge_scalarmult_base(&A, h.data());
 
@@ -73,8 +73,8 @@ namespace sirius::contract::test
         ge_p3_tobytes(expected.data(), &A);
 
         ge_p3 B;
-        sirius::Hash512 h2;
-        h2[31] = 1;
+        sirius::Hash256 h2;
+        h2[0] = 1;
 
         ge_scalarmult_base(&B, h2.data());
         std::vector<unsigned char> b_bytes;
@@ -82,8 +82,8 @@ namespace sirius::contract::test
         ge_p3_tobytes(b_bytes.data(), &B);
 
         ge_p3 C;
-        sirius::Hash512 h3;
-        h3[31] = 3;
+        sirius::Hash256 h3;
+        h3[0] = 3;
 
         ge_scalarmult_base(&C, h3.data());
 
@@ -102,39 +102,39 @@ namespace sirius::contract::test
         ASSERT_NE(b_bytes, expected);
     }
 
-    // TEST(TEST_NAME, DoubleScalar)
-    // {
-    //     sirius::Hash512 h;
-    //     ge_p3 A;
+     TEST(TEST_NAME, DoubleScalar)
+     {
+         sirius::Hash256 h;
+         ge_p3 A;
 
-    //     h[31] = 80;
+         h[0] = 80;
 
-    //     ge_scalarmult_base(&A, h.data());
+         ge_scalarmult_base(&A, h.data());
 
-    //     ge_p2 temp;
-    //     ge_p3_to_p2(&temp, &A);
-    //     std::vector<unsigned char> expected;
-    //     expected.resize(256);
-    //     ge_tobytes(expected.data(), &temp);
+         ge_p2 temp;
+         ge_p3_to_p2(&temp, &A);
+         std::vector<unsigned char> expected;
+         expected.resize(256);
+         ge_tobytes(expected.data(), &temp);
 
-    //     ge_p3 C;
-    //     sirius::Hash512 h2;
-    //     h2[31] = 7;
+         ge_p3 C;
+         sirius::Hash256 h2;
+         h2[0] = 7;
 
-    //     ge_scalarmult_base(&C, h2.data());
+         ge_scalarmult_base(&C, h2.data());
 
-    //     sirius::Hash512 h3;
-    //     h3[31] = 11;
+         sirius::Hash256 h3;
+         h3[0] = 11;
 
-    //     sirius::Hash512 h4;
-    //     h4[31] = 3;
+         sirius::Hash256 h4;
+         h4[0] = 3;
 
-    //     ge_p2 E;
-    //     ge_double_scalarmult_vartime(&E, h3.data(), &A, h4.data());
+         ge_p2 E;
+         ge_double_scalarmult_vartime(&E, h3.data(), &C, h4.data());
 
-    //     std::vector<unsigned char> actual;
-    //     actual.resize(256);
-    //     ge_tobytes(actual.data(), &E);
-    //     ASSERT_EQ(actual, expected);
-    // }
+         std::vector<unsigned char> actual;
+         actual.resize(256);
+         ge_tobytes(actual.data(), &E);
+         ASSERT_EQ(actual, expected);
+     }
 }
