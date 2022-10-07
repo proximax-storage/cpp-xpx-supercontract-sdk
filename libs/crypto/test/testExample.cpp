@@ -102,39 +102,69 @@ namespace sirius::contract::test
         ASSERT_NE(b_bytes, expected);
     }
 
-     TEST(TEST_NAME, DoubleScalar)
-     {
-         sirius::Hash256 h;
-         ge_p3 A;
+    TEST(TEST_NAME, DoubleScalar)
+    {
+        sirius::Hash256 h;
+        ge_p3 A;
 
-         h[0] = 80;
+        h[0] = 80;
 
-         ge_scalarmult_base(&A, h.data());
+        ge_scalarmult_base(&A, h.data());
 
-         ge_p2 temp;
-         ge_p3_to_p2(&temp, &A);
-         std::vector<unsigned char> expected;
-         expected.resize(256);
-         ge_tobytes(expected.data(), &temp);
+        ge_p2 temp;
+        ge_p3_to_p2(&temp, &A);
+        std::vector<unsigned char> expected;
+        expected.resize(256);
+        ge_tobytes(expected.data(), &temp);
 
-         ge_p3 C;
-         sirius::Hash256 h2;
-         h2[0] = 7;
+        ge_p3 C;
+        sirius::Hash256 h2;
+        h2[0] = 7;
 
-         ge_scalarmult_base(&C, h2.data());
+        ge_scalarmult_base(&C, h2.data());
 
-         sirius::Hash256 h3;
-         h3[0] = 11;
+        sirius::Hash256 h3;
+        h3[0] = 11;
 
-         sirius::Hash256 h4;
-         h4[0] = 3;
+        sirius::Hash256 h4;
+        h4[0] = 3;
 
-         ge_p2 E;
-         ge_double_scalarmult_vartime(&E, h3.data(), &C, h4.data());
+        ge_p2 E;
+        ge_double_scalarmult_vartime(&E, h3.data(), &C, h4.data());
 
-         std::vector<unsigned char> actual;
-         actual.resize(256);
-         ge_tobytes(actual.data(), &E);
-         ASSERT_EQ(actual, expected);
-     }
+        std::vector<unsigned char> actual;
+        actual.resize(256);
+        ge_tobytes(actual.data(), &E);
+        ASSERT_EQ(actual, expected);
+    }
+
+    TEST(TEST_NAME, NaturalElement)
+    {
+        sirius::Hash256 h;
+        ge_p3 A;
+
+        h[0] = 80;
+
+        ge_scalarmult_base(&A, h.data());
+
+        std::vector<unsigned char> expected;
+        expected.resize(256);
+        ge_p3_tobytes(expected.data(), &A);
+
+        ge_cached B;
+        ge_p3_to_cached(&B, &A);
+
+        ge_p3 C;
+        ge_p3_0(&C);
+
+        ge_p1p1 E;
+        ge_add(&E, &C, &B);
+
+        ge_p3 actual_g;
+        ge_p1p1_to_p3(&actual_g, &E);
+        std::vector<unsigned char> actual;
+        actual.resize(256);
+        ge_p3_tobytes(actual.data(), &actual_g);
+        ASSERT_EQ(actual, expected);
+    }
 }
