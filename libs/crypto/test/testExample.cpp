@@ -6,6 +6,7 @@
 
 #include "gtest/gtest.h"
 #include "utils/types.h"
+#include "crypto/Scalar.h"
 extern "C"
 {
 #include <external/ref10/ge.h>
@@ -166,5 +167,16 @@ namespace sirius::contract::test
         actual.resize(256);
         ge_p3_tobytes(actual.data(), &actual_g);
         ASSERT_EQ(actual, expected);
+    }
+
+    TEST(TEST_NAME, Scalar)
+    {
+        struct Scalar_tag
+        {
+            size_t Byte_Size = 32;
+        };
+        sirius::crypto::Scalar a;
+        sirius::crypto::Scalar b;
+        a = a + b;
     }
 }
