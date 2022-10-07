@@ -6,7 +6,8 @@
 
 #include "gtest/gtest.h"
 #include "utils/types.h"
-#include "crypto/Scalar.h"
+// #include "crypto/Scalar.h"
+#include "crypto/CurvePoint.h"
 extern "C"
 {
 #include <external/ref10/ge.h>
@@ -367,5 +368,169 @@ namespace sirius::contract::test
         sirius::crypto::Scalar expected;
         expected[0] = 4;
         ASSERT_EQ(actual, expected);
+    }
+
+    TEST(TEST_NAME, CurvePointAdd)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar two;
+        two[0] = 2;
+        a *= two;
+        sirius::crypto::CurvePoint b;
+        sirius::crypto::Scalar three;
+        three[0] = 3;
+        b *= three;
+        sirius::crypto::CurvePoint c = a + b;
+        sirius::crypto::CurvePoint expected;
+        sirius::crypto::Scalar five;
+        five[0] = 5;
+        expected *= five;
+        ASSERT_EQ(expected, c);
+    }
+
+    TEST(TEST_NAME, CurvePointAddLarge)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        a *= I; // I - 1
+        sirius::crypto::CurvePoint b;
+        I[0] = 234; // I - 3
+        b *= I;
+        sirius::crypto::CurvePoint c = a + b;
+        sirius::crypto::CurvePoint expected;
+        I[0] = 233; // I - 4
+        expected *= I;
+        ASSERT_EQ(expected, c);
+    }
+
+    TEST(TEST_NAME, CurvePointSub)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar two;
+        two[0] = 8;
+        a *= two;
+        sirius::crypto::CurvePoint b;
+        sirius::crypto::Scalar three;
+        three[0] = 3;
+        b *= three;
+        sirius::crypto::CurvePoint c = a - b;
+        sirius::crypto::CurvePoint expected;
+        sirius::crypto::Scalar five;
+        five[0] = 5;
+        expected *= five;
+        ASSERT_EQ(expected, c);
+    }
+
+    TEST(TEST_NAME, CurvePointSubLarge)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        a *= I; // I - 1
+        sirius::crypto::CurvePoint b;
+        I[0] = 234; // I - 3
+        b *= I;
+        sirius::crypto::CurvePoint c = a - b;
+        sirius::crypto::CurvePoint expected;
+        I[0] = 239; // I + 2
+        expected *= I;
+        ASSERT_EQ(expected, c);
+    }
+
+    TEST(TEST_NAME, CurvePointAddInPlace)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar two;
+        two[0] = 2;
+        a *= two;
+        sirius::crypto::CurvePoint b;
+        sirius::crypto::Scalar three;
+        three[0] = 3;
+        b *= three;
+        a += b;
+        sirius::crypto::CurvePoint expected;
+        sirius::crypto::Scalar five;
+        five[0] = 5;
+        expected *= five;
+        ASSERT_EQ(expected, a);
+    }
+
+    TEST(TEST_NAME, CurvePointAddLargeInPlace)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        a *= I; // I - 1
+        sirius::crypto::CurvePoint b;
+        I[0] = 234; // I - 3
+        b *= I;
+        a += b;
+        sirius::crypto::CurvePoint expected;
+        I[0] = 233; // I - 4
+        expected *= I;
+        ASSERT_EQ(expected, a);
+    }
+
+    TEST(TEST_NAME, CurvePointSubInPlace)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar two;
+        two[0] = 8;
+        a *= two;
+        sirius::crypto::CurvePoint b;
+        sirius::crypto::Scalar three;
+        three[0] = 3;
+        b *= three;
+        a -= b;
+        sirius::crypto::CurvePoint expected;
+        sirius::crypto::Scalar five;
+        five[0] = 5;
+        expected *= five;
+        ASSERT_EQ(expected, a);
+    }
+
+    TEST(TEST_NAME, CurvePointSubLargeInPlace)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        a *= I; // I - 1
+        sirius::crypto::CurvePoint b;
+        I[0] = 234; // I - 3
+        b *= I;
+        a -= b;
+        sirius::crypto::CurvePoint expected;
+        I[0] = 239; // I + 2
+        expected *= I;
+        ASSERT_EQ(expected, a);
+    }
+
+    TEST(TEST_NAME, CurvePointMul)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar a_scalar;
+        a_scalar[0] = 3;
+        a *= a_scalar;
+        sirius::crypto::CurvePoint b = a * a_scalar;
+        ASSERT_EQ(a, b);
+    }
+
+    TEST(TEST_NAME, CurvePointMulLarge)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        a *= I;
+        sirius::crypto::CurvePoint b = a * I;
+        ASSERT_EQ(a, b);
+    }
+
+    TEST(TEST_NAME, CurvePointNaturalElement)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar two;
+        two[0] = 2;
+        a *= two;
+        sirius::crypto::CurvePoint base = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::CurvePoint c = a + base;
+        sirius::crypto::CurvePoint expected;
+        expected *= two;
+        ASSERT_EQ(expected, c);
     }
 }
