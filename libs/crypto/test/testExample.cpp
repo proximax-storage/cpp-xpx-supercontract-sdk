@@ -169,14 +169,203 @@ namespace sirius::contract::test
         ASSERT_EQ(actual, expected);
     }
 
-    TEST(TEST_NAME, Scalar)
+    TEST(TEST_NAME, ScalarAdd)
     {
-        struct Scalar_tag
-        {
-            size_t Byte_Size = 32;
-        };
         sirius::crypto::Scalar a;
+        a[0] = 3;
         sirius::crypto::Scalar b;
-        a = a + b;
+        b[0] = 2;
+        sirius::crypto::Scalar c = a + b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 5;
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarAddLarge)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar c = a + b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 235; // I - 2
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMul)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 3;
+        sirius::crypto::Scalar b;
+        b[0] = 2;
+        sirius::crypto::Scalar c = a * b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 6;
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMulLarge)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b;
+        b[0] = 10;
+        sirius::crypto::Scalar c = a * b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 227; // I - 10
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMulLarge2)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar c = a * b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 1;
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSub)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 10;
+        sirius::crypto::Scalar b;
+        b[0] = 6;
+        sirius::crypto::Scalar c = a - b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 4;
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSubLarge)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar c = a - b;
+        sirius::crypto::Scalar expected;
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSubLarge2)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b;
+        b[0] = 10;
+        sirius::crypto::Scalar c = a - b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 226; // I - 11
+        ASSERT_EQ(c, expected);
+    }
+
+    TEST(TEST_NAME, ScalarAddInPlace)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 3;
+        sirius::crypto::Scalar b;
+        b[0] = 2;
+        a += b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 5;
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarAddLargeInPlace)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        a += b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 235; // I - 2
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMulInPlace)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 3;
+        sirius::crypto::Scalar b;
+        b[0] = 2;
+        a *= b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 6;
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMulLargeInPlace)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b;
+        b[0] = 10;
+        a *= b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 227; // I - 10
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarMulLargeInPlace2)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        a *= b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 1;
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSubInPlace)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 10;
+        sirius::crypto::Scalar b;
+        b[0] = 6;
+        a -= b;
+        sirius::crypto::Scalar expected;
+        expected[0] = 4;
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSubLargeInPlace)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        a -= b;
+        sirius::crypto::Scalar expected;
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, ScalarSubLarge2InPlace)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b;
+        b[0] = 10;
+        a -= b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        expected[0] = 226; // I - 11
+        ASSERT_EQ(a, expected);
+    }
+
+    TEST(TEST_NAME, AddProduct)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 5;
+        sirius::crypto::Scalar b;
+        b[0] = 10;
+        sirius::crypto::Scalar c;
+        c[0] = 6;
+        sirius::crypto::Scalar actual = a.addProduct(b, c);
+        sirius::crypto::Scalar expected;
+        expected[0] = 65;
+        ASSERT_EQ(actual, expected);
+    }
+
+    TEST(TEST_NAME, AddProductLarge)
+    {
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar c = sirius::crypto::Scalar::getI();
+        c[0] = 232; // I - 5
+        sirius::crypto::Scalar actual = a.addProduct(b, c);
+        sirius::crypto::Scalar expected;
+        expected[0] = 4;
+        ASSERT_EQ(actual, expected);
     }
 }
