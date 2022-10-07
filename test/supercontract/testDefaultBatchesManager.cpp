@@ -8,9 +8,7 @@
 #include "supercontract/DefaultBatchesManager.h"
 
 namespace sirius::contract::test {
-
     class ContractEnvironmentMock: public ContractEnvironment {
-
     private:
         ContractKey m_contractKey;
         DriveKey m_driveKey;
@@ -18,144 +16,117 @@ namespace sirius::contract::test {
         uint64_t m_automaticExecutionsSCLimit;
         uint64_t m_automaticExecutionsSMLimit;
         ContractConfig m_contractConfig;
-
+        
     public:
-        ContractEnvironmentMock(ContractKey contractKey,
+        ContractEnvironmentMock(ContractKey& contractKey,
                                 uint64_t automaticExecutionsSCLimit,
                                 uint64_t automaticExecutionsSMLimit)
-            : m_contractKey(contractKey),
-              m_automaticExecutionsSCLimit(automaticExecutionsSCLimit),
-              m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
+            :m_contractKey(contractKey),
+            m_automaticExecutionsSCLimit(automaticExecutionsSCLimit),
+            m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
         {}
 
-        ~ContractEnvironmentMock() = default;
+        virtual ~ContractEnvironmentMock(){}
 
-        const ContractKey &contractKey() const override {}
+        const ContractKey& contractKey() const override { return m_contractKey; }
 
-        const DriveKey &driveKey() const override {}
+        const DriveKey& driveKey() const override { return m_driveKey; }
 
-        const std::set<ExecutorKey> &executors() const override {}
+        const std::set<ExecutorKey>& executors() const override { return m_executors; }
 
-        uint64_t automaticExecutionsSCLimit() const override {}
+        uint64_t automaticExecutionsSCLimit() const override { return m_automaticExecutionsSCLimit; }
 
-        uint64_t automaticExecutionsSMLimit() const override {}
+        uint64_t automaticExecutionsSMLimit() const override { return m_automaticExecutionsSMLimit; }
 
-        const ContractConfig &contractConfig() const override {}
+        const ContractConfig& contractConfig() const override { return m_contractConfig; }
 
-        void finishTask() override{};
+        void finishTask() override {}
 
-        void addSynchronizationTask() override{};
+        void addSynchronizationTask() override {}
 
-        void delayBatchExecution(Batch &&batch) override;
+        void delayBatchExecution(Batch&& batch) override {}
+    };
+    
+    class MessengerMock: public Messenger {
+    public:
+        virtual ~MessengerMock(){}
+        void sendMessage(const ExecutorKey& key, const std::string& msg) override {};
+    };
+
+    class ExecutorEventHandlerMock: public ExecutorEventHandler{
+    public:
+        virtual ~ExecutorEventHandlerMock(){}
+        void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {};
+        void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {};
     };
 
     class ExecutorEnvironmentMock : public ExecutorEnvironment {
-
     private:
-        const crypto::KeyPair &m_keyPair;
-        std::shared_ptr<storage::Storage> m_storage;
-        std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
+        crypto::KeyPair m_keyPair;
+        std::weak_ptr<vm::VirtualMachine> m_virtualMachineMock;
         ExecutorConfig m_executorConfig;
+        MessengerMock m_messengerMock;
+        std::weak_ptr<storage::Storage> m_storage;
+        ExecutorEventHandlerMock m_executorEventHandlerMock;
+        boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
+        ThreadManager m_threadManager;
+        logging::Logger m_logger;
+        
 
     public:
-        ExecutorEnvironmentMock(crypto::KeyPair &keyPair,
-                                std::shared_ptr<storage::Storage> storage,
-                                std::shared_ptr<vm::VirtualMachine> virtualMachine,
+        ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
+                                std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                                 ExecutorConfig executorConfig)
-            : m_keyPair(keyPair),
-              m_storage(storage),
-              m_virtualMachine(virtualMachine),
-              m_executorConfig(executorConfig)
+            :m_keyPair(std::move(keyPair)),
+            m_virtualMachineMock(virtualMachineMock),
+            m_executorConfig(executorConfig),
+            m_logger(getLoggerConfig(), "executor")
         {}
 
-        ~ExecutorEnvironmentMock() = default;
+        virtual ~ExecutorEnvironmentMock(){}
 
-        const crypto::KeyPair &keyPair() const override {}
+        const crypto::KeyPair& keyPair() const override { return m_keyPair; }
 
-        Messenger &messenger() override {}
+        Messenger& messenger() override { return m_messengerMock; }
 
-        std::weak_ptr<storage::Storage> storage() override {}
+        std::weak_ptr<storage::Storage> storage() override { return m_storage; }
 
-        ExecutorEventHandler &executorEventHandler() override {}
+        ExecutorEventHandler& executorEventHandler() override { return m_executorEventHandlerMock; }
 
-        std::weak_ptr<vm::VirtualMachine> virtualMachine() override {}
+        std::weak_ptr<vm::VirtualMachine> virtualMachine() override { return m_virtualMachineMock; }
 
-        ExecutorConfig &executorConfig() override {}
+        ExecutorConfig& executorConfig() override { return m_executorConfig; }
 
-        boost::asio::ssl::context &sslContext() override {}
+        boost::asio::ssl::context& sslContext() override { return m_sslContext; }
 
-        ThreadManager &threadManager() override {
-            // return m_threadManager;
-        }
+        ThreadManager& threadManager() { return m_threadManager; }
 
-        logging::Logger &logger() override {}
-    };
-
-    class StorageMock : public storage::Storage {
+        logging::Logger& logger() override { return m_logger; }
+    
     private:
-    public:
-        ~StorageMock() = default;
-
-        void synchronizeStorage(const DriveKey &driveKey, const StorageHash &storageHash,
-                                std::shared_ptr<AsyncQueryCallback<bool>> callback) override {}
-
-        void initiateModifications(const DriveKey &driveKey,
-                              std::shared_ptr<AsyncQueryCallback<bool>> callback) override {}
-
-        void applySandboxStorageModifications(const DriveKey &driveKey,
-                                              bool success,
-                                              std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) override {}
-
-        void evaluateStorageHash(const DriveKey &driveKey,
-                            std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) override {}
-
-        void applyStorageModifications(const DriveKey &driveKey, bool success,
-                                       std::shared_ptr<AsyncQueryCallback<bool>> callback) override {}
-
-        void getAbsolutePath(const DriveKey &driveKey, const std::string &relativePath,
-                        std::shared_ptr<AsyncQueryCallback<std::string>> callback) override {}
+        logging::LoggerConfig getLoggerConfig() {
+            logging::LoggerConfig config;
+            config.setLogToConsole(true);
+            config.setLogPath({});
+            return config;
+        }
     };
 
     class VirtualMachineMock : public vm::VirtualMachine {
-    private:
-        std::weak_ptr<DefaultBatchesManager> m_defaultBatchesManager;
+    private: 
         ThreadManager m_mainThreadManager;
         ThreadManager m_threadManager;
-        std::map<CallId, Timer> m_timers;
-        std::deque<bool> m_executionResult;
-
+        std::map<CallId, Timer> timers;
     public:
-        VirtualMachineMock(std::weak_ptr<DefaultBatchesManager> defaultBatchesManager)
-            :m_defaultBatchesManager(defaultBatchesManager),
-            m_executionResult({true, true, false, false})
-            {}
     
-        ~VirtualMachineMock() = default;
+        virtual ~VirtualMachineMock(){}
 
         void executeCall(const CallRequest& request,
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-            m_threadManager.execute([=, this] {
-                bool result = m_executionResult.front();
-                m_executionResult.pop_front();
-                m_timers[request.m_callId] = m_threadManager.startTimer(rand() % 10000, [=, this] {
-                    m_mainThreadManager.execute([=, this] {
-                        vm::CallExecutionResult callExecutionResult= {
-                            result,
-                            1,
-                            1,
-                            1
-                        };
-                        // onSuperContractCallExecuted has change to private and be called from addblock()
-                        m_defaultBatchesManager.lock()->onSuperContractCallExecuted(request.m_callId, callExecutionResult);
-                    });
-                });
-            });
-        }
-
-        ThreadManager &threadManager() {
-            return m_mainThreadManager;
+            srand(time(0));
+            sleep(rand()%10);
         }
     };
 
@@ -166,23 +137,23 @@ namespace sirius::contract::test {
         ContractKey contractKey;
         uint64_t automaticExucutionsSCLimit = 0;
         uint64_t automaticExucutionsSMLimit = 0;
+        DriveKey driveKey;
+        std::set<ExecutorKey> executors;
+        ContractConfig contractConfig;
 
         ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit, automaticExucutionsSMLimit);
 
         // create executor environment
         crypto::PrivateKey privateKey;
-        const crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-        std::weak_ptr<DefaultBatchesManager> pDefaultBatchesManager;
-        StorageMock storageMock;
-        VirtualMachineMock virtualMachineMock(pDefaultBatchesManager);
+        crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+        std::weak_ptr<VirtualMachineMock> virtualMachineMock = std::make_shared<VirtualMachineMock>();
         ExecutorConfig executorConfig;
 
-        // im not sure why its says does not match arguments of the contructors
-        ExecutorEnvironmentMock executorEnvironmentMock(keyPair, storageMock, virtualMachineMock, executorConfig);
+        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), virtualMachineMock, executorConfig);
 
         // create default batches manager
         uint64_t index = 1;
-        pDefaultBatchesManager = std::make_shared<DefaultBatchesManager>(index, contractEnvironmentMock, executorEnvironmentMock);
+        DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
 
         // create call requests
         std::vector<uint8_t> params;
@@ -276,30 +247,18 @@ namespace sirius::contract::test {
             10004
         };
 
-        pDefaultBatchesManager.lock()->setAutomaticExecutionsEnabledSince(0);
-        pDefaultBatchesManager.lock()->addCall(callRequest1);
-        pDefaultBatchesManager.lock()->addCall(callRequest2);
-        pDefaultBatchesManager.lock()->addBlockInfo(block1);
-        pDefaultBatchesManager.lock()->addBlockInfo(block2);
-        pDefaultBatchesManager.lock()->addBlockInfo(block3);
-        pDefaultBatchesManager.lock()->addCall(callRequest3);
-        pDefaultBatchesManager.lock()->addCall(callRequest4);
-        pDefaultBatchesManager.lock()->addBlockInfo(block4);
         
-        auto &mainThread = virtualMachineMock.threadManager();
-        vm::CallExecutionResult callExecutionResult= {
-                            true,
-                            1,
-                            1,
-                            1
-        };
+        ThreadManager threadManager; 
 
-        mainThread.execute([&]{
-            virtualMachineMock.executeCall(callRequest1, 
-            std::weak_ptr<vm::VirtualMachineInternetQueryHandler>(), 
-            std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler>(),
-            // std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback  im not sure how to create the argument for this field
-            ); 
-        });
+        defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
+        defaultBatchesManager.addCall(callRequest1);
+        // defaultBatchesManager.addCall(callRequest2);
+        // defaultBatchesManager.addBlockInfo(block1); //true
+        // defaultBatchesManager.addBlockInfo(block2); //true 
+        // defaultBatchesManager.addBlockInfo(block3); //false
+        // defaultBatchesManager.addCall(callRequest3);
+        // defaultBatchesManager.addCall(callRequest4);
+        // defaultBatchesManager.addBlockInfo(block4); //false
+        
     }
 }
