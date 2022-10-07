@@ -26,8 +26,6 @@ namespace sirius::contract::test {
             m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
         {}
 
-        virtual ~ContractEnvironmentMock(){}
-
         const ContractKey& contractKey() const override { return m_contractKey; }
 
         const DriveKey& driveKey() const override { return m_driveKey; }
