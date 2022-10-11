@@ -15,11 +15,12 @@ namespace sirius { namespace crypto {
             CurvePoint operator+(CurvePoint &a) const;
             CurvePoint operator-(CurvePoint &a) const;
             CurvePoint operator*(Scalar &a) const;
-            friend CurvePoint operator*(Scalar &a, CurvePoint&b);
+            friend CurvePoint operator*(Scalar &a, CurvePoint &b);
             CurvePoint &operator+=(CurvePoint &a);
             CurvePoint &operator-=(CurvePoint &a);
             CurvePoint &operator*=(Scalar &a);
             bool operator==(const CurvePoint &a) const;
+            Scalar tobytes() const;
         };
     }
 }

@@ -6,44 +6,35 @@
 *** license that can be found in the LICENSE file.
 */
 
-namespace sirius::contract {
+#include <crypto/CurvePoint.h>
+#include <crypto/Hashes.h>
+#include "utils/types.h"
+#include "supercontract/SingleThread.h"
+#include "supercontract/GlobalEnvironment.h"
 
-class ProofOfExecution {
+namespace sirius::contract
+{
 
-private:
+    class ProofOfExecution : private SingleThread
+    {
 
-    Hash256 m_secretData;
+    private:
+        GlobalEnvironment &m_environment;
 
-    Hash256 m_proofOfExecution;
-    Hash256 m_proofOfExecutionVerificationInfo;
+        sirius::crypto::Scalar m_x;
+        sirius::crypto::Scalar m_xPrevious;
 
-public:
+        Hash256 m_publicKey;
 
-    const Hash256& secretData() const {
-        return m_secretData;
-    }
+        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> m_b;
+        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> m_q;
 
-    void setSecretData( const Hash256& secretData ) {
-        m_secretData = secretData;
-    }
-
-    const Hash256& proofOfExecution() {
-        return m_proofOfExecution;
-    }
-
-    const Hash256& proofOfExecutionVerificationInfo() {
-        return m_proofOfExecutionVerificationInfo;
-    }
-
-    void computeProofOfExecution(const Hash256& batchId, const ExecutorKey& executorKey) {
-        // TODO Compute PoEx
-        m_secretData = Hash256();
-    }
-
-    void resetProofOfExecution() {
-
-    }
-
-};
+    public:
+        ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed);
+        void addToProof(u_int64_t digest);
+        void popFromProof();
+        void buildProof();
+        void reset();
+    };
 
 }

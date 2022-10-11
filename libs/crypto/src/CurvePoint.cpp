@@ -48,7 +48,8 @@ namespace sirius { namespace crypto {
             return ret;
         }
 
-        CurvePoint operator*(Scalar &a, CurvePoint&b) {
+        CurvePoint operator*(Scalar &a, CurvePoint &b)
+        {
             CurvePoint ret;
             ret.m_ge_p3 = b.m_ge_p3;
             ge_scalarmult_base(&ret.m_ge_p3, a.data());
@@ -75,14 +76,19 @@ namespace sirius { namespace crypto {
 
         bool CurvePoint::operator==(const CurvePoint &a) const
         {
-            std::vector<uint8_t> this_bytes;
-            this_bytes.resize(Scalar_Size);
+            Scalar this_bytes;
             ge_p3_tobytes(this_bytes.data(), &this->m_ge_p3);
-            std::vector<uint8_t> a_bytes;
-            a_bytes.resize(Scalar_Size);
+            Scalar a_bytes;
             ge_p3_tobytes(a_bytes.data(), &a.m_ge_p3);
 
             return this_bytes == a_bytes;
+        }
+
+        Scalar CurvePoint::tobytes() const
+        {
+            Scalar ret;
+            ge_p3_tobytes(ret.data(), &this->m_ge_p3);
+            return ret;
         }
     }
 }
