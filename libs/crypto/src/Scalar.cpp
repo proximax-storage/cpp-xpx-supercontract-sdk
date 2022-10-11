@@ -4,14 +4,19 @@ extern "C"
 #include <external/ref10/sc.h>
 }
 
-namespace sirius
-{
-    namespace crypto
-    {
-        Scalar Scalar::getI()
+namespace sirius { namespace crypto {
+        Scalar::Scalar(const std::array<uint8_t, Scalar_Size> &arr)
+        {
+            this->m_array = arr;
+            sc_reduce(this->m_array.data());
+        }
+
+        Scalar::Scalar() : ByteArray() {}
+
+        Scalar Scalar::getLMinusOne()
         {
             Scalar ret;
-            ret.m_array = Scalar::I_MINUS_ONE;
+            ret.m_array = Scalar::L_MINUS_ONE;
             return ret;
         }
 
@@ -37,25 +42,28 @@ namespace sirius
         Scalar Scalar::operator-(const Scalar &a) const
         {
             Scalar temp;
-            Scalar iMinusOne = Scalar::getI();
+            Scalar iMinusOne = Scalar::getLMinusOne();
             sc_muladd(temp.data(), a.m_array.data(), iMinusOne.m_array.data(), this->m_array.data());
 
             return temp;
         }
 
-        void Scalar::operator+=(const Scalar &a)
+        Scalar &Scalar::operator+=(const Scalar &a)
         {
             *this = *this + a;
+            return *this;
         }
 
-        void Scalar::operator-=(const Scalar &a)
+        Scalar &Scalar::operator-=(const Scalar &a)
         {
             *this = *this - a;
+            return *this;
         }
 
-        void Scalar::operator*=(const Scalar &a)
+        Scalar &Scalar::operator*=(const Scalar &a)
         {
             *this = *this * a;
+            return *this;
         }
 
         Scalar Scalar::addProduct(const Scalar &r, const Scalar &h) const

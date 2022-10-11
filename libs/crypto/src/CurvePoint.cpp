@@ -1,18 +1,17 @@
 #include "crypto/CurvePoint.h"
 
-namespace sirius
-{
-    namespace crypto
-    {
-        CurvePoint::CurvePoint() : m_ge_p3(ge_p3())
+namespace sirius { namespace crypto {
+        CurvePoint::CurvePoint()
         {
+            ge_p3 a;
+            ge_p3_0(&a);
+            this->m_ge_p3 = a;
         }
 
         CurvePoint CurvePoint::BasePoint()
         {
             CurvePoint temp;
             ge_p3 a;
-            ge_p3_0(&a);
             temp.m_ge_p3 = a;
             return temp;
         }
@@ -41,36 +40,46 @@ namespace sirius
             return temp;
         }
 
-        CurvePoint CurvePoint::operator*(Scalar &a)
+        CurvePoint CurvePoint::operator*(Scalar &a) const
         {
             CurvePoint ret;
-            ge_scalarmult_base(&this->m_ge_p3, a.data());
             ret.m_ge_p3 = this->m_ge_p3;
+            ge_scalarmult_base(&ret.m_ge_p3, a.data());
             return ret;
         }
 
-        void CurvePoint::operator+=(CurvePoint &a)
+        CurvePoint operator*(Scalar &a, CurvePoint&b) {
+            CurvePoint ret;
+            ret.m_ge_p3 = b.m_ge_p3;
+            ge_scalarmult_base(&ret.m_ge_p3, a.data());
+            return ret;
+        }
+
+        CurvePoint &CurvePoint::operator+=(CurvePoint &a)
         {
             *this = *this + a;
+            return *this;
         }
 
-        void CurvePoint::operator-=(CurvePoint &a)
+        CurvePoint &CurvePoint::operator-=(CurvePoint &a)
         {
             *this = *this - a;
+            return *this;
         }
 
-        void CurvePoint::operator*=(Scalar &a)
+        CurvePoint &CurvePoint::operator*=(Scalar &a)
         {
             *this = *this * a;
+            return *this;
         }
 
         bool CurvePoint::operator==(const CurvePoint &a) const
         {
             std::vector<uint8_t> this_bytes;
-            this_bytes.resize(32);
+            this_bytes.resize(Scalar_Size);
             ge_p3_tobytes(this_bytes.data(), &this->m_ge_p3);
             std::vector<uint8_t> a_bytes;
-            a_bytes.resize(32);
+            a_bytes.resize(Scalar_Size);
             ge_p3_tobytes(a_bytes.data(), &a.m_ge_p3);
 
             return this_bytes == a_bytes;

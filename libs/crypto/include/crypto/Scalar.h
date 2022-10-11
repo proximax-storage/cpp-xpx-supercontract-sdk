@@ -1,9 +1,6 @@
 #include "utils/ByteArray.h"
 
-namespace sirius
-{
-    namespace crypto
-    {
+namespace sirius { namespace crypto {
         constexpr size_t Scalar_Size = 32;
         struct Scalar_Tag
         {
@@ -12,16 +9,18 @@ namespace sirius
         class Scalar : public sirius::utils::ByteArray<Scalar_Size, Scalar_Tag>
         {
         private:
-            static constexpr std::array<uint8_t, 32> I_MINUS_ONE = {236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16};
+            static constexpr std::array<uint8_t, Scalar_Size> L_MINUS_ONE = {236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16};
 
         public:
-            static Scalar getI();
+            Scalar();
+            Scalar(const std::array<uint8_t, Scalar_Size> &arr);
+            static Scalar getLMinusOne();
             Scalar operator+(const Scalar &a) const;
             Scalar operator*(const Scalar &a) const;
             Scalar operator-(const Scalar &a) const;
-            void operator+=(const Scalar &a);
-            void operator*=(const Scalar &a);
-            void operator-=(const Scalar &a);
+            Scalar &operator+=(const Scalar &a);
+            Scalar &operator*=(const Scalar &a);
+            Scalar &operator-=(const Scalar &a);
             Scalar addProduct(const Scalar &r, const Scalar &h) const;
         };
     }

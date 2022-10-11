@@ -140,7 +140,7 @@ namespace sirius::contract::test
         ASSERT_EQ(actual, expected);
     }
 
-    TEST(TEST_NAME, NaturalElement)
+    TEST(TEST_NAME, NeutralElement)
     {
         sirius::Hash256 h;
         ge_p3 A;
@@ -184,10 +184,10 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarAddLarge)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar c = a + b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 235; // I - 2
         ASSERT_EQ(c, expected);
     }
@@ -206,19 +206,19 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarMulLarge)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar b;
         b[0] = 10;
         sirius::crypto::Scalar c = a * b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 227; // I - 10
         ASSERT_EQ(c, expected);
     }
 
     TEST(TEST_NAME, ScalarMulLarge2)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar c = a * b;
         sirius::crypto::Scalar expected;
         expected[0] = 1;
@@ -237,10 +237,22 @@ namespace sirius::contract::test
         ASSERT_EQ(c, expected);
     }
 
+    TEST(TEST_NAME, ScalarSubNegative)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 4;
+        sirius::crypto::Scalar b;
+        b[0] = 6;
+        sirius::crypto::Scalar c = a - b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
+        expected[0] = 235; // I - 2
+        ASSERT_EQ(c, expected);
+    }
+
     TEST(TEST_NAME, ScalarSubLarge)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar c = a - b;
         sirius::crypto::Scalar expected;
         ASSERT_EQ(c, expected);
@@ -248,11 +260,11 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarSubLarge2)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar b;
         b[0] = 10;
         sirius::crypto::Scalar c = a - b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 226; // I - 11
         ASSERT_EQ(c, expected);
     }
@@ -271,10 +283,10 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarAddLargeInPlace)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         a += b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 235; // I - 2
         ASSERT_EQ(a, expected);
     }
@@ -293,19 +305,19 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarMulLargeInPlace)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar b;
         b[0] = 10;
         a *= b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 227; // I - 10
         ASSERT_EQ(a, expected);
     }
 
     TEST(TEST_NAME, ScalarMulLargeInPlace2)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         a *= b;
         sirius::crypto::Scalar expected;
         expected[0] = 1;
@@ -324,10 +336,22 @@ namespace sirius::contract::test
         ASSERT_EQ(a, expected);
     }
 
+    TEST(TEST_NAME, ScalarSubNegativeInPlace)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 4;
+        sirius::crypto::Scalar b;
+        b[0] = 6;
+        a -= b;
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
+        expected[0] = 235; // I - 2
+        ASSERT_EQ(a, expected);
+    }
+
     TEST(TEST_NAME, ScalarSubLargeInPlace)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
         a -= b;
         sirius::crypto::Scalar expected;
         ASSERT_EQ(a, expected);
@@ -335,11 +359,11 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, ScalarSubLarge2InPlace)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
         sirius::crypto::Scalar b;
         b[0] = 10;
         a -= b;
-        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar expected = sirius::crypto::Scalar::getLMinusOne();
         expected[0] = 226; // I - 11
         ASSERT_EQ(a, expected);
     }
@@ -360,9 +384,9 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, AddProductLarge)
     {
-        sirius::crypto::Scalar a = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar b = sirius::crypto::Scalar::getI();
-        sirius::crypto::Scalar c = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar a = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar b = sirius::crypto::Scalar::getLMinusOne();
+        sirius::crypto::Scalar c = sirius::crypto::Scalar::getLMinusOne();
         c[0] = 232; // I - 5
         sirius::crypto::Scalar actual = a.addProduct(b, c);
         sirius::crypto::Scalar expected;
@@ -391,7 +415,7 @@ namespace sirius::contract::test
     TEST(TEST_NAME, CurvePointAddLarge)
     {
         sirius::crypto::CurvePoint a;
-        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I; // I - 1
         sirius::crypto::CurvePoint b;
         I[0] = 234; // I - 3
@@ -424,15 +448,16 @@ namespace sirius::contract::test
     TEST(TEST_NAME, CurvePointSubLarge)
     {
         sirius::crypto::CurvePoint a;
-        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
-        a *= I; // I - 1
+        sirius::crypto::Scalar l = sirius::crypto::Scalar::getLMinusOne();
+        a *= l; // I - 1
         sirius::crypto::CurvePoint b;
-        I[0] = 234; // I - 3
-        b *= I;
+        l[0] = 234; // I - 3
+        b *= l;
         sirius::crypto::CurvePoint c = a - b;
         sirius::crypto::CurvePoint expected;
-        I[0] = 239; // I + 2
-        expected *= I;
+        sirius::crypto::Scalar scalar;
+        scalar[0] = 2;
+        expected *= scalar;
         ASSERT_EQ(expected, c);
     }
 
@@ -457,7 +482,7 @@ namespace sirius::contract::test
     TEST(TEST_NAME, CurvePointAddLargeInPlace)
     {
         sirius::crypto::CurvePoint a;
-        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I; // I - 1
         sirius::crypto::CurvePoint b;
         I[0] = 234; // I - 3
@@ -490,15 +515,16 @@ namespace sirius::contract::test
     TEST(TEST_NAME, CurvePointSubLargeInPlace)
     {
         sirius::crypto::CurvePoint a;
-        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
-        a *= I; // I - 1
+        sirius::crypto::Scalar l = sirius::crypto::Scalar::getLMinusOne();
+        a *= l; // I - 1
         sirius::crypto::CurvePoint b;
-        I[0] = 234; // I - 3
-        b *= I;
+        l[0] = 234; // I - 3
+        b *= l;
         a -= b;
         sirius::crypto::CurvePoint expected;
-        I[0] = 239; // I + 2
-        expected *= I;
+        sirius::crypto::Scalar scalar;
+        scalar[0] = 2;
+        expected *= scalar;
         ASSERT_EQ(expected, a);
     }
 
@@ -512,22 +538,32 @@ namespace sirius::contract::test
         ASSERT_EQ(a, b);
     }
 
+    TEST(TEST_NAME, CurvePointMulInvert)
+    {
+        sirius::crypto::CurvePoint a;
+        sirius::crypto::Scalar a_scalar;
+        a_scalar[0] = 3;
+        a *= a_scalar;
+        sirius::crypto::CurvePoint b = a_scalar * a;
+        ASSERT_EQ(a, b);
+    }
+
     TEST(TEST_NAME, CurvePointMulLarge)
     {
         sirius::crypto::CurvePoint a;
-        sirius::crypto::Scalar I = sirius::crypto::Scalar::getI();
+        sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I;
         sirius::crypto::CurvePoint b = a * I;
         ASSERT_EQ(a, b);
     }
 
-    TEST(TEST_NAME, CurvePointNaturalElement)
+    TEST(TEST_NAME, CurvePointNeutralElement)
     {
         sirius::crypto::CurvePoint a;
         sirius::crypto::Scalar two;
         two[0] = 2;
         a *= two;
-        sirius::crypto::CurvePoint base = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::CurvePoint base;
         sirius::crypto::CurvePoint c = a + base;
         sirius::crypto::CurvePoint expected;
         expected *= two;
