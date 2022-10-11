@@ -4,26 +4,26 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "InitiateModificationsTag.h"
+#include "InitiateSandboxModificationsTag.h"
 
 namespace sirius::contract::storage {
 
-InitiateModificationsTag::InitiateModificationsTag(GlobalEnvironment& environment,
-                                                   storageServer::InitModificationsRequest&& request,
+InitiateSandboxModificationsTag::InitiateSandboxModificationsTag(GlobalEnvironment& environment,
+                                                   storageServer::InitSandboxRequest&& request,
                                                    storageServer::StorageServer::Stub& stub,
                                                    grpc::CompletionQueue& completionQueue,
                                                    std::shared_ptr<AsyncQueryCallback<void>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
-        , m_responseReader(stub.PrepareAsyncInitiateModifications(&m_context, m_request, &completionQueue))
+        , m_responseReader(stub.PrepareAsyncInitiateSandboxModifications(&m_context, m_request, &completionQueue))
         , m_callback(std::move(callback)) {}
 
-void InitiateModificationsTag::start() {
+void InitiateSandboxModificationsTag::start() {
     m_responseReader->StartCall();
     m_responseReader->Finish(&m_response, &m_status, this);
 }
 
-void InitiateModificationsTag::process(bool ok) {
+void InitiateSandboxModificationsTag::process(bool ok) {
 
     ASSERT(!isSingleThread(), m_environment.logger())
 
@@ -37,7 +37,7 @@ void InitiateModificationsTag::process(bool ok) {
     }
 }
 
-void InitiateModificationsTag::cancel() {
+void InitiateSandboxModificationsTag::cancel() {
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_context.TryCancel();

@@ -10,14 +10,13 @@ namespace sirius::contract::storage {
 
 OpenFileTag::OpenFileTag(
         GlobalEnvironment& environment,
-        rpc::OpenFileRequest&& request,
-        rpc::StorageContentManagerServer::Stub& stub,
+        storageServer::OpenFileRequest&& request,
+        storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
         std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback)
-        : m_environment(environment)
-        , m_request(std::move(request))
-        , m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue))
-        , m_callback(std::move(callback)) {}
+        : m_environment(environment), m_request(std::move(request)),
+          m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue)),
+          m_callback(std::move(callback)) {}
 
 void OpenFileTag::start() {
     m_responseReader->StartCall();
@@ -32,13 +31,18 @@ void OpenFileTag::process(bool ok) {
 
     if (!m_status.ok()) {
         m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
-        m_callback->postReply(
-                tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory)));
+        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
     } else if (!m_response.success()) {
         m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
     } else {
         m_callback->postReply(m_response.id());
     }
+}
+
+void OpenFileTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }

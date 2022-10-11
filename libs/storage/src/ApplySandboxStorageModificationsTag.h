@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "RPCTag.h"
+#include "storage/RPCTag.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
@@ -15,7 +15,7 @@
 
 namespace sirius::contract::storage {
 
-namespace rpc = ::storage;
+
 
 class ApplySandboxStorageModificationsTag
         : private SingleThread, public RPCTag {
@@ -27,27 +27,29 @@ private:
 
     std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> m_callback;
 
-    rpc::ApplySandboxModificationsRequest   m_request;
-    rpc::ApplySandboxModificationsResponse  m_response;
+    storageServer::ApplySandboxModificationsRequest   m_request;
+    storageServer::ApplySandboxModificationsResponse  m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    rpc::ApplySandboxModificationsResponse>> m_responseReader;
+                    storageServer::ApplySandboxModificationsResponse>> m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
     ApplySandboxStorageModificationsTag(GlobalEnvironment& environment,
-                                        rpc::ApplySandboxModificationsRequest&& request,
-                                        rpc::StorageServer::Stub& stub,
+                                        storageServer::ApplySandboxModificationsRequest&& request,
+                                        storageServer::StorageServer::Stub& stub,
                                         grpc::CompletionQueue& completionQueue,
                                         std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>>&& callback);
 
     void start();
 
     void process(bool ok) override;
+
+    void cancel() override;
 
 };
 

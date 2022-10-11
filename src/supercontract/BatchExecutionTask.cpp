@@ -31,13 +31,11 @@ void BatchExecutionTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto[query, callback] = createAsyncQuery<bool>([this](auto&& success) {
+    auto[query, callback] = createAsyncQuery<void>([this](auto&& success) {
         if (!success.has_value()) {
             onStorageUnavailable();
             return;
         }
-
-        ASSERT(*success, m_executorEnvironment.logger());
 
         onInitiatedModifications();
     }, [] {}, m_executorEnvironment, true, true);
@@ -312,13 +310,11 @@ void BatchExecutionTask::processPublishedEndBatch() {
             return;
         }
 
-        auto[query, callback] = createAsyncQuery<bool>([this](auto&& res) {
+        auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
             if (!res) {
                 onStorageUnavailable();
                 return;
             }
-
-            ASSERT(*res, m_executorEnvironment.logger());
 
             onAppliedStorageModifications();
 

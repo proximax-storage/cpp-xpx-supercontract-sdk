@@ -16,7 +16,7 @@ namespace sirius::contract::storage {
 
 
 
-class InitiateModificationsTag
+class InitiateSandboxModificationsTag
         : private SingleThread, public RPCTag {
 
 
@@ -26,20 +26,20 @@ private:
 
     std::shared_ptr<AsyncQueryCallback<void>>                m_callback;
 
-    storageServer::InitModificationsRequest                            m_request;
-    storageServer::InitModificationsResponse                           m_response;
+    storageServer::InitSandboxRequest                                  m_request;
+    storageServer::InitSandboxResponse                                 m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    storageServer::InitModificationsResponse>>         m_responseReader;
+                    storageServer::InitSandboxResponse>>         m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
-    InitiateModificationsTag(GlobalEnvironment& environment,
-                             storageServer::InitModificationsRequest&& request,
+    InitiateSandboxModificationsTag(GlobalEnvironment& environment,
+                             storageServer::InitSandboxRequest&& request,
                              storageServer::StorageServer::Stub& stub,
                              grpc::CompletionQueue& completionQueue,
                              std::shared_ptr<AsyncQueryCallback<void>>&& callback);

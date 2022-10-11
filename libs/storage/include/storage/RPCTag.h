@@ -16,6 +16,8 @@ public:
 
     virtual void process(bool ok) = 0;
 
+    virtual void cancel() = 0;
+
 };
 
 }

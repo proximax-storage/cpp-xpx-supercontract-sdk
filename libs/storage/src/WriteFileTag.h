@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "storage/RPCTag.h"
+#include <storage/RPCTag.h>
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
@@ -17,32 +17,32 @@ namespace sirius::contract::storage {
 
 
 
-class AbsolutePathTag
+class WriteFileTag
         : private SingleThread, public RPCTag {
-    
+
 private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
-    storageServer::AbsolutePathRequest   m_request;
-    storageServer::AbsolutePathResponse  m_response;
+    storageServer::WriteFileRequest   m_request;
+    storageServer::WriteFileResponse  m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    storageServer::AbsolutePathResponse>> m_responseReader;
+                    storageServer::WriteFileResponse>> m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
-    AbsolutePathTag(GlobalEnvironment& environment,
-                                        storageServer::AbsolutePathRequest&& request,
+    WriteFileTag(GlobalEnvironment& environment,
+                                        storageServer::WriteFileRequest&& request,
                                         storageServer::StorageServer::Stub& stub,
                                         grpc::CompletionQueue& completionQueue,
-                                        std::shared_ptr<AsyncQueryCallback<std::string>>&& callback);
+                                        std::shared_ptr<AsyncQueryCallback<void>>&& callback);
 
     void start();
 

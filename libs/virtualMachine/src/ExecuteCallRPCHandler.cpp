@@ -106,7 +106,7 @@ void ExecuteCallRPCHandler::onWritten(expected<void>&& res) {
 
 void ExecuteCallRPCHandler::writeRequest(supercontractserver::Request&& requestWrapper) {
 
-    ASSERT(isSingleThread(), m_environment.logger());
+    ASSERT(isSingleThread(), m_environment.logger())
 
     m_environment.logger().info("Call {} write message to vm server", m_request.m_callId);
 
