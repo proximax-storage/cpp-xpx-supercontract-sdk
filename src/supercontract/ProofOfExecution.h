@@ -35,6 +35,8 @@ namespace sirius::contract
         void popFromProof();
         void buildProof();
         void reset();
+        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> getBProof() const;
+        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> getTProof() const;
     };
 
 }

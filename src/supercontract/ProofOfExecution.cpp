@@ -78,4 +78,12 @@ namespace sirius::contract
         this->m_b = std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar());
         this->m_q = std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar());
     }
+
+    std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> ProofOfExecution::getBProof() const {
+        return this->m_b;
+    }
+
+    std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> ProofOfExecution::getTProof() const {
+        return this->m_q;
+    }
 }
