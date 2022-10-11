@@ -5,12 +5,20 @@
 */
 
 #include "gtest/gtest.h"
+#include "supercontract/ProofOfExecution.h"
 
-namespace sirius::contract::test {
+namespace sirius::contract::test
+{
 
-#define TEST_NAME Example
+#define TEST_NAME Supercontract
 
-TEST(TEST_NAME, Example) {
-}
+    TEST(TEST_NAME, PoEx)
+    {
+        GlobalEnvironmentMock environment;
+        auto &threadManager = environment.threadManager();
+        threadManager.execute([&]
+                              { sirius::contract::ProofOfExecution poex(environment); });
+        threadManager.stop();
+    }
 
 }
