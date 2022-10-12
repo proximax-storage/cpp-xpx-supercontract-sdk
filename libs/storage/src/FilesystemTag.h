@@ -12,42 +12,50 @@
 #include "supercontract/AsyncQuery.h"
 #include "storage/StorageRequests.h"
 #include "storageServer.grpc.pb.h"
+#include <storage/FilesystemEntry.h>
+#include <storage/Folder.h>
+#include <storage/File.h>
 
 namespace sirius::contract::storage {
 
 
-class AbsolutePathTag
+class FilesystemTag
         : private SingleThread, public RPCTag {
 
 private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> m_callback;
 
-    storageServer::AbsolutePathRequest m_request;
-    storageServer::AbsolutePathResponse m_response;
+    storageServer::FilesystemRequest m_request;
+    storageServer::FilesystemResponse m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    storageServer::AbsolutePathResponse>> m_responseReader;
+                    storageServer::FilesystemResponse>> m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
-    AbsolutePathTag(GlobalEnvironment& environment,
-                    storageServer::AbsolutePathRequest&& request,
+    FilesystemTag(GlobalEnvironment& environment,
+                    storageServer::FilesystemRequest&& request,
                     storageServer::StorageServer::Stub& stub,
                     grpc::CompletionQueue& completionQueue,
-                    std::shared_ptr<AsyncQueryCallback<std::string>>&& callback);
+                    std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>>&& callback);
 
     void start();
 
     void process(bool ok) override;
 
     void cancel() override;
+
+private:
+
+    std::unique_ptr<Folder> buildFolder(const storageServer::Folder& folder);
+    std::unique_ptr<File> buildFile(const storageServer::File& file);
 };
 
 }

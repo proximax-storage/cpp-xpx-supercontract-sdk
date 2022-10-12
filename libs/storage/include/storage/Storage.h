@@ -10,6 +10,7 @@
 #include "storage/StorageRequests.h"
 
 #include <vector>
+#include "Folder.h"
 
 namespace sirius::contract::storage {
 
@@ -58,6 +59,11 @@ public:
     virtual void applyStorageModifications(const DriveKey& driveKey, bool success,
                                            std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
+    virtual void absolutePath(const DriveKey& key, const std::string& relativePath,
+                              std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
+
+    virtual void
+    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) = 0;
 };
 
 }

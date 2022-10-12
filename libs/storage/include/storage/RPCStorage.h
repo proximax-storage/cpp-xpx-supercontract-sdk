@@ -74,6 +74,12 @@ public:
 
     void flush(const DriveKey& key, uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
+    void absolutePath(const DriveKey& key, const std::string& relativePath,
+                      std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+
+    void
+    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) override;
+
 private:
 
     void waitForRPCResponse();

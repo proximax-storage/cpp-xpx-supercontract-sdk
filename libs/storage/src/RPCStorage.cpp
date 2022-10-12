@@ -19,6 +19,8 @@
 #include "WriteFileTag.h"
 #include "CloseFileTag.h"
 #include "FlushFileTag.h"
+#include "AbsolutePathTag.h"
+#include "FilesystemTag.h"
 
 namespace sirius::contract::storage {
 
@@ -216,6 +218,39 @@ void RPCStorage::flush(const DriveKey& driveKey, uint64_t fileId, std::shared_pt
                                  *m_stub,
                                  m_completionQueue,
                                  std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::absolutePath(const DriveKey& driveKey,
+                              const std::string& relativePath,
+                              std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::AbsolutePathRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_relative_path(relativePath);
+    auto* tag = new AbsolutePathTag(m_environment,
+                                    std::move(request),
+                                    *m_stub,
+                                    m_completionQueue,
+                                    std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void
+RPCStorage::filesystem(const DriveKey& driveKey,
+                       std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::FilesystemRequest request;
+    request.set_drive_key(driveKey.toString());
+    auto* tag = new FilesystemTag(m_environment,
+                                  std::move(request),
+                                  *m_stub,
+                                  m_completionQueue,
+                                  std::move(callback));
     m_activeTags.insert(tag);
     tag->start();
 }
