@@ -12,6 +12,9 @@ namespace sirius { namespace crypto {
         {
             CurvePoint temp;
             ge_p3 a;
+            Scalar one;
+            one[0] = 1;
+            ge_scalarmult_base(&a, one.data());
             temp.m_ge_p3 = a;
             return temp;
         }
@@ -43,16 +46,25 @@ namespace sirius { namespace crypto {
         CurvePoint CurvePoint::operator*(Scalar &a) const
         {
             CurvePoint ret;
-            ret.m_ge_p3 = this->m_ge_p3;
-            ge_scalarmult_base(&ret.m_ge_p3, a.data());
+            Scalar zero;
+            ge_p2 ans;
+            ge_double_scalarmult_vartime(&ans, a.data(), &this->m_ge_p3, zero.data());
+            Scalar temp;
+            ge_tobytes(temp.data(), &ans);
+
+            ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
             return ret;
         }
 
         CurvePoint operator*(Scalar &a, CurvePoint &b)
         {
             CurvePoint ret;
-            ret.m_ge_p3 = b.m_ge_p3;
-            ge_scalarmult_base(&ret.m_ge_p3, a.data());
+            Scalar zero;
+            ge_p2 ans;
+            ge_double_scalarmult_vartime(&ans, a.data(), &b.m_ge_p3, zero.data());
+            Scalar temp;
+            ge_tobytes(temp.data(), &ans);
+            ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
             return ret;
         }
 
@@ -81,6 +93,8 @@ namespace sirius { namespace crypto {
             Scalar a_bytes;
             ge_p3_tobytes(a_bytes.data(), &a.m_ge_p3);
 
+            // std::cout << this_bytes << std::endl;
+            // std::cout << a_bytes << std::endl;
             return this_bytes == a_bytes;
         }
 

@@ -1,11 +1,13 @@
 #include "ProofOfExecution.h"
 #include "utils/Random.h"
+extern "C"
+{
+#include <external/ref10/sc.h>
+}
 
 namespace sirius::contract
 {
-    ProofOfExecution::ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed) : m_publicKey(Hash256(publicKey)),
-                                                                                                                       m_b(std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar())),
-                                                                                                                       m_q(std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar())),
+    ProofOfExecution::ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed) : m_publicKey(publicKey),
                                                                                                                        m_x(sirius::crypto::Scalar()),
                                                                                                                        m_xPrevious(sirius::crypto::Scalar()),
                                                                                                                        m_environment(environment)
@@ -18,9 +20,9 @@ namespace sirius::contract
         ASSERT(isSingleThread(), m_environment.logger())
 
         sirius::crypto::CurvePoint beta;
-        Hash256 digest_hash;
-        sirius::crypto::Scalar temp;
-        sirius::crypto::Sha3_256_Builder hasher_h;
+        Hash512 digest_hash;
+        Hash512 temp;
+        sirius::crypto::Sha3_512_Builder hasher_h;
 
         std::memcpy(temp.data(), &digest, sizeof digest);
         hasher_h.update(temp);
@@ -29,8 +31,8 @@ namespace sirius::contract
         sirius::crypto::Scalar digest_scalar(digest_hash.array());
         sirius::crypto::CurvePoint Y = digest_scalar * beta;
 
-        sirius::crypto::Sha3_256_Builder hasher_h2;
-        Hash256 c;
+        sirius::crypto::Sha3_512_Builder hasher_h2;
+        Hash512 c;
         hasher_h2.update({beta.tobytes(), Y.tobytes(), this->m_publicKey});
         hasher_h2.final(c);
         sirius::crypto::Scalar c_scalar(c.array());
@@ -46,27 +48,33 @@ namespace sirius::contract
         this->m_x = this->m_xPrevious;
     }
 
-    void ProofOfExecution::buildProof()
+    Proofs ProofOfExecution::buildProof()
     {
         ASSERT(isSingleThread(), m_environment.logger())
 
-        sirius::crypto::Scalar v = sirius::utils::generateRandomByteValue<sirius::crypto::Scalar>();
+        Hash512 v_r = sirius::utils::generateRandomByteValue<Hash512>();
+        sirius::crypto::Scalar v(v_r.array());
         sirius::crypto::CurvePoint beta;
         sirius::crypto::CurvePoint T = v * beta;
         sirius::crypto::Scalar r = v - this->m_x;
-        this->m_b = std::make_tuple(T, r);
+        // this->m_b = std::make_tuple(T, r);
+        BatchProof b{T, r};
 
-        sirius::crypto::Scalar w = sirius::utils::generateRandomByteValue<sirius::crypto::Scalar>();
+        Hash512 w_r = sirius::utils::generateRandomByteValue<Hash512>();
+        sirius::crypto::Scalar w(w_r.array());
         sirius::crypto::CurvePoint F = w * beta;
 
-        Hash256 d_hash;
-        sirius::crypto::Sha3_256_Builder hasher_h;
+        Hash512 d_hash;
+        sirius::crypto::Sha3_512_Builder hasher_h;
         hasher_h.update({F.tobytes(), T.tobytes(), this->m_publicKey});
         hasher_h.final(d_hash);
+
         sirius::crypto::Scalar d(d_hash.array());
         sirius::crypto::Scalar k = w - d * v;
 
-        this->m_q = std::make_tuple(F, k);
+        // this->m_q = std::make_tuple(F, k);
+        TProof q{F, k};
+        return Proofs{q, b};
     }
 
     void ProofOfExecution::reset()
@@ -75,15 +83,5 @@ namespace sirius::contract
 
         this->m_x = sirius::crypto::Scalar();
         this->m_xPrevious = sirius::crypto::Scalar();
-        this->m_b = std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar());
-        this->m_q = std::make_tuple(sirius::crypto::CurvePoint(), sirius::crypto::Scalar());
-    }
-
-    std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> ProofOfExecution::getBProof() const {
-        return this->m_b;
-    }
-
-    std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> ProofOfExecution::getTProof() const {
-        return this->m_q;
     }
 }

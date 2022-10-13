@@ -396,16 +396,16 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointAdd)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar two;
         two[0] = 2;
         a *= two;
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar three;
         three[0] = 3;
         b *= three;
         sirius::crypto::CurvePoint c = a + b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar five;
         five[0] = 5;
         expected *= five;
@@ -414,14 +414,14 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointAddLarge)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I; // I - 1
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         I[0] = 234; // I - 3
         b *= I;
         sirius::crypto::CurvePoint c = a + b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         I[0] = 233; // I - 4
         expected *= I;
         ASSERT_EQ(expected, c);
@@ -429,16 +429,16 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointSub)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar two;
         two[0] = 8;
         a *= two;
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar three;
         three[0] = 3;
         b *= three;
         sirius::crypto::CurvePoint c = a - b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar five;
         five[0] = 5;
         expected *= five;
@@ -447,14 +447,14 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointSubLarge)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar l = sirius::crypto::Scalar::getLMinusOne();
         a *= l; // I - 1
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         l[0] = 234; // I - 3
         b *= l;
         sirius::crypto::CurvePoint c = a - b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar scalar;
         scalar[0] = 2;
         expected *= scalar;
@@ -463,16 +463,16 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointAddInPlace)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar two;
         two[0] = 2;
         a *= two;
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar three;
         three[0] = 3;
         b *= three;
         a += b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar five;
         five[0] = 5;
         expected *= five;
@@ -481,14 +481,14 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointAddLargeInPlace)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I; // I - 1
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         I[0] = 234; // I - 3
         b *= I;
         a += b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         I[0] = 233; // I - 4
         expected *= I;
         ASSERT_EQ(expected, a);
@@ -496,16 +496,16 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointSubInPlace)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar two;
         two[0] = 8;
         a *= two;
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar three;
         three[0] = 3;
         b *= three;
         a -= b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar five;
         five[0] = 5;
         expected *= five;
@@ -514,14 +514,14 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointSubLargeInPlace)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar l = sirius::crypto::Scalar::getLMinusOne();
         a *= l; // I - 1
-        sirius::crypto::CurvePoint b;
+        auto b = sirius::crypto::CurvePoint::BasePoint();
         l[0] = 234; // I - 3
         b *= l;
         a -= b;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar scalar;
         scalar[0] = 2;
         expected *= scalar;
@@ -530,27 +530,43 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointMul)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar a_scalar;
         a_scalar[0] = 3;
-        a *= a_scalar;
         sirius::crypto::CurvePoint b = a * a_scalar;
+        a *= a_scalar;
         ASSERT_EQ(a, b);
+    }
+
+    TEST(TEST_NAME, CurvePointMulDouble)
+    {
+        auto a = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::Scalar a_scalar;
+        a_scalar[0] = 3;
+        sirius::crypto::Scalar b_scalar;
+        b_scalar[0] = 6;
+        a *= a_scalar;
+        a *= b_scalar;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::Scalar expected_scalar;
+        expected_scalar[0] = 18;
+        expected *= expected_scalar;
+        ASSERT_EQ(expected, a);
     }
 
     TEST(TEST_NAME, CurvePointMulInvert)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar a_scalar;
         a_scalar[0] = 3;
-        a *= a_scalar;
         sirius::crypto::CurvePoint b = a_scalar * a;
+        a *= a_scalar;
         ASSERT_EQ(a, b);
     }
 
     TEST(TEST_NAME, CurvePointMulLarge)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
         a *= I;
         sirius::crypto::CurvePoint b = a * I;
@@ -559,13 +575,13 @@ namespace sirius::contract::test
 
     TEST(TEST_NAME, CurvePointNeutralElement)
     {
-        sirius::crypto::CurvePoint a;
+        auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar two;
         two[0] = 2;
         a *= two;
         sirius::crypto::CurvePoint base;
         sirius::crypto::CurvePoint c = a + base;
-        sirius::crypto::CurvePoint expected;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
         expected *= two;
         ASSERT_EQ(expected, c);
     }

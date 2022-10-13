@@ -14,6 +14,23 @@
 
 namespace sirius::contract
 {
+    struct TProof
+    {
+        sirius::crypto::CurvePoint F;
+        sirius::crypto::Scalar k;
+    };
+
+    struct BatchProof
+    {
+        sirius::crypto::CurvePoint T;
+        sirius::crypto::Scalar r;
+    };
+
+    struct Proofs
+    {
+        TProof q;
+        BatchProof b;
+    };
 
     class ProofOfExecution : private SingleThread
     {
@@ -26,17 +43,12 @@ namespace sirius::contract
 
         Hash256 m_publicKey;
 
-        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> m_b;
-        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> m_q;
-
     public:
         ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed);
         void addToProof(u_int64_t digest);
         void popFromProof();
-        void buildProof();
+        Proofs buildProof();
         void reset();
-        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> getBProof() const;
-        std::tuple<sirius::crypto::CurvePoint, sirius::crypto::Scalar> getTProof() const;
     };
 
 }

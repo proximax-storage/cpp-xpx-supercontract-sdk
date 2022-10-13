@@ -1,14 +1,24 @@
 #include "crypto/Scalar.h"
+#include <cstdio>
 extern "C"
 {
 #include <external/ref10/sc.h>
 }
 
 namespace sirius { namespace crypto {
+        Scalar::Scalar(const std::array<uint8_t, Scalar_Size * 2> &arr)
+        {
+            auto temp = arr;
+            sc_reduce(temp.data());
+            std::copy(temp.begin(), temp.end(), m_array.begin());
+        }
+
         Scalar::Scalar(const std::array<uint8_t, Scalar_Size> &arr)
         {
-            this->m_array = arr;
-            sc_reduce(this->m_array.data());
+            std::array<uint8_t, Scalar_Size * 2> temp;
+            std::copy(arr.begin(), arr.end(), temp.begin());
+            sc_reduce(temp.data());
+            std::copy(temp.begin(), temp.end(), m_array.begin());
         }
 
         Scalar::Scalar() : ByteArray() {}
