@@ -568,8 +568,8 @@ namespace sirius::contract::test
     {
         auto a = sirius::crypto::CurvePoint::BasePoint();
         sirius::crypto::Scalar I = sirius::crypto::Scalar::getLMinusOne();
-        a *= I;
         sirius::crypto::CurvePoint b = a * I;
+        a *= I;
         ASSERT_EQ(a, b);
     }
 

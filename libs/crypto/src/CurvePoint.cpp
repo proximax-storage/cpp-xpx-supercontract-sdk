@@ -53,6 +53,9 @@ namespace sirius { namespace crypto {
             ge_tobytes(temp.data(), &ans);
 
             ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
+            auto offset = ret;
+            ret -= offset;
+            ret -= offset;
             return ret;
         }
 
@@ -64,7 +67,11 @@ namespace sirius { namespace crypto {
             ge_double_scalarmult_vartime(&ans, a.data(), &b.m_ge_p3, zero.data());
             Scalar temp;
             ge_tobytes(temp.data(), &ans);
+
             ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
+            auto offset = ret;
+            ret -= offset;
+            ret -= offset;
             return ret;
         }
 

@@ -24,8 +24,8 @@ namespace sirius::contract::test
         hasher_h.update({F.tobytes(), T.tobytes(), publicKey});
         hasher_h.final(d_h);
         sirius::crypto::Scalar d(d_h.array());
-        sirius::crypto::CurvePoint beta;
-        sirius::crypto::CurvePoint expected = k * beta;
+        auto beta = sirius::crypto::CurvePoint::BasePoint();
+        auto expected = k * beta;
         T *= d;
         expected += T;
         ASSERT_EQ(F, expected);
@@ -33,7 +33,7 @@ namespace sirius::contract::test
 
     void batchProofVerification(Proofs n, Proofs m, sirius::crypto::CurvePoint cY)
     {
-        sirius::crypto::CurvePoint beta;
+        auto beta = sirius::crypto::CurvePoint::BasePoint();
 
         auto T_m = m.b.T;
         auto r_m = m.b.r;
@@ -63,25 +63,14 @@ namespace sirius::contract::test
 
             std::array<uint64_t, 3> secretInfo = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
-            sirius::crypto::CurvePoint beta;
+            auto beta = sirius::crypto::CurvePoint::BasePoint();
             for (auto i = secretInfo.begin(); i != secretInfo.end(); i++) {
-                poex.addToProof(*i);
+                auto Y = poex.addToProof(*i);
 
-                sirius::crypto::Sha3_512_Builder secretInfoHasher;
-                Hash512 alphaHash;
-                Hash512 temp;
-                std::memcpy(temp.data(), i, sizeof *i);
-
-                secretInfoHasher.update(temp);
-                secretInfoHasher.final(alphaHash);
-                sirius::crypto::Scalar alpha(alphaHash.array());
-
-                auto Y = alpha * beta;
-
-                sirius::crypto::Sha3_512_Builder hasher_h2;
+                sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h2.update({beta.tobytes(), Y.tobytes(), publicKey});
-                hasher_h2.final(cHash);
+                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
                 cY += part;
@@ -93,27 +82,17 @@ namespace sirius::contract::test
             std::array<uint64_t, 3> secretInfo2 = {354625726501424, 7687354345387, 3546387643};
             sirius::crypto::CurvePoint cY2;
             for (auto i = secretInfo2.begin(); i != secretInfo2.end(); i++) {
-                poex.addToProof(*i);
+                auto Y = poex.addToProof(*i);
 
-                sirius::crypto::Sha3_512_Builder secretInfoHasher;
-                Hash512 alphaHash;
-                Hash512 temp;
-                std::memcpy(temp.data(), i, sizeof *i);
-
-                secretInfoHasher.update(temp);
-                secretInfoHasher.final(alphaHash);
-                sirius::crypto::Scalar alpha(alphaHash.array());
-
-                auto Y = alpha * beta;
-
-                sirius::crypto::Sha3_512_Builder hasher_h2;
+                sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h2.update({beta.tobytes(), Y.tobytes(), publicKey});
-                hasher_h2.final(cHash);
+                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
                 cY2 += part;
             }
+            cY += cY2;
             auto n = poex.buildProof();
             tProofVerification(n, publicKey);
             

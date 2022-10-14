@@ -45,7 +45,7 @@ namespace sirius::contract
 
     public:
         ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed);
-        void addToProof(u_int64_t digest);
+        sirius::crypto::CurvePoint addToProof(u_int64_t digest);
         void popFromProof();
         Proofs buildProof();
         void reset();

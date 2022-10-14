@@ -15,11 +15,11 @@ namespace sirius::contract
         srand(seed);
     }
 
-    void ProofOfExecution::addToProof(u_int64_t digest)
+    sirius::crypto::CurvePoint ProofOfExecution::addToProof(u_int64_t digest)
     {
         ASSERT(isSingleThread(), m_environment.logger())
 
-        sirius::crypto::CurvePoint beta;
+        auto beta = sirius::crypto::CurvePoint::BasePoint();
         Hash512 digest_hash;
         Hash512 temp;
         sirius::crypto::Sha3_512_Builder hasher_h;
@@ -29,7 +29,7 @@ namespace sirius::contract
         hasher_h.final(digest_hash);
 
         sirius::crypto::Scalar digest_scalar(digest_hash.array());
-        sirius::crypto::CurvePoint Y = digest_scalar * beta;
+        auto Y = digest_scalar * beta;
 
         sirius::crypto::Sha3_512_Builder hasher_h2;
         Hash512 c;
@@ -39,6 +39,8 @@ namespace sirius::contract
 
         this->m_xPrevious = this->m_x;
         this->m_x += c_scalar * digest_scalar;
+
+        return Y;
     }
 
     void ProofOfExecution::popFromProof()
@@ -54,15 +56,15 @@ namespace sirius::contract
 
         Hash512 v_r = sirius::utils::generateRandomByteValue<Hash512>();
         sirius::crypto::Scalar v(v_r.array());
-        sirius::crypto::CurvePoint beta;
-        sirius::crypto::CurvePoint T = v * beta;
-        sirius::crypto::Scalar r = v - this->m_x;
+        auto beta = sirius::crypto::CurvePoint::BasePoint();
+        auto T = v * beta;
+        auto r = v - this->m_x;
         // this->m_b = std::make_tuple(T, r);
         BatchProof b{T, r};
 
         Hash512 w_r = sirius::utils::generateRandomByteValue<Hash512>();
         sirius::crypto::Scalar w(w_r.array());
-        sirius::crypto::CurvePoint F = w * beta;
+        auto F = w * beta;
 
         Hash512 d_hash;
         sirius::crypto::Sha3_512_Builder hasher_h;
@@ -70,7 +72,7 @@ namespace sirius::contract
         hasher_h.final(d_hash);
 
         sirius::crypto::Scalar d(d_hash.array());
-        sirius::crypto::Scalar k = w - d * v;
+        auto k = w - d * v;
 
         // this->m_q = std::make_tuple(F, k);
         TProof q{F, k};
