@@ -100,9 +100,17 @@ namespace sirius { namespace crypto {
             Scalar a_bytes;
             ge_p3_tobytes(a_bytes.data(), &a.m_ge_p3);
 
-            // std::cout << this_bytes << std::endl;
-            // std::cout << a_bytes << std::endl;
             return this_bytes == a_bytes;
+        }
+
+        bool CurvePoint::operator!=(const CurvePoint &a) const
+        {
+            Scalar this_bytes;
+            ge_p3_tobytes(this_bytes.data(), &this->m_ge_p3);
+            Scalar a_bytes;
+            ge_p3_tobytes(a_bytes.data(), &a.m_ge_p3);
+
+            return this_bytes != a_bytes;
         }
 
         Scalar CurvePoint::tobytes() const

@@ -17,7 +17,7 @@ namespace sirius::contract
 
     sirius::crypto::CurvePoint ProofOfExecution::addToProof(u_int64_t digest)
     {
-        ASSERT(isSingleThread(), m_environment.logger())
+        // ASSERT(isSingleThread(), m_environment.logger())
 
         auto beta = sirius::crypto::CurvePoint::BasePoint();
         Hash512 digest_hash;
@@ -45,14 +45,14 @@ namespace sirius::contract
 
     void ProofOfExecution::popFromProof()
     {
-        ASSERT(isSingleThread(), m_environment.logger())
+        // ASSERT(isSingleThread(), m_environment.logger())
 
         this->m_x = this->m_xPrevious;
     }
 
     Proofs ProofOfExecution::buildProof()
     {
-        ASSERT(isSingleThread(), m_environment.logger())
+        // ASSERT(isSingleThread(), m_environment.logger())
 
         Hash512 v_r = sirius::utils::generateRandomByteValue<Hash512>();
         sirius::crypto::Scalar v(v_r.array());
@@ -81,7 +81,7 @@ namespace sirius::contract
 
     void ProofOfExecution::reset()
     {
-        ASSERT(isSingleThread(), m_environment.logger())
+        // ASSERT(isSingleThread(), m_environment.logger())
 
         this->m_x = sirius::crypto::Scalar();
         this->m_xPrevious = sirius::crypto::Scalar();

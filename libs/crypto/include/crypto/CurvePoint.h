@@ -20,6 +20,7 @@ namespace sirius { namespace crypto {
             CurvePoint &operator-=(CurvePoint &a);
             CurvePoint &operator*=(Scalar &a);
             bool operator==(const CurvePoint &a) const;
+            bool operator!=(const CurvePoint &a) const;
             Scalar tobytes() const;
         };
     }
