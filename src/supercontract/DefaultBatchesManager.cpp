@@ -46,7 +46,7 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 bool DefaultBatchesManager::hasNextBatch() {
     clearOutdatedBatches();
     return !m_batches.empty() &&
-           m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED;
+           m_batches.begin()->second.m_batchFormationStatus != DraftBatch::BatchFormationStatus::FINISHED;
 }
 
 Batch DefaultBatchesManager::nextBatch() {
@@ -58,7 +58,7 @@ Batch DefaultBatchesManager::nextBatch() {
 }
 
 void DefaultBatchesManager::addBlockInfo(const Block& block) {
-    if (!m_automaticExecutionsEnabledSince || m_automaticExecutionsEnabledSince < block.m_height) {
+     if (!m_automaticExecutionsEnabledSince ||  block.m_height < *m_automaticExecutionsEnabledSince){
         // Automatic Executions Are Disabled For This Block
 
         if (m_batches.empty()) {
@@ -86,7 +86,6 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
         m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash};
-
         CallRequest request{m_contractEnvironment.contractKey(),
                             callId,
                             m_executorEnvironment.executorConfig().autorunFile(),
@@ -95,7 +94,7 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
                             m_executorEnvironment.executorConfig().autorunSCLimit(),
                             0,
                             CallRequest::CallLevel::AUTORUN};
-
+            
         auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this] (auto&& result) {
             ASSERT(result, m_executorEnvironment.logger())
             onSuperContractCallExecuted(request.m_callId, std::move(*result));
