@@ -33,6 +33,7 @@ void CallExecutionManager::execute() {
 
     auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([this] (auto&& result) {
         if (result) {
+            m_repeatTimer.cancel();
             m_callback->postReply(std::move(result));
         }
         else {
