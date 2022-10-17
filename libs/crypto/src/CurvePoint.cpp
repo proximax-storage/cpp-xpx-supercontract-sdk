@@ -43,6 +43,15 @@ namespace sirius { namespace crypto {
             return temp;
         }
 
+        CurvePoint CurvePoint::operator-()
+        {
+            CurvePoint temp;
+            temp.m_ge_p3 = this->m_ge_p3;
+            temp -= *this;
+            temp -= *this;
+            return temp;
+        }
+
         CurvePoint CurvePoint::operator*(Scalar &a) const
         {
             CurvePoint ret;
@@ -53,10 +62,7 @@ namespace sirius { namespace crypto {
             ge_tobytes(temp.data(), &ans);
 
             ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
-            auto offset = ret;
-            ret -= offset;
-            ret -= offset;
-            return ret;
+            return -ret;
         }
 
         CurvePoint operator*(Scalar &a, CurvePoint &b)
@@ -69,10 +75,7 @@ namespace sirius { namespace crypto {
             ge_tobytes(temp.data(), &ans);
 
             ge_frombytes_negate_vartime(&ret.m_ge_p3, temp.data());
-            auto offset = ret;
-            ret -= offset;
-            ret -= offset;
-            return ret;
+            return -ret;
         }
 
         CurvePoint &CurvePoint::operator+=(CurvePoint &a)

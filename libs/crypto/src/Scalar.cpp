@@ -58,6 +58,15 @@ namespace sirius { namespace crypto {
             return temp;
         }
 
+        Scalar Scalar::operator-() const
+        {
+            Scalar temp;
+            temp.m_array = this->m_array;
+            temp -= *this;
+            temp -= *this;
+            return temp;
+        }
+
         Scalar &Scalar::operator+=(const Scalar &a)
         {
             *this = *this + a;

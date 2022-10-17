@@ -14,6 +14,7 @@ namespace sirius { namespace crypto {
             static CurvePoint BasePoint();
             CurvePoint operator+(CurvePoint &a) const;
             CurvePoint operator-(CurvePoint &a) const;
+            CurvePoint operator-();
             CurvePoint operator*(Scalar &a) const;
             friend CurvePoint operator*(Scalar &a, CurvePoint &b);
             CurvePoint &operator+=(CurvePoint &a);

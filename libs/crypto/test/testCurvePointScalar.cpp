@@ -585,4 +585,48 @@ namespace sirius::contract::test
         expected *= two;
         ASSERT_EQ(expected, c);
     }
+
+    TEST(TEST_NAME, NegativeScalar)
+    {
+        sirius::crypto::Scalar a;
+        a[0] = 5;
+        auto expected = sirius::crypto::Scalar::getLMinusOne();
+        expected[0] -= 4;
+        ASSERT_EQ(-a, expected);
+    }
+
+    TEST(TEST_NAME, NegativeScalarBig)
+    {
+        auto a = sirius::crypto::Scalar::getLMinusOne();
+        a[0] -= 5;
+        sirius::crypto::Scalar expected;
+        expected[0] = 6;
+        ASSERT_EQ(-a, expected);
+    }
+
+    TEST(TEST_NAME, NegativeCurvePoint)
+    {
+        auto a = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::Scalar six;
+        six[0] = 6;
+        a *= six;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
+        auto negFive = sirius::crypto::Scalar::getLMinusOne();
+        negFive[0] -= 5;
+        expected *= negFive;
+        ASSERT_EQ(-a, expected);
+    }
+
+    TEST(TEST_NAME, NegativeCurvePointLarge)
+    {
+        auto a = sirius::crypto::CurvePoint::BasePoint();
+        auto neg = sirius::crypto::Scalar::getLMinusOne();
+        neg[0] -= 15;
+        a *= neg;
+        auto expected = sirius::crypto::CurvePoint::BasePoint();
+        sirius::crypto::Scalar num;
+        num[0] = 16;
+        expected *= num;
+        ASSERT_EQ(-a, expected);
+    }
 }

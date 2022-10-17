@@ -19,6 +19,7 @@ namespace sirius { namespace crypto {
             Scalar operator+(const Scalar &a) const;
             Scalar operator*(const Scalar &a) const;
             Scalar operator-(const Scalar &a) const;
+            Scalar operator-() const;
             Scalar &operator+=(const Scalar &a);
             Scalar &operator*=(const Scalar &a);
             Scalar &operator-=(const Scalar &a);
