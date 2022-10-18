@@ -46,7 +46,7 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 bool DefaultBatchesManager::hasNextBatch() {
     clearOutdatedBatches();
     return !m_batches.empty() &&
-           m_batches.begin()->second.m_batchFormationStatus != DraftBatch::BatchFormationStatus::FINISHED;
+           m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED;
 }
 
 Batch DefaultBatchesManager::nextBatch() {
