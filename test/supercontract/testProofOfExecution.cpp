@@ -13,15 +13,15 @@ namespace sirius::contract::test
 
 #define TEST_NAME Supercontract
 
-    void tProofVerification(Proofs p, std::array<uint8_t, 32> publicKey)
+    void tProofVerification(Proofs p, crypto::KeyPair& key)
     {
-        auto T = p.b.T;
-        auto r = p.b.r;
-        auto F = p.q.F;
-        auto k = p.q.k;
+        auto T = p.m_batchProof.m_T;
+        auto r = p.m_batchProof.m_r;
+        auto F = p.m_tProof.m_F;
+        auto k = p.m_tProof.m_k;
         sirius::crypto::Sha3_512_Builder hasher_h;
         Hash512 d_h;
-        hasher_h.update({F.tobytes(), T.tobytes(), publicKey});
+        hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
         hasher_h.final(d_h);
         sirius::crypto::Scalar d(d_h.array());
         auto beta = sirius::crypto::CurvePoint::BasePoint();
@@ -31,15 +31,15 @@ namespace sirius::contract::test
         ASSERT_EQ(F, expected);
     }
 
-    void tProofVerificationFalse(Proofs p, std::array<uint8_t, 32> publicKey)
+    void tProofVerificationFalse(Proofs p, crypto::KeyPair& key)
     {
-        auto T = p.b.T;
-        auto r = p.b.r;
-        auto F = p.q.F;
-        auto k = p.q.k;
+        auto T = p.m_batchProof.m_T;
+        auto r = p.m_batchProof.m_r;
+        auto F = p.m_tProof.m_F;
+        auto k = p.m_tProof.m_k;
         sirius::crypto::Sha3_512_Builder hasher_h;
         Hash512 d_h;
-        hasher_h.update({F.tobytes(), T.tobytes(), publicKey});
+        hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
         hasher_h.final(d_h);
         sirius::crypto::Scalar d(d_h.array());
         auto beta = sirius::crypto::CurvePoint::BasePoint();
@@ -53,11 +53,11 @@ namespace sirius::contract::test
     {
         auto beta = sirius::crypto::CurvePoint::BasePoint();
 
-        auto T_m = m.b.T;
-        auto r_m = m.b.r;
+        auto T_m = m.m_batchProof.m_T;
+        auto r_m = m.m_batchProof.m_r;
 
-        auto T_n = n.b.T;
-        auto r_n = n.b.r;
+        auto T_n = n.m_batchProof.m_T;
+        auto r_n = n.m_batchProof.m_r;
 
         auto T_diff = T_n - T_m;
         auto r_diff = r_n - r_m;
@@ -71,11 +71,11 @@ namespace sirius::contract::test
     {
         auto beta = sirius::crypto::CurvePoint::BasePoint();
 
-        auto T_m = m.b.T;
-        auto r_m = m.b.r;
+        auto T_m = m.m_batchProof.m_T;
+        auto r_m = m.m_batchProof.m_r;
 
-        auto T_n = n.b.T;
-        auto r_n = n.b.r;
+        auto T_n = n.m_batchProof.m_T;
+        auto r_n = n.m_batchProof.m_r;
 
         auto T_diff = T_n - T_m;
         auto r_diff = r_n - r_m;
@@ -91,11 +91,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -105,7 +105,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -113,7 +113,7 @@ namespace sirius::contract::test
             }
 
             auto m2 = poex.buildProof();
-            tProofVerification(m2, publicKey);
+            tProofVerification(m2, key);
 
             uint64_t secretInfo2[3] = {354625726501424, 7687354345387, 3546387643};
             sirius::crypto::CurvePoint cY2;
@@ -122,7 +122,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -130,7 +130,7 @@ namespace sirius::contract::test
             }
             cY += cY2;
             auto n = poex.buildProof();
-            tProofVerification(n, publicKey);
+            tProofVerification(n, key);
             
             batchProofVerification(n, m, cY);
             batchProofVerification(n, m2, cY2); });
@@ -143,11 +143,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -157,7 +157,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -165,7 +165,7 @@ namespace sirius::contract::test
             }
 
             auto m2 = poex.buildProof();
-            tProofVerification(m2, publicKey);
+            tProofVerification(m2, key);
 
             uint64_t secretInfo2[3] = {354625726501424, 7687354345387, 3546387643};
             sirius::crypto::CurvePoint cY2;
@@ -174,7 +174,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -182,7 +182,7 @@ namespace sirius::contract::test
             }
             cY += cY2;
             auto n = poex.buildProof();
-            tProofVerification(n, publicKey);
+            tProofVerification(n, key);
             
             batchProofVerificationFalse(n, m, cY2);
             batchProofVerificationFalse(n, m2, cY); });
@@ -195,11 +195,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -209,7 +209,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -217,13 +217,13 @@ namespace sirius::contract::test
             }
 
             auto m2 = poex.buildProof();
-            tProofVerification(m2, publicKey);
+            tProofVerification(m2, key);
             batchProofVerification(m2, m, cY);
 
             poex.addToProof(354625726501424);
             poex.popFromProof();
             auto n = poex.buildProof();
-            tProofVerification(n, publicKey);
+            tProofVerification(n, key);
             
             sirius::crypto::CurvePoint empty;
             batchProofVerification(n, m2, empty);
@@ -238,11 +238,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -252,7 +252,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -260,13 +260,13 @@ namespace sirius::contract::test
             }
 
             auto m2 = poex.buildProof();
-            tProofVerification(m2, publicKey);
+            tProofVerification(m2, key);
             batchProofVerification(m2, m, cY);
 
             poex.addToProof(354625726501424);
             // poex.popFromProof();
             auto n = poex.buildProof();
-            tProofVerification(n, publicKey);
+            tProofVerification(n, key);
             
             sirius::crypto::CurvePoint empty;
             batchProofVerificationFalse(n, m2, empty);
@@ -281,11 +281,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -295,7 +295,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;
@@ -316,11 +316,11 @@ namespace sirius::contract::test
         auto &threadManager = environment.threadManager();
         threadManager.execute([&]
                               {
-            std::array<uint8_t, 32> publicKey = {184, 250, 143, 132, 33, 57, 17, 65, 124, 25, 21, 253, 69, 10, 249, 252, 33, 5, 215, 81, 76, 47, 150, 29, 221, 22, 161, 101, 16, 252, 247, 11};
-            sirius::contract::ProofOfExecution poex(environment, publicKey, 87);
+            auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+            sirius::contract::ProofOfExecution poex(environment, key);
             
             auto m = poex.buildProof();
-            tProofVerification(m, publicKey);
+            tProofVerification(m, key);
 
             uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
             sirius::crypto::CurvePoint cY;
@@ -330,7 +330,7 @@ namespace sirius::contract::test
 
                 sirius::crypto::Sha3_512_Builder hasher_h;
                 Hash512 cHash;
-                hasher_h.update({beta.tobytes(), Y.tobytes(), publicKey});
+                hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
                 hasher_h.final(cHash);
                 sirius::crypto::Scalar c(cHash.array());
                 auto part = Y * c;

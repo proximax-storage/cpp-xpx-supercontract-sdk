@@ -12,43 +12,39 @@
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 
-namespace sirius::contract
-{
-    struct TProof
-    {
-        sirius::crypto::CurvePoint F;
-        sirius::crypto::Scalar k;
-    };
+namespace sirius::contract {
 
-    struct BatchProof
-    {
-        sirius::crypto::CurvePoint T;
-        sirius::crypto::Scalar r;
-    };
+struct TProof {
+    sirius::crypto::CurvePoint m_F;
+    sirius::crypto::Scalar m_k;
+};
 
-    struct Proofs
-    {
-        TProof q;
-        BatchProof b;
-    };
+struct BatchProof {
+    sirius::crypto::CurvePoint m_T;
+    sirius::crypto::Scalar m_r;
+};
 
-    class ProofOfExecution : private SingleThread
-    {
+struct Proofs {
+    TProof m_tProof;
+    BatchProof m_batchProof;
+};
 
-    private:
-        GlobalEnvironment &m_environment;
+class ProofOfExecution : private SingleThread {
 
-        sirius::crypto::Scalar m_x;
-        sirius::crypto::Scalar m_xPrevious;
+private:
+    GlobalEnvironment &m_environment;
 
-        Hash256 m_publicKey;
+    sirius::crypto::Scalar m_x;
+    sirius::crypto::Scalar m_xPrevious;
 
-    public:
-        ProofOfExecution(GlobalEnvironment &environment, std::array<uint8_t, 32> &publicKey, int seed);
-        sirius::crypto::CurvePoint addToProof(u_int64_t digest);
-        void popFromProof();
-        Proofs buildProof();
-        void reset();
-    };
+    const crypto::KeyPair& m_keyPair;
+
+public:
+    ProofOfExecution(GlobalEnvironment &environment, const crypto::KeyPair& key);
+    sirius::crypto::CurvePoint addToProof(uint64_t digest);
+    void popFromProof();
+    Proofs buildProof();
+    void reset();
+};
 
 }

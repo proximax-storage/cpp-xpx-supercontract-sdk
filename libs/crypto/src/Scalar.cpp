@@ -23,6 +23,11 @@ namespace sirius { namespace crypto {
 
         Scalar::Scalar() : ByteArray() {}
 
+        Scalar::~Scalar() 
+        {
+            m_array.fill(0);
+        }
+
         Scalar Scalar::getLMinusOne()
         {
             Scalar ret;
