@@ -4,93 +4,86 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "gtest/gtest.h"
-#include "supercontract/ProofOfExecution.h"
 #include "TestUtils.h"
+#include "supercontract/ProofOfExecution.h"
+#include "gtest/gtest.h"
 
-namespace sirius::contract::test
-{
+namespace sirius::contract::test {
 
 #define TEST_NAME Supercontract
 
-    void tProofVerification(Proofs p, crypto::KeyPair& key)
-    {
-        auto T = p.m_batchProof.m_T;
-        auto r = p.m_batchProof.m_r;
-        auto F = p.m_tProof.m_F;
-        auto k = p.m_tProof.m_k;
-        sirius::crypto::Sha3_512_Builder hasher_h;
-        Hash512 d_h;
-        hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
-        hasher_h.final(d_h);
-        sirius::crypto::Scalar d(d_h.array());
-        auto beta = sirius::crypto::CurvePoint::BasePoint();
-        auto expected = k * beta;
-        T *= d;
-        expected += T;
-        ASSERT_EQ(F, expected);
-    }
+void tProofVerification(Proofs p, crypto::KeyPair &key) {
+    auto T = p.m_batchProof.m_T;
+    auto r = p.m_batchProof.m_r;
+    auto F = p.m_tProof.m_F;
+    auto k = p.m_tProof.m_k;
+    sirius::crypto::Sha3_512_Builder hasher_h;
+    Hash512 d_h;
+    hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
+    hasher_h.final(d_h);
+    sirius::crypto::Scalar d(d_h.array());
+    auto beta = sirius::crypto::CurvePoint::BasePoint();
+    auto expected = k * beta;
+    T *= d;
+    expected += T;
+    ASSERT_EQ(F, expected);
+}
 
-    void tProofVerificationFalse(Proofs p, crypto::KeyPair& key)
-    {
-        auto T = p.m_batchProof.m_T;
-        auto r = p.m_batchProof.m_r;
-        auto F = p.m_tProof.m_F;
-        auto k = p.m_tProof.m_k;
-        sirius::crypto::Sha3_512_Builder hasher_h;
-        Hash512 d_h;
-        hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
-        hasher_h.final(d_h);
-        sirius::crypto::Scalar d(d_h.array());
-        auto beta = sirius::crypto::CurvePoint::BasePoint();
-        auto expected = k * beta;
-        T *= d;
-        expected += T;
-        ASSERT_NE(F, expected);
-    }
+void tProofVerificationFalse(Proofs p, crypto::KeyPair &key) {
+    auto T = p.m_batchProof.m_T;
+    auto r = p.m_batchProof.m_r;
+    auto F = p.m_tProof.m_F;
+    auto k = p.m_tProof.m_k;
+    sirius::crypto::Sha3_512_Builder hasher_h;
+    Hash512 d_h;
+    hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
+    hasher_h.final(d_h);
+    sirius::crypto::Scalar d(d_h.array());
+    auto beta = sirius::crypto::CurvePoint::BasePoint();
+    auto expected = k * beta;
+    T *= d;
+    expected += T;
+    ASSERT_NE(F, expected);
+}
 
-    void batchProofVerification(Proofs n, Proofs m, sirius::crypto::CurvePoint cY)
-    {
-        auto beta = sirius::crypto::CurvePoint::BasePoint();
+void batchProofVerification(Proofs n, Proofs m, sirius::crypto::CurvePoint cY) {
+    auto beta = sirius::crypto::CurvePoint::BasePoint();
 
-        auto T_m = m.m_batchProof.m_T;
-        auto r_m = m.m_batchProof.m_r;
+    auto T_m = m.m_batchProof.m_T;
+    auto r_m = m.m_batchProof.m_r;
 
-        auto T_n = n.m_batchProof.m_T;
-        auto r_n = n.m_batchProof.m_r;
+    auto T_n = n.m_batchProof.m_T;
+    auto r_n = n.m_batchProof.m_r;
 
-        auto T_diff = T_n - T_m;
-        auto r_diff = r_n - r_m;
-        auto rBeta = r_diff * beta;
-        auto rhs = rBeta + cY;
+    auto T_diff = T_n - T_m;
+    auto r_diff = r_n - r_m;
+    auto rBeta = r_diff * beta;
+    auto rhs = rBeta + cY;
 
-        ASSERT_EQ(T_diff, rhs);
-    };
+    ASSERT_EQ(T_diff, rhs);
+};
 
-    void batchProofVerificationFalse(Proofs n, Proofs m, sirius::crypto::CurvePoint cY)
-    {
-        auto beta = sirius::crypto::CurvePoint::BasePoint();
+void batchProofVerificationFalse(Proofs n, Proofs m, sirius::crypto::CurvePoint cY) {
+    auto beta = sirius::crypto::CurvePoint::BasePoint();
 
-        auto T_m = m.m_batchProof.m_T;
-        auto r_m = m.m_batchProof.m_r;
+    auto T_m = m.m_batchProof.m_T;
+    auto r_m = m.m_batchProof.m_r;
 
-        auto T_n = n.m_batchProof.m_T;
-        auto r_n = n.m_batchProof.m_r;
+    auto T_n = n.m_batchProof.m_T;
+    auto r_n = n.m_batchProof.m_r;
 
-        auto T_diff = T_n - T_m;
-        auto r_diff = r_n - r_m;
-        auto rBeta = r_diff * beta;
-        auto rhs = rBeta + cY;
+    auto T_diff = T_n - T_m;
+    auto r_diff = r_n - r_m;
+    auto rBeta = r_diff * beta;
+    auto rhs = rBeta + cY;
 
-        ASSERT_NE(T_diff, rhs);
-    };
+    ASSERT_NE(T_diff, rhs);
+};
 
-    TEST(TEST_NAME, PoEx)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoEx) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -134,15 +127,13 @@ namespace sirius::contract::test
             
             batchProofVerification(n, m, cY);
             batchProofVerification(n, m2, cY2); });
-        threadManager.stop();
-    }
+    threadManager.stop();
+}
 
-    TEST(TEST_NAME, PoExWrongBatch)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoExWrongBatch) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -186,15 +177,13 @@ namespace sirius::contract::test
             
             batchProofVerificationFalse(n, m, cY2);
             batchProofVerificationFalse(n, m2, cY); });
-        threadManager.stop();
-    }
+    threadManager.stop();
+}
 
-    TEST(TEST_NAME, PoExPopProof)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoExPopProof) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -229,15 +218,13 @@ namespace sirius::contract::test
             batchProofVerification(n, m2, empty);
             
             batchProofVerification(n, m, cY); });
-        threadManager.stop();
-    }
+    threadManager.stop();
+}
 
-    TEST(TEST_NAME, PoExNonPopProof)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoExNonPopProof) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -272,15 +259,13 @@ namespace sirius::contract::test
             batchProofVerificationFalse(n, m2, empty);
             
             batchProofVerificationFalse(n, m, cY); });
-        threadManager.stop();
-    }
+    threadManager.stop();
+}
 
-    TEST(TEST_NAME, PoExReset)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoExReset) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -307,15 +292,13 @@ namespace sirius::contract::test
             auto n = poex.buildProof();
             
             batchProofVerification(n, m, empty); });
-        threadManager.stop();
-    }
+    threadManager.stop();
+}
 
-    TEST(TEST_NAME, PoExNonReset)
-    {
-        GlobalEnvironmentMock environment;
-        auto& threadManager = environment.threadManager();
-        threadManager.execute([&]
-                              {
+TEST(TEST_NAME, PoExNonReset) {
+    GlobalEnvironmentMock environment;
+    auto &threadManager = environment.threadManager();
+    threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
             
@@ -342,6 +325,6 @@ namespace sirius::contract::test
             auto n = poex.buildProof();
             
             batchProofVerificationFalse(n, m, empty); });
-        threadManager.stop();
-    }
+    threadManager.stop();
 }
+} // namespace sirius::contract::test

@@ -5,36 +5,30 @@
 */
 
 #include "TestUtils.h"
-
 #include <filesystem>
 
-namespace sirius::contract::test
-{
+namespace sirius::contract::test {
 
-    GlobalEnvironmentMock::GlobalEnvironmentMock()
-        : m_logger(getLoggerConfig(), "executor") {}
+GlobalEnvironmentMock::GlobalEnvironmentMock()
+    : m_logger(getLoggerConfig(), "executor") {}
 
-    ThreadManager &GlobalEnvironmentMock::threadManager()
-    {
-        return m_threadManager;
-    }
-
-    logging::Logger &GlobalEnvironmentMock::logger()
-    {
-        return m_logger;
-    }
-
-    logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig()
-    {
-        logging::LoggerConfig config;
-        config.setLogToConsole(true);
-        config.setLogPath({});
-        return config;
-    }
-
-    void StorageContentManagerMock::getAbsolutePath(const DriveKey &driveKey, const std::string &relativePath,
-                                                    std::shared_ptr<AsyncQueryCallback<std::string>> callback)
-    {
-        callback->postReply(std::filesystem::absolute(relativePath));
-    }
+ThreadManager &GlobalEnvironmentMock::threadManager() {
+    return m_threadManager;
 }
+
+logging::Logger &GlobalEnvironmentMock::logger() {
+    return m_logger;
+}
+
+logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
+    logging::LoggerConfig config;
+    config.setLogToConsole(true);
+    config.setLogPath({});
+    return config;
+}
+
+void StorageContentManagerMock::getAbsolutePath(const DriveKey &driveKey, const std::string &relativePath,
+                                                std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+    callback->postReply(std::filesystem::absolute(relativePath));
+}
+} // namespace sirius::contract::test
