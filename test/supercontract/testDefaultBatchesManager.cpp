@@ -47,41 +47,55 @@ namespace sirius::contract::test {
     
     class MessengerMock: public Messenger {
     public:
-        virtual ~MessengerMock(){}
         void sendMessage(const ExecutorKey& key, const std::string& msg) override {};
     };
 
     class ExecutorEventHandlerMock: public ExecutorEventHandler{
     public:
-        virtual ~ExecutorEventHandlerMock(){}
         void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {};
         void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {};
+    };
+
+    class VirtualMachineMock : public vm::VirtualMachine {
+    public:
+        VirtualMachineMock(){}
+        void executeCall(const CallRequest& request,
+                         std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
+                         std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                         std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
+            
+            // srand(time(0));
+            // auto x = (rand()%10);
+            sleep(2);
+            // sleep(rand()%10);
+            std::cout << "vm executing " << std::endl;
+        }
     };
 
     class ExecutorEnvironmentMock : public ExecutorEnvironment {
     private:
         crypto::KeyPair m_keyPair;
-        std::weak_ptr<vm::VirtualMachine> m_virtualMachineMock;
+        std::weak_ptr<VirtualMachineMock> m_virtualMachineMock;
         ExecutorConfig m_executorConfig;
         MessengerMock m_messengerMock;
         std::weak_ptr<storage::Storage> m_storage;
         ExecutorEventHandlerMock m_executorEventHandlerMock;
         boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
-        ThreadManager m_threadManager;
+        std::shared_ptr<ThreadManager> m_pThreadManager;
         logging::Logger m_logger;
         
 
     public:
         ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
-                                std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
-                                ExecutorConfig executorConfig)
+                                std::weak_ptr<VirtualMachineMock> virtualMachineMock,
+                                ExecutorConfig executorConfig,
+                                std::shared_ptr<ThreadManager> pThreadManager)
             :m_keyPair(std::move(keyPair)),
             m_virtualMachineMock(virtualMachineMock),
             m_executorConfig(executorConfig),
-            m_logger(getLoggerConfig(), "executor")
+            m_pThreadManager(pThreadManager),
+            m_logger(executorConfig.loggerConfig(), "executor")
         {}
-
-        virtual ~ExecutorEnvironmentMock(){}
 
         const crypto::KeyPair& keyPair() const override { return m_keyPair; }
 
@@ -97,40 +111,15 @@ namespace sirius::contract::test {
 
         boost::asio::ssl::context& sslContext() override { return m_sslContext; }
 
-        ThreadManager& threadManager() { return m_threadManager; }
+        ThreadManager& threadManager() override { return *m_pThreadManager; }
 
         logging::Logger& logger() override { return m_logger; }
     
-    private:
-        logging::LoggerConfig getLoggerConfig() {
-            logging::LoggerConfig config;
-            config.setLogToConsole(true);
-            config.setLogPath({});
-            return config;
-        }
     };
 
-    class VirtualMachineMock : public vm::VirtualMachine {
-    private: 
-        ThreadManager m_mainThreadManager;
-        ThreadManager m_threadManager;
-        std::map<CallId, Timer> timers;
-    public:
-    
-        virtual ~VirtualMachineMock(){}
+#define TEST_NAME DefaultBatchesManagerTest
 
-        void executeCall(const CallRequest& request,
-                         std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
-                         std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                         std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-            srand(time(0));
-            sleep(rand()%10);
-        }
-    };
-
-#define TEST_NAME Example
-
-    TEST(TEST_NAME, Example) {
+    TEST(TEST_NAME, BatchesTest) {
         // create contract environment
         ContractKey contractKey;
         uint64_t automaticExucutionsSCLimit = 0;
@@ -144,14 +133,38 @@ namespace sirius::contract::test {
         // create executor environment
         crypto::PrivateKey privateKey;
         crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-        std::weak_ptr<VirtualMachineMock> virtualMachineMock = std::make_shared<VirtualMachineMock>();
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>();
+        std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
         ExecutorConfig executorConfig;
+        auto threadManager = std::make_shared<ThreadManager>();
 
-        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), virtualMachineMock, executorConfig);
+        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
 
         // create default batches manager
         uint64_t index = 1;
         DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
+
+        // create block
+        BlockHash hash1 = BlockHash();
+        BlockHash hash2 = BlockHash();
+        BlockHash hash3 = BlockHash();
+        BlockHash hash4 = BlockHash();
+        Block block1 = {
+            hash1,
+            20
+        };
+        Block block2 = {
+            hash2,
+            21
+        };
+        Block block3 = {
+            hash3,
+            22
+        };
+        Block block4 = {
+            hash4,
+            23
+        };
 
         // create call requests
         std::vector<uint8_t> params;
@@ -227,36 +240,49 @@ namespace sirius::contract::test {
                 {}
             }
         };
-
-        Block block1 = {
-            BlockHash(),
-            10001
-        };
-        Block block2 = {
-            BlockHash(),
-            10002
-        };
-        Block block3 = {
-            BlockHash(),
-            10003
-        };
-        Block block4 = {
-            BlockHash(),
-            10004
-        };
-
         
-        ThreadManager threadManager; 
-
         defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
-        defaultBatchesManager.addCall(callRequest1);
-        // defaultBatchesManager.addCall(callRequest2);
-        // defaultBatchesManager.addBlockInfo(block1); //true
-        // defaultBatchesManager.addBlockInfo(block2); //true 
-        // defaultBatchesManager.addBlockInfo(block3); //false
+        defaultBatchesManager.addCall(callRequest1); 
+        std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+        defaultBatchesManager.addCall(callRequest2); 
+        defaultBatchesManager.addBlockInfo(block1); // batch 1 (callReq1, callReq2, block1)
+        sleep(2);
+        std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+        std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
+        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::AUTOMATIC){
+            std::cout << "auto" << std::endl;
+        }
+        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::MANUAL){
+            std::cout << "manual" << std::endl;
+        }
+        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::FINISHED){
+            std::cout << "finish" << std::endl;
+        }
+
+        // defaultBatchesManager.addBlockInfo(block2); // batch 2
+        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
+        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+
+        // defaultBatchesManager.addBlockInfo(block3); // batch 3
+        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
+        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+
         // defaultBatchesManager.addCall(callRequest3);
         // defaultBatchesManager.addCall(callRequest4);
-        // defaultBatchesManager.addBlockInfo(block4); //false
+        // defaultBatchesManager.addBlockInfo(block4); // batch 4 (callReq3, callReq4, block4)
+        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
+        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
         
+        // defaultBatchesManager.nextBatch(); // consume batch 1
+        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+        
+        // defaultBatchesManager.nextBatch(); // consume batch 2
+        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+
+        // defaultBatchesManager.nextBatch(); // consume batch 3
+        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+
+        // defaultBatchesManager.nextBatch(); // consume batch 4
+        // ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
     }
 }
