@@ -14,16 +14,16 @@ class CurvePoint {
 public:
     CurvePoint();
     static CurvePoint BasePoint();
-    CurvePoint operator+(CurvePoint &a) const;
-    CurvePoint operator-(CurvePoint &a) const;
+    CurvePoint operator+(CurvePoint& a) const;
+    CurvePoint operator-(CurvePoint& a) const;
     CurvePoint operator-() const;
-    CurvePoint operator*(Scalar &a) const;
-    friend CurvePoint operator*(Scalar &a, CurvePoint &b);
-    CurvePoint &operator+=(CurvePoint &a);
-    CurvePoint &operator-=(CurvePoint &a);
-    CurvePoint &operator*=(Scalar &a);
-    bool operator==(const CurvePoint &a) const;
-    bool operator!=(const CurvePoint &a) const;
+    CurvePoint operator*(Scalar& a) const;
+    friend CurvePoint operator*(Scalar& a, CurvePoint& b);
+    CurvePoint& operator+=(CurvePoint& a);
+    CurvePoint& operator-=(CurvePoint& a);
+    CurvePoint& operator*=(Scalar& a);
+    bool operator==(const CurvePoint& a) const;
+    bool operator!=(const CurvePoint& a) const;
     Key tobytes() const;
 };
 

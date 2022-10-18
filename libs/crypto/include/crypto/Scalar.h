@@ -16,17 +16,17 @@ private:
 public:
     Scalar();
     ~Scalar();
-    Scalar(const std::array<uint8_t, Scalar_Size * 2> &arr);
-    Scalar(const std::array<uint8_t, Scalar_Size> &arr);
+    Scalar(const std::array<uint8_t, Scalar_Size * 2>& arr);
+    Scalar(const std::array<uint8_t, Scalar_Size>& arr);
     static Scalar getLMinusOne();
-    Scalar operator+(const Scalar &a) const;
-    Scalar operator*(const Scalar &a) const;
-    Scalar operator-(const Scalar &a) const;
+    Scalar operator+(const Scalar& a) const;
+    Scalar operator*(const Scalar& a) const;
+    Scalar operator-(const Scalar& a) const;
     Scalar operator-() const;
-    Scalar &operator+=(const Scalar &a);
-    Scalar &operator*=(const Scalar &a);
-    Scalar &operator-=(const Scalar &a);
-    Scalar addProduct(const Scalar &r, const Scalar &h) const;
+    Scalar& operator+=(const Scalar& a);
+    Scalar& operator*=(const Scalar& a);
+    Scalar& operator-=(const Scalar& a);
+    Scalar addProduct(const Scalar& r, const Scalar& h) const;
 };
 
 }}

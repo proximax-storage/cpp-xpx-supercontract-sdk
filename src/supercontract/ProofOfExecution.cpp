@@ -8,12 +8,12 @@ extern "C"
 
 namespace sirius::contract
 {
-    void HashPrivateKey(const sirius::crypto::PrivateKey &privateKey, Hash512 &hash)
+    void HashPrivateKey(const sirius::crypto::PrivateKey& privateKey, Hash512& hash)
     {
         sirius::crypto::Sha3_512({privateKey.data(), privateKey.size()}, hash);
     }
 
-    sirius::crypto::Scalar hashPrivateKey(const crypto::KeyPair &key, const utils::RawBuffer &dataBuffer)
+    sirius::crypto::Scalar hashPrivateKey(const crypto::KeyPair& key, const utils::RawBuffer& dataBuffer)
     {
         // Hash the private key to improve randomness.
         Hash512 privHash;
@@ -31,7 +31,7 @@ namespace sirius::contract
         return scalar;
     }
 
-    ProofOfExecution::ProofOfExecution(GlobalEnvironment &environment, const crypto::KeyPair &key) : m_keyPair(key),
+    ProofOfExecution::ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key) : m_keyPair(key),
                                                                                                      m_x(sirius::crypto::Scalar()),
                                                                                                      m_xPrevious(sirius::crypto::Scalar()),
                                                                                                      m_environment(environment)
