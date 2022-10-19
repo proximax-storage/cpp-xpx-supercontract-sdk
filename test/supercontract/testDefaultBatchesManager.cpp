@@ -69,10 +69,7 @@ namespace sirius::contract::test {
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
             
-            // srand(time(0));
-            // std::cout << m_threadManager.get()->threadId() << std::endl;
-            m_timers[request.m_callId] = m_threadManager.get()->startTimer((1000), [&callback]{
-            std::cout << "vm executing2" << std::endl;
+            m_timers[request.m_callId] = m_threadManager.get()->startTimer((rand()%10000), [&]{
                 vm::CallExecutionResult result {
                     true,
                     0,
@@ -252,49 +249,17 @@ namespace sirius::contract::test {
                 {}
             }
         };
-        
-        defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
-        defaultBatchesManager.addCall(callRequest1); 
-        std::cout << "hasNext: " << defaultBatchesManager.hasNextBatch() << std::endl;
-        defaultBatchesManager.addCall(callRequest2); 
-        defaultBatchesManager.addBlockInfo(block1); // batch 1 (callReq1, callReq2, block1)
-        std::cout << "added block, hasNext: " << defaultBatchesManager.hasNextBatch() << std::endl;
-        std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
 
-        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::AUTOMATIC){
-        //     std::cout << "auto" << std::endl;
-        // }
-        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::MANUAL){
-        //     std::cout << "manual" << std::endl;
-        // }
-        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::FINISHED){
-        //     std::cout << "finish" << std::endl;
-        // }
+        ThreadManager mainThread;
 
-        // defaultBatchesManager.addBlockInfo(block2); // batch 2
-        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
-        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+        mainThread.execute([&]{
+            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
+            defaultBatchesManager.addCall(callRequest1); 
+            defaultBatchesManager.addCall(callRequest2); 
+            defaultBatchesManager.addBlockInfo(block1); 
 
-        // defaultBatchesManager.addBlockInfo(block3); // batch 3
-        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
-        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
-
-        // defaultBatchesManager.addCall(callRequest3);
-        // defaultBatchesManager.addCall(callRequest4);
-        // defaultBatchesManager.addBlockInfo(block4); // batch 4 (callReq3, callReq4, block4)
-        // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
-        // std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
-        
-        // defaultBatchesManager.nextBatch(); // consume batch 1
-        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
-        
-        // defaultBatchesManager.nextBatch(); // consume batch 2
-        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
-
-        // defaultBatchesManager.nextBatch(); // consume batch 3
-        // ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
-
-        // defaultBatchesManager.nextBatch(); // consume batch 4
-        // ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+        });
+        sleep(10);
+        std::cin.get();
     }
 }
