@@ -57,18 +57,30 @@ namespace sirius::contract::test {
     };
 
     class VirtualMachineMock : public vm::VirtualMachine {
+    private:
+        std::shared_ptr<ThreadManager> m_threadManager;
+        std::map<CallId, Timer> m_timers;
     public:
-        VirtualMachineMock(){}
+        VirtualMachineMock(std::shared_ptr<ThreadManager> threadManager)
+            :m_threadManager(threadManager)
+            {}
         void executeCall(const CallRequest& request,
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
             
             // srand(time(0));
-            // auto x = (rand()%10);
-            sleep(2);
-            // sleep(rand()%10);
-            std::cout << "vm executing " << std::endl;
+            // std::cout << m_threadManager.get()->threadId() << std::endl;
+            m_timers[request.m_callId] = m_threadManager.get()->startTimer((1000), [&callback]{
+            std::cout << "vm executing2" << std::endl;
+                vm::CallExecutionResult result {
+                    true,
+                    0,
+                    0,
+                    0,
+                };
+                callback->postReply(result);
+            });
         }
     };
 
@@ -133,11 +145,11 @@ namespace sirius::contract::test {
         // create executor environment
         crypto::PrivateKey privateKey;
         crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-        auto virtualMachineMock = std::make_shared<VirtualMachineMock>();
+        auto threadManager = std::make_shared<ThreadManager>();
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager);
         std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
         ExecutorConfig executorConfig;
-        auto threadManager = std::make_shared<ThreadManager>();
-
+        
         ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
 
         // create default batches manager
@@ -243,21 +255,21 @@ namespace sirius::contract::test {
         
         defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
         defaultBatchesManager.addCall(callRequest1); 
-        std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+        std::cout << "hasNext: " << defaultBatchesManager.hasNextBatch() << std::endl;
         defaultBatchesManager.addCall(callRequest2); 
         defaultBatchesManager.addBlockInfo(block1); // batch 1 (callReq1, callReq2, block1)
-        sleep(2);
-        std::cout << defaultBatchesManager.hasNextBatch() << std::endl;
+        std::cout << "added block, hasNext: " << defaultBatchesManager.hasNextBatch() << std::endl;
         std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
-        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::AUTOMATIC){
-            std::cout << "auto" << std::endl;
-        }
-        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::MANUAL){
-            std::cout << "manual" << std::endl;
-        }
-        if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::FINISHED){
-            std::cout << "finish" << std::endl;
-        }
+
+        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::AUTOMATIC){
+        //     std::cout << "auto" << std::endl;
+        // }
+        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::MANUAL){
+        //     std::cout << "manual" << std::endl;
+        // }
+        // if(defaultBatchesManager.m_batches.begin()->second.m_batchFormationStatus == DefaultBatchesManager::DraftBatch::BatchFormationStatus::FINISHED){
+        //     std::cout << "finish" << std::endl;
+        // }
 
         // defaultBatchesManager.addBlockInfo(block2); // batch 2
         // std::cout << "batch size" << defaultBatchesManager.m_batches.size() << std::endl;
