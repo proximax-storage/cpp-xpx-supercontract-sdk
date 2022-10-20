@@ -58,18 +58,16 @@ namespace sirius::contract::test {
 
     class VirtualMachineMock : public vm::VirtualMachine {
     private:
-        std::shared_ptr<ThreadManager> m_threadManager;
+        ThreadManager& m_threadManager;
         std::map<CallId, Timer> m_timers;
     public:
-        VirtualMachineMock(std::shared_ptr<ThreadManager> threadManager)
-            :m_threadManager(threadManager)
-            {}
+        VirtualMachineMock(ThreadManager& threadManager):m_threadManager(threadManager){}
         void executeCall(const CallRequest& request,
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
             
-            m_timers[request.m_callId] = m_threadManager.get()->startTimer((rand()%10000), [&]{
+            m_timers[request.m_callId] = m_threadManager.startTimer(1000, [&]{
                 vm::CallExecutionResult result {
                     true,
                     0,
@@ -90,7 +88,7 @@ namespace sirius::contract::test {
         std::weak_ptr<storage::Storage> m_storage;
         ExecutorEventHandlerMock m_executorEventHandlerMock;
         boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
-        std::shared_ptr<ThreadManager> m_pThreadManager;
+        ThreadManager& m_threadManager;
         logging::Logger m_logger;
         
 
@@ -98,11 +96,11 @@ namespace sirius::contract::test {
         ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                                 std::weak_ptr<VirtualMachineMock> virtualMachineMock,
                                 ExecutorConfig executorConfig,
-                                std::shared_ptr<ThreadManager> pThreadManager)
+                                ThreadManager& threadManager)
             :m_keyPair(std::move(keyPair)),
             m_virtualMachineMock(virtualMachineMock),
             m_executorConfig(executorConfig),
-            m_pThreadManager(pThreadManager),
+            m_threadManager(threadManager),
             m_logger(executorConfig.loggerConfig(), "executor")
         {}
 
@@ -120,7 +118,7 @@ namespace sirius::contract::test {
 
         boost::asio::ssl::context& sslContext() override { return m_sslContext; }
 
-        ThreadManager& threadManager() override { return *m_pThreadManager; }
+        ThreadManager& threadManager() override { return m_threadManager; }
 
         logging::Logger& logger() override { return m_logger; }
     
@@ -142,15 +140,14 @@ namespace sirius::contract::test {
         // create executor environment
         crypto::PrivateKey privateKey;
         crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-        auto threadManager = std::make_shared<ThreadManager>();
+        ExecutorConfig executorConfig;
+        ThreadManager threadManager;
         auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager);
         std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
-        ExecutorConfig executorConfig;
         
         ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
-
         // create default batches manager
-        uint64_t index = 1;
+        uint64_t index = 0;
         DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
 
         // create block
