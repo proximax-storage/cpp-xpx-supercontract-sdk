@@ -60,14 +60,15 @@ namespace sirius::contract::test {
     private:
         ThreadManager& m_threadManager;
         std::map<CallId, Timer> m_timers;
+
     public:
         VirtualMachineMock(ThreadManager& threadManager):m_threadManager(threadManager){}
         void executeCall(const CallRequest& request,
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-            
-            m_timers[request.m_callId] = m_threadManager.startTimer(1000, [&]{
+
+            m_timers[request.m_callId] = m_threadManager.startTimer(1000, [=, this]() mutable {
                 vm::CallExecutionResult result {
                     true,
                     0,
@@ -75,6 +76,7 @@ namespace sirius::contract::test {
                     0,
                 };
                 callback->postReply(result);
+                std::cout << "vm executing \n";
             });
         }
     };
@@ -146,6 +148,7 @@ namespace sirius::contract::test {
         std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
         
         ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
+
         // create default batches manager
         uint64_t index = 0;
         DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
@@ -247,16 +250,21 @@ namespace sirius::contract::test {
             }
         };
 
-        ThreadManager mainThread;
-
-        mainThread.execute([&]{
+        threadManager.execute([&]{
+            std::cout << "run \n";
             defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
             defaultBatchesManager.addCall(callRequest1); 
             defaultBatchesManager.addCall(callRequest2); 
             defaultBatchesManager.addBlockInfo(block1); 
-
         });
-        sleep(10);
-        std::cin.get();
+        std::cout << "wait \n";
+        sleep(5);
+        std::cout << "end of wait \n";
+
+        threadManager.execute([&]{
+            std::cout << "check \n";
+            defaultBatchesManager.nextBatch();
+            ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+        });
     }
 }
