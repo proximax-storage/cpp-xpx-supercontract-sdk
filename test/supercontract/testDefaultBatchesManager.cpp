@@ -261,10 +261,16 @@ namespace sirius::contract::test {
         sleep(5);
         std::cout << "end of wait \n";
 
+        std::promise<void> barrier;
+
         threadManager.execute([&]{
             std::cout << "check \n";
             defaultBatchesManager.nextBatch();
             ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+            barrier.set_value();
         });
+
+        barrier.get_future().wait();
+        threadManager.stop();
     }
 }
