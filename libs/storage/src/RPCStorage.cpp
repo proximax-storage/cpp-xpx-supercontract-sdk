@@ -21,6 +21,13 @@
 #include "FlushFileTag.h"
 #include "AbsolutePathTag.h"
 #include "FilesystemTag.h"
+#include "CreateDirectoriesTag.h"
+#include "DirectoryIteratorCreateTag.h"
+#include "DirectoryIteratorDestroyTag.h"
+#include "DirectoryIteratorHasNextTag.h"
+#include "DirectoryIteratorNextTag.h"
+#include "RemoveFilesystemEntryTag.h"
+#include "MoveFilesystemEntryTag.h"
 
 namespace sirius::contract::storage {
 
@@ -251,6 +258,121 @@ RPCStorage::filesystem(const DriveKey& driveKey,
                                   *m_stub,
                                   m_completionQueue,
                                   std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::createDirectories(const DriveKey& driveKey, const std::string& path,
+                                   std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::CreateDirectoriesRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_path(path);
+    auto* tag = new CreateDirectoriesTag(m_environment,
+                                         std::move(request),
+                                         *m_stub,
+                                         m_completionQueue,
+                                         std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::directoryIteratorCreate(const DriveKey& driveKey, const std::string& path, bool recursive,
+                                         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::DirectoryIteratorCreateRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_path(path);
+    request.set_recursive(recursive);
+    auto* tag = new DirectoryIteratorCreateTag(m_environment,
+                                               std::move(request),
+                                               *m_stub,
+                                               m_completionQueue,
+                                               std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+
+void RPCStorage::removeFilesystemEntry(const DriveKey& driveKey, const std::string& path,
+                                       std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::RemoveFilesystemEntryRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_path(path);
+    auto* tag = new RemoveFilesystemEntryTag(m_environment,
+                                             std::move(request),
+                                             *m_stub,
+                                             m_completionQueue,
+                                             std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::moveFilesystemEntry(const DriveKey& driveKey, const std::string& src, const std::string& dst,
+                                     std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::MoveFilesystemEntryRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_src_path(src);
+    request.set_dst_path(dst);
+    auto* tag = new MoveFilesystemEntryTag(m_environment,
+                                           std::move(request),
+                                           *m_stub,
+                                           m_completionQueue,
+                                           std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::directoryIteratorHasNext(const DriveKey& driveKey, uint64_t id,
+                                          std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::DirectoryIteratorHasNextRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_id(id);
+    auto* tag = new DirectoryIteratorHasNextTag(m_environment,
+                                                std::move(request),
+                                                *m_stub,
+                                                m_completionQueue,
+                                                std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::directoryIteratorNext(const DriveKey& driveKey, uint64_t id,
+                                       std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::DirectoryIteratorNextRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_id(id);
+    auto* tag = new DirectoryIteratorNextTag(m_environment,
+                                             std::move(request),
+                                             *m_stub,
+                                             m_completionQueue,
+                                             std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::directoryIteratorDestroy(const DriveKey& driveKey, uint64_t id,
+                                          std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::DirectoryIteratorDestroyRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_id(id);
+    auto* tag = new DirectoryIteratorDestroyTag(m_environment,
+                                                std::move(request),
+                                                *m_stub,
+                                                m_completionQueue,
+                                                std::move(callback));
     m_activeTags.insert(tag);
     tag->start();
 }

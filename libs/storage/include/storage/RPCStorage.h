@@ -80,6 +80,27 @@ public:
     void
     filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) override;
 
+    void createDirectories(const DriveKey& key, const std::string& path,
+                           std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+    void directoryIteratorCreate(const DriveKey& driveKey, const std::string& path, bool recursive,
+                                 std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void directoryIteratorHasNext(const DriveKey& driveKey, uint64_t id,
+                                  std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void directoryIteratorNext(const DriveKey& driveKey, uint64_t id,
+                               std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+
+    void directoryIteratorDestroy(const DriveKey& driveKey, uint64_t id,
+                                  std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+    void removeFilesystemEntry(const DriveKey& driveKey, const std::string& path,
+                               std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+    void moveFilesystemEntry(const DriveKey& driveKey, const std::string& src, const std::string& dst,
+                             std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
 private:
 
     void waitForRPCResponse();
