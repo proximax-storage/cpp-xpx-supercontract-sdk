@@ -32,10 +32,12 @@
 namespace sirius::contract::storage {
 
 RPCStorage::RPCStorage(GlobalEnvironment& environment, const std::string& serverAddress)
-        : m_environment(environment), m_stub(std::move(storageServer::StorageServer::NewStub(grpc::CreateChannel(
-        serverAddress, grpc::InsecureChannelCredentials())))), m_completionQueueThread([this] {
-    waitForRPCResponse();
-}) {}
+        : m_environment(environment)
+        , m_stub(storageServer::StorageServer::NewStub(
+                grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials())))
+        , m_completionQueueThread([this] {
+            waitForRPCResponse();
+        }) {}
 
 RPCStorage::~RPCStorage() {
     ASSERT(isSingleThread(), m_environment.logger())
