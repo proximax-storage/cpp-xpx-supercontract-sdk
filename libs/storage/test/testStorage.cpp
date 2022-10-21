@@ -194,7 +194,6 @@ TEST(Storage, Example) {
     DriveKey driveKey{{1}};
 
     threadManager.execute([&] {
-        // TODO Fill in the address
         std::string address = "127.0.0.1:5551";
 
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
