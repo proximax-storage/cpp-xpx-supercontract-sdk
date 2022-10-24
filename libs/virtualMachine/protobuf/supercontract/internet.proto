@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package supercontractserver;
+
+message OpenConnection {
+  string url = 3;
+}
+
+message ReadConnectionStream {
+  int64 identifier = 3;
+}
+
+message CloseConnection {
+  int64 identifier = 3;
+}
+
+message CloseConnectionReturn {
+  bool success = 1;
+}
+
+message OpenConnectionReturn {
+  bool success = 1;
+  int64 identifier = 2;
+}
+
+message InternetReadBufferReturn {
+  bool success = 1;
+  bytes buffer = 2;
+}
