@@ -8,13 +8,18 @@
 
 namespace sirius::contract::storage {
 
-class RPCTag {
+class Folder;
+class File;
+
+class FilesystemTraversal {
 
 public:
 
-    virtual ~RPCTag() = default;
+    virtual ~FilesystemTraversal() = default;
 
-    virtual void process(bool ok) = 0;
+    virtual void acceptFolder( const Folder& folder ) = 0;
+
+    virtual void acceptFile ( const File& file ) = 0;
 
 };
 

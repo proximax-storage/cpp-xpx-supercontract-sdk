@@ -40,7 +40,7 @@ public:
 
     virtual void addSynchronizationTask() = 0;
 
-    virtual void delayBatchExecution(Batch&& batch);
+    virtual void delayBatchExecution(Batch&& batch) = 0;
 
 };
 

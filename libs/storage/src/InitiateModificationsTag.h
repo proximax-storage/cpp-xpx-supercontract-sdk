@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "RPCTag.h"
+#include "storage/RPCTag.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
@@ -14,7 +14,7 @@
 
 namespace sirius::contract::storage {
 
-namespace rpc = ::storage;
+
 
 class InitiateModificationsTag
         : private SingleThread, public RPCTag {
@@ -24,29 +24,31 @@ private:
 
     GlobalEnvironment&                                       m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<void>>                m_callback;
 
-    rpc::InitModificationsRequest                            m_request;
-    rpc::InitModificationsResponse                           m_response;
+    storageServer::InitModificationsRequest                            m_request;
+    storageServer::InitModificationsResponse                           m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    rpc::InitModificationsResponse>>         m_responseReader;
+                    storageServer::InitModificationsResponse>>         m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
     InitiateModificationsTag(GlobalEnvironment& environment,
-                             rpc::InitModificationsRequest&& request,
-                             rpc::StorageServer::Stub& stub,
+                             storageServer::InitModificationsRequest&& request,
+                             storageServer::StorageServer::Stub& stub,
                              grpc::CompletionQueue& completionQueue,
-                             std::shared_ptr<AsyncQueryCallback<bool>>&& callback);
+                             std::shared_ptr<AsyncQueryCallback<void>>&& callback);
 
     void start();
 
     void process(bool ok) override;
+
+    void cancel() override;
 
 };
 

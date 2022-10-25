@@ -9,15 +9,14 @@
 namespace sirius::contract::storage {
 
 AbsolutePathTag::AbsolutePathTag(
-        GlobalEnvironment& environment,
-        rpc::AbsolutePathRequest&& request,
-        rpc::StorageContentManagerServer::Stub& stub,
-        grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::string>>&& callback)
-        : m_environment(environment)
-        , m_request(std::move(request))
-        , m_responseReader(stub.PrepareAsyncGetAbsolutePath(&m_context, m_request, &completionQueue))
-        , m_callback(std::move(callback)) {}
+        GlobalEnvironment &environment,
+        storageServer::AbsolutePathRequest &&request,
+        storageServer::StorageServer::Stub &stub,
+        grpc::CompletionQueue &completionQueue,
+        std::shared_ptr<AsyncQueryCallback<std::string>> &&callback)
+        : m_environment(environment), m_request(std::move(request)),
+          m_responseReader(stub.PrepareAsyncGetAbsolutePath(&m_context, m_request, &completionQueue)),
+          m_callback(std::move(callback)) {}
 
 void AbsolutePathTag::start() {
     m_responseReader->StartCall();
@@ -40,6 +39,12 @@ void AbsolutePathTag::process(bool ok) {
     } else {
         m_callback->postReply(m_response.absolute_path());
     }
+}
+
+void AbsolutePathTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }
