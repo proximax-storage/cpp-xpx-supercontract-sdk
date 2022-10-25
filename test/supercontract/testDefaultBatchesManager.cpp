@@ -59,7 +59,7 @@ namespace sirius::contract::test {
     class VirtualMachineMock : public vm::VirtualMachine {
     private:
         ThreadManager& m_threadManager;
-        std::deque<bool> m_result = {true, true, false, false};
+        std::deque<bool> m_result = {true, true, true, false, false}; //first element is dummy data
         std::map<CallId, Timer> m_timers;
 
     public:
@@ -69,6 +69,7 @@ namespace sirius::contract::test {
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
             
+            m_result.pop_front();
             m_timers[request.m_callId] = m_threadManager.startTimer(rand()%5000, [=, this]() mutable {
                 vm::CallExecutionResult result {
                     m_result.front(),
@@ -78,7 +79,6 @@ namespace sirius::contract::test {
                 };
                 callback->postReply(result);
             });
-            m_result.pop_front();
         }
     };
 
@@ -259,6 +259,7 @@ namespace sirius::contract::test {
         });
         sleep(5);
         threadManager.execute([&]{
+            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
             defaultBatchesManager.addBlockInfo(block2); 
         });
         sleep(5);
@@ -274,6 +275,8 @@ namespace sirius::contract::test {
         sleep(5);
         std::promise<void> barrier;
         threadManager.execute([&]{
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
             defaultBatchesManager.nextBatch();
             ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
             defaultBatchesManager.nextBatch();
