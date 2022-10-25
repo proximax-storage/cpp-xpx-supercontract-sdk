@@ -34,7 +34,7 @@ ExecuteCallRPCRequest& ExecuteCallRPCRequest::operator=(ExecuteCallRPCRequest&& 
 
 ExecuteCallRPCRequest::~ExecuteCallRPCRequest() {
 
-    ASSERT(isSingleThread(), m_environment.logger());
+    ASSERT(isSingleThread(), m_environment.logger())
 
     if (m_handler) {
         m_handler->finish();

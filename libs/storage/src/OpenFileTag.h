@@ -6,16 +6,16 @@
 
 #pragma once
 
-#include "RPCTag.h"
+#include "storage/RPCTag.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
 #include "storage/StorageRequests.h"
-#include "storageContentManagerServer.grpc.pb.h"
+#include "storageServer.grpc.pb.h"
 
 namespace sirius::contract::storage {
 
-namespace rpc = ::storage;
+
 
 class OpenFileTag
         : private SingleThread, public RPCTag {
@@ -26,21 +26,21 @@ private:
 
     std::shared_ptr<AsyncQueryCallback<uint64_t>> m_callback;
 
-    rpc::OpenFileRequest   m_request;
-    rpc::OpenFileResponse  m_response;
+    storageServer::OpenFileRequest   m_request;
+    storageServer::OpenFileResponse  m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    rpc::OpenFileResponse>> m_responseReader;
+                    storageServer::OpenFileResponse>> m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
     OpenFileTag(GlobalEnvironment& environment,
-                                        rpc::OpenFileRequest&& request,
-                                        rpc::StorageContentManagerServer::Stub& stub,
+                                        storageServer::OpenFileRequest&& request,
+                                        storageServer::StorageServer::Stub& stub,
                                         grpc::CompletionQueue& completionQueue,
                                         std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback);
 
@@ -48,6 +48,7 @@ public:
 
     void process(bool ok) override;
 
+    void cancel() override;
 };
 
 }

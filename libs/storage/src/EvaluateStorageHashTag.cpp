@@ -10,8 +10,8 @@ namespace sirius::contract::storage {
 
 EvaluateStorageHashTag::EvaluateStorageHashTag(
         GlobalEnvironment& environment,
-        rpc::EvaluateStorageHashRequest&& request,
-        rpc::StorageServer::Stub& stub,
+        storageServer::EvaluateStorageHashRequest&& request,
+        storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
         std::shared_ptr<AsyncQueryCallback<StorageState>>&& callback)
         : m_environment(environment)
@@ -38,6 +38,12 @@ void EvaluateStorageHashTag::process(bool ok) {
         m_environment.logger().warn("Failed To Evaluate Storage Hash: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
     }
+}
+
+void EvaluateStorageHashTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }

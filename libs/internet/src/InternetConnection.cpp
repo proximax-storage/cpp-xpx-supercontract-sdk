@@ -36,7 +36,7 @@ InternetConnection& InternetConnection::operator=(InternetConnection&& other) no
 };
 
 void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
-    ASSERT(isSingleThread(), m_environment.logger());
+    ASSERT(isSingleThread(), m_environment.logger())
 
     ASSERT(m_resource, m_environment.logger());
 

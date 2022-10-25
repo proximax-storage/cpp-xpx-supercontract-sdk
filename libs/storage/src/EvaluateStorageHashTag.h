@@ -7,7 +7,7 @@
 #pragma once
 
 #include <storage/StorageRequests.h>
-#include "RPCTag.h"
+#include "storage/RPCTag.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
@@ -15,7 +15,7 @@
 
 namespace sirius::contract::storage {
 
-namespace rpc = ::storage;
+
 
 class EvaluateStorageHashTag
         : private SingleThread, public RPCTag {
@@ -26,27 +26,29 @@ private:
 
     std::shared_ptr<AsyncQueryCallback<StorageState>> m_callback;
 
-    rpc::EvaluateStorageHashRequest m_request;
-    rpc::EvaluateStorageHashResponse m_response;
+    storageServer::EvaluateStorageHashRequest m_request;
+    storageServer::EvaluateStorageHashResponse m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    rpc::EvaluateStorageHashResponse>> m_responseReader;
+                    storageServer::EvaluateStorageHashResponse>> m_responseReader;
 
     grpc::Status m_status;
 
 public:
 
     EvaluateStorageHashTag(GlobalEnvironment& environment,
-                        rpc::EvaluateStorageHashRequest&& request,
-                        rpc::StorageServer::Stub& stub,
+                        storageServer::EvaluateStorageHashRequest&& request,
+                        storageServer::StorageServer::Stub& stub,
                         grpc::CompletionQueue& completionQueue,
                         std::shared_ptr<AsyncQueryCallback<StorageState>>&& callback);
 
     void start();
 
     void process(bool ok) override;
+
+    void cancel() override;
 
 };
 

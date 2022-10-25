@@ -4,7 +4,7 @@ find_package(OpenSSL REQUIRED)
 
 supercontract_sdk_shared_library_target(contract-storage)
 
-foreach(_service storageServer storageContentManagerServer)
+foreach(_service storageServer)
 
     # Proto file
     get_filename_component(${_service}_proto "../protobuf/storage/${_service}.proto" ABSOLUTE)
