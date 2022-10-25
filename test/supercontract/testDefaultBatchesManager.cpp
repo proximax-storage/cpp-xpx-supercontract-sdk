@@ -59,6 +59,7 @@ namespace sirius::contract::test {
     class VirtualMachineMock : public vm::VirtualMachine {
     private:
         ThreadManager& m_threadManager;
+        std::deque<bool> m_result = {true, true, false, false};
         std::map<CallId, Timer> m_timers;
 
     public:
@@ -67,17 +68,17 @@ namespace sirius::contract::test {
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-
-            m_timers[request.m_callId] = m_threadManager.startTimer(1000, [=, this]() mutable {
+            
+            m_timers[request.m_callId] = m_threadManager.startTimer(rand()%5000, [=, this]() mutable {
                 vm::CallExecutionResult result {
-                    true,
+                    m_result.front(),
                     0,
                     0,
                     0,
                 };
                 callback->postReply(result);
-                std::cout << "vm executing \n";
             });
+            m_result.pop_front();
         }
     };
 
@@ -150,7 +151,7 @@ namespace sirius::contract::test {
         ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
 
         // create default batches manager
-        uint64_t index = 0;
+        uint64_t index = 1;
         DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
 
         // create block
@@ -251,20 +252,30 @@ namespace sirius::contract::test {
         };
 
         threadManager.execute([&]{
-            std::cout << "run \n";
             defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
             defaultBatchesManager.addCall(callRequest1); 
             defaultBatchesManager.addCall(callRequest2); 
             defaultBatchesManager.addBlockInfo(block1); 
         });
-        std::cout << "wait \n";
         sleep(5);
-        std::cout << "end of wait \n";
-
-        std::promise<void> barrier;
-
         threadManager.execute([&]{
-            std::cout << "check \n";
+            defaultBatchesManager.addBlockInfo(block2); 
+        });
+        sleep(5);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block3); 
+        });
+        sleep(5);
+        threadManager.execute([&]{
+            defaultBatchesManager.addCall(callRequest3); 
+            defaultBatchesManager.addCall(callRequest4); 
+            defaultBatchesManager.addBlockInfo(block4); 
+        });
+        sleep(5);
+        std::promise<void> barrier;
+        threadManager.execute([&]{
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
             defaultBatchesManager.nextBatch();
             ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
             barrier.set_value();
