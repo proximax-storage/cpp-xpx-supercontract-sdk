@@ -228,8 +228,10 @@ void ExecuteCallRPCHandler::postResponse(expected<CallExecutionResult>&& result)
 
     ASSERT(m_callback, m_environment.logger())
 
-    m_callback->postReply(std::move(result));
-    m_callback.reset();
+    // TODO This is a workaround that allows
+    //  to reset m_callback before calling postReply
+    auto callback = std::move(m_callback);
+    callback->postReply(std::move(result));
 }
 
 void ExecuteCallRPCHandler::finish() {
@@ -276,7 +278,7 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 
                 auto* status = new supercontractserver::OpenConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_open_connection_status(status);
+                requestWrapper.set_allocated_open_connection_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<OpenConnectionRPCHandler>(
@@ -289,7 +291,7 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 }
 
 void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractserver::ReadConnectionStream& request) {
-    auto[_, callback] = createAsyncQuery<supercontractserver::InternetReadBufferReturn>(
+    auto[_, callback] = createAsyncQuery<supercontractserver::ReadConnectionStreamReturn>(
             [this](auto&& res) {
 
                 ASSERT(isSingleThread(), m_environment.logger())
@@ -301,9 +303,9 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
 
                 ASSERT(res, m_environment.logger());
 
-                auto* status = new supercontractserver::InternetReadBufferReturn(std::move(*res));
+                auto* status = new supercontractserver::ReadConnectionStreamReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_internet_read_buffer(status);
+                requestWrapper.set_allocated_read_connection_stream_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<ReadConnectionRPCHandler>(
@@ -330,7 +332,7 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
 
                 auto* status = new supercontractserver::CloseConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_close_connection_status(status);
+                requestWrapper.set_allocated_close_connection_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<CloseConnectionRPCHandler>(

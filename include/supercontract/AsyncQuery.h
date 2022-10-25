@@ -167,8 +167,7 @@ private:
 
 public:
 
-    AsyncCallbackAsyncQuery(TCallback&& callback,
-                            std::shared_ptr<QueryStore<TCallback>> statusManager,
+    AsyncCallbackAsyncQuery(std::shared_ptr<QueryStore<TCallback>> statusManager,
                             GlobalEnvironment& globalEnvironment)
             : m_statusManager(std::move(statusManager))
             , m_globalEnvironment(globalEnvironment) {}
@@ -213,15 +212,12 @@ private:
 
     GlobalEnvironment& m_globalEnvironment;
     std::shared_ptr<QueryStore<TCallback>> m_statusManager;
-    TCallback m_callback;
 
 public:
 
-    SyncCallbackAsyncQuery(TCallback&& callback,
-                           std::shared_ptr<QueryStore<TCallback>> statusManager,
+    SyncCallbackAsyncQuery(std::shared_ptr<QueryStore<TCallback>> statusManager,
                            GlobalEnvironment& globalEnvironment)
-            : m_callback(std::move(callback))
-            , m_statusManager(std::move(statusManager))
+            : m_statusManager(std::move(statusManager))
             , m_globalEnvironment(globalEnvironment) {}
 
     void postReply(tl::expected<TReply, std::error_code>&& reply) override {
@@ -233,7 +229,10 @@ public:
         }
 
         m_statusManager->setStatus(Status::EXECUTED);
-        m_callback(std::move(reply));
+
+        auto callback = std::move(m_statusManager->callback());
+
+        callback->operator()(std::move(reply));
     }
 
 public:
@@ -263,11 +262,9 @@ createAsyncQuery(TCallback&& callback,
     std::shared_ptr<AsyncQueryCallback<TReply>> back;
 
     if (asyncCallback) {
-        back = std::make_shared<AsyncCallbackAsyncQuery<TReply, TCallback>>(
-                std::forward<TCallback>(callback), statusManager, env);
+        back = std::make_shared<AsyncCallbackAsyncQuery<TReply, TCallback>>(statusManager, env);
     } else {
-        back = std::make_shared<SyncCallbackAsyncQuery<TReply, TCallback>>(
-                std::forward<TCallback>(callback), statusManager, env);
+        back = std::make_shared<SyncCallbackAsyncQuery<TReply, TCallback>>(statusManager, env);
     }
 
     return {query, back};
