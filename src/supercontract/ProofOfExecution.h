@@ -45,6 +45,10 @@ public:
     void popFromProof();
     Proofs buildProof();
     void reset();
+
+private:
+
+    sirius::crypto::Scalar generateUniqueRandom(const utils::RawBuffer& dataBuffer);
 };
 
 } // namespace sirius::contract
