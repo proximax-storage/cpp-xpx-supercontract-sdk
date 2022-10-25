@@ -32,15 +32,15 @@ struct Proofs {
 class ProofOfExecution : private SingleThread {
 
 private:
-    GlobalEnvironment &m_environment;
+    GlobalEnvironment& m_environment;
 
     sirius::crypto::Scalar m_x;
     sirius::crypto::Scalar m_xPrevious;
 
-    const crypto::KeyPair &m_keyPair;
+    const crypto::KeyPair& m_keyPair;
 
 public:
-    ProofOfExecution(GlobalEnvironment &environment, const crypto::KeyPair &key);
+    ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
     Proofs buildProof();

@@ -12,7 +12,7 @@ namespace sirius::contract::test {
 
 #define TEST_NAME Supercontract
 
-void tProofVerification(Proofs p, crypto::KeyPair &key) {
+void tProofVerification(Proofs p, crypto::KeyPair& key) {
     auto T = p.m_batchProof.m_T;
     auto r = p.m_batchProof.m_r;
     auto F = p.m_tProof.m_F;
@@ -29,7 +29,7 @@ void tProofVerification(Proofs p, crypto::KeyPair &key) {
     ASSERT_EQ(F, expected);
 }
 
-void tProofVerificationFalse(Proofs p, crypto::KeyPair &key) {
+void tProofVerificationFalse(Proofs p, crypto::KeyPair& key) {
     auto T = p.m_batchProof.m_T;
     auto r = p.m_batchProof.m_r;
     auto F = p.m_tProof.m_F;
@@ -82,7 +82,7 @@ void batchProofVerificationFalse(Proofs n, Proofs m, sirius::crypto::CurvePoint 
 
 TEST(TEST_NAME, PoEx) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
@@ -132,7 +132,7 @@ TEST(TEST_NAME, PoEx) {
 
 TEST(TEST_NAME, PoExWrongBatch) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
@@ -182,7 +182,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
 
 TEST(TEST_NAME, PoExPopProof) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
@@ -223,7 +223,7 @@ TEST(TEST_NAME, PoExPopProof) {
 
 TEST(TEST_NAME, PoExNonPopProof) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
@@ -264,7 +264,7 @@ TEST(TEST_NAME, PoExNonPopProof) {
 
 TEST(TEST_NAME, PoExReset) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);
@@ -297,7 +297,7 @@ TEST(TEST_NAME, PoExReset) {
 
 TEST(TEST_NAME, PoExNonReset) {
     GlobalEnvironmentMock environment;
-    auto &threadManager = environment.threadManager();
+    auto& threadManager = environment.threadManager();
     threadManager.execute([&] {
             auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
             sirius::contract::ProofOfExecution poex(environment, key);

@@ -5,13 +5,13 @@ extern "C" {
 }
 
 namespace sirius { namespace crypto {
-Scalar::Scalar(const std::array<uint8_t, Scalar_Size * 2> &arr) {
+Scalar::Scalar(const std::array<uint8_t, Scalar_Size * 2>& arr) {
     auto temp = arr;
     sc_reduce(temp.data());
     std::copy(temp.begin(), temp.begin() + Scalar_Size, m_array.begin());
 }
 
-Scalar::Scalar(const std::array<uint8_t, Scalar_Size> &arr) {
+Scalar::Scalar(const std::array<uint8_t, Scalar_Size>& arr) {
     std::array<uint8_t, Scalar_Size * 2> temp;
     std::copy(arr.begin(), arr.end(), temp.begin());
     sc_reduce(temp.data());
@@ -30,7 +30,7 @@ Scalar Scalar::getLMinusOne() {
     return ret;
 }
 
-Scalar Scalar::operator+(const Scalar &a) const {
+Scalar Scalar::operator+(const Scalar& a) const {
     Scalar temp;
     Scalar one;
     one[0] = 1;
@@ -39,7 +39,7 @@ Scalar Scalar::operator+(const Scalar &a) const {
     return temp;
 }
 
-Scalar Scalar::operator*(const Scalar &a) const {
+Scalar Scalar::operator*(const Scalar& a) const {
     Scalar temp;
     Scalar zero;
     sc_muladd(temp.data(), this->m_array.data(), a.m_array.data(), zero.m_array.data());
@@ -47,7 +47,7 @@ Scalar Scalar::operator*(const Scalar &a) const {
     return temp;
 }
 
-Scalar Scalar::operator-(const Scalar &a) const {
+Scalar Scalar::operator-(const Scalar& a) const {
     Scalar temp;
     Scalar iMinusOne = Scalar::getLMinusOne();
     sc_muladd(temp.data(), a.m_array.data(), iMinusOne.m_array.data(), m_array.data());
@@ -63,22 +63,22 @@ Scalar Scalar::operator-() const {
     return temp;
 }
 
-Scalar &Scalar::operator+=(const Scalar &a) {
+Scalar& Scalar::operator+=(const Scalar& a) {
     *this = *this + a;
     return *this;
 }
 
-Scalar &Scalar::operator-=(const Scalar &a) {
+Scalar& Scalar::operator-=(const Scalar& a) {
     *this = *this - a;
     return *this;
 }
 
-Scalar &Scalar::operator*=(const Scalar &a) {
+Scalar& Scalar::operator*=(const Scalar& a) {
     *this = *this * a;
     return *this;
 }
 
-Scalar Scalar::addProduct(const Scalar &r, const Scalar &h) const {
+Scalar Scalar::addProduct(const Scalar& r, const Scalar& h) const {
     Scalar temp;
     sc_muladd(temp.data(), r.m_array.data(), h.m_array.data(), m_array.data());
     return temp;

@@ -12,11 +12,11 @@ namespace sirius::contract::test {
 GlobalEnvironmentMock::GlobalEnvironmentMock()
     : m_logger(getLoggerConfig(), "executor") {}
 
-ThreadManager &GlobalEnvironmentMock::threadManager() {
+ThreadManager& GlobalEnvironmentMock::threadManager() {
     return m_threadManager;
 }
 
-logging::Logger &GlobalEnvironmentMock::logger() {
+logging::Logger& GlobalEnvironmentMock::logger() {
     return m_logger;
 }
 
@@ -27,7 +27,7 @@ logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
     return config;
 }
 
-void StorageContentManagerMock::getAbsolutePath(const DriveKey &driveKey, const std::string &relativePath,
+void StorageContentManagerMock::getAbsolutePath(const DriveKey& driveKey, const std::string& relativePath,
                                                 std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
     callback->postReply(std::filesystem::absolute(relativePath));
 }

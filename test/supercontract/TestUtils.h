@@ -20,9 +20,9 @@ private:
 public:
     GlobalEnvironmentMock();
 
-    ThreadManager &threadManager() override;
+    ThreadManager& threadManager() override;
 
-    logging::Logger &logger() override;
+    logging::Logger& logger() override;
 
 private:
     logging::LoggerConfig getLoggerConfig();
@@ -30,7 +30,7 @@ private:
 
 class StorageContentManagerMock : public storage::StorageContentManager {
 public:
-    void getAbsolutePath(const DriveKey &driveKey, const std::string &relativePath,
+    void getAbsolutePath(const DriveKey& driveKey, const std::string& relativePath,
                          std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
 };
 

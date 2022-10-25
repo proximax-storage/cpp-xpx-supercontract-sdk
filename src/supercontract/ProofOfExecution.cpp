@@ -6,13 +6,13 @@ extern "C" {
 }
 
 namespace sirius::contract {
-void HashPrivateKey(const sirius::crypto::PrivateKey &privateKey,
-                    Hash512 &hash) {
+void HashPrivateKey(const sirius::crypto::PrivateKey& privateKey,
+                    Hash512& hash) {
     sirius::crypto::Sha3_512({privateKey.data(), privateKey.size()}, hash);
 }
 
-sirius::crypto::Scalar hashPrivateKey(const crypto::KeyPair &key,
-                                      const utils::RawBuffer &dataBuffer) {
+sirius::crypto::Scalar hashPrivateKey(const crypto::KeyPair& key,
+                                      const utils::RawBuffer& dataBuffer) {
     // Hash the private key to improve randomness.
     Hash512 privHash;
     HashPrivateKey(key.privateKey(), privHash);
@@ -30,8 +30,8 @@ sirius::crypto::Scalar hashPrivateKey(const crypto::KeyPair &key,
     return scalar;
 }
 
-ProofOfExecution::ProofOfExecution(GlobalEnvironment &environment,
-                                   const crypto::KeyPair &key)
+ProofOfExecution::ProofOfExecution(GlobalEnvironment& environment,
+                                   const crypto::KeyPair& key)
     : m_keyPair(key), m_x(sirius::crypto::Scalar()),
       m_xPrevious(sirius::crypto::Scalar()), m_environment(environment) {}
 
@@ -78,8 +78,9 @@ Proofs ProofOfExecution::buildProof() {
     // this->m_b = std::make_tuple(T, r);
     BatchProof b{T, r};
 
-    Hash512 w_r = sirius::utils::generateRandomByteValue<Hash512>();
-    sirius::crypto::Scalar w(w_r.array());
+    // Hash512 w_r = sirius::utils::generateRandomByteValue<Hash512>();
+    // sirius::crypto::Scalar w(w_r.array());
+    auto w = hashPrivateKey(m_keyPair, v);
     auto F = w * Beta;
 
     Hash512 d_hash;
