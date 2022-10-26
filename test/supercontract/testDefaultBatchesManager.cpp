@@ -59,18 +59,20 @@ namespace sirius::contract::test {
     class VirtualMachineMock : public vm::VirtualMachine {
     private:
         ThreadManager& m_threadManager;
-        std::deque<bool> m_result = {true, true, true, false, false}; //first element is dummy data
+        std::deque<bool> m_result;
         std::map<CallId, Timer> m_timers;
 
     public:
-        VirtualMachineMock(ThreadManager& threadManager):m_threadManager(threadManager){}
+        VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result)
+            :m_threadManager(threadManager), 
+            m_result(result){}
         void executeCall(const CallRequest& request,
                          std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
             
             m_result.pop_front();
-            m_timers[request.m_callId] = m_threadManager.startTimer(rand()%5000, [=, this]() mutable {
+            m_timers[request.m_callId] = m_threadManager.startTimer(rand()%1000, [=, this]() mutable {
                 vm::CallExecutionResult result {
                     m_result.front(),
                     0,
@@ -127,9 +129,62 @@ namespace sirius::contract::test {
     
     };
 
+    // create block
+    BlockHash hash1 = BlockHash();
+    BlockHash hash2 = BlockHash();
+    BlockHash hash3 = BlockHash();
+    BlockHash hash4 = BlockHash();
+    Block block1 = {
+        hash1,
+        20
+    };
+    Block block2 = {
+        hash2,
+        21
+    };
+    Block block3 = {
+        hash3,
+        22
+    };
+    Block block4 = {
+        hash4,
+        23
+    };
+
+    // create call requests
+    std::vector<uint8_t> params;
+    CallRequest callRequest = {
+        ContractKey(),
+        CallId(),
+        "",
+        "",
+        params,
+        52000000,
+        20 * 1024,
+        CallRequest::CallLevel::AUTOMATIC,
+        CallReferenceInfo {
+            {},
+            0,
+            BlockHash(),
+            0,
+            0,
+            {}
+        }
+    };
+
 #define TEST_NAME DefaultBatchesManagerTest
 
-    TEST(TEST_NAME, BatchesTest) {
+    TEST(TEST_NAME, BatchTest) {
+        // Test procedure:
+        // addCall
+        // addCall
+        // addBLockInfo - true
+        // addBlockInfo - true
+        // addBlockInfo - false
+        // addCall 
+        // addCall 
+        // addBlockInfo - false
+
         // create contract environment
         ContractKey contractKey;
         uint64_t automaticExucutionsSCLimit = 0;
@@ -145,7 +200,8 @@ namespace sirius::contract::test {
         crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
         ExecutorConfig executorConfig;
         ThreadManager threadManager;
-        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager);
+        std::deque<bool> result = {true, true, true, false, false}; //first element is dummy data
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
         std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
         
         ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
@@ -154,129 +210,251 @@ namespace sirius::contract::test {
         uint64_t index = 1;
         DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
 
-        // create block
-        BlockHash hash1 = BlockHash();
-        BlockHash hash2 = BlockHash();
-        BlockHash hash3 = BlockHash();
-        BlockHash hash4 = BlockHash();
-        Block block1 = {
-            hash1,
-            20
-        };
-        Block block2 = {
-            hash2,
-            21
-        };
-        Block block3 = {
-            hash3,
-            22
-        };
-        Block block4 = {
-            hash4,
-            23
-        };
-
-        // create call requests
-        std::vector<uint8_t> params;
-        CallRequest callRequest1 = {
-            ContractKey(),
-            CallId(),
-            "",
-            "",
-            params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
-            CallReferenceInfo {
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-            }
-        };
-        CallRequest callRequest2 = {
-            ContractKey(),
-            CallId(),
-            "",
-            "",
-            params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
-            CallReferenceInfo {
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-            }
-        };
-        CallRequest callRequest3 = {
-            ContractKey(),
-            CallId(),
-            "",
-            "",
-            params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
-            CallReferenceInfo {
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-            }
-        };
-        CallRequest callRequest4 = {
-            ContractKey(),
-            CallId(),
-            "",
-            "",
-            params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
-            CallReferenceInfo {
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-            }
-        };
-
         threadManager.execute([&]{
             defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
-            defaultBatchesManager.addCall(callRequest1); 
-            defaultBatchesManager.addCall(callRequest2); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
             defaultBatchesManager.addBlockInfo(block1); 
         });
-        sleep(5);
+        sleep(1);
         threadManager.execute([&]{
-            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
             defaultBatchesManager.addBlockInfo(block2); 
         });
-        sleep(5);
+        sleep(1);
         threadManager.execute([&]{
             defaultBatchesManager.addBlockInfo(block3); 
         });
-        sleep(5);
+        sleep(1);
         threadManager.execute([&]{
-            defaultBatchesManager.addCall(callRequest3); 
-            defaultBatchesManager.addCall(callRequest4); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
             defaultBatchesManager.addBlockInfo(block4); 
         });
-        sleep(5);
+        sleep(1);
         std::promise<void> barrier;
         threadManager.execute([&]{
             defaultBatchesManager.nextBatch();
             ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+            defaultBatchesManager.nextBatch();
+            ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+            barrier.set_value();
+        });
+
+        barrier.get_future().wait();
+        threadManager.stop();
+    }
+
+    TEST(TEST_NAME, AllFalseTest) {
+        // Test procedure:
+        // addCall x8
+        // addBLockInfo - false  (batch1)
+        // addCall x4
+        // addBlockInfo - false  (batch2)
+        // addCall x2
+        // addBlockInfo - false  (batch3)
+        // addBlockInfo - false 
+        // create contract environment
+        ContractKey contractKey;
+        uint64_t automaticExucutionsSCLimit = 0;
+        uint64_t automaticExucutionsSMLimit = 0;
+        DriveKey driveKey;
+        std::set<ExecutorKey> executors;
+        ContractConfig contractConfig;
+
+        ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit, automaticExucutionsSMLimit);
+
+        // create executor environment
+        crypto::PrivateKey privateKey;
+        crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+        ExecutorConfig executorConfig;
+        ThreadManager threadManager;
+        std::deque<bool> result = {true, false, false, false, false}; //first element is dummy data
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
+        std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+        
+        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
+
+        // create default batches manager
+        uint64_t index = 1;
+        DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
+
+        threadManager.execute([&]{
+            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addBlockInfo(block1); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addBlockInfo(block2); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addBlockInfo(block3); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block4); 
+        });
+        sleep(1);
+        std::promise<void> barrier;
+        threadManager.execute([&]{
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+            defaultBatchesManager.nextBatch();
+            ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+            barrier.set_value();
+        });
+
+        barrier.get_future().wait();
+        threadManager.stop();
+    }
+
+    TEST(TEST_NAME, StorageSynchronisedTest) {
+        // Test procedure:  
+        // nextBatchIndex = 0
+        // addCall
+        // addCall
+        // addBLockInfo - false  (batch1) storageSynchronised
+        // addBlockInfo - true   (batch2) 
+        // addCall 
+        // addCall 
+        // addBlockInfo - true  (batch3)
+        // addBlockInfo - false 
+        // create contract environment
+        ContractKey contractKey;
+        uint64_t automaticExucutionsSCLimit = 0;
+        uint64_t automaticExucutionsSMLimit = 0;
+        DriveKey driveKey;
+        std::set<ExecutorKey> executors;
+        ContractConfig contractConfig;
+
+        ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit, automaticExucutionsSMLimit);
+
+        // create executor environment
+        crypto::PrivateKey privateKey;
+        crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+        ExecutorConfig executorConfig;
+        ThreadManager threadManager;
+        std::deque<bool> result = {true, false, true, true, false}; //first element is dummy data
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
+        std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+        
+        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
+
+        // create default batches manager
+        uint64_t index = 0;
+        DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
+
+        threadManager.execute([&]{
+            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addBlockInfo(block1); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block2); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addCall(callRequest); 
+            defaultBatchesManager.addBlockInfo(block3); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block4); 
+        });
+        sleep(1);
+        std::promise<void> barrier;
+        threadManager.execute([&]{
+            defaultBatchesManager.nextBatch();
+            ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
+            defaultBatchesManager.nextBatch();
+            ASSERT_FALSE(defaultBatchesManager.hasNextBatch());
+            barrier.set_value();
+        });
+
+        barrier.get_future().wait();
+        threadManager.stop();
+    }
+
+    TEST(TEST_NAME, StorageSynchronisedFirstBlockFalseTest) {
+        // Test procedure: 
+        // nextBatchIndex = 0
+        // addBLockInfo - false 
+        // addBLockInfo - true  (batch1) storageSynchronised
+        // addBLockInfo - true  (batch2)
+        // addCall 
+        // addCall 
+        // addCall 
+        // addCall
+        // addBlockInfo - false (batch3)
+        // create contract environment
+        ContractKey contractKey;
+        uint64_t automaticExucutionsSCLimit = 0;
+        uint64_t automaticExucutionsSMLimit = 0;
+        DriveKey driveKey;
+        std::set<ExecutorKey> executors;
+        ContractConfig contractConfig;
+
+        ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit, automaticExucutionsSMLimit);
+
+        // create executor environment
+        crypto::PrivateKey privateKey;
+        crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+        ExecutorConfig executorConfig;
+        ThreadManager threadManager;
+        std::deque<bool> result = {true, false, true, true, false}; //first element is dummy data
+        auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
+        std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+        
+        ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig, threadManager);
+
+        // create default batches manager
+        uint64_t index = 0;
+        DefaultBatchesManager defaultBatchesManager(index, contractEnvironmentMock, executorEnvironmentMock);
+
+        threadManager.execute([&]{
+            defaultBatchesManager.setAutomaticExecutionsEnabledSince(0);
+            defaultBatchesManager.addBlockInfo(block1); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block2); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addBlockInfo(block3); 
+        });
+        sleep(1);
+        threadManager.execute([&]{
+            defaultBatchesManager.addCall(callRequest);
+            defaultBatchesManager.addCall(callRequest);
+            defaultBatchesManager.addCall(callRequest);
+            defaultBatchesManager.addCall(callRequest);
+            defaultBatchesManager.addBlockInfo(block4); 
+        });
+        sleep(1);
+        std::promise<void> barrier;
+        threadManager.execute([&]{
             defaultBatchesManager.nextBatch();
             ASSERT_TRUE(defaultBatchesManager.hasNextBatch());
             defaultBatchesManager.nextBatch();
