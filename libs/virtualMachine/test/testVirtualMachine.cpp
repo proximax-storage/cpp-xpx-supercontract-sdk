@@ -37,8 +37,10 @@ TEST(VirtualMachine, SimpleContract) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/simple.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -85,7 +87,8 @@ TEST(VirtualMachine, SimpleContract) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetRead) {
@@ -102,8 +105,10 @@ TEST(VirtualMachine, InternetRead) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -158,7 +163,8 @@ TEST(VirtualMachine, InternetRead) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetReadNotEnoughSC) {
@@ -175,8 +181,10 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -227,7 +235,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetReadNotEnoughSM) {
@@ -244,8 +252,10 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -296,7 +306,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongContractPath) {
@@ -313,8 +323,10 @@ TEST(VirtualMachine, WrongContractPath) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -361,7 +373,7 @@ TEST(VirtualMachine, WrongContractPath) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongIP) {
@@ -378,8 +390,10 @@ TEST(VirtualMachine, WrongIP) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50052";
@@ -427,7 +441,7 @@ TEST(VirtualMachine, WrongIP) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongExecFunction) {
@@ -444,8 +458,10 @@ TEST(VirtualMachine, WrongExecFunction) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -496,7 +512,7 @@ TEST(VirtualMachine, WrongExecFunction) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, UnauthorizedImportFunction) {
@@ -513,8 +529,10 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -565,7 +583,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, AbortVMDuringExecution) {
@@ -582,8 +600,10 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -640,7 +660,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
     barrier.get();
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, FaultyContract) {
@@ -657,9 +677,11 @@ TEST(VirtualMachine, FaultyContract) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // The contract should panic in this case due to failing the assertion
-        exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -714,7 +736,7 @@ TEST(VirtualMachine, FaultyContract) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 
@@ -735,8 +757,10 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     std::promise<void> pAborted;
     auto barrierAborted = pAborted.get_future();
 
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -831,7 +855,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 } // namespace sirius::contract::vm::test
