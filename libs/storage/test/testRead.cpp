@@ -310,7 +310,7 @@ TEST(Storage, Read) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{1}};
+    DriveKey driveKey{{2}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";

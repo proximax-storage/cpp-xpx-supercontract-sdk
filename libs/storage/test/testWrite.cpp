@@ -125,6 +125,17 @@ void onClosedFile(const DriveKey& driveKey,
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
 }
 
+void onFlushed(const DriveKey& driveKey,
+               GlobalEnvironment& environment,
+               std::shared_ptr<Storage> pStorage,
+               std::promise<void>& barrier, uint64_t fileId) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+        ASSERT(res, environment.logger())
+        onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+
+    pStorage->closeFile(driveKey, fileId, callback);
+}
+
 void onWrittenFile(const DriveKey& driveKey,
                    GlobalEnvironment& environment,
                    std::shared_ptr<Storage> pStorage,
@@ -132,9 +143,9 @@ void onWrittenFile(const DriveKey& driveKey,
                    uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         ASSERT(res, environment.logger())
-        onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+        onFlushed(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
-    pStorage->closeFile(driveKey, fileId, callback);
+    pStorage->flush(driveKey, fileId, callback);
 }
 
 void onOpenedFile(const DriveKey& driveKey,
@@ -180,7 +191,7 @@ TEST(Storage, Write) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{1}};
+    DriveKey driveKey{{4}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
