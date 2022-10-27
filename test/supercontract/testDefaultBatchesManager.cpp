@@ -148,23 +148,22 @@ Block block4 = {
 
 // create call requests
 std::vector<uint8_t> params;
-vm::CallRequest callRequest({ContractKey(),
-                             CallId(),
-                             "",
-                             "",
-                             params,
-                             52000000,
-                             20 * 1024,
-                             CallReferenceInfo{
-                                     {},
-                                     0,
-                                     BlockHash(),
-                                     0,
-                                     0,
-                                     {}
-                             }
-                            },
-                            vm::CallRequest::CallLevel::AUTOMATIC);
+CallRequestParameters callRequest({ContractKey(),
+                                   CallId(),
+                                   "",
+                                   "",
+                                   params,
+                                   52000000,
+                                   20 * 1024,
+                                   CallReferenceInfo{
+                                           {},
+                                           0,
+                                           BlockHash(),
+                                           0,
+                                           0,
+                                           {}
+                                   }
+                                  };
 
 #define TEST_NAME DefaultBatchesManagerTest
 
