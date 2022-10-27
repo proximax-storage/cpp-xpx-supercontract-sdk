@@ -148,7 +148,7 @@ Block block4 = {
 
 // create call requests
 std::vector<uint8_t> params;
-CallRequestParameters callRequest({ContractKey(),
+CallRequestParameters callRequest{ContractKey(),
                                    CallId(),
                                    "",
                                    "",
