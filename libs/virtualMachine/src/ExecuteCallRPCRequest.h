@@ -7,7 +7,7 @@
 #pragma once
 
 #include "ExecuteCallRPCHandler.h"
-#include <virtualMachine/CallExecutionResult.h>
+#include <virtualMachine/CallRequest.h>
 
 namespace sirius::contract::vm {
 

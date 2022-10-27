@@ -46,11 +46,11 @@ void DefaultContract::terminate() {
     }
 }
 
-void DefaultContract::addContractCall(const CallRequest& request) {
+void DefaultContract::addManualCall(const CallRequestParameters& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_batchesManager->addCall(request);
+    m_batchesManager->addManualCall(request);
     if (!m_task) {
         runTask();
     }

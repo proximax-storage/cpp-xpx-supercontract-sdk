@@ -25,7 +25,7 @@ class Contract
           , public ContractBlockchainEventHandler {
 public:
 
-    virtual void addContractCall( const CallRequest& ) = 0;
+    virtual void addManualCall(const CallRequestParameters& ) = 0;
 
     virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
 

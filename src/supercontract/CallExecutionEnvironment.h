@@ -28,7 +28,7 @@ private:
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
 
-    const CallRequest m_callRequest;
+    const vm::CallRequest m_callRequest;
 
     std::shared_ptr<AsyncQuery> m_asyncQuery;
 
@@ -39,7 +39,7 @@ private:
 
 public:
 
-    CallExecutionEnvironment(const CallRequest& request,
+    CallExecutionEnvironment(const vm::CallRequest& request,
                              ExecutorEnvironment& executorEnvironment,
                              ContractEnvironment& contractEnvironment);
 

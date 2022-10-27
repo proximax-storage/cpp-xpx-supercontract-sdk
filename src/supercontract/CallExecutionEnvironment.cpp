@@ -10,7 +10,7 @@
 
 namespace sirius::contract {
 
-CallExecutionEnvironment::CallExecutionEnvironment(const CallRequest& request,
+CallExecutionEnvironment::CallExecutionEnvironment(const vm::CallRequest& request,
                                                    ExecutorEnvironment& executorEnvironment,
                                                    ContractEnvironment& contractEnvironment)
         : m_callRequest(request)

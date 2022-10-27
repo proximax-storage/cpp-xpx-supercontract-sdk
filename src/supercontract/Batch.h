@@ -11,12 +11,13 @@
 #include <vector>
 
 #include "supercontract/Requests.h"
+#include "virtualMachine/CallRequest.h"
 
 namespace sirius::contract {
 
 struct Batch {
     const uint64_t m_batchIndex;
-    std::deque<CallRequest> m_callRequests;
+    std::deque<vm::CallRequest> m_callRequests;
 };
 
 }

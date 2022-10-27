@@ -30,26 +30,25 @@ TEST(VirtualMachine, Example) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
-            ContractKey(),
-            CallId(),
-            "../../../rust-xpx-supercontract-client-sdk/pkg/simple_contract.wasm",
-            "run",
-            params,
-            52000000,
-            20 * 1024,
-            CallRequest::CallLevel::AUTOMATIC,
-            CallReferenceInfo {
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-}
-        };
+        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+                ContractKey(),
+                CallId(),
+                "../../../rust-xpx-supercontract-client-sdk/pkg/simple_contract.wasm",
+                "run",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        BlockHash(),
+                        0,
+                        0,
+                        {}
+                }
+        }, CallRequest::CallLevel::AUTOMATIC);
 
-        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&] (auto&& res) {
+        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             // TODO on call executed
             p.set_value();
             ASSERT_TRUE(res);

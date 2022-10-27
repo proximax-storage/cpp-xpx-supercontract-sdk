@@ -65,7 +65,7 @@ public:
     VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result)
             : m_threadManager(threadManager), m_result(result) {}
 
-    void executeCall(const CallRequest& request,
+    void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                      std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
@@ -148,24 +148,23 @@ Block block4 = {
 
 // create call requests
 std::vector<uint8_t> params;
-CallRequest callRequest = {
-        ContractKey(),
-        CallId(),
-        "",
-        "",
-        params,
-        52000000,
-        20 * 1024,
-        CallRequest::CallLevel::AUTOMATIC,
-        CallReferenceInfo{
-                {},
-                0,
-                BlockHash(),
-                0,
-                0,
-                {}
-        }
-};
+vm::CallRequest callRequest({ContractKey(),
+                             CallId(),
+                             "",
+                             "",
+                             params,
+                             52000000,
+                             20 * 1024,
+                             CallReferenceInfo{
+                                     {},
+                                     0,
+                                     BlockHash(),
+                                     0,
+                                     0,
+                                     {}
+                             }
+                            },
+                            vm::CallRequest::CallLevel::AUTOMATIC);
 
 #define TEST_NAME DefaultBatchesManagerTest
 
@@ -213,8 +212,8 @@ TEST(TEST_NAME, BatchTest) {
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block1);
     });
     sleep(1);
@@ -227,8 +226,8 @@ TEST(TEST_NAME, BatchTest) {
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block4);
     });
     sleep(1);
@@ -294,28 +293,28 @@ TEST(TEST_NAME, AllFalseTest) {
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block1);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block2);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block3);
     });
     sleep(1);
@@ -387,8 +386,8 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block1);
     });
     sleep(1);
@@ -397,8 +396,8 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block3);
     });
     sleep(1);
@@ -482,10 +481,10 @@ TEST(TEST_NAME, StorageSynchronisedFirstBlockFalseTest) {
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
-        batchesManager->addCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
+        batchesManager->addManualCall(callRequest);
         batchesManager->addBlockInfo(block4);
     });
     sleep(1);

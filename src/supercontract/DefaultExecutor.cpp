@@ -69,7 +69,7 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
     });
 }
 
-void DefaultExecutor::addContractCall(const ContractKey& key, CallRequest&& request) {
+void DefaultExecutor::addManualCall(const ContractKey& key, CallRequestParameters&& request) {
     m_pThreadManager->execute([=, this, request = std::move(request)] {
 
         auto contractIt = m_contracts.find(key);
@@ -79,7 +79,7 @@ void DefaultExecutor::addContractCall(const ContractKey& key, CallRequest&& requ
             return;
         }
 
-        contractIt->second->addContractCall(request);
+        contractIt->second->addManualCall(request);
     });
 }
 

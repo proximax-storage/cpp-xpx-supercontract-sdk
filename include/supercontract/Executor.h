@@ -27,7 +27,7 @@ public:
 
     virtual void addContract( const ContractKey&, AddContractRequest&& ) = 0;
 
-    virtual void addContractCall( const ContractKey&, CallRequest&& ) = 0;
+    virtual void addManualCall(const ContractKey&, CallRequestParameters&& ) = 0;
 
     virtual void addBlockInfo( const ContractKey&, Block&& ) = 0;
 

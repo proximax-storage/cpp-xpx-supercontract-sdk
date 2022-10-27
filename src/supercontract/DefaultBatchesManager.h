@@ -28,7 +28,7 @@ private:
         };
 
         BatchFormationStatus m_batchFormationStatus = BatchFormationStatus::MANUAL;
-        std::deque<CallRequest> m_requests;
+        std::deque<vm::CallRequest> m_requests;
     };
 
     struct AutorunCallInfo {
@@ -60,7 +60,7 @@ public:
 
 public:
 
-    void addCall(const CallRequest& request) override;
+    void addManualCall(const CallRequestParameters& request) override;
 
     void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override;
 

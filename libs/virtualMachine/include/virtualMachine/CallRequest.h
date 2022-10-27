@@ -7,8 +7,24 @@
 #pragma once
 
 #include <cstdint>
+#include <supercontract/Requests.h>
 
 namespace sirius::contract::vm {
+
+struct CallRequest : CallRequestParameters {
+
+    enum class CallLevel {
+        AUTORUN,
+        AUTOMATIC,
+        MANUAL
+    };
+
+    CallLevel m_callLevel;
+
+    CallRequest(const CallRequestParameters& parameters, const CallLevel& callLevel)
+            : CallRequestParameters(parameters)
+            , m_callLevel(callLevel) {}
+};
 
 struct CallExecutionResult {
     bool m_success;
