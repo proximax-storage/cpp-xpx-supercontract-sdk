@@ -12,11 +12,12 @@
 #include "ContractEnvironment.h"
 
 #include "CallExecutionManager.h"
+#include <supercontract/SingleThread.h>
 
 namespace sirius::contract {
 
 class DefaultBatchesManager
-        : public BaseBatchesManager {
+        : public BaseBatchesManager, private SingleThread {
 
 private:
 
@@ -77,24 +78,13 @@ public:
 
     // region blockchain event handler
 
-    bool onStorageSynchronized(uint64_t batchIndex) override {
-        m_storageSynchronizedBatchIndex = batchIndex;
-
-        return true;
-    }
+    bool onStorageSynchronized(uint64_t batchIndex) override;
 
     // endregion
 
 private:
 
-    void clearOutdatedBatches() {
-        while (!m_batches.empty() &&
-               m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
-               m_nextBatchIndex <= m_storageSynchronizedBatchIndex) {
-            m_batches.erase(m_batches.begin());
-            m_nextBatchIndex++;
-        }
-    }
+    void clearOutdatedBatches();
 
 };
 

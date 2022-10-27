@@ -15,6 +15,9 @@ DefaultBatchesManager::DefaultBatchesManager(uint64_t nextBatchIndex, ContractEn
         , m_nextBatchIndex(nextBatchIndex) {}
 
 void DefaultBatchesManager::addCall(const CallRequest& request) {
+    
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
     if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
                              DraftBatch::BatchFormationStatus::MANUAL) {
         m_batches[m_nextDraftBatchIndex++] = DraftBatch();
@@ -27,6 +30,8 @@ void DefaultBatchesManager::addCall(const CallRequest& request) {
 
 void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) {
 
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
     if (m_automaticExecutionsEnabledSince.has_value() == blockHeight.has_value()) {
         // TODO Can have value but differ?
         return;
@@ -44,12 +49,18 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 }
 
 bool DefaultBatchesManager::hasNextBatch() {
+    
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
     clearOutdatedBatches();
     return !m_batches.empty() &&
            m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED;
 }
 
 Batch DefaultBatchesManager::nextBatch() {
+    
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
     clearOutdatedBatches();
 
     auto batch = std::move(m_batches.extract(m_batches.begin()).mapped());
@@ -58,7 +69,10 @@ Batch DefaultBatchesManager::nextBatch() {
 }
 
 void DefaultBatchesManager::addBlockInfo(const Block& block) {
-     if (!m_automaticExecutionsEnabledSince ||  block.m_height < *m_automaticExecutionsEnabledSince){
+    
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
+    if (!m_automaticExecutionsEnabledSince || block.m_height < *m_automaticExecutionsEnabledSince) {
         // Automatic Executions Are Disabled For This Block
 
         if (m_batches.empty()) {
@@ -94,8 +108,8 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
                             m_executorEnvironment.executorConfig().autorunSCLimit(),
                             0,
                             CallRequest::CallLevel::AUTORUN};
-            
-        auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this] (auto&& result) {
+
+        auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this](auto&& result) {
             ASSERT(result, m_executorEnvironment.logger())
             onSuperContractCallExecuted(request.m_callId, std::move(*result));
         }, [] {}, m_executorEnvironment, false, false);
@@ -115,6 +129,8 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
 void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
                                                         vm::CallExecutionResult&& executionResult) {
 
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    
     auto callIt = m_autorunCallInfos.find(callId);
 
     if (callIt == m_autorunCallInfos.end()) {
@@ -124,7 +140,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     auto batchIt = m_batches.find(callIt->second.m_batchIndex);
 
     ASSERT(batchIt != m_batches.end(), m_executorEnvironment.logger())
-    ASSERT (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC,
+    ASSERT(batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC,
             m_executorEnvironment.logger())
 
     if (executionResult.m_success && executionResult.m_return == 0) {
@@ -149,6 +165,27 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     }
 
     m_autorunCallInfos.erase(callIt);
+}
+
+bool DefaultBatchesManager::onStorageSynchronized(uint64_t batchIndex) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_storageSynchronizedBatchIndex = batchIndex;
+
+    return true;
+}
+
+void DefaultBatchesManager::clearOutdatedBatches() {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    while (!m_batches.empty() &&
+           m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
+           m_nextBatchIndex <= m_storageSynchronizedBatchIndex) {
+        m_batches.erase(m_batches.begin());
+        m_nextBatchIndex++;
+    }
 }
 
 }
