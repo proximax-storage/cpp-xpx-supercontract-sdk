@@ -7,7 +7,9 @@ target_include_directories(supercontract PUBLIC ../../include/)
 target_include_directories(supercontract PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 target_link_libraries(supercontract
         expected
+        magic_enum
         cereal::cereal
         contract-internet
         contract-virtualMachine
-        contract-crypto)
+        contract-crypto
+        contract-messenger)

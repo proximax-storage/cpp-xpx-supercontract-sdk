@@ -18,8 +18,13 @@
 #include <cereal/types/optional.hpp>
 
 #include "utils/Serializer.h"
+#include <supercontract/Transactions.h>
 
 namespace sirius::contract {
+
+enum class MessageTag {
+    END_BATCH
+};
 
 struct CallExecutionOpinion {
 

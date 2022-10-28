@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "messengerServer.grpc.pb.h"
 #include <messenger/Message.h>
 #include <queue>
 #include <supercontract/AsyncQuery.h>
@@ -20,7 +21,26 @@ private:
 
     GlobalEnvironment& m_environment;
 
+    messengerServer::MessengerServer::Stub& m_stub;
+
+    grpc::CompletionQueue m_completionQueue;
+    std::thread m_completionQueueThread;
+
+    grpc::ClientContext m_context;
+
+    std::unique_ptr<grpc::ClientAsyncReaderWriter<messengerServer::ClientMessage, messengerServer::ServerMessage>> m_stream;
+
+
 public:
+
+    RPCMessengerSession(GlobalEnvironment& environment,
+                        messengerServer::MessengerServer::Stub& stub);
+
+    virtual ~RPCMessengerSession();
+
+public:
+
+    void initiate(std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void read(std::shared_ptr<AsyncQueryCallback<InputMessage>> callback);
 
@@ -30,7 +50,7 @@ public:
 
 private:
 
-    void onRead(expected<InputMessage>&& message);
+    void waitForRPCResponse();
 
 };
 

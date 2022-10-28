@@ -15,9 +15,8 @@
 namespace sirius::contract::vm {
 
 class ExecuteCallRPCReader
-        :
-                private SingleThread,
-                public RPCTag {
+        : private SingleThread
+        , public RPCTag {
 
 private:
 

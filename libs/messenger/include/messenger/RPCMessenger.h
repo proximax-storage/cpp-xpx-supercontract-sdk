@@ -16,11 +16,14 @@
 
 namespace sirius::contract::messenger {
 
-class RPCMessenger: public Messenger, private SingleThread {
+class RPCMessenger : public Messenger, private SingleThread {
 
 private:
 
     GlobalEnvironment& m_environment;
+
+    std::unique_ptr<messengerServer::MessengerServer::Stub> m_stub;
+
     std::weak_ptr<MessageSubscriber> m_subscriber;
     std::set<std::string> m_subscribedTags;
 
@@ -38,16 +41,19 @@ private:
 public:
 
     RPCMessenger(GlobalEnvironment& environment,
+                 const std::string& address,
                  std::weak_ptr<MessageSubscriber> subscriber,
                  std::set<std::string> subscribedTags);
 
+    ~RPCMessenger();
+
 public:
 
-    void sendMessage(const ExecutorKey& receiver, const std::string& tag, const std::string& message) override;
+    void sendMessage(const OutputMessage& message) override;
 
 private:
 
-    void onSessionInitiated( expected<void>&& res );
+    void onSessionInitiated(expected<void>&& res);
 
     void write();
 
@@ -59,9 +65,9 @@ private:
 
     void restartSession();
 
-    void onWritten( const expected<void>& res );
+    void onWritten(expected<void>&& res);
 
-    void onRead( const expected<InputMessage>& res );
+    void onRead(expected<InputMessage>&& res);
 
     bool isSessionActive();
 

@@ -19,6 +19,7 @@
 #include "supercontract/Identifiers.h"
 
 #include "utils/Serializer.h"
+#include <magic_enum.hpp>
 
 namespace sirius::contract {
 
@@ -131,18 +132,25 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>
 
 // region message event handler
 
-void DefaultExecutor::onMessageReceived(const std::string& tag, const std::string& msg) {
+void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
     m_pThreadManager->execute([=, this] {
         try {
-            if (tag == "end_batch") {
-                auto info = utils::deserialize<EndBatchExecutionOpinion>(msg);
-                onEndBatchExecutionOpinionReceived(info);
-                return true;
+            auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
+            if (tag.has_value()) {
+                switch (tag.value()) {
+                    case MessageTag::END_BATCH : {
+                        auto info = utils::deserialize<EndBatchExecutionOpinion>(inputMessage.m_content);
+                        onEndBatchExecutionOpinionReceived(info);
+                        break;
+                    }
+                }
+            }
+            else {
+                logger().warn("onMessageReceived: unknown tag", inputMessage.m_tag);
             }
         } catch (...) {
-            logger().warn("onMessageReceived: invalid message format: query={}", tag);
+            logger().warn("onMessageReceived: invalid message format: query={}", inputMessage.m_content);
         }
-        return false;
     });
 }
 
@@ -166,8 +174,8 @@ const crypto::KeyPair& DefaultExecutor::keyPair() const {
     return m_keyPair;
 }
 
-Messenger& DefaultExecutor::messenger() {
-    return *m_messenger;
+std::weak_ptr<messenger::Messenger> DefaultExecutor::messenger() {
+    return m_messenger;
 }
 
 std::weak_ptr<storage::Storage> DefaultExecutor::storage() {
@@ -249,7 +257,7 @@ void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint
 
 void DefaultExecutor::terminate() {
 
-    ASSERT(isSingleThread(), m_logger);
+    ASSERT(isSingleThread(), m_logger)
 
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();

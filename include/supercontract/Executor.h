@@ -8,7 +8,7 @@
 
 #include "Requests.h"
 #include "ExecutorConfig.h"
-#include "MessengerEventHandler.h"
+#include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
 
 
@@ -18,12 +18,12 @@
 namespace sirius::contract {
 
 class Executor :
-        public MessengerEventHandler,
+        public messenger::MessageSubscriber,
         public BlockchainEventHandler {
 
 public:
 
-    virtual ~Executor() = default;
+    ~Executor() override = default;
 
     virtual void addContract( const ContractKey&, AddContractRequest&& ) = 0;
 

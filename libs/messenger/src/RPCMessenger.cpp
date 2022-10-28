@@ -5,18 +5,40 @@
 */
 
 #include <messenger/RPCMessenger.h>
+#include <grpcpp/security/credentials.h>
+#include <grpcpp/create_channel.h>
+#include "ReadInputMessageTag.h"
 
 namespace sirius::contract::messenger {
 
 RPCMessenger::RPCMessenger(GlobalEnvironment& environment,
+                           const std::string& address,
                            std::weak_ptr<MessageSubscriber> subscriber,
                            std::set<std::string> subscribedTags)
         : m_environment(environment)
+          , m_stub(messengerServer::MessengerServer::NewStub(grpc::CreateChannel(
+                address, grpc::InsecureChannelCredentials())))
           , m_subscriber(std::move(subscriber))
-          , m_subscribedTags(std::move(subscribedTags)) {}
+          , m_subscribedTags(std::move(subscribedTags)) {
+    startSession();
+}
 
-void RPCMessenger::sendMessage(const ExecutorKey& receiver, const std::string& tag, const std::string& message) {
+RPCMessenger::~RPCMessenger() {
 
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    stopSession();
+}
+
+void RPCMessenger::sendMessage(const OutputMessage& message) {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_queuedMessages.push(message);
+
+    if (!m_writeQuery) {
+        write();
+    }
 }
 
 void RPCMessenger::write() {
@@ -33,18 +55,18 @@ void RPCMessenger::write() {
         auto tag = std::move(m_queuedTags.front());
         m_queuedTags.pop();
         auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
-            onWritten(res);
+            onWritten(std::forward<expected<void>>(res));
         }, [] {}, m_environment, true, true);
         m_writeQuery = std::move(query);
-        m_rpcSession->subscribe(tag, callback);
+        m_rpcSession->subscribe(tag, std::move(callback));
     } else if (!m_queuedMessages.empty()) {
         auto message = std::move(m_queuedMessages.front());
         m_queuedMessages.pop();
         auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
-            onWritten(res);
+            onWritten(std::forward<expected<void>>(res));
         }, [] {}, m_environment, true, true);
         m_writeQuery = std::move(query);
-        m_rpcSession->write(message, callback);
+        m_rpcSession->write(message, std::move(callback));
     }
 }
 
@@ -55,9 +77,13 @@ void RPCMessenger::read() {
 
     ASSERT(!m_readQuery, m_environment.logger())
 
-    auto [query, callback] = createAsyncQuery<InputMessage>([this] (auto&& res) {
-        onRead(res);
-    })
+    auto[query, callback] = createAsyncQuery<InputMessage>([this](auto&& res) {
+        onRead(std::forward<decltype(res)>(res));
+    }, [] {}, m_environment, true, true);
+
+    m_readQuery = std::move(query);
+
+    m_rpcSession->read(callback);
 }
 
 void RPCMessenger::onSessionInitiated(expected<void>&& res) {
@@ -72,13 +98,14 @@ void RPCMessenger::onSessionInitiated(expected<void>&& res) {
 
     if (!res) {
         restartSession();
+        return;
     }
-    else {
-        write();
-    }
+
+    read();
+    write();
 }
 
-void RPCMessenger::onWritten(const expected<void>& res) {
+void RPCMessenger::onWritten(expected<void>&& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -95,7 +122,7 @@ void RPCMessenger::onWritten(const expected<void>& res) {
     write();
 }
 
-void RPCMessenger::onRead(const expected<InputMessage>& res) {
+void RPCMessenger::onRead(expected<InputMessage>&& res) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     ASSERT(m_readQuery, m_environment.logger())
@@ -112,8 +139,7 @@ void RPCMessenger::onRead(const expected<InputMessage>& res) {
         if (subscriber) {
             subscriber->onMessageReceived(*res);
         }
-    }
-    else {
+    } else {
         m_environment.logger().warn("Received Message With Unknown Tag: {}", res->m_tag);
     }
 
@@ -134,7 +160,20 @@ void RPCMessenger::stopSession() {
 
 void RPCMessenger::startSession() {
 
-//    auto [query, callback] = createAsyncQuery<>()
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    ASSERT(!m_rpcSession, m_environment.logger())
+
+    ASSERT(!m_sessionInitiateQuery, m_environment.logger())
+
+    auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
+        onSessionInitiated(std::forward<expected<void>>(res));
+    }, [] {}, m_environment, true, true);
+
+    m_sessionInitiateQuery = std::move(query);
+
+    m_rpcSession = std::make_unique<RPCMessengerSession>(m_environment, *m_stub);
+    m_rpcSession->initiate(std::move(callback));
 }
 
 void RPCMessenger::restartSession() {

@@ -34,7 +34,7 @@ private:
     ExecutorConfig m_config;
 
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
-    std::shared_ptr<Messenger> m_messenger;
+    std::shared_ptr<messenger::Messenger> m_messenger;
     std::shared_ptr<storage::Storage> m_storage;
     std::shared_ptr<storage::StorageContentManager> m_storageContentManager;
 
@@ -62,9 +62,9 @@ public:
 
 public:
 
-    // region message event handler
+    // region message subscrbier
 
-    void onMessageReceived(const std::string& tag, const std::string& msg) override;
+    void onMessageReceived(const messenger::InputMessage& message) override;
 
     // endregion
 
@@ -84,7 +84,7 @@ public:
 
     const crypto::KeyPair& keyPair() const override;
 
-    Messenger& messenger() override;
+    std::weak_ptr<messenger::Messenger> messenger() override;
 
     std::weak_ptr<storage::Storage> storage() override;
 

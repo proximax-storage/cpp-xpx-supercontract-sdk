@@ -27,6 +27,12 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(expected)
 
 FetchContent_Declare(
+        magic_enum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum
+        GIT_TAG        v0.8.1)
+FetchContent_MakeAvailable(magic_enum)
+
+FetchContent_Declare(
         cereal
         GIT_REPOSITORY https://github.com/USCiLab/cereal.git
         GIT_TAG        v1.3.2)

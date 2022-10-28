@@ -6,18 +6,16 @@
 
 #pragma once
 
-#include <supercontract/Identifiers.h>
-#include "Message.h"
 
 namespace sirius::contract::messenger {
 
-class Messenger {
+class RPCTag {
 
 public:
 
-    virtual ~Messenger() = default;
+    virtual ~RPCTag() = default;
 
-    virtual void sendMessage(const OutputMessage& message) = 0;
+    virtual void process(bool ok) = 0;
 
 };
 
