@@ -30,7 +30,7 @@ TEST(VirtualMachine, SimpleContract) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -98,7 +98,7 @@ TEST(VirtualMachine, InternetRead) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -176,7 +176,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -249,7 +249,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -322,7 +322,7 @@ TEST(VirtualMachine, WrongContractPath) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -391,7 +391,7 @@ TEST(VirtualMachine, WrongIP) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -461,7 +461,7 @@ TEST(VirtualMachine, WrongExecFunction) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -534,7 +534,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -607,7 +607,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -686,7 +686,7 @@ TEST(VirtualMachine, FaultyContract) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 
@@ -768,7 +768,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    auto storageObserver = std::make_shared<StorageContentManagerMock>();
+    auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<VirtualMachine> pVirtualMachine;
 

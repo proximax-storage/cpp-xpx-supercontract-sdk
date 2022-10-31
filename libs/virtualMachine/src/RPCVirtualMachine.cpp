@@ -14,7 +14,7 @@
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageContentManager> storageContentManager,
+RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageObserver> storageContentManager,
                                      GlobalEnvironment& environment,
                                      const std::string& serverAddress)
         : m_storageContentManager(std::move(storageContentManager))
@@ -67,7 +67,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
                 callback->postReply({});
             }, m_environment, true, true);
     m_pathQueries[request.m_callId] = std::move(pathQuery);
-    storageContentManager->getAbsolutePath(DriveKey(), request.m_file, pathCallback);
+    storageContentManager->absolutePath(DriveKey(), request.m_file, pathCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,

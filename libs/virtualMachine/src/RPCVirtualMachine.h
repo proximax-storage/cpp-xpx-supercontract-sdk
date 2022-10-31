@@ -13,7 +13,7 @@
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
 #include "ExecuteCallRPCRequest.h"
-#include <storage/StorageContentManager.h>
+#include <storage/StorageObserver.h>
 
 namespace sirius::contract::vm {
 
@@ -33,7 +33,7 @@ private:
         CallContext& operator=(CallContext&& other) noexcept = default;
     };
 
-    std::weak_ptr<storage::StorageContentManager> m_storageContentManager;
+    std::weak_ptr<storage::StorageObserver> m_storageContentManager;
 
     GlobalEnvironment& m_environment;
 
@@ -49,7 +49,7 @@ private:
 public:
 
     RPCVirtualMachine(
-            std::weak_ptr<storage::StorageContentManager> storageContentManager,
+            std::weak_ptr<storage::StorageObserver> storageContentManager,
             GlobalEnvironment& environment,
             const std::string& serverAddress);
 

@@ -84,7 +84,7 @@ private:
     crypto::KeyPair m_keyPair;
     std::weak_ptr<VirtualMachineMock> m_virtualMachineMock;
     ExecutorConfig m_executorConfig;
-    std::weak_ptr<storage::Storage> m_storage;
+    std::weak_ptr<storage::StorageModifier> m_storage;
     ExecutorEventHandlerMock m_executorEventHandlerMock;
     boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
     ThreadManager& m_threadManager;
@@ -105,7 +105,7 @@ public:
         return {};
     }
 
-    std::weak_ptr<storage::Storage> storage() override { return m_storage; }
+    std::weak_ptr<storage::StorageModifier> storage() override { return m_storage; }
 
     ExecutorEventHandler& executorEventHandler() override { return m_executorEventHandlerMock; }
 

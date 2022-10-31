@@ -8,7 +8,7 @@
 
 #include <boost/beast/ssl.hpp>
 
-#include <storage/Storage.h>
+#include <storage/StorageModifier.h>
 #include <messenger/Messenger.h>
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
@@ -32,7 +32,7 @@ public:
 
     virtual std::weak_ptr<messenger::Messenger> messenger() = 0;
 
-    virtual std::weak_ptr<storage::Storage> storage() = 0;
+    virtual std::weak_ptr<storage::StorageModifier> storage() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

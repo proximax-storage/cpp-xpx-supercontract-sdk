@@ -7,7 +7,7 @@
 #pragma once
 
 #include "supercontract/GlobalEnvironment.h"
-#include <storage/StorageContentManager.h>
+#include <storage/StorageObserver.h>
 
 namespace sirius::contract::storage::test {
 
@@ -32,10 +32,15 @@ private:
 
 };
 
-class StorageContentManagerMock: public storage::StorageContentManager {
+class StorageObserverMock: public storage::StorageObserver {
 public:
-    void getAbsolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                         std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+
+    void absolutePath(const DriveKey& key, const std::string& relativePath,
+                      std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+
+    void
+    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) override;
+
 };
 
 }

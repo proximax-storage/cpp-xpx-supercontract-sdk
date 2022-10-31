@@ -7,12 +7,10 @@
 #include "DefaultContract.h"
 
 #include "BatchesManager.h"
-#include "ContractEnvironment.h"
 #include "BaseContractTask.h"
 #include "ProofOfExecution.h"
 #include "ContractConfig.h"
 #include "ExecutorEnvironment.h"
-#include "TaskRequests.h"
 #include "DefaultBatchesManager.h"
 
 #include "InitContractTask.h"

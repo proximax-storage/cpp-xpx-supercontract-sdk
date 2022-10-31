@@ -193,7 +193,7 @@ std::weak_ptr<messenger::Messenger> DefaultExecutor::messenger() {
     return m_messenger;
 }
 
-std::weak_ptr<storage::Storage> DefaultExecutor::storage() {
+std::weak_ptr<storage::StorageModifier> DefaultExecutor::storage() {
     return m_storage;
 }
 
