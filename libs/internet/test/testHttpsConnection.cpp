@@ -146,11 +146,11 @@ TEST(HttpsConnection, ConnectingLocalhost) {
     ctx.set_verify_mode(ssl::verify_peer);
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("http://localhost");
+        auto urlDescription = parseURL("https://localhost");
 
         ASSERT_TRUE(urlDescription);
-        ASSERT_FALSE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "80");
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
 
         auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
                 [&](auto&& connection) {

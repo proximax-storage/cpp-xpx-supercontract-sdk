@@ -245,7 +245,8 @@ TEST(HttpConnection, NonExistingTarget) {
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
                         [&, sharedConnection](auto&& res) {
-                            readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                            ASSERT_FALSE(res.has_value());
+                            // readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
                         },
                         [] {}, globalEnvironment, false, false);
                     sharedConnection->read(readCallback);
@@ -262,7 +263,7 @@ TEST(HttpConnection, NonExistingTarget) {
                 connectionCallback);
     });
     threadManager.stop();
-    ASSERT_TRUE(read_flag);
+    ASSERT_FALSE(read_flag);
 }
 
 TEST(HttpConnection, ConnectingLocalhost) {
@@ -304,11 +305,11 @@ TEST(HttpConnection, ConnectingToIPAddress) {
 
     threadManager.execute([&] {
 
-        auto urlDescription = parseURL("https://103.235.46.122");
+        auto urlDescription = parseURL("http://103.235.46.122");
 
         ASSERT_TRUE(urlDescription);
-        ASSERT_TRUE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "443");
+        ASSERT_FALSE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "80");
 
         auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
                 [&](auto&& connection) {
