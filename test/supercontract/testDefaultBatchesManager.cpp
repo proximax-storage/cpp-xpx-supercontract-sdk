@@ -5,6 +5,7 @@
 */
 
 #include <supercontract/DefaultBatchesManager.h>
+#include "utils/Random.h"
 #include "gtest/gtest.h"
 
 namespace sirius::contract::test {
@@ -124,48 +125,6 @@ public:
 
 };
 
-// create block //todo generate random
-BlockHash hash1 = BlockHash();
-BlockHash hash2 = BlockHash();
-BlockHash hash3 = BlockHash();
-BlockHash hash4 = BlockHash();
-Block block1 = {
-        hash1,
-        20
-};
-Block block2 = {
-        hash2,
-        21
-};
-Block block3 = {
-        hash3,
-        22
-};
-Block block4 = {
-        hash4,
-        23
-};
-
-// create call requests
-std::vector<uint8_t> params;
-vm::CallRequest callRequest({ContractKey(),
-                             CallId(),
-                             "",
-                             "",
-                             params,
-                             52000000,
-                             20 * 1024,
-                             CallReferenceInfo{
-                                     {},
-                                     0,
-                                     BlockHash(),
-                                     0,
-                                     0,
-                                     {}
-                             }
-                            },
-                            vm::CallRequest::CallLevel::AUTOMATIC);
-
 #define TEST_NAME DefaultBatchesManagerTest
 
 TEST(TEST_NAME, BatchTest) {
@@ -206,29 +165,64 @@ TEST(TEST_NAME, BatchTest) {
     uint64_t index = 1;
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=4; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
@@ -287,39 +281,74 @@ TEST(TEST_NAME, AllFalseTest) {
     uint64_t index = 1;
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=13; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addManualCall(requests[4]);
+        batchesManager->addManualCall(requests[5]);
+        batchesManager->addManualCall(requests[6]);
+        batchesManager->addManualCall(requests[7]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addManualCall(requests[8]);
+        batchesManager->addManualCall(requests[9]);
+        batchesManager->addManualCall(requests[10]);
+        batchesManager->addManualCall(requests[11]);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addManualCall(requests[12]);
+        batchesManager->addManualCall(requests[13]);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
@@ -370,7 +399,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, false, true, true, false}; //first element is dummy data
+    std::deque<bool> result = {true, true, false, true, false}; //first element is dummy data
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -381,6 +410,41 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     uint64_t index = 1;
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=4; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
@@ -388,29 +452,23 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->onStorageSynchronized(2);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
@@ -471,6 +529,41 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
 
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=4; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
@@ -478,30 +571,24 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
         batchesManager->onStorageSynchronized(2);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
@@ -562,6 +649,41 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=4; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
@@ -569,29 +691,23 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
@@ -653,6 +769,41 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<vm::CallRequest> requests;
+
+    for(auto i=1; i<=4; i++){
+        uint64_t height = 0;
+        Block block = {
+            utils::generateRandomByteValue<BlockHash>(),
+            ++height
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=4; i++){
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
+                                utils::generateRandomByteValue<CallId>(),
+                                "",
+                                "",
+                                params,
+                                52000000,
+                                20 * 1024,
+                                CallReferenceInfo{
+                                        {},
+                                        0,
+                                        utils::generateRandomByteValue<BlockHash>(),
+                                        0,
+                                        0,
+                                        {}
+                                }
+                                },
+                                vm::CallRequest::CallLevel::AUTOMATIC);
+        requests.push_back(callRequest);
+    }
+
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
@@ -660,24 +811,24 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block1);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addBlockInfo(blocks[0]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block2);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[1]);
     });
     sleep(1);
     threadManager.execute([&] {
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block3);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addBlockInfo(blocks[2]);
     });
     sleep(1);
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(std::nullopt);
-        batchesManager->addManualCall(callRequest);
-        batchesManager->addBlockInfo(block4);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[3]);
     });
     sleep(1);
     std::promise<void> barrier;
