@@ -27,11 +27,11 @@ ExecuteCallRPCHandler::ExecuteCallRPCHandler(
         std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
         std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback)
         : m_environment(environment)
-        , m_request(std::move(callRequest))
-        , m_stream(stub.PrepareAsyncExecuteCall(&m_context, &completionQueue))
-        , m_callback(std::move(callback))
-        , m_internetQueryHandler(std::move(internetQueryHandler))
-        , m_blockchainQueryHandler(std::move(blockchainQueryHandler)) {}
+          , m_request(std::move(callRequest))
+          , m_stream(stub.PrepareAsyncExecuteCall(&m_context, &completionQueue))
+          , m_callback(std::move(callback))
+          , m_internetQueryHandler(std::move(internetQueryHandler))
+          , m_blockchainQueryHandler(std::move(blockchainQueryHandler)) {}
 
 void ExecuteCallRPCHandler::start() {
 
@@ -43,7 +43,7 @@ void ExecuteCallRPCHandler::start() {
     m_environment.logger().info("Call {} start", m_request.m_callId);
 
     auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
-        onStarted(std::move(res));
+        onStarted(std::forward<decltype(res)>(res));
     }, [] {}, m_environment, true, true);
     m_tagQuery = std::move(query);
     auto* starter = new ExecuteCallRPCStarter(m_environment, callback);
@@ -97,7 +97,7 @@ void ExecuteCallRPCHandler::onWritten(expected<void>&& res) {
     }
 
     auto[query, callback] = createAsyncQuery<supercontractserver::Response>(
-            [this](auto&& response) { onRead(std::move(response)); },
+            [this](auto&& response) { onRead(std::forward<decltype(response)>(response)); },
             [] {}, m_environment, true, true);
     m_tagQuery = std::move(query);
     auto* reader = new ExecuteCallRPCReader(m_environment, callback);
@@ -111,7 +111,7 @@ void ExecuteCallRPCHandler::writeRequest(supercontractserver::Request&& requestW
     m_environment.logger().info("Call {} write message to vm server", m_request.m_callId);
 
     auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
-                                                       onWritten(std::move(res));
+                                                       onWritten(std::forward<decltype(res)>(res));
                                                    }, [] {},
                                                    m_environment, true, true);
     auto* writer = new ExecuteCallRPCWriter(m_environment, callback);
@@ -152,32 +152,6 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
             processExecuteCallResponse(response->returns());
             break;
         }
-        case supercontractserver::Response::kGetServicePayment: {
-            break;
-        }
-        case supercontractserver::Response::kOpenConnection: {
-            processOpenInternetConnection(response->open_connection());
-            break;
-        }
-        case supercontractserver::Response::kReadConnectionStream: {
-            processReadInternetConnection(response->read_connection_stream());
-            break;
-        }
-        case supercontractserver::Response::kOpenFile: {
-            break;
-        }
-        case supercontractserver::Response::kWriteFileStream: {
-            break;
-        }
-        case supercontractserver::Response::kFlush: {
-            break;
-        }
-        case supercontractserver::Response::kMoveFile: {
-            break;
-        }
-        case supercontractserver::Response::kRemoveFile: {
-            break;
-        }
         case supercontractserver::Response::kGetBlockHeight: {
             break;
         }
@@ -196,6 +170,9 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         case supercontractserver::Response::kGetCallerPublicKey: {
             break;
         }
+        case supercontractserver::Response::kGetServicePayment: {
+            break;
+        }
         case supercontractserver::Response::kAddTransaction: {
             break;
         }
@@ -208,8 +185,13 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         case supercontractserver::Response::kGetTransactionContent: {
             break;
         }
-        case supercontractserver::Response::kCloseConnection: {
-            processCloseInternetConnection(response->close_connection());
+        case supercontractserver::Response::kOpenFile: {
+            break;
+        }
+        case supercontractserver::Response::kWriteFileStream: {
+            break;
+        }
+        case supercontractserver::Response::kFlush: {
             break;
         }
         case supercontractserver::Response::kReadFileStream: {
@@ -218,8 +200,51 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         case supercontractserver::Response::kCloseFile: {
             break;
         }
-        case supercontractserver::Response::SERVER_MESSAGE_NOT_SET:
+        case supercontractserver::Response::kPathExist: {
             break;
+        }
+        case supercontractserver::Response::kIsFile: {
+            break;
+        }
+        case supercontractserver::Response::kCreateDir: {
+            break;
+        }
+        case supercontractserver::Response::kMoveFile: {
+            break;
+        }
+        case supercontractserver::Response::kRemoveFile: {
+            break;
+        }
+        case supercontractserver::Response::kOpenConnection: {
+            processOpenInternetConnection(response->open_connection());
+            break;
+        }
+        case supercontractserver::Response::kReadConnectionStream: {
+            processReadInternetConnection(response->read_connection_stream());
+            break;
+        }
+        case supercontractserver::Response::kCloseConnection: {
+            processCloseInternetConnection(response->close_connection());
+            break;
+        }
+        case supercontractserver::Response::kCreateDirIterator: {
+            break;
+        }
+        case supercontractserver::Response::kDestroyDirIterator: {
+            break;
+        }
+        case supercontractserver::Response::kHasNextIterator: {
+            break;
+        }
+        case supercontractserver::Response::kNextDirIterator: {
+            break;
+        }
+        case supercontractserver::Response::kRemoveDirIterator: {
+            break;
+        }
+        case supercontractserver::Response::SERVER_MESSAGE_NOT_SET: {
+            break;
+        }
     }
 }
 
@@ -246,7 +271,7 @@ void ExecuteCallRPCHandler::finish() {
 
     // TODO According to grpc docs finish should not be called concurrently with other operations but for now we do not see any problems with it
     auto[query, callback] = createAsyncQuery<grpc::Status>([pThis = shared_from_this()](auto&& status) {
-        ASSERT(status, pThis->m_environment.logger());
+        ASSERT(status, pThis->m_environment.logger())
         pThis->onFinished(std::move(*status));
     }, [] {}, m_environment, false, true);
     auto* finisher = new ExecuteCallRPCFinisher(m_environment, callback);
@@ -274,7 +299,7 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 
                 m_responseHandler.reset();
 
-                ASSERT(res, m_environment.logger());
+                ASSERT(res, m_environment.logger())
 
                 auto* status = new supercontractserver::OpenConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
@@ -301,7 +326,7 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
 
                 m_responseHandler.reset();
 
-                ASSERT(res, m_environment.logger());
+                ASSERT(res, m_environment.logger())
 
                 auto* status = new supercontractserver::ReadConnectionStreamReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
@@ -328,7 +353,7 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
 
                 m_responseHandler.reset();
 
-                ASSERT(res, m_environment.logger());
+                ASSERT(res, m_environment.logger())
 
                 auto* status = new supercontractserver::CloseConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
