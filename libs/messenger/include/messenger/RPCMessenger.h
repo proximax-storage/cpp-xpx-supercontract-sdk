@@ -24,7 +24,7 @@ private:
 
     std::unique_ptr<messengerServer::MessengerServer::Stub> m_stub;
 
-    std::weak_ptr<MessageSubscriber> m_subscriber;
+    MessageSubscriber& m_subscriber;
     std::set<std::string> m_subscribedTags;
 
     std::queue<std::string> m_queuedTags;
@@ -42,10 +42,9 @@ public:
 
     RPCMessenger(GlobalEnvironment& environment,
                  const std::string& address,
-                 std::weak_ptr<MessageSubscriber> subscriber,
-                 std::set<std::string> subscribedTags);
+                 MessageSubscriber& subscriber);
 
-    ~RPCMessenger();
+    ~RPCMessenger() override;
 
 public:
 

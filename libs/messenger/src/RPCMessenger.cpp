@@ -13,13 +13,12 @@ namespace sirius::contract::messenger {
 
 RPCMessenger::RPCMessenger(GlobalEnvironment& environment,
                            const std::string& address,
-                           std::weak_ptr<MessageSubscriber> subscriber,
-                           std::set<std::string> subscribedTags)
+                           MessageSubscriber& subscriber)
         : m_environment(environment)
-          , m_stub(messengerServer::MessengerServer::NewStub(grpc::CreateChannel(
+        , m_stub(messengerServer::MessengerServer::NewStub(grpc::CreateChannel(
                 address, grpc::InsecureChannelCredentials())))
-          , m_subscriber(std::move(subscriber))
-          , m_subscribedTags(std::move(subscribedTags)) {
+        , m_subscriber(subscriber)
+        , m_subscribedTags(m_subscriber.subscriptions()) {
     startSession();
 }
 
@@ -135,10 +134,7 @@ void RPCMessenger::onRead(expected<InputMessage>&& res) {
     }
 
     if (m_subscribedTags.contains(res->m_tag)) {
-        auto subscriber = m_subscriber.lock();
-        if (subscriber) {
-            subscriber->onMessageReceived(*res);
-        }
+        m_subscriber.onMessageReceived(*res);
     } else {
         m_environment.logger().warn("Received Message With Unknown Tag: {}", res->m_tag);
     }

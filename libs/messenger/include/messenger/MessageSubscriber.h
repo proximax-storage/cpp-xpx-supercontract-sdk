@@ -19,6 +19,8 @@ public:
 
     virtual void onMessageReceived(const InputMessage&) = 0;
 
+    virtual std::set<std::string> subscriptions() = 0;
+
 };
 
 }

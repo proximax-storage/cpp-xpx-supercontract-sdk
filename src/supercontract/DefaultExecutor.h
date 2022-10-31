@@ -66,6 +66,8 @@ public:
 
     void onMessageReceived(const messenger::InputMessage& message) override;
 
+    std::set<std::string> subscriptions() override;
+
     // endregion
 
 public:

@@ -13,6 +13,7 @@
 #include "Messages.h"
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "DefaultContract.h"
+#include <messenger/RPCMessenger.h>
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -37,6 +38,7 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
         // TODO Init pointers
         , m_storage(nullptr)
         , m_storageContentManager(nullptr)
+        , m_messenger(std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this))
         , m_virtualMachine(
                 vm::RPCVirtualMachineBuilder().build(m_storageContentManager, *this, m_config.rpcVirtualMachineAddress())) {
     m_sslContext.set_default_verify_paths();
@@ -130,7 +132,7 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>
     });
 }
 
-// region message event handler
+// region message subscriber
 
 void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
     m_pThreadManager->execute([=, this] {
@@ -152,6 +154,19 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
             logger().warn("onMessageReceived: invalid message format: query={}", inputMessage.m_content);
         }
     });
+}
+
+std::set<std::string> DefaultExecutor::subscriptions() {
+
+    constexpr auto values = magic_enum::enum_names<MessageTag>();
+
+    std::set<std::string> tags;
+
+    for (const auto& v: values) {
+        tags.emplace(v.begin(), v.end());
+    }
+
+    return tags;
 }
 
 // endregion
@@ -258,7 +273,7 @@ void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint
 void DefaultExecutor::terminate() {
 
     ASSERT(isSingleThread(), m_logger)
-
+    m_messenger = std::make_shared<messenger::RPCMessenger>(*this, "", *this);
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();
     }
@@ -276,4 +291,5 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const EndBatchExecution
         contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
     }
 }
+
 }
