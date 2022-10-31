@@ -277,6 +277,8 @@ void DefaultExecutor::terminate() {
     }
 
     m_virtualMachine.reset();
+    m_storage.reset();
+    m_messenger.reset();
 }
 
 void DefaultExecutor::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
