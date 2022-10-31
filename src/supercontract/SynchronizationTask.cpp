@@ -53,7 +53,7 @@ void SynchronizationTask::run() {
 
     ASSERT(!m_storageQuery, m_executorEnvironment.logger());
 
-    auto storage = m_executorEnvironment.storage().lock();
+    auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
 

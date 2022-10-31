@@ -32,7 +32,7 @@ public:
 
     virtual std::weak_ptr<messenger::Messenger> messenger() = 0;
 
-    virtual std::weak_ptr<storage::StorageModifier> storage() = 0;
+    virtual std::weak_ptr<storage::StorageModifier> storageModifier() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

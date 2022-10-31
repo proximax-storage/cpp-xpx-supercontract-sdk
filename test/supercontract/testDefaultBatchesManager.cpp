@@ -105,7 +105,7 @@ public:
         return {};
     }
 
-    std::weak_ptr<storage::StorageModifier> storage() override { return m_storage; }
+    std::weak_ptr<storage::StorageModifier> storageModifier() override { return m_storage; }
 
     ExecutorEventHandler& executorEventHandler() override { return m_executorEventHandlerMock; }
 

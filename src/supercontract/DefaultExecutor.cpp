@@ -14,6 +14,7 @@
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "DefaultContract.h"
 #include <messenger/RPCMessenger.h>
+#include <storage/RPCStorage.h>
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
@@ -35,12 +36,10 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
         , m_sslContext(boost::asio::ssl::context::tlsv12_client)
         , m_config(config)
         , m_eventHandler(std::move(eventHandler))
-        // TODO Init pointers
-        , m_storage(nullptr)
-        , m_storageContentManager(nullptr)
+        , m_storage(std::make_shared<storage::RPCStorage>(*this, m_config.rpcStorageAddress()))
         , m_messenger(std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this))
         , m_virtualMachine(
-                vm::RPCVirtualMachineBuilder().build(m_storageContentManager, *this, m_config.rpcVirtualMachineAddress())) {
+                vm::RPCVirtualMachineBuilder().build(m_storage, *this, m_config.rpcVirtualMachineAddress())) {
     m_sslContext.set_default_verify_paths();
     m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
 }
@@ -193,7 +192,7 @@ std::weak_ptr<messenger::Messenger> DefaultExecutor::messenger() {
     return m_messenger;
 }
 
-std::weak_ptr<storage::StorageModifier> DefaultExecutor::storage() {
+std::weak_ptr<storage::StorageModifier> DefaultExecutor::storageModifier() {
     return m_storage;
 }
 
@@ -273,7 +272,6 @@ void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint
 void DefaultExecutor::terminate() {
 
     ASSERT(isSingleThread(), m_logger)
-    m_messenger = std::make_shared<messenger::RPCMessenger>(*this, "", *this);
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();
     }

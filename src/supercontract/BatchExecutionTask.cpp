@@ -43,7 +43,7 @@ void BatchExecutionTask::run() {
 
     m_storageQuery = std::move(query);
 
-    auto storage = m_executorEnvironment.storage().lock();
+    auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
         onStorageUnavailable();
@@ -91,7 +91,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 
     m_storageQuery = std::move(query);
 
-    auto storage = m_executorEnvironment.storage().lock();
+    auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
         onStorageUnavailable();
@@ -312,7 +312,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
     } else {
 
-        auto storage = m_executorEnvironment.storage().lock();
+        auto storage = m_executorEnvironment.storageModifier().lock();
 
         if (!storage) {
             onStorageUnavailable();
@@ -526,7 +526,7 @@ void BatchExecutionTask::executeNextCall() {
         m_batch.m_callRequests.pop_front();
     } else {
 
-        auto storage = m_executorEnvironment.storage().lock();
+        auto storage = m_executorEnvironment.storageModifier().lock();
 
         if (!storage) {
             onStorageUnavailable();
