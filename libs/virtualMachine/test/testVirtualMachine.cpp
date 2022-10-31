@@ -40,7 +40,9 @@ TEST(VirtualMachine, SimpleContract) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/simple.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/simple.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -87,7 +89,8 @@ TEST(VirtualMachine, SimpleContract) {
 
     threadManager.stop();
     // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetRead) {
@@ -107,7 +110,9 @@ TEST(VirtualMachine, InternetRead) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -116,7 +121,7 @@ TEST(VirtualMachine, InternetRead) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -126,7 +131,6 @@ TEST(VirtualMachine, InternetRead) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -135,7 +139,7 @@ TEST(VirtualMachine, InternetRead) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -163,7 +167,8 @@ TEST(VirtualMachine, InternetRead) {
 
     threadManager.stop();
     // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetReadNotEnoughSC) {
@@ -183,7 +188,9 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -192,7 +199,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -202,7 +209,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -211,7 +217,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -234,7 +240,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, InternetReadNotEnoughSM) {
@@ -254,7 +261,9 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -263,7 +272,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -273,7 +282,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 25 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -282,7 +290,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -305,7 +313,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongContractPath) {
@@ -325,7 +334,9 @@ TEST(VirtualMachine, WrongContractPath) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -334,7 +345,7 @@ TEST(VirtualMachine, WrongContractPath) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "sdk_bg.wasm",
@@ -344,7 +355,6 @@ TEST(VirtualMachine, WrongContractPath) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -353,7 +363,7 @@ TEST(VirtualMachine, WrongContractPath) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -372,7 +382,8 @@ TEST(VirtualMachine, WrongContractPath) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongIP) {
@@ -392,7 +403,9 @@ TEST(VirtualMachine, WrongIP) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50052";
@@ -401,7 +414,7 @@ TEST(VirtualMachine, WrongIP) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -411,7 +424,6 @@ TEST(VirtualMachine, WrongIP) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -420,7 +432,7 @@ TEST(VirtualMachine, WrongIP) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -440,7 +452,8 @@ TEST(VirtualMachine, WrongIP) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, WrongExecFunction) {
@@ -460,7 +473,9 @@ TEST(VirtualMachine, WrongExecFunction) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -469,7 +484,7 @@ TEST(VirtualMachine, WrongExecFunction) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -479,7 +494,6 @@ TEST(VirtualMachine, WrongExecFunction) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -488,7 +502,7 @@ TEST(VirtualMachine, WrongExecFunction) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -511,7 +525,8 @@ TEST(VirtualMachine, WrongExecFunction) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, UnauthorizedImportFunction) {
@@ -531,7 +546,9 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -540,7 +557,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -550,7 +567,6 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::AUTOMATIC,
                 CallReferenceInfo{
                         {},
                         0,
@@ -559,7 +575,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::AUTOMATIC);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -582,7 +598,8 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, AbortVMDuringExecution) {
@@ -602,7 +619,9 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -611,7 +630,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -621,7 +640,6 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -630,7 +648,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -659,7 +677,8 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
     barrier.get();
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(VirtualMachine, FaultyContract) {
@@ -680,7 +699,9 @@ TEST(VirtualMachine, FaultyContract) {
     threadManager.execute([&] {
         // The contract should panic in this case due to failing the assertion
         // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -689,7 +710,7 @@ TEST(VirtualMachine, FaultyContract) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -699,7 +720,6 @@ TEST(VirtualMachine, FaultyContract) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -708,7 +728,7 @@ TEST(VirtualMachine, FaultyContract) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -735,7 +755,8 @@ TEST(VirtualMachine, FaultyContract) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 
@@ -759,7 +780,9 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
-        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
@@ -768,7 +791,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -778,7 +801,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -787,7 +809,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -815,7 +837,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     threadManager.execute([&] {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        CallRequest callRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -825,7 +847,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL,
                 CallReferenceInfo{
                         {},
                         0,
@@ -834,7 +855,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::MANUAL);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -854,7 +875,8 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs", "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 } // namespace sirius::contract::vm::test
