@@ -35,7 +35,11 @@ public:
 
         const auto& children = folder.children();
 
-        ASSERT_EQ(children.size(), 1);
+        if (folder.name() == "moved") {
+            ASSERT_EQ(children.size(), 0);
+        } else {
+            ASSERT_EQ(children.size(), 1);
+        }
 
         for (const auto& [name, entry] : children) {
             entry->acceptTraversal(*this);
@@ -122,10 +126,10 @@ void onFileMoved(const DriveKey& driveKey,
                  GlobalEnvironment& environment,
                  std::shared_ptr<Storage> pStorage,
                  std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
         ASSERT(res, environment.logger())
-        onAppliedStorageModifications(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
-    pStorage->applyStorageModifications(driveKey, true, callback);
+        onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
+    pStorage->applySandboxStorageModifications(driveKey, true, callback);
 }
 
 void onCreatedDirectory(const DriveKey& driveKey,
@@ -163,7 +167,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 }
 } // namespace move
 
-TEST(Storage, CreateDirAndRemoveNonExistingFile) {
+TEST(Storage, MoveNonExistingFile) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
