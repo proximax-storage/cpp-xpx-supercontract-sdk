@@ -81,6 +81,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
         pStorage->absolutePath(driveKey, "moved/test.txt", callback);
     });
     traversal.acceptFolder(*folder);
+    promise.set_value();
 }
 
 void onAppliedStorageModifications(const DriveKey& driveKey,
