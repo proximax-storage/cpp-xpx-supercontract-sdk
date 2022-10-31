@@ -9,7 +9,7 @@
 #include <boost/beast/ssl.hpp>
 
 #include <storage/Storage.h>
-#include "supercontract/Messenger.h"
+#include <messenger/Messenger.h>
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/ExecutorConfig.h"
 #include "supercontract/GlobalEnvironment.h"
@@ -26,11 +26,11 @@ class ExecutorEnvironment: public GlobalEnvironment {
 
 public:
 
-    virtual ~ExecutorEnvironment() = default;
+    ~ExecutorEnvironment() override = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;
 
-    virtual Messenger& messenger() = 0;
+    virtual std::weak_ptr<messenger::Messenger> messenger() = 0;
 
     virtual std::weak_ptr<storage::Storage> storage() = 0;
 

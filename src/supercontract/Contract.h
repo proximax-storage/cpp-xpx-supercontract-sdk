@@ -11,7 +11,7 @@
 
 #include "supercontract/ExecutorEventHandler.h"
 #include "supercontract/Requests.h"
-#include "supercontract/Messenger.h"
+#include <messenger/Messenger.h>
 #include <storage/Storage.h>
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"

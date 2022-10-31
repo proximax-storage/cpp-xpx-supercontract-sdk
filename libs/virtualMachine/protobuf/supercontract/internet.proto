@@ -3,11 +3,21 @@ syntax = "proto3";
 package supercontractserver;
 
 message OpenConnection {
-  string url = 3;
+  string url = 1;
+}
+
+message OpenConnectionReturn {
+  bool success = 1;
+  int64 identifier = 2;
 }
 
 message ReadConnectionStream {
   int64 identifier = 3;
+}
+
+message ReadConnectionStreamReturn {
+  bool success = 1;
+  bytes buffer = 2;
 }
 
 message CloseConnection {
@@ -16,14 +26,4 @@ message CloseConnection {
 
 message CloseConnectionReturn {
   bool success = 1;
-}
-
-message OpenConnectionReturn {
-  bool success = 1;
-  int64 identifier = 2;
-}
-
-message InternetReadBufferReturn {
-  bool success = 1;
-  bytes buffer = 2;
 }

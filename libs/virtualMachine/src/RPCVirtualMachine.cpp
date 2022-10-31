@@ -19,8 +19,8 @@ RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageContentManage
                                      const std::string& serverAddress)
         : m_storageContentManager(std::move(storageContentManager))
         , m_environment(environment)
-        , m_stub(std::move(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
-                serverAddress, grpc::InsecureChannelCredentials()))))
+        , m_stub(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
+                serverAddress, grpc::InsecureChannelCredentials())))
         , m_completionQueueThread([this] {
             waitForRPCResponse();
         }) {}
@@ -59,7 +59,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
                     auto&& callAbsolutePath) mutable -> void {
 
                 onReceivedCallAbsolutePath(std::move(request),
-                                           std::move(callAbsolutePath),
+                                           std::forward<decltype(callAbsolutePath)>(callAbsolutePath),
                                            std::move(internetQueryHandler),
                                            std::move(blockchainQueryHandler),
                                            std::move(callback));

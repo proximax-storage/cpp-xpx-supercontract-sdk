@@ -44,12 +44,6 @@ namespace sirius::contract::test {
 
         void delayBatchExecution(Batch&& batch) override {}
     };
-    
-    class MessengerMock: public Messenger {
-    public:
-        virtual ~MessengerMock(){}
-        void sendMessage(const ExecutorKey& key, const std::string& msg) override {};
-    };
 
     class ExecutorEventHandlerMock: public ExecutorEventHandler{
     public:
@@ -63,7 +57,6 @@ namespace sirius::contract::test {
         crypto::KeyPair m_keyPair;
         std::weak_ptr<vm::VirtualMachine> m_virtualMachineMock;
         ExecutorConfig m_executorConfig;
-        MessengerMock m_messengerMock;
         std::weak_ptr<storage::Storage> m_storage;
         ExecutorEventHandlerMock m_executorEventHandlerMock;
         boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
@@ -85,7 +78,7 @@ namespace sirius::contract::test {
 
         const crypto::KeyPair& keyPair() const override { return m_keyPair; }
 
-        Messenger& messenger() override { return m_messengerMock; }
+        std::weak_ptr<messenger::Messenger> messenger() override { return {}; }
 
         std::weak_ptr<storage::Storage> storage() override { return m_storage; }
 

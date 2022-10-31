@@ -224,10 +224,27 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
 }
 
 void ExecuteCallRPCHandler::postResponse(expected<CallExecutionResult>&& result) {
-    m_callback->postReply(std::move(result));
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    ASSERT(m_callback, m_environment.logger())
+
+    // TODO This is a workaround that allows
+    //  to reset m_callback before calling postReply
+    auto callback = std::move(m_callback);
+    callback->postReply(std::move(result));
 }
 
 void ExecuteCallRPCHandler::finish() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_tagQuery.reset();
+    m_responseHandler.reset();
+
+    if (m_callback) {
+        m_context.TryCancel();
+    }
+
+    // TODO According to grpc docs finish should not be called concurrently with other operations but for now we do not see any problems with it
     auto[query, callback] = createAsyncQuery<grpc::Status>([pThis = shared_from_this()](auto&& status) {
         ASSERT(status, pThis->m_environment.logger());
         pThis->onFinished(std::move(*status));
@@ -261,7 +278,7 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 
                 auto* status = new supercontractserver::OpenConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_open_connection_status(status);
+                requestWrapper.set_allocated_open_connection_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<OpenConnectionRPCHandler>(
@@ -269,10 +286,12 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractserver::ReadConnectionStream& request) {
-    auto[_, callback] = createAsyncQuery<supercontractserver::InternetReadBufferReturn>(
+    auto[_, callback] = createAsyncQuery<supercontractserver::ReadConnectionStreamReturn>(
             [this](auto&& res) {
 
                 ASSERT(isSingleThread(), m_environment.logger())
@@ -284,9 +303,9 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
 
                 ASSERT(res, m_environment.logger());
 
-                auto* status = new supercontractserver::InternetReadBufferReturn(std::move(*res));
+                auto* status = new supercontractserver::ReadConnectionStreamReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_internet_read_buffer(status);
+                requestWrapper.set_allocated_read_connection_stream_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<ReadConnectionRPCHandler>(
@@ -294,6 +313,8 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractserver::CloseConnection& request) {
@@ -311,7 +332,7 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
 
                 auto* status = new supercontractserver::CloseConnectionReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_close_connection_status(status);
+                requestWrapper.set_allocated_close_connection_return(status);
                 writeRequest(std::move(requestWrapper));
             }, [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<CloseConnectionRPCHandler>(
@@ -319,6 +340,8 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
             request,
             m_internetQueryHandler,
             callback);
+
+    m_responseHandler->process();
 }
 
 }

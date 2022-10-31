@@ -6,18 +6,18 @@
 
 #pragma once
 
-#include <cereal/archives/portable_binary.hpp>
+#include <supercontract/Identifiers.h>
+#include "Message.h"
 
-namespace sirius::contract {
+namespace sirius::contract::messenger {
 
 class Messenger {
+
 public:
 
     virtual ~Messenger() = default;
 
-    virtual void sendMessage(const ExecutorKey& key, const std::string& msg) = 0;
-
-
+    virtual void sendMessage(const OutputMessage& message) = 0;
 
 };
 

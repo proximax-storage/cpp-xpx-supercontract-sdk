@@ -41,6 +41,26 @@ std::string exec_http(const char* cmd) {
     return result;
 }
 
+void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+    read_flag = true;
+    ASSERT_TRUE(res);
+    actual_vec.insert(actual_vec.end(), res->begin(), res->end());
+
+    if (res->empty()) {
+        std::string actual(actual_vec.begin(), actual_vec.end());
+        std::string expected = "</html>";
+        std::size_t found = actual.find(expected);
+        if (found==std::string::npos) {throw found;}
+        return;
+    }
+
+    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
+        readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+    },
+        [] {}, globalEnvironment, false, true);
+    sharedConnection->read(readCallback);
+}
+
 #define TEST_NAME HttpConnection
 
 TEST(TEST_NAME, ValidRead) {
@@ -209,39 +229,25 @@ TEST(HttpConnection, NonExistingTarget) {
     auto& threadManager = globalEnvironment.threadManager();
 
     bool read_flag = false;
+    std::vector<uint8_t> actual_vec;
 
     threadManager.execute([&] {
 
-        auto urlDescription = parseURL("http://www.google.com/eg");
+        auto urlDescription = parseURL("http://google.com/eg");
 
         ASSERT_TRUE(urlDescription);
         ASSERT_FALSE(urlDescription->ssl);
         ASSERT_EQ(urlDescription->port, "80");
 
-        auto[query, connectionCallback] = createAsyncQuery<InternetConnection>(
+        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
                 [&](auto&& connection) {
                     ASSERT_TRUE(connection);
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
-                            [&read_flag, connection = sharedConnection](auto&& res) {
-                                read_flag = true;
-                                ASSERT_FALSE(res.has_value());
-                                // std::string actual(res->begin(), res->end());
-                                // const std::string expected = "<!DOCTYPE html>\n"
-                                //                             "<!-- saved from url=(0014)about:internet -->\n"
-                                //                             "<html lang=\"en\"><head><meta http-equiv=\"Content-Type\" content=\"text/html; charset=UTF-8\">\n"
-                                //                             "  <meta name=\"viewport\" content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n"
-                                //                             "  <title>Error 404 (Not Found)!!1</title>\n"
-                                //                             "  <style>\n"
-                                //                             "    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}\n"
-                                //                             "  </style>\n"
-                                //                             "  </head><body><a href=\"https://www.google.com/\"><span id=\"logo\" aria-label=\"Google\"></span></a>\n"
-                                //                             "  <p><b>404.</b> <ins>That's an error.</ins>\n"
-                                //                             "  </p><p>The requested URL <code>/signin</code> was not found on this server.  <ins>That's all we know.</ins>\n"
-                                //                             "</p></body></html>";
-                                // ASSERT_EQ( actual, expected );
-                            },
-                            [] {}, globalEnvironment, false, false);
+                        [&, sharedConnection](auto&& res) {
+                            readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                        },
+                        [] {}, globalEnvironment, false, false);
                     sharedConnection->read(readCallback);
                 },
                 [] {}, globalEnvironment, false, false);
@@ -355,26 +361,6 @@ TEST(HttpConnection, ConnectingToIPAddress) {
 //     threadManager.stop();
 // }
 
-void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
-    read_flag = true;
-    ASSERT_TRUE(res);
-    actual_vec.insert(actual_vec.end(), res->begin(), res->end());
-
-    if (res->empty()) {
-        std::string actual(actual_vec.begin(), actual_vec.end());
-        std::string expected = "</html>";
-        std::size_t found = actual.find(expected);
-        if (found==std::string::npos) {throw found;}
-        return;
-    }
-
-    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
-        readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-    },
-        [] {}, globalEnvironment, false, true);
-    sharedConnection->read(readCallback);
-}
-
 TEST(TEST_NAME, ReadBigWebsite) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -420,12 +406,12 @@ TEST(TEST_NAME, ReadBigWebsite) {
 }
 
 void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
-    read_flag = true;
     if (!res.has_value()) {
+        read_flag = true; 
         return;
     }
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
-    std::cout << actual_vec.data() << std::endl;
+    // std::cout << actual_vec.data() << std::endl;
 
     if (res->empty()) {
         return;

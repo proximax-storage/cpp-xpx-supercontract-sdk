@@ -10,6 +10,7 @@
 #include "utils/Serializer.h"
 #include "Messages.h"
 #include "CallExecutionManager.h"
+#include <magic_enum.hpp>
 
 namespace sirius::contract {
 
@@ -55,7 +56,7 @@ void BatchExecutionTask::run() {
 
 void BatchExecutionTask::terminate() {
 
-    ASSERT(isSingleThread(), m_executorEnvironment.logger());
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_callManager.reset();
 
@@ -72,7 +73,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_callManager, m_executorEnvironment.logger());
+    ASSERT(m_callManager, m_executorEnvironment.logger())
 
     auto success = executionResult.m_success;
 
@@ -131,7 +132,7 @@ void BatchExecutionTask::onInitiatedModifications() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_storageQuery, m_executorEnvironment.logger());
+    ASSERT(m_storageQuery, m_executorEnvironment.logger())
 
     m_storageQuery.reset();
 
@@ -142,14 +143,14 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& call
                                                               vm::CallExecutionResult&& executionResult,
                                                               storage::SandboxModificationDigest&& digest) {
 
-    ASSERT(isSingleThread(), m_executorEnvironment.logger());
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_storageQuery, m_executorEnvironment.logger());
+    ASSERT(m_storageQuery, m_executorEnvironment.logger())
 
     m_storageQuery.reset();
 
     if (!executionResult.m_success) {
-        ASSERT(digest.m_success, m_executorEnvironment.logger());
+        ASSERT(digest.m_success, m_executorEnvironment.logger())
     }
 
     m_callsExecutionOpinions.push_back(CallExecutionOpinion{
@@ -170,9 +171,9 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& call
 
 void BatchExecutionTask::onStorageHashEvaluated(storage::StorageState&& storageState) {
 
-    ASSERT(isSingleThread(), m_executorEnvironment.logger());
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_storageQuery, m_executorEnvironment.logger());
+    ASSERT(m_storageQuery, m_executorEnvironment.logger())
 
     m_storageQuery.reset();
 
@@ -257,9 +258,17 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
 
     m_successfulEndBatchOpinion->m_callsExecutionInfo = std::move(m_callsExecutionOpinions);
 
-    for (const auto& executor: m_contractEnvironment.executors()) {
-        auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
-        m_executorEnvironment.messenger().sendMessage(executor, serializedInfo);
+    auto messenger = m_executorEnvironment.messenger().lock();
+
+    if (messenger) {
+        for (const auto& executor: m_contractEnvironment.executors()) {
+            auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
+            auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
+            messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
+        }
+    }
+    else {
+        m_executorEnvironment.logger().warn("Messenger not available");
     }
 
     m_unsuccessfulExecutionTimer = m_executorEnvironment.threadManager().startTimer(
@@ -488,9 +497,9 @@ void BatchExecutionTask::executeNextCall() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(!m_callManager, m_executorEnvironment.logger());
+    ASSERT(!m_callManager, m_executorEnvironment.logger())
 
-    ASSERT(!m_storageQuery, m_executorEnvironment.logger());
+    ASSERT(!m_storageQuery, m_executorEnvironment.logger())
 
     const auto& callRequest = m_batch.m_callRequests.front();
 
@@ -502,7 +511,7 @@ void BatchExecutionTask::executeNextCall() {
 
         auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
                 [this, callId = callRequest.m_callId](auto&& res) {
-                    ASSERT(res, m_executorEnvironment.logger());
+                    ASSERT(res, m_executorEnvironment.logger())
                     onSuperContractCallExecuted(callId, std::move(*res));
                 }, [] {}, m_executorEnvironment, false, false);
 
@@ -557,9 +566,17 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
         callInfo.m_successfulCallExecutionInfo.reset();
     }
 
-    for (const auto& executor: m_contractEnvironment.executors()) {
-        auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
-        m_executorEnvironment.messenger().sendMessage(executor, serializedInfo);
+    auto messenger = m_executorEnvironment.messenger().lock();
+
+    if (messenger) {
+        for (const auto& executor: m_contractEnvironment.executors()) {
+            auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
+            auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
+            messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
+        }
+    }
+    else {
+        m_executorEnvironment.logger().warn("Messenger not available");
     }
 }
 

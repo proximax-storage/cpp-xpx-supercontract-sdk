@@ -33,6 +33,7 @@ private:
 
     std::string             m_rpcVirtualMachineAddress = "localhost:50051";
     std::string             m_rpcStorageAddress = "localhost:50052";
+    std::string             m_rpcMessengerAddress = "localhost:50052";
 
     int                     m_virtualMachineRepeatTimeoutMs = 5000;
 
@@ -115,6 +116,14 @@ public:
 
     void setRpcStorageAddress( const std::string& rpcStorageAddress ) {
         m_rpcStorageAddress = rpcStorageAddress;
+    }
+
+    const std::string& rpcMessengerAddress() const {
+        return m_rpcMessengerAddress;
+    }
+
+    void setRpcMessengerAddress(const std::string& rpcMessengerAddress) {
+        m_rpcMessengerAddress = rpcMessengerAddress;
     }
 
     int internetBufferSize() const {

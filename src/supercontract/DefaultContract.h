@@ -38,7 +38,7 @@ private:
     ExecutorEnvironment& m_executorEnvironment;
     ContractConfig m_contractConfig;
 
-    ProofOfExecution m_proofOfExecution;
+    // ProofOfExecution m_proofOfExecution; TODO PoEx
 
     KnownStorageState m_lastKnownStorageState;
 

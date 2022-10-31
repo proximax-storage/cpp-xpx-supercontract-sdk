@@ -13,12 +13,14 @@
 #include "Messages.h"
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "DefaultContract.h"
+#include <messenger/RPCMessenger.h>
 
 #include "supercontract/Executor.h"
 #include "crypto/KeyPair.h"
 #include "supercontract/Identifiers.h"
 
 #include "utils/Serializer.h"
+#include <magic_enum.hpp>
 
 namespace sirius::contract {
 
@@ -36,6 +38,7 @@ DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
         // TODO Init pointers
         , m_storage(nullptr)
         , m_storageContentManager(nullptr)
+        , m_messenger(std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this))
         , m_virtualMachine(
                 vm::RPCVirtualMachineBuilder().build(m_storageContentManager, *this, m_config.rpcVirtualMachineAddress())) {
     m_sslContext.set_default_verify_paths();
@@ -129,21 +132,41 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>
     });
 }
 
-// region message event handler
+// region message subscriber
 
-void DefaultExecutor::onMessageReceived(const std::string& tag, const std::string& msg) {
+void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
     m_pThreadManager->execute([=, this] {
         try {
-            if (tag == "end_batch") {
-                auto info = utils::deserialize<EndBatchExecutionOpinion>(msg);
-                onEndBatchExecutionOpinionReceived(info);
-                return true;
+            auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
+            if (tag.has_value()) {
+                switch (tag.value()) {
+                    case MessageTag::END_BATCH : {
+                        auto info = utils::deserialize<EndBatchExecutionOpinion>(inputMessage.m_content);
+                        onEndBatchExecutionOpinionReceived(info);
+                        break;
+                    }
+                }
+            }
+            else {
+                logger().warn("onMessageReceived: unknown tag", inputMessage.m_tag);
             }
         } catch (...) {
-            logger().warn("onMessageReceived: invalid message format: query={}", tag);
+            logger().warn("onMessageReceived: invalid message format: query={}", inputMessage.m_content);
         }
-        return false;
     });
+}
+
+std::set<std::string> DefaultExecutor::subscriptions() {
+
+    constexpr auto values = magic_enum::enum_names<MessageTag>();
+
+    std::set<std::string> tags;
+
+    for (const auto& v: values) {
+        tags.emplace(v.begin(), v.end());
+    }
+
+    return tags;
 }
 
 // endregion
@@ -166,8 +189,8 @@ const crypto::KeyPair& DefaultExecutor::keyPair() const {
     return m_keyPair;
 }
 
-Messenger& DefaultExecutor::messenger() {
-    return *m_messenger;
+std::weak_ptr<messenger::Messenger> DefaultExecutor::messenger() {
+    return m_messenger;
 }
 
 std::weak_ptr<storage::Storage> DefaultExecutor::storage() {
@@ -249,8 +272,8 @@ void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint
 
 void DefaultExecutor::terminate() {
 
-    ASSERT(isSingleThread(), m_logger);
-
+    ASSERT(isSingleThread(), m_logger)
+    m_messenger = std::make_shared<messenger::RPCMessenger>(*this, "", *this);
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();
     }
@@ -268,4 +291,5 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const EndBatchExecution
         contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
     }
 }
+
 }
