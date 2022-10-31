@@ -12,11 +12,12 @@
 #include "ContractEnvironment.h"
 
 #include "CallExecutionManager.h"
+#include <supercontract/SingleThread.h>
 
 namespace sirius::contract {
 
 class DefaultBatchesManager
-        : public BaseBatchesManager {
+        : public BaseBatchesManager, private SingleThread {
 
 private:
 
@@ -27,7 +28,7 @@ private:
         };
 
         BatchFormationStatus m_batchFormationStatus = BatchFormationStatus::MANUAL;
-        std::deque<CallRequest> m_requests;
+        std::deque<vm::CallRequest> m_requests;
     };
 
     struct AutorunCallInfo {
@@ -59,7 +60,7 @@ public:
 
 public:
 
-    void addCall(const CallRequest& request) override;
+    void addManualCall(const CallRequestParameters& request) override;
 
     void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override;
 
@@ -77,24 +78,13 @@ public:
 
     // region blockchain event handler
 
-    bool onStorageSynchronized(uint64_t batchIndex) override {
-        m_storageSynchronizedBatchIndex = batchIndex;
-
-        return true;
-    }
+    bool onStorageSynchronized(uint64_t batchIndex) override;
 
     // endregion
 
 private:
 
-    void clearOutdatedBatches() {
-        while (!m_batches.empty() &&
-               m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
-               m_nextBatchIndex <= m_storageSynchronizedBatchIndex) {
-            m_batches.erase(m_batches.begin());
-            m_nextBatchIndex++;
-        }
-    }
+    void clearOutdatedBatches();
 
 };
 

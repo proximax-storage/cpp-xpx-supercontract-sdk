@@ -49,7 +49,7 @@ TEST(VirtualMachine, SimpleContract) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest = {
+        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
                 ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
@@ -57,7 +57,6 @@ TEST(VirtualMachine, SimpleContract) {
                 params,
                 52000000,
                 20 * 1024,
-                CallRequest::CallLevel::AUTOMATIC,
                 CallReferenceInfo{
                         {},
                         0,
@@ -66,7 +65,7 @@ TEST(VirtualMachine, SimpleContract) {
                         0,
                         {}
                 }
-        };
+        }, CallRequest::CallLevel::AUTOMATIC);
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             // TODO on call executed

@@ -11,7 +11,7 @@ namespace sirius::contract {
 CallExecutionManager::CallExecutionManager(GlobalEnvironment& environment,
                                            std::weak_ptr<vm::VirtualMachine> virtualMachine,
                                            int repeatTimeout,
-                                           const CallRequest& request,
+                                           const vm::CallRequest& request,
                                            std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                            std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                                            std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback)
@@ -33,6 +33,7 @@ void CallExecutionManager::execute() {
 
     auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([this] (auto&& result) {
         if (result) {
+            m_repeatTimer.cancel();
             m_callback->postReply(std::move(result));
         }
         else {

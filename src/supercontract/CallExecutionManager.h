@@ -23,7 +23,7 @@ private:
     Timer   m_repeatTimer;
     int     m_repeatTimeout;
 
-    CallRequest m_callRequest;
+    vm::CallRequest m_callRequest;
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> m_internetQueryHandler;
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
@@ -37,7 +37,7 @@ public:
     CallExecutionManager(GlobalEnvironment& environment,
                          std::weak_ptr<vm::VirtualMachine> virtualMachine,
                          int repeatTimeout,
-                         const CallRequest& request,
+                         const vm::CallRequest& request,
                          std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback);

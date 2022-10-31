@@ -12,7 +12,7 @@
 #include "supercontract/AsyncQuery.h"
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
-#include <virtualMachine/CallExecutionResult.h>
+#include <virtualMachine/CallRequest.h>
 #include "supercontract/Requests.h"
 #include "supercontract/SingleThread.h"
 #include "RPCResponseHandler.h"
