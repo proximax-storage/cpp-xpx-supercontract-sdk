@@ -92,7 +92,7 @@ void onAppliedStorageModifications(const DriveKey& driveKey,
                                    std::promise<void>& promise) {
 
     auto [_, callback] = createAsyncQuery<std::unique_ptr<Folder>>([=, &environment, &promise](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onFilesystemReceived(driveKey, environment, pStorage, promise, std::move(*res)); }, [] {}, environment, false, true);
     pStorage->filesystem(driveKey, callback);
 }
@@ -103,7 +103,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
                             std::promise<void>& barrier,
                             const StorageState& digest) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
     pStorage->applyStorageModifications(driveKey, true, callback);
 }
@@ -114,7 +114,7 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
                                    std::promise<void>& barrier,
                                    const SandboxModificationDigest& digest) {
     auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onEvaluatedStorageHash(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->evaluateStorageHash(driveKey, callback);
@@ -125,11 +125,11 @@ void onCreatedDirectory(const DriveKey& driveKey,
                         std::shared_ptr<Storage> pStorage,
                         std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     auto [__, createDirCallback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onCreatedDirectory(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     if (i == 6) {
@@ -144,7 +144,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onCreatedDirectory(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->createDirectories(driveKey, createFolders::folders[i++], callback);
@@ -155,7 +155,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               std::shared_ptr<Storage> pStorage,
                               std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onSandboxModificationsInitiated(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->initiateSandboxModifications(driveKey, callback);
@@ -194,7 +194,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
                           std::unique_ptr<Folder> folder) {
     iterator::fs::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
         auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
-            ASSERT(res, environment.logger())
+            ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
         pStorage->absolutePath(driveKey, createFiles::files[i++], callback);
     },
@@ -209,7 +209,7 @@ void onAppliedStorageModifications(const DriveKey& driveKey,
                                    std::promise<void>& promise) {
 
     auto [_, callback] = createAsyncQuery<std::unique_ptr<Folder>>([=, &environment, &promise](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onFilesystemReceived(driveKey, environment, pStorage, promise, std::move(*res)); }, [] {}, environment, false, true);
     pStorage->filesystem(driveKey, callback);
 }
@@ -220,7 +220,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
                             std::promise<void>& barrier,
                             const StorageState& digest) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
     pStorage->applyStorageModifications(driveKey, true, callback);
 }
@@ -231,7 +231,7 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
                                    std::promise<void>& barrier,
                                    const SandboxModificationDigest& digest) {
     auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onEvaluatedStorageHash(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->evaluateStorageHash(driveKey, callback);
@@ -242,11 +242,11 @@ void onClosedFile(const DriveKey& driveKey,
                   std::shared_ptr<Storage> pStorage,
                   std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     auto [__, openFileCallback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onFileOpened(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     if (i == 11) {
@@ -262,7 +262,7 @@ void onFlushed(const DriveKey& driveKey,
                std::shared_ptr<Storage> pStorage,
                std::promise<void>& barrier, uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->closeFile(driveKey, fileId, callback);
@@ -274,7 +274,7 @@ void onWrittenFile(const DriveKey& driveKey,
                    std::promise<void>& barrier,
                    uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onFlushed(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
     pStorage->flush(driveKey, fileId, callback);
@@ -285,7 +285,7 @@ void onFileOpened(const DriveKey& driveKey,
                   std::shared_ptr<Storage> pStorage,
                   std::promise<void>& barrier, uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onWrittenFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
     std::string s("data");
@@ -297,7 +297,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onFileOpened(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->openFile(driveKey, createFiles::files[i++], OpenFileMode::WRITE, callback);
@@ -308,7 +308,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               std::shared_ptr<Storage> pStorage,
                               std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onSandboxModificationsInitiated(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->initiateSandboxModifications(driveKey, callback);
@@ -336,7 +336,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
                             std::promise<void>& barrier,
                             const StorageState& digest) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
     pStorage->applyStorageModifications(driveKey, true, callback);
 }
@@ -347,7 +347,7 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
                                    std::promise<void>& barrier,
                                    const SandboxModificationDigest& digest) {
     auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onEvaluatedStorageHash(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->evaluateStorageHash(driveKey, callback);
@@ -358,7 +358,7 @@ void onIteratorDestroyed(const DriveKey& driveKey,
                          std::shared_ptr<Storage> pStorage,
                          std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
@@ -369,7 +369,7 @@ void onIteratorHasEnded(const DriveKey& driveKey,
                         std::shared_ptr<Storage> pStorage,
                         std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onIteratorDestroyed(driveKey, environment, pStorage, barrier, id); }, [] {}, environment, false, true);
 
     pStorage->directoryIteratorDestroy(driveKey, id, callback);
@@ -380,7 +380,7 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        std::shared_ptr<Storage> pStorage,
                        std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         auto filename = *res;
         ASSERT_TRUE(filename == expected[i++]);
         onIteratorCreated(driveKey, environment, pStorage, barrier, id); }, [] {}, environment, false, true);
@@ -393,7 +393,7 @@ void onIteratorCreated(const DriveKey& driveKey,
                        std::shared_ptr<Storage> pStorage,
                        std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<bool>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         auto hasNext = *res;
         if (hasNext) {
             onIteratorHasNext(driveKey, environment, pStorage, barrier, id);
@@ -409,7 +409,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onIteratorCreated(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->directoryIteratorCreate(driveKey, "", true, callback);
@@ -420,7 +420,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               std::shared_ptr<Storage> pStorage,
                               std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT(res, environment.logger())
+        ASSERT_TRUE(res);
         onSandboxModificationsInitiated(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->initiateSandboxModifications(driveKey, callback);
@@ -443,7 +443,7 @@ TEST(Storage, Iterator) {
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
-            ASSERT(res, environment.logger())
+            ASSERT_TRUE(res);
             createFolders::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
@@ -459,7 +459,7 @@ TEST(Storage, Iterator) {
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pCreateFile](auto&& res) {
-            ASSERT(res, environment.logger())
+            ASSERT_TRUE(res);
             createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
@@ -475,7 +475,7 @@ TEST(Storage, Iterator) {
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pIterate](auto&& res) {
-            ASSERT(res, environment.logger())
+            ASSERT_TRUE(res);
             iterator::onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
