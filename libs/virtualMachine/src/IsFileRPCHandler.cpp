@@ -1,0 +1,50 @@
+/*
+*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Use of this source code is governed by the Apache 2.0
+*** license that can be found in the LICENSE file.
+*/
+#include "IsFileRPCHandler.h"
+
+namespace sirius::contract::vm {
+
+IsFileRPCHandler::IsFileRPCHandler(GlobalEnvironment& environment,
+                                   const supercontractserver::IsFile& request,
+                                   std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
+                                   std::shared_ptr<AsyncQueryCallback<supercontractserver::IsFileReturn>> callback)
+    : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(std::move(callback)) {}
+
+void IsFileRPCHandler::process() {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    auto handler = m_handler.lock();
+
+    if (!handler) {
+        m_environment.logger().warn("Storage Handler Is Absent");
+        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
+        return;
+    }
+
+    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
+
+    m_query = std::move(query);
+
+    handler->isFile(m_request.path(), callback);
+}
+
+void IsFileRPCHandler::onResult(const expected<bool>& res) {
+
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    supercontractserver::IsFileReturn status;
+
+    if (res.has_value()) {
+        status.set_is_file(*res);
+    } else {
+        status.set_is_file(false);
+    }
+
+    m_callback->postReply(std::move(status));
+}
+
+} // namespace sirius::contract::vm

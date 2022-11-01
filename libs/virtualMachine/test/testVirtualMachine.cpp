@@ -80,7 +80,7 @@ TEST(VirtualMachine, SimpleContract) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -158,7 +158,7 @@ TEST(VirtualMachine, InternetRead) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -232,7 +232,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -305,7 +305,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -374,7 +374,7 @@ TEST(VirtualMachine, WrongContractPath) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -444,7 +444,7 @@ TEST(VirtualMachine, WrongIP) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -517,7 +517,7 @@ TEST(VirtualMachine, WrongExecFunction) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -590,7 +590,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -667,7 +667,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -747,7 +747,7 @@ TEST(VirtualMachine, FaultyContract) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -820,7 +820,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -867,7 +867,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrierSuccesful.wait();

@@ -6,7 +6,7 @@ find_package(GTest REQUIRED)
 
 file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
-add_executable(virtualMachine-tests ${TEST_FILES} TestUtils.cpp MockInternetHandler.cpp)
+add_executable(virtualMachine-tests ${TEST_FILES} TestUtils.cpp MockInternetHandler.cpp MockStorageHandler.cpp)
 enable_testing()
 add_test(virtualMachine-tests "./test")
 target_link_libraries(virtualMachine-tests contract-virtualMachine Threads::Threads ${GTEST_LIBRARIES} gtest_main)

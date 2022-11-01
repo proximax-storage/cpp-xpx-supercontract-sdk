@@ -13,18 +13,16 @@ ExecuteCallRPCRequest::ExecuteCallRPCRequest(GlobalEnvironment& environment, Cal
                                              grpc::CompletionQueue& completionQueue,
                                              std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                              std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                                             std::weak_ptr<VirtualMachineStorageQueryHandler>&& storageQueryHandler,
                                              std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback)
-        : m_environment(environment)
-        , m_handler(std::make_shared<ExecuteCallRPCHandler>(
-                environment, std::move(callRequest), stub, completionQueue, std::move(internetQueryHandler),
-                std::move(blockchainQueryHandler), std::move(callback)
-        )) {
+    : m_environment(environment), m_handler(std::make_shared<ExecuteCallRPCHandler>(
+                                      environment, std::move(callRequest), stub, completionQueue, std::move(internetQueryHandler),
+                                      std::move(blockchainQueryHandler), std::move(storageQueryHandler), std::move(callback))) {
     m_handler->start();
 }
 
 ExecuteCallRPCRequest::ExecuteCallRPCRequest(ExecuteCallRPCRequest&& other) noexcept
-    : m_environment(other.m_environment)
-    , m_handler(std::move(other.m_handler)) {}
+    : m_environment(other.m_environment), m_handler(std::move(other.m_handler)) {}
 
 ExecuteCallRPCRequest& ExecuteCallRPCRequest::operator=(ExecuteCallRPCRequest&& other) noexcept {
     m_environment = other.m_environment;
@@ -41,5 +39,4 @@ ExecuteCallRPCRequest::~ExecuteCallRPCRequest() {
     }
 }
 
-
-}
+} // namespace sirius::contract::vm
