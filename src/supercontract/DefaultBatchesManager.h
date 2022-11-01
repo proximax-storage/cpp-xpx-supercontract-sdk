@@ -50,6 +50,7 @@ private:
 
     std::map<CallId, AutorunCallInfo> m_autorunCallInfos;
 
+    std::optional<Batch> m_delayedBatch;
     std::map<uint64_t, DraftBatch> m_batches;
 
 public:
@@ -69,6 +70,8 @@ public:
     Batch nextBatch() override;
 
     void addBlockInfo(const Block& block) override;
+
+    void delayBatch(Batch&& batch) override;
 
 private:
 
