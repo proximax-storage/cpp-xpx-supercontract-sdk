@@ -5,126 +5,13 @@
 */
 
 #include <supercontract/DefaultBatchesManager.h>
+#include "TestUtils.h"
+
+#include <utility>
 #include "utils/Random.h"
 #include "gtest/gtest.h"
 
 namespace sirius::contract::test {
-class ContractEnvironmentMock : public ContractEnvironment {
-private:
-    ContractKey m_contractKey;
-    DriveKey m_driveKey;
-    std::set<ExecutorKey> m_executors;
-    uint64_t m_automaticExecutionsSCLimit;
-    uint64_t m_automaticExecutionsSMLimit;
-    ContractConfig m_contractConfig;
-
-public:
-    ContractEnvironmentMock(ContractKey& contractKey,
-                            uint64_t automaticExecutionsSCLimit,
-                            uint64_t automaticExecutionsSMLimit)
-            : m_contractKey(contractKey), m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
-              , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit) {}
-
-    const ContractKey& contractKey() const override { return m_contractKey; }
-
-    const DriveKey& driveKey() const override { return m_driveKey; }
-
-    const std::set<ExecutorKey>& executors() const override { return m_executors; }
-
-    uint64_t automaticExecutionsSCLimit() const override { return m_automaticExecutionsSCLimit; }
-
-    uint64_t automaticExecutionsSMLimit() const override { return m_automaticExecutionsSMLimit; }
-
-    const ContractConfig& contractConfig() const override { return m_contractConfig; }
-
-    void finishTask() override {}
-
-    void addSynchronizationTask() override {}
-
-    void delayBatchExecution(Batch&& batch) override {}
-};
-
-class MessengerMock : public Messenger {
-public:
-    void sendMessage(const ExecutorKey& key, const std::string& msg) override {};
-};
-
-class ExecutorEventHandlerMock : public ExecutorEventHandler {
-public:
-    void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {};
-
-    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {};
-};
-
-class VirtualMachineMock : public vm::VirtualMachine {
-private:
-    ThreadManager& m_threadManager;
-    std::deque<bool> m_result;
-    std::map<CallId, Timer> m_timers;
-
-public:
-    VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result)
-            : m_threadManager(threadManager), m_result(result) {}
-
-    void executeCall(const vm::CallRequest& request,
-                     std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
-                     std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                     std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-
-        m_result.pop_front();
-        m_timers[request.m_callId] = m_threadManager.startTimer(rand() % 1000, [=, this]() mutable {
-            vm::CallExecutionResult result{
-                    m_result.front(),
-                    0,
-                    0,
-                    0,
-            };
-            callback->postReply(result);
-        });
-    }
-};
-
-class ExecutorEnvironmentMock : public ExecutorEnvironment {
-private:
-    crypto::KeyPair m_keyPair;
-    std::weak_ptr<VirtualMachineMock> m_virtualMachineMock;
-    ExecutorConfig m_executorConfig;
-    MessengerMock m_messengerMock;
-    std::weak_ptr<storage::Storage> m_storage;
-    ExecutorEventHandlerMock m_executorEventHandlerMock;
-    boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
-    ThreadManager& m_threadManager;
-    logging::Logger m_logger;
-
-
-public:
-    ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
-                            std::weak_ptr<VirtualMachineMock> virtualMachineMock,
-                            ExecutorConfig executorConfig,
-                            ThreadManager& threadManager)
-            : m_keyPair(std::move(keyPair)), m_virtualMachineMock(virtualMachineMock), m_executorConfig(executorConfig)
-              , m_threadManager(threadManager), m_logger(executorConfig.loggerConfig(), "executor") {}
-
-    const crypto::KeyPair& keyPair() const override { return m_keyPair; }
-
-    Messenger& messenger() override { return m_messengerMock; }
-
-    std::weak_ptr<storage::Storage> storage() override { return m_storage; }
-
-    ExecutorEventHandler& executorEventHandler() override { return m_executorEventHandlerMock; }
-
-    std::weak_ptr<vm::VirtualMachine> virtualMachine() override { return m_virtualMachineMock; }
-
-    ExecutorConfig& executorConfig() override { return m_executorConfig; }
-
-    boost::asio::ssl::context& sslContext() override { return m_sslContext; }
-
-    ThreadManager& threadManager() override { return m_threadManager; }
-
-    logging::Logger& logger() override { return m_logger; }
-
-};
-
 #define TEST_NAME DefaultBatchesManagerTest
 
 TEST(TEST_NAME, BatchTest) {
@@ -140,14 +27,13 @@ TEST(TEST_NAME, BatchTest) {
 
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -270,14 +156,13 @@ TEST(TEST_NAME, AllFalseTest) {
     // addBlockInfo - false
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -421,14 +306,13 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     // addBlockInfo - false (batch4)
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -547,14 +431,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     // addBlockInfo - false (batch4)
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -675,14 +558,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     // storageSynchronised = 2
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -792,25 +674,24 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     // Test procedure:
     // enabledSince = 0
-    // addcall
+    // addCall
     // addBLockInfo(height 20) - true
-    // addcall
+    // addCall
     // addBLockInfo(height 21) - false
-    // enabledSince = nullopt (disabled)
-    // addcall
+    // enabledSince = null opt (disabled)
+    // addCall
     // addBLockInfo(height 22) - true
-    // addcall
+    // addCall
     // addBlockInfo(height 23) - false
     // create contract environment
     ContractKey contractKey;
-    uint64_t automaticExucutionsSCLimit = 0;
-    uint64_t automaticExucutionsSMLimit = 0;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
-    ContractConfig contractConfig;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExucutionsSCLimit,
-                                                    automaticExucutionsSMLimit);
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create executor environment
     crypto::PrivateKey privateKey;
