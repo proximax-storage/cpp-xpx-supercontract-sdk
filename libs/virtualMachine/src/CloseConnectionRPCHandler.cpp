@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "CloseConnectionRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -26,7 +27,8 @@ void CloseConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::internet_unavailable)));
+        // TODO Return Correct Error
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
@@ -42,6 +44,11 @@ void CloseConnectionRPCHandler::process() {
 void CloseConnectionRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    if (res.error() == ExecutionError::internet_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
 
     supercontractserver::CloseConnectionReturn status;
 

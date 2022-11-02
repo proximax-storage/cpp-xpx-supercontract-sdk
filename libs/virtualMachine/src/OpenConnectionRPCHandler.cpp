@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "OpenConnectionRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -26,7 +27,8 @@ void OpenConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::internet_unavailable)));
+        // TODO Return Correct Error
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
@@ -39,15 +41,20 @@ void OpenConnectionRPCHandler::process() {
     handler->openConnection(m_request.url(), callback);
 }
 
-void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& connectionId) {
+void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     supercontractserver::OpenConnectionReturn status;
 
-    if (connectionId.has_value()) {
+    if (res.error() == ExecutionError::internet_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
+
+    if (res.has_value()) {
         status.set_success(true);
-        status.set_identifier(*connectionId);
+        status.set_identifier(*res);
     } else {
         status.set_success(false);
     }

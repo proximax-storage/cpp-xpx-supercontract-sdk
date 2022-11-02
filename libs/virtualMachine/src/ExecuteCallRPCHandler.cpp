@@ -27,6 +27,7 @@
 #include "RemoveFileIteratorRPCHandler.h"
 #include "RemoveFileRPCHandler.h"
 #include "WriteFileRPCHandler.h"
+#include "ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
 
 namespace sirius::contract::vm {
@@ -318,6 +319,11 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::internet_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::OpenConnectionReturn(std::move(*res));
@@ -344,6 +350,11 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::internet_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -372,6 +383,11 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::internet_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::CloseConnectionReturn(std::move(*res));
@@ -398,6 +414,11 @@ void ExecuteCallRPCHandler::processOpenFile(const supercontractserver::OpenFile&
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -426,6 +447,11 @@ void ExecuteCallRPCHandler::processWriteFile(const supercontractserver::WriteFil
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::WriteFileStreamReturn(std::move(*res));
@@ -452,6 +478,11 @@ void ExecuteCallRPCHandler::processReadFile(const supercontractserver::ReadFileS
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -480,6 +511,11 @@ void ExecuteCallRPCHandler::processFlush(const supercontractserver::Flush& reque
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::FlushReturn(std::move(*res));
@@ -506,6 +542,11 @@ void ExecuteCallRPCHandler::processCloseFile(const supercontractserver::CloseFil
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -534,6 +575,11 @@ void ExecuteCallRPCHandler::processPathExist(const supercontractserver::PathExis
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::PathExistReturn(std::move(*res));
@@ -560,6 +606,11 @@ void ExecuteCallRPCHandler::processIsFile(const supercontractserver::IsFile& req
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -588,6 +639,11 @@ void ExecuteCallRPCHandler::processCreateDir(const supercontractserver::CreateDi
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::CreateDirReturn(std::move(*res));
@@ -614,6 +670,11 @@ void ExecuteCallRPCHandler::processMoveFile(const supercontractserver::MoveFile&
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -642,6 +703,11 @@ void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveF
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::RemoveFileReturn(std::move(*res));
@@ -668,6 +734,11 @@ void ExecuteCallRPCHandler::processCreateIterator(const supercontractserver::Cre
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -696,6 +767,11 @@ void ExecuteCallRPCHandler::processHasNext(const supercontractserver::HasNextIte
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::HasNextIteratorReturn(std::move(*res));
@@ -722,6 +798,11 @@ void ExecuteCallRPCHandler::processNext(const supercontractserver::NextDirIterat
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 
@@ -750,6 +831,11 @@ void ExecuteCallRPCHandler::processRemoveFileIterator(const supercontractserver:
 
             m_responseHandler.reset();
 
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
+
             ASSERT(res, m_environment.logger())
 
             auto* status = new supercontractserver::RemoveDirIteratorReturn(std::move(*res));
@@ -776,6 +862,11 @@ void ExecuteCallRPCHandler::processDestroyIterator(const supercontractserver::De
             ASSERT(m_responseHandler, m_environment.logger())
 
             m_responseHandler.reset();
+
+            if (res.error() == ExecutionError::storage_unavailable) {
+                postResponse(tl::unexpected<std::error_code>(res.error()));
+                return;
+            }
 
             ASSERT(res, m_environment.logger())
 

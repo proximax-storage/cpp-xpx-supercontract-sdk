@@ -3,8 +3,9 @@
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
+#include <storage/StorageErrorCode.h>
 #include "FlushRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
 
 namespace sirius::contract::vm {
 
@@ -22,7 +23,7 @@ void FlushRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
@@ -36,6 +37,11 @@ void FlushRPCHandler::process() {
 void FlushRPCHandler::onResult(const expected<bool>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    if (res.error() == ExecutionError::storage_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
 
     supercontractserver::FlushReturn status;
 

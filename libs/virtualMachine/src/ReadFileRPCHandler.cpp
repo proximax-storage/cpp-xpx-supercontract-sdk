@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "ReadFileRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -23,7 +24,7 @@ void ReadFileRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
@@ -34,15 +35,20 @@ void ReadFileRPCHandler::process() {
     handler->read(m_request.identifier(), callback);
 }
 
-void ReadFileRPCHandler::onResult(const expected<std::vector<uint8_t>>& result) {
+void ReadFileRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    if (res.error() == ExecutionError::storage_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
+
     supercontractserver::ReadFileStreamReturn response;
 
-    if (result.has_value()) {
+    if (res.has_value()) {
         response.set_success(true);
-        std::string buffer(result->begin(), result->end());
+        std::string buffer(res->begin(), res->end());
         response.set_buffer(std::move(buffer));
     } else {
         response.set_success(false);

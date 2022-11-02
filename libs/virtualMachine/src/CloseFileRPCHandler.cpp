@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "CloseFileRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -12,7 +13,8 @@ CloseFileRPCHandler::CloseFileRPCHandler(GlobalEnvironment& environment,
                                          const supercontractserver::CloseFile& request,
                                          std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
                                          std::shared_ptr<AsyncQueryCallback<supercontractserver::CloseFileReturn>> callback)
-    : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(std::move(callback)) {}
+        : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(
+        std::move(callback)) {}
 
 void CloseFileRPCHandler::process() {
 
@@ -22,11 +24,12 @@ void CloseFileRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
+    auto[query, callback] = createAsyncQuery<void>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true,
+                                                   true);
 
     m_query = std::move(query);
 
@@ -36,6 +39,11 @@ void CloseFileRPCHandler::process() {
 void CloseFileRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    if (res.error() == ExecutionError::storage_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
 
     supercontractserver::CloseFileReturn status;
 

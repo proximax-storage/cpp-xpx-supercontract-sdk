@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "RemoveFileRPCHandler.h"
-#include "common/SupercontractError.h"
+#include "ExecutionErrorConidition.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -22,7 +23,7 @@ void RemoveFileRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
+        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
         return;
     }
 
@@ -36,6 +37,11 @@ void RemoveFileRPCHandler::process() {
 void RemoveFileRPCHandler::onResult(const expected<bool>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+
+    if (res.error() == ExecutionError::storage_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
 
     supercontractserver::RemoveFileReturn status;
 

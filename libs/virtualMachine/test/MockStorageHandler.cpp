@@ -1,5 +1,5 @@
 #include "MockStorageHandler.h"
-#include "common/SupercontractError.h"
+#include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm::test {
 MockStorageHandler::MockStorageHandler() : m_reader(std::ifstream(".")), m_writer(std::ofstream(".")), m_iterator(std::filesystem::directory_iterator(".")), m_recursive(false) {
