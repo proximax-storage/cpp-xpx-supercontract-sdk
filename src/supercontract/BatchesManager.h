@@ -30,6 +30,8 @@ public:
     virtual Batch nextBatch() = 0;
 
     virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
+
+    virtual void delayBatch( Batch&& batch ) = 0;
 };
 
 }

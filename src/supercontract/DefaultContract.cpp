@@ -274,7 +274,10 @@ void DefaultContract::runSynchronizationTask() {
 }
 
 void DefaultContract::delayBatchExecution(Batch&& batch) {
-    // TODO Implement
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_batchesManager->delayBatch(std::move(batch));
 }
 
 void DefaultContract::runBatchExecutionTask() {

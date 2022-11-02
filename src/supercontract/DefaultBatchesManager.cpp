@@ -11,8 +11,8 @@ namespace sirius::contract {
 DefaultBatchesManager::DefaultBatchesManager(uint64_t nextBatchIndex, ContractEnvironment& contractEnvironment,
                                              ExecutorEnvironment& executorEnvironment)
         : m_contractEnvironment(contractEnvironment)
-        , m_executorEnvironment(executorEnvironment)
-        , m_nextBatchIndex(nextBatchIndex) {}
+          , m_executorEnvironment(executorEnvironment)
+          , m_nextBatchIndex(nextBatchIndex) {}
 
 void DefaultBatchesManager::addManualCall(const CallRequestParameters& request) {
 
@@ -53,6 +53,11 @@ bool DefaultBatchesManager::hasNextBatch() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     clearOutdatedBatches();
+
+    if (m_delayedBatch) {
+        return true;
+    }
+
     return !m_batches.empty() &&
            m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED;
 }
@@ -62,6 +67,12 @@ Batch DefaultBatchesManager::nextBatch() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     clearOutdatedBatches();
+
+    if (m_delayedBatch) {
+        auto batch = std::move(*m_delayedBatch);
+        m_delayedBatch.reset();
+        return batch;
+    }
 
     auto batch = std::move(m_batches.extract(m_batches.begin()).mapped());
 
@@ -179,12 +190,27 @@ void DefaultBatchesManager::clearOutdatedBatches() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    if (m_delayedBatch && m_delayedBatch->m_batchIndex <= m_storageSynchronizedBatchIndex) {
+        // Note that we do NOT increment next batch index
+        m_delayedBatch.reset();
+    }
+
     while (!m_batches.empty() &&
            m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
            m_nextBatchIndex <= m_storageSynchronizedBatchIndex) {
         m_batches.erase(m_batches.begin());
         m_nextBatchIndex++;
     }
+}
+
+void DefaultBatchesManager::delayBatch(Batch&& batch) {
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(!m_delayedBatch, m_executorEnvironment.logger())
+
+    ASSERT(batch.m_batchIndex < m_nextBatchIndex, m_executorEnvironment.logger())
+
+    m_delayedBatch = std::move(batch);
 }
 
 }
