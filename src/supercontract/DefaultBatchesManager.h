@@ -11,7 +11,6 @@
 #include "ExecutorEnvironment.h"
 #include "ContractEnvironment.h"
 
-#include "CallExecutionManager.h"
 #include <supercontract/SingleThread.h>
 
 namespace sirius::contract {
@@ -34,7 +33,8 @@ private:
     struct AutorunCallInfo {
         uint64_t m_batchIndex;
         BlockHash m_blockHash;
-        std::unique_ptr<CallExecutionManager> m_manager;
+        std::shared_ptr<AsyncQuery> m_query;
+        Timer m_repeatTimer;
     };
 
     ContractEnvironment& m_contractEnvironment;
@@ -76,6 +76,10 @@ public:
 private:
 
     void onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult);
+
+    void onSuperContractCallFailed(const CallId& callId, std::error_code&& ec);
+
+    std::shared_ptr<AsyncQuery> runAutorunCall(const CallId& callId);
 
 public:
 

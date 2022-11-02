@@ -8,13 +8,13 @@
 
 #include <system_error>
 
-namespace sirius::contract::storage {
+namespace sirius::contract::vm {
 
-enum class StorageError {
-    storage_unavailable = 1
+enum class VirtualMachineError {
+    vm_unavailable = 1
 };
 
-class StorageErrorCategory
+class VirtualMachineErrorCategory
         : public std::error_category {
 public:
     const char* name() const noexcept override;
@@ -24,16 +24,16 @@ public:
     bool equivalent(int code, const std::error_condition& condition) const noexcept override;
 };
 
-const std::error_category& storageErrorCategory();
+const std::error_category& virtualMachineErrorCategory();
 
-std::error_code make_error_code(StorageError e);
+std::error_code make_error_code(VirtualMachineError e);
 
 }
 
 namespace std {
 
 template<>
-struct is_error_code_enum<sirius::contract::storage::StorageError>
+struct is_error_code_enum<sirius::contract::vm::VirtualMachineError>
         : public true_type {
 };
 

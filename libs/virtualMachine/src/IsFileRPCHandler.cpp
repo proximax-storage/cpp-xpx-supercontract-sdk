@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 #include "IsFileRPCHandler.h"
-#include "ExecutionErrorConidition.h"
+#include "virtualMachine/ExecutionErrorConidition.h"
 #include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {

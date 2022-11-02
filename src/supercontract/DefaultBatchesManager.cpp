@@ -5,6 +5,8 @@
 */
 
 #include "DefaultBatchesManager.h"
+#include <virtualMachine/ExecutionErrorConidition.h>
+#include <virtualMachine/VirtualMachineErrorCode.h>
 
 namespace sirius::contract {
 
@@ -110,31 +112,39 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
         std::mt19937 rng(seed);
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
-        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash};
-        vm::CallRequest request(CallRequestParameters{m_contractEnvironment.contractKey(),
-                                                      callId,
-                                                      m_executorEnvironment.executorConfig().autorunFile(),
-                                                      m_executorEnvironment.executorConfig().autorunFunction(),
-                                                      {},
-                                                      m_executorEnvironment.executorConfig().autorunSCLimit(),
-                                                      0},
-                                vm::CallRequest::CallLevel::AUTORUN);
+        auto query = runAutorunCall(callId);
 
-        auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([=, this](auto&& result) {
-            ASSERT(result, m_executorEnvironment.logger())
-            onSuperContractCallExecuted(request.m_callId, std::move(*result));
-        }, [] {}, m_executorEnvironment, false, false);
-
-        auto manager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
-                                                              m_executorEnvironment.virtualMachine(),
-                                                              m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
-                                                              request,
-                                                              nullptr,
-                                                              nullptr,
-                                                              callback);
-
-        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(manager)};
+        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(query), Timer()};
     }
+}
+
+std::shared_ptr<AsyncQuery> DefaultBatchesManager::runAutorunCall(const CallId& callId) {
+    vm::CallRequest request(CallRequestParameters{m_contractEnvironment.contractKey(),
+                                                  callId,
+                                                  m_executorEnvironment.executorConfig().autorunFile(),
+                                                  m_executorEnvironment.executorConfig().autorunFunction(),
+                                                  {},
+                                                  m_executorEnvironment.executorConfig().autorunSCLimit(),
+                                                  0},
+                            vm::CallRequest::CallLevel::AUTORUN);
+
+    auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([callId = request.m_callId, this](auto&& result) {
+        if (result) {
+            onSuperContractCallExecuted(callId, std::move(*result));
+        } else {
+            onSuperContractCallFailed(callId, std::move(result.error()));
+        }
+    }, [] {}, m_executorEnvironment, true, true);
+
+    auto virtualMachine = m_executorEnvironment.virtualMachine().lock();
+
+    if (virtualMachine) {
+        virtualMachine->executeCall(request, {}, {}, {}, std::move(callback));
+    } else {
+        callback->postReply(tl::unexpected(vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
+    }
+
+    return query;
 }
 
 void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
@@ -144,9 +154,9 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
 
     auto callIt = m_autorunCallInfos.find(callId);
 
-    if (callIt == m_autorunCallInfos.end()) {
-        return;
-    }
+    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
+
+    ASSERT(callIt->second.m_query, m_executorEnvironment.logger())
 
     auto batchIt = m_batches.find(callIt->second.m_batchIndex);
 
@@ -175,6 +185,30 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     }
 
     m_autorunCallInfos.erase(callIt);
+}
+
+void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std::error_code&& ec) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger());
+
+    auto callIt = m_autorunCallInfos.find(callId);
+
+    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
+
+    ASSERT(callIt->second.m_query, m_executorEnvironment.logger())
+
+    callIt->second.m_query.reset();
+    callIt->second.m_repeatTimer.cancel();
+
+    callIt->second.m_repeatTimer = Timer(m_executorEnvironment.threadManager().context(),
+                                         m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
+                                         [callId = callIt->first, this] {
+                                             auto callIt = m_autorunCallInfos.find(callId);
+                                             ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
+                                             callIt->second.m_query = runAutorunCall(callId);
+                                         });
 }
 
 bool DefaultBatchesManager::onStorageSynchronized(uint64_t batchIndex) {

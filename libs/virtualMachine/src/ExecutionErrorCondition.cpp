@@ -4,7 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "ExecutionErrorConidition.h"
+#include <virtualMachine/ExecutionErrorConidition.h>
+#include <virtualMachine/VirtualMachineErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -30,7 +31,12 @@ std::string ExecutionErrorCategory::message(int ev) const {
 }
 
 bool ExecutionErrorCategory::equivalent(const std::error_code& code, int condition) const noexcept {
-    return false;
+    switch (condition) {
+        case static_cast<unsigned int>(ExecutionError::virtual_machine_unavailable):
+            return code == VirtualMachineError::vm_unavailable;
+        default:
+            return false;
+    }
 }
 
 const std::error_category& executionErrorCategory() {

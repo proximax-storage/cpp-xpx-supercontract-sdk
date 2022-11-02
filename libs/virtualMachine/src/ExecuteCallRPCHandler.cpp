@@ -27,7 +27,7 @@
 #include "RemoveFileIteratorRPCHandler.h"
 #include "RemoveFileRPCHandler.h"
 #include "WriteFileRPCHandler.h"
-#include "ExecutionErrorConidition.h"
+#include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
 
 namespace sirius::contract::vm {

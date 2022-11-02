@@ -5,7 +5,7 @@
 */
 #include <storage/StorageErrorCode.h>
 #include "FlushRPCHandler.h"
-#include "ExecutionErrorConidition.h"
+#include "virtualMachine/ExecutionErrorConidition.h"
 
 namespace sirius::contract::vm {
 
