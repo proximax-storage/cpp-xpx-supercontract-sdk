@@ -29,10 +29,11 @@ void VirtualMachineMock::executeCall(const vm::CallRequest& request,
                  std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                  std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                  std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
+    auto executionResult = m_result.front();
     m_result.pop_front();
-    m_timers[request.m_callId] = m_threadManager.startTimer(rand() % 1000, [=, this]() mutable {
+    m_timers[request.m_callId] = m_threadManager.startTimer(rand()%1000, [=, this]() mutable {
     vm::CallExecutionResult result{
-            m_result.front(),
+            executionResult,
             0,
             0,
             0,

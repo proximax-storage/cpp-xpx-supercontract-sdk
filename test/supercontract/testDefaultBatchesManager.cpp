@@ -39,7 +39,7 @@ TEST(TEST_NAME, BatchTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, true, false, false}; //first element is dummy data
+    std::deque<bool> result = {true, true, false, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -168,7 +168,7 @@ TEST(TEST_NAME, AllFalseTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, false, false, false, false}; //first element is dummy data
+    std::deque<bool> result = {false, false, false, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -318,7 +318,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, false, true, false}; //first element is dummy data
+    std::deque<bool> result = {true, false, true, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -443,7 +443,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, false, true, false}; //first element is dummy data
+    std::deque<bool> result = {true, false, true, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -570,7 +570,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, false, true, false}; //first element is dummy data
+    std::deque<bool> result = {true, false, true, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -697,7 +697,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, false, true, false}; //first element is dummy data
+    std::deque<bool> result = {true, false, true, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -832,7 +832,7 @@ TEST(TEST_NAME, OneExecuteTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, true, false, false}; //first element is dummy data
+    std::deque<bool> result = {true, true, false, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
