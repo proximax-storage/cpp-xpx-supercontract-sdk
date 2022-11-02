@@ -6,11 +6,30 @@
 
 #pragma once
 
+#include <storage/Storage.h>
 #include "../../src/supercontract/ContractEnvironment.h"
 #include "virtualMachine/VirtualMachine.h"
 #include "../../src/supercontract/ExecutorEnvironment.h"
 
 namespace sirius::contract::test {
+
+class GlobalEnvironmentMock : public GlobalEnvironment {
+
+private:
+    ThreadManager m_threadManager;
+    logging::Logger m_logger;
+
+public:
+    GlobalEnvironmentMock();
+
+    ThreadManager& threadManager() override;
+
+    logging::Logger& logger() override;
+
+private:
+    logging::LoggerConfig getLoggerConfig();
+};
+
 class ContractEnvironmentMock : public ContractEnvironment {
 private:
     ContractKey m_contractKey;
@@ -44,11 +63,6 @@ public:
     void delayBatchExecution(Batch&& batch) override {}
 };
 
-class MessengerMock : public Messenger {
-public:
-    void sendMessage(const ExecutorKey& key, const std::string& msg) override {}
-};
-
 class ExecutorEventHandlerMock : public ExecutorEventHandler {
 public:
     void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {}
@@ -68,6 +82,7 @@ public:
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                     std::weak_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
                      std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) override;
 };
 
@@ -76,7 +91,6 @@ private:
     crypto::KeyPair m_keyPair;
     std::weak_ptr<VirtualMachineMock> m_virtualMachineMock;
     ExecutorConfig m_executorConfig;
-    MessengerMock m_messengerMock;
     std::weak_ptr<storage::Storage> m_storage;
     ExecutorEventHandlerMock m_executorEventHandlerMock;
     boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
@@ -92,9 +106,9 @@ public:
 
     const crypto::KeyPair& keyPair() const override;
 
-    Messenger& messenger() override;
+    std::weak_ptr<messenger::Messenger> messenger() override;
 
-    std::weak_ptr<storage::Storage> storage() override;
+    std::weak_ptr<storage::StorageModifier> storageModifier() override;
 
     ExecutorEventHandler& executorEventHandler() override;
 
