@@ -30,7 +30,7 @@ void OpenFileRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->openFile(m_request.path(), callback);
+    handler->openFile(m_request.path(), m_request.mode(), callback);
 }
 
 void OpenFileRPCHandler::onResult(const expected<uint64_t>& fileId) {

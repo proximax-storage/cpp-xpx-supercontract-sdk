@@ -17,6 +17,7 @@ class VirtualMachineStorageQueryHandler {
 public:
     virtual void openFile(
         const std::string& path,
+        const std::string& mode,
         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;
 
     virtual void read(

@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <fstream>
 #include <optional>
 #include <string>
 #include <virtualMachine/VirtualMachineStorageQueryHandler.h>
@@ -14,67 +15,79 @@ namespace sirius::contract::vm::test {
 
 class MockStorageHandler : public VirtualMachineStorageQueryHandler {
 
+    std::ifstream m_reader;
+    std::ofstream m_writer;
+    std::filesystem::directory_iterator m_iterator;
+    bool m_recursive;
+
 public:
-    virtual void openFile(
+    MockStorageHandler();
+
+    void openFile(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;
+        const std::string& mode,
+        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
 
-    virtual void read(
+    void read(
         uint64_t fileId,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback);
 
-    virtual void write(
+    void write(
         uint64_t fileId,
         std::vector<uint8_t> buffer,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
 
-    virtual void flush(
+    void flush(
         uint64_t fileId,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void closeFile(
+    void closeFile(
         uint64_t fileId,
-        std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
-    virtual void createFSIterator(
+    void createFSIterator(
         const std::string& path,
         bool recursive,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
 
-    virtual void hasNext(
+    void hasNext(
         uint64_t iteratorID,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void next(
+    void next(
         uint64_t iteratorID,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback);
 
-    virtual void destroyFSIterator(
+    void removeFileIterator(
         uint64_t iteratorID,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void pathExist(
+    void destroyFSIterator(
+        uint64_t iteratorID,
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
+
+    void pathExist(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void isFile(
+    void isFile(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void createDir(
+    void createDir(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void moveFile(
+    void moveFile(
         const std::string& oldPath,
         const std::string& newPath,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual void removeFile(
+    void removeFile(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+        std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    virtual ~MockStorageHandler() = default;
+    ~MockStorageHandler() = default;
 };
 
 } // namespace sirius::contract::vm::test

@@ -1,1 +1,171 @@
 #include "MockStorageHandler.h"
+#include "common/PlaceHolder.h"
+
+namespace sirius::contract::vm::test {
+MockStorageHandler::MockStorageHandler() : m_reader(std::ifstream(".")), m_writer(std::ofstream(".")), m_iterator(std::filesystem::directory_iterator(".")), m_recursive(false) {
+}
+
+void MockStorageHandler::openFile(
+    const std::string& path,
+    const std::string& mode,
+    std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    if (mode == "w") {
+        m_writer.open(path);
+    } else {
+        m_reader.open(path);
+    }
+    callback->postReply(std::move(102112022));
+}
+
+void MockStorageHandler::read(
+    uint64_t fileId,
+    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+    if (fileId != 102112022) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        std::vector<uint8_t> buffer;
+        std::string myText;
+        int i = 0;
+        while (getline(m_reader, myText) || i < 16 * 1024) {
+            std::vector<uint8_t> temp(myText.begin(), myText.end());
+            buffer.insert(buffer.end(), temp.begin(), temp.end());
+            i += myText.size();
+        }
+        callback->postReply(std::move(buffer));
+    }
+}
+
+void MockStorageHandler::write(
+    uint64_t fileId,
+    std::vector<uint8_t> buffer,
+    std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    if (fileId != 102112022) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        std::string string(buffer.begin(), buffer.end());
+        m_writer << string;
+        callback->postReply(std::move(string.size()));
+    }
+}
+
+void MockStorageHandler::flush(
+    uint64_t fileId,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    if (fileId != 102112022) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        m_writer.flush();
+        callback->postReply(std::move(true));
+    }
+}
+
+void MockStorageHandler::closeFile(
+    uint64_t fileId,
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    if (fileId != 102112022) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        m_writer.close();
+        m_reader.close();
+        expected<void> res;
+        callback->postReply(std::move(res));
+    }
+}
+
+void MockStorageHandler::createFSIterator(
+    const std::string& path,
+    bool recursive,
+    std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    m_iterator = std::filesystem::directory_iterator{path};
+    m_recursive = recursive;
+    callback->postReply(231546131);
+}
+
+void MockStorageHandler::hasNext(
+    uint64_t iteratorID,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    if (iteratorID != 231546131) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        try {
+            m_iterator++; // Idk what is the corresponding function to hasNext
+            callback->postReply(std::move(true));
+        } catch (...) {
+            callback->postReply(std::move(false));
+        }
+    }
+}
+
+void MockStorageHandler::next(
+    uint64_t iteratorID,
+    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+    if (iteratorID != 231546131) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        auto ret = m_iterator->path();
+        std::vector<uint8_t> name(ret.begin(), ret.end());
+        callback->postReply(std::move(name));
+    }
+}
+
+void MockStorageHandler::removeFileIterator(
+    uint64_t iteratorID,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    if (iteratorID != 231546131) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        auto path = m_iterator->path();
+        auto ret = std::filesystem::remove(path);
+        callback->postReply(std::move(ret));
+    }
+}
+
+void MockStorageHandler::destroyFSIterator(
+    uint64_t iteratorID,
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    if (iteratorID != 231546131) {
+        callback->postReply(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+    } else {
+        m_iterator.~directory_iterator();
+        expected<void> res;
+        callback->postReply(std::move(res));
+    }
+}
+
+void MockStorageHandler::pathExist(
+    const std::string& path,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    auto ret = std::filesystem::exists(path);
+    callback->postReply(std::move(ret));
+}
+
+void MockStorageHandler::isFile(
+    const std::string& path,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    auto ret = std::filesystem::is_regular_file(path);
+    callback->postReply(std::move(ret));
+}
+
+void MockStorageHandler::createDir(
+    const std::string& path,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    auto ret = std::filesystem::create_directory(path);
+    callback->postReply(std::move(ret));
+}
+
+void MockStorageHandler::moveFile(
+    const std::string& oldPath,
+    const std::string& newPath,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    std::filesystem::rename(oldPath, newPath);
+    callback->postReply(std::move(true));
+}
+
+void MockStorageHandler::removeFile(
+    const std::string& path,
+    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    auto ret = std::filesystem::remove(path);
+    callback->postReply(std::move(ret));
+}
+
+} // namespace sirius::contract::vm::test
