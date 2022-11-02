@@ -51,7 +51,7 @@ void CallExecutionManager::execute() {
         return;
     }
 
-    virtualMachine->executeCall(m_callRequest, m_internetQueryHandler, m_blockchainQueryHandler, callback);
+//    virtualMachine->executeCall(m_callRequest, m_internetQueryHandler, m_blockchainQueryHandler, callback);
 }
 
 void CallExecutionManager::runTimer() {

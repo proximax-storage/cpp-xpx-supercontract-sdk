@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 #include "FlushRPCHandler.h"
-#include "common/PlaceHolder.h"
+#include "common/SupercontractError.h"
 
 namespace sirius::contract::vm {
 
@@ -22,7 +22,7 @@ void FlushRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
+        onResult(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
         return;
     }
 

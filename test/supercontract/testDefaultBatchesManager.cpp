@@ -64,7 +64,8 @@ public:
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                     std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
+                     std::weak_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
+                     std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) override {
 
         m_result.pop_front();
         m_timers[request.m_callId] = m_threadManager.startTimer(rand() % 1000, [=, this]() mutable {
