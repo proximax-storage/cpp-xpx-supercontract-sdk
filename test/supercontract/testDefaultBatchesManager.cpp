@@ -7,7 +7,6 @@
 #include <supercontract/DefaultBatchesManager.h>
 #include "TestUtils.h"
 
-#include <utility>
 #include "utils/Random.h"
 #include "gtest/gtest.h"
 
@@ -53,37 +52,37 @@ TEST(TEST_NAME, BatchTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=4; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
@@ -182,37 +181,37 @@ TEST(TEST_NAME, AllFalseTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=13; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
@@ -332,37 +331,37 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=4; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
@@ -458,37 +457,37 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=4; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
@@ -585,37 +584,37 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=4; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
@@ -712,37 +711,37 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 
     //create block and request
     std::vector<Block> blocks;
-    std::vector<vm::CallRequest> requests;
+    std::vector<CallRequestParameters> requests;
 
     for(auto i=1; i<=4; i++){
         uint64_t height = 0;
         Block block = {
-            utils::generateRandomByteValue<BlockHash>(),
-            ++height
+                utils::generateRandomByteValue<BlockHash>(),
+                ++height
         };
         blocks.push_back(block);
     }
 
     for(auto i=1; i<=4; i++){
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest({utils::generateRandomByteValue<ContractKey>(),
-                                utils::generateRandomByteValue<CallId>(),
-                                "",
-                                "",
-                                params,
-                                52000000,
-                                20 * 1024,
-                                CallReferenceInfo{
-                                        {},
-                                        0,
-                                        utils::generateRandomByteValue<BlockHash>(),
-                                        0,
-                                        0,
-                                        {}
-                                }
-                                },
-                                vm::CallRequest::CallLevel::MANUAL);
-        requests.push_back(callRequest);
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
     }
 
     threadManager.execute([&] {
