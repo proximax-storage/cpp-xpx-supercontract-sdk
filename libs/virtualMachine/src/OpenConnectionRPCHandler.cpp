@@ -4,6 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 #include "OpenConnectionRPCHandler.h"
+#include "common/PlaceHolder.h"
 
 namespace sirius::contract::vm {
 
@@ -25,7 +26,7 @@ void OpenConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
+        onResult(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::internet_unavailable)));
         return;
     }
 

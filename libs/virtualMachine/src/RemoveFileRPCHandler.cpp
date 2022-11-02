@@ -4,6 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 #include "RemoveFileRPCHandler.h"
+#include "common/PlaceHolder.h"
 
 namespace sirius::contract::vm {
 
@@ -21,7 +22,7 @@ void RemoveFileRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Storage Handler Is Absent");
-        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
+        onResult(tl::make_unexpected(std::make_error_code(sirius::contract::supercontract_error::storage_unavailable)));
         return;
     }
 
