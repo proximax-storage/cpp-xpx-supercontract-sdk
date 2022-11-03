@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -123,7 +124,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::create_iterator_error);
         onIteratorCreated(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->directoryIteratorCreate(driveKey, "tests", true, callback);

@@ -37,7 +37,7 @@ public:
 
         const auto& children = folder.children();
 
-        ASSERT_EQ(children.size(), 0);
+        ASSERT_EQ(children.size(), 1);
 
         for (const auto& [name, entry] : children) {
             entry->acceptTraversal(*this);
@@ -50,7 +50,24 @@ public:
     }
 };
 
-namespace read {
+void onPathReceived(const DriveKey& driveKey,
+                    GlobalEnvironment& environment,
+                    std::shared_ptr<Storage> pStorage,
+                    std::promise<void>& promise,
+                    const std::string& path) {
+    ASSERT_TRUE(fs::exists(path));
+
+    std::ifstream stream(path.c_str());
+
+    std::ostringstream stringStream;
+    stringStream << stream.rdbuf();
+
+    std::string content = stringStream.str();
+
+    ASSERT_EQ(content, "data");
+
+    promise.set_value();
+}
 
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
@@ -58,11 +75,12 @@ void onFilesystemReceived(const DriveKey& driveKey,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
     FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
-        auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) { ASSERT_TRUE(res); }, [] {}, environment, false, true);
+        auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
+            ASSERT_TRUE(res);
+            onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
         pStorage->absolutePath(driveKey, "test.txt", callback);
     });
     traversal.acceptFolder(*folder);
-    promise.set_value();
 }
 
 void onAppliedStorageModifications(const DriveKey& driveKey,
@@ -110,11 +128,10 @@ void onClosedFile(const DriveKey& driveKey,
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
 }
 
-void onReadFile(const DriveKey& driveKey,
-                GlobalEnvironment& environment,
-                std::shared_ptr<Storage> pStorage,
-                std::promise<void>& barrier,
-                uint64_t fileId) {
+void onFlushed(const DriveKey& driveKey,
+               GlobalEnvironment& environment,
+               std::shared_ptr<Storage> pStorage,
+               std::promise<void>& barrier, uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
@@ -122,18 +139,30 @@ void onReadFile(const DriveKey& driveKey,
     pStorage->closeFile(driveKey, fileId, callback);
 }
 
+void onWrittenFile(const DriveKey& driveKey,
+                   GlobalEnvironment& environment,
+                   std::shared_ptr<Storage> pStorage,
+                   std::promise<void>& barrier,
+                   uint64_t fileId) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+        ASSERT_TRUE(res);
+        onFlushed(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
+
+    pStorage->flush(driveKey, fileId, callback);
+}
+
 void onOpenedFile(const DriveKey& driveKey,
                   GlobalEnvironment& environment,
                   std::shared_ptr<Storage> pStorage,
                   std::promise<void>& barrier,
                   uint64_t fileId) {
-    auto [_, callback] = createAsyncQuery<std::vector<uint8_t>>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        std::string actual(res->begin(), res->end());
-        ASSERT_EQ(actual, "data");
-        onReadFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+        ASSERT_FALSE(res);
+        ASSERT_EQ(res.error(), storage::StorageError::write_file_error);
+        onWrittenFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
-    pStorage->readFile(driveKey, fileId, 16 * 1024, callback);
+    std::string s("data");
+    pStorage->writeFile(driveKey, 1315646, {s.begin(), s.end()}, callback);
 }
 
 void onSandboxModificationsInitiated(const DriveKey& driveKey,
@@ -141,10 +170,10 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), StorageError::open_file_error);
-        onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+        ASSERT_TRUE(res);
+        onOpenedFile(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
-    pStorage->openFile(driveKey, "test.txt", OpenFileMode::READ, callback);
+    pStorage->openFile(driveKey, "test.txt", OpenFileMode::WRITE, callback);
 }
 
 void onModificationsInitiated(const DriveKey& driveKey,
@@ -157,30 +186,29 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace read
 
-TEST(Storage, ReadNonExisting) {
+TEST(Storage, WriteWithWrongID) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{8}};
+    std::promise<void> p;
+    auto barrier = p.get_future();
 
-    std::promise<void> pRead;
-    auto barrierRead = pRead.get_future();
+    DriveKey driveKey{{15}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
 
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
 
-        auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRead](auto&& res) {
+        auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
-            read::onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
+            onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
-    barrierRead.get();
+    barrier.get();
 
     threadManager.stop();
 }

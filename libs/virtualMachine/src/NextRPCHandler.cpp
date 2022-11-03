@@ -39,7 +39,7 @@ void NextRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    if (res.error() == ExecutionError::storage_unavailable) {
+    if (!res && res.error() == ExecutionError::storage_unavailable) {
         m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
         return;
     }

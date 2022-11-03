@@ -1,4 +1,5 @@
 #include "MockInternetHandler.h"
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::vm::test
 {
@@ -38,7 +39,7 @@ namespace sirius::contract::vm::test
         }
         else
         {
-            callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::bad_message)));
+            callback->postReply(tl::unexpected<std::error_code>(internet::make_error_code(internet::InternetError::connection_closed_error)));
         }
     }
 }

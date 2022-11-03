@@ -5,7 +5,7 @@
 */
 #include "ReadConnectionRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
-#include <storage/StorageErrorCode.h>
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -27,8 +27,7 @@ void ReadConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        // TODO Return Correct Error
-        onResult(tl::make_unexpected(storage::make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
+        onResult(tl::make_unexpected(internet::make_error_code(internet::InternetError::internet_unavailable)));
         return;
     }
 
@@ -45,7 +44,7 @@ void ReadConnectionRPCHandler::onResult(const expected<std::vector<uint8_t>>& re
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    if (res.error() == ExecutionError::internet_unavailable) {
+    if (!res && res.error() == ExecutionError::internet_unavailable) {
         m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
         return;
     }

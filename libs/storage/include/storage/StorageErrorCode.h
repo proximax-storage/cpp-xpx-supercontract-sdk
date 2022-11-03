@@ -11,7 +11,19 @@
 namespace sirius::contract::storage {
 
 enum class StorageError {
-    storage_unavailable = 1
+    storage_unavailable = 1,
+    open_file_error,
+    read_file_error,
+    write_file_error,
+    flush_error,
+    close_file_error,
+    create_directory_error,
+    move_file_error,
+    remove_file_error,
+    create_iterator_error,
+    iterator_next_error,
+    iterator_remove_error,
+    destroy_iterator_error
 };
 
 class StorageErrorCategory

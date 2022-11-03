@@ -4,6 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 
+#include <storage/StorageErrorCode.h>
+#include <internet/InternetErrorCode.h>
 #include <virtualMachine/ExecutionErrorConidition.h>
 #include <virtualMachine/VirtualMachineErrorCode.h>
 
@@ -32,8 +34,18 @@ std::string ExecutionErrorCategory::message(int ev) const {
 
 bool ExecutionErrorCategory::equivalent(const std::error_code& code, int condition) const noexcept {
     switch (condition) {
-        case static_cast<unsigned int>(ExecutionError::virtual_machine_unavailable):
+        case static_cast<int>(ExecutionError::virtual_machine_unavailable):
             return code == VirtualMachineError::vm_unavailable;
+        case static_cast<int>(ExecutionError::storage_unavailable):
+            return code == storage::StorageError::storage_unavailable;
+        case static_cast<int>(ExecutionError::storage_incorrect_query):
+            return code.category() == storage::storageErrorCategory() &&
+                   code != storage::StorageError::storage_unavailable;
+        case static_cast<int>(ExecutionError::internet_unavailable):
+            return code == internet::InternetError::internet_unavailable;
+        case static_cast<int>(ExecutionError::internet_incorrect_query):
+            return code.category() == internet::internetErrorCategory() &&
+                   code != internet::InternetError::internet_unavailable;
         default:
             return false;
     }
@@ -48,4 +60,4 @@ std::error_condition make_error_condition(ExecutionError e) {
     return {static_cast<int>(e), executionErrorCategory()};
 }
 
-}
+} // namespace sirius::contract::vm

@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -112,7 +113,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::remove_file_error);
         onFileRemoved(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->removeFilesystemEntry(driveKey, "test.txt", callback);

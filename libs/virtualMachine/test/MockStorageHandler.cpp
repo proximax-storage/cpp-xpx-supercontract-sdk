@@ -2,7 +2,7 @@
 #include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm::test {
-MockStorageHandler::MockStorageHandler() : m_reader(std::ifstream(".")), m_writer(std::ofstream(".")), m_iterator(std::filesystem::directory_iterator(".")), m_recursive(false) {
+MockStorageHandler::MockStorageHandler() {
 }
 
 void MockStorageHandler::openFile(
@@ -21,7 +21,7 @@ void MockStorageHandler::read(
     uint64_t fileId,
     std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
     if (fileId != 102112022) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::read_file_error)));
     } else {
         std::vector<uint8_t> buffer;
         std::string myText;
@@ -40,7 +40,7 @@ void MockStorageHandler::write(
     std::vector<uint8_t> buffer,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
     if (fileId != 102112022) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::write_file_error)));
     } else {
         std::string string(buffer.begin(), buffer.end());
         m_writer << string;
@@ -52,7 +52,7 @@ void MockStorageHandler::flush(
     uint64_t fileId,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     if (fileId != 102112022) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::flush_error)));
     } else {
         m_writer.flush();
         callback->postReply(std::move(true));
@@ -63,7 +63,7 @@ void MockStorageHandler::closeFile(
     uint64_t fileId,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
     if (fileId != 102112022) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::close_file_error)));
     } else {
         m_writer.close();
         m_reader.close();
@@ -85,7 +85,7 @@ void MockStorageHandler::hasNext(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     if (iteratorID != 231546131) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
         try {
             m_iterator++; // Idk what is the corresponding function to hasNext
@@ -100,7 +100,7 @@ void MockStorageHandler::next(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
     if (iteratorID != 231546131) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
         auto ret = m_iterator->path().string();
         std::vector<uint8_t> name(ret.begin(), ret.end());
@@ -112,7 +112,7 @@ void MockStorageHandler::removeFileIterator(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     if (iteratorID != 231546131) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::remove_file_error)));
     } else {
         auto path = m_iterator->path();
         auto ret = std::filesystem::remove(path);
@@ -124,7 +124,7 @@ void MockStorageHandler::destroyFSIterator(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
     if (iteratorID != 231546131) {
-        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::supercontract_error::storage_incorrect_query)));
+        callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::destroy_iterator_error)));
     } else {
         m_iterator.~directory_iterator();
         expected<void> res;

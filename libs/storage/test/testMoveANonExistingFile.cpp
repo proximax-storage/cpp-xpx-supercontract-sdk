@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -138,7 +139,7 @@ void onCreatedDirectory(const DriveKey& driveKey,
                         std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         // ASSERT_TRUE(res);
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::move_file_error);
         onFileMoved(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->moveFilesystemEntry(driveKey, "tests/test.txt", "moved/test.txt", callback);
