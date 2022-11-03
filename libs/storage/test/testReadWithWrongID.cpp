@@ -274,7 +274,7 @@ void onOpenedFile(const DriveKey& driveKey,
                   std::promise<void>& barrier,
                   uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<std::vector<uint8_t>>([=, &environment, &barrier](auto&& res) {
-        // ASSERT_TRUE(res);
+        ASSERT_FALSE(res);
         ASSERT_EQ(res.error(), storage::StorageError::read_file_error);
         // std::string actual(res->begin(), res->end());
         // ASSERT_EQ(actual, "data");
