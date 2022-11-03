@@ -370,7 +370,11 @@ TEST(VirtualMachine, WrongContractPath) {
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             // TODO on call executed
             p.set_value();
-            ASSERT_FALSE(res);
+            ASSERT_TRUE(res);
+            ASSERT_EQ(res->m_success, false);
+            ASSERT_EQ(res->m_return, 0);
+            ASSERT_EQ(res->m_scConsumed, 0);
+            ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
