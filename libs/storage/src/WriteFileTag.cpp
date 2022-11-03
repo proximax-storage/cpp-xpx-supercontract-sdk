@@ -5,6 +5,7 @@
 */
 
 #include "WriteFileTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
@@ -33,11 +34,11 @@ void WriteFileTag::process(bool ok) {
         if (m_response.success()) {
             m_callback->postReply(expected<void>());
         } else {
-            m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
+            m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::write_file_error)));
         }
     } else {
         m_environment.logger().warn("Failed to write to file: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
 }
 

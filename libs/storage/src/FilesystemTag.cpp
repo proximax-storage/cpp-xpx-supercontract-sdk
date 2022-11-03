@@ -5,6 +5,7 @@
 */
 
 #include "FilesystemTag.h"
+#include "storage/StorageErrorCode.h"
 
 
 namespace sirius::contract::storage {
@@ -32,7 +33,7 @@ void FilesystemTag::process(bool ok) {
 
     if (!m_status.ok()) {
         m_environment.logger().warn("Failed to obtain the filesystem: {}", m_status.error_message());
-        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted));
+        auto error = tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable));
         m_callback->postReply(error);
     } else {
         auto pFolder = buildFolder(m_response.filesystem());

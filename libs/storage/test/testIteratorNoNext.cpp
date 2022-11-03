@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -267,7 +268,7 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &barrier](auto&& res) {
         if (!res) {
-            ASSERT_EQ(res.error(), std::errc::io_error);
+            ASSERT_EQ(res.error(), StorageError::iterator_next_error);
             flag = true;
         }
         onIteratorCreated(driveKey, environment, pStorage, barrier, id); }, [] {}, environment, false, true);

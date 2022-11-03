@@ -5,6 +5,7 @@
 */
 
 #include "OpenFileTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
@@ -31,9 +32,9 @@ void OpenFileTag::process(bool ok) {
 
     if (!m_status.ok()) {
         m_environment.logger().warn("Failed to open file: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::open_file_error)));
     } else {
         m_callback->postReply(m_response.id());
     }
