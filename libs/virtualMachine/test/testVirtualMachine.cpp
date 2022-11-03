@@ -8,6 +8,7 @@
 #include "TestUtils.h"
 #include <gtest/gtest.h>
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
+#include <virtualMachine/ExecutionErrorConidition.h>
 
 namespace sirius::contract::vm::test {
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
@@ -70,7 +71,7 @@ TEST(VirtualMachine, SimpleContract) {
         }, CallRequest::CallLevel::AUTOMATIC);
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
@@ -144,7 +145,7 @@ TEST(VirtualMachine, InternetRead) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -222,7 +223,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -295,7 +296,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -368,7 +369,7 @@ TEST(VirtualMachine, WrongContractPath) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -412,7 +413,7 @@ TEST(VirtualMachine, WrongIP) {
                               copyOptions);
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
-        std::string address = "127.0.0.1:50052";
+        std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder;
         pVirtualMachine = builder.build(storageObserver, environment, address);
 
@@ -441,10 +442,10 @@ TEST(VirtualMachine, WrongIP) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
+            // TODO res == true
             ASSERT_FALSE(res);
-            ASSERT_TRUE(res.error() == std::make_error_code(std::errc::connection_aborted));
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -511,7 +512,7 @@ TEST(VirtualMachine, WrongExecFunction) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -584,7 +585,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -657,7 +658,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -737,7 +738,7 @@ TEST(VirtualMachine, FaultyContract) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -818,7 +819,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             ASSERT_FALSE(res);
             pAborted.set_value();
         }, [] {}, environment, false, false);
@@ -864,7 +865,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             pSuccessful.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
@@ -928,7 +929,7 @@ TEST(VirtualMachine, SimpleStorage) {
         }, CallRequest::CallLevel::AUTOMATIC);
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            // TODO on call executed
+            
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);

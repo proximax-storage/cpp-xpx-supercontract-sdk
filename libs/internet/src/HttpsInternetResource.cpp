@@ -19,6 +19,7 @@
 #include "supercontract/Identifiers.h"
 #include "supercontract/AsyncQuery.h"
 #include <openssl/sslerr.h>
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::internet {
 
@@ -105,7 +106,7 @@ void HttpsInternetResource::read(
 
     if (m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED) {
         m_environment.logger().warn("Read Https Connection Closed");
-        callback->postReply(tl::unexpected(std::make_error_code(std::errc::bad_file_descriptor)));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::connection_closed_error)));
         return;
     }
 
@@ -179,7 +180,7 @@ void HttpsInternetResource::onHostResolved(beast::error_code ec,
     if (ec) {
         m_environment.logger().warn("OnHostResolved Https Connection Error: {}", ec.message());
         closeDuringInitialization();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::resolve_error)));
         return;
     }
 
@@ -213,7 +214,7 @@ void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio:
     if (ec) {
         m_environment.logger().warn("OnConnected Https Connection Error: {}", ec.message());
         closeDuringInitialization();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::connection_error)));
         return;
     }
 
@@ -259,7 +260,7 @@ void HttpsInternetResource::onHandshake(beast::error_code ec,
     if (ec) {
         m_environment.logger().warn("OnHandshake Https Connection Error {}",  ec.message());
         closeDuringInitialization();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::handshake_error)));
         return;
     }
 
@@ -286,7 +287,7 @@ void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tr
     if (ec) {
         m_environment.logger().warn("OnWritten Https Connection Error: {}", ec.message());
         close();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::write_error)));
         return;
     }
 
@@ -313,7 +314,7 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
 
     if (ec) {
         m_environment.logger().warn("OnRead Https Connection Error {}", ec.message());
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::read_error)));
         return;
     }
 
@@ -411,7 +412,7 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
         m_environment.logger().warn("OnOCSPVerified Https Connection OCSP Invalid");
         closeDuringInitialization();
         auto ec = beast::error_code(SSL_R_CERTIFICATE_VERIFY_FAILED, boost::asio::error::get_ssl_category());
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::invalid_ocsp_error)));
         return;
     }
 
