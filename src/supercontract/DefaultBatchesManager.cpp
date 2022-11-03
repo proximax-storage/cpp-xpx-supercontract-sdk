@@ -6,7 +6,6 @@
 
 #include "DefaultBatchesManager.h"
 #include <virtualMachine/ExecutionErrorConidition.h>
-#include <virtualMachine/VirtualMachineErrorCode.h>
 
 namespace sirius::contract {
 
@@ -112,13 +111,16 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
         std::mt19937 rng(seed);
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
-        auto query = runAutorunCall(callId);
+        auto callManager = runAutorunCall(callId);
 
-        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(query), Timer()};
+        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(callManager), Timer()};
     }
 }
 
-std::shared_ptr<AsyncQuery> DefaultBatchesManager::runAutorunCall(const CallId& callId) {
+std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(const CallId& callId) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
     vm::CallRequest request(CallRequestParameters{m_contractEnvironment.contractKey(),
                                                   callId,
                                                   m_executorEnvironment.executorConfig().autorunFile(),
@@ -136,15 +138,11 @@ std::shared_ptr<AsyncQuery> DefaultBatchesManager::runAutorunCall(const CallId& 
         }
     }, [] {}, m_executorEnvironment, true, true);
 
-    auto virtualMachine = m_executorEnvironment.virtualMachine().lock();
+    auto callManager = std::make_unique<CallExecutionManager>(m_executorEnvironment, nullptr, nullptr, nullptr, std::move(query));
 
-    if (virtualMachine) {
-        virtualMachine->executeCall(request, {}, {}, {}, std::move(callback));
-    } else {
-        callback->postReply(tl::unexpected(vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
-    }
+    callManager->run(request, std::move(callback));
 
-    return query;
+    return callManager;
 }
 
 void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
@@ -154,9 +152,9 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
 
     auto callIt = m_autorunCallInfos.find(callId);
 
-    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
+    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
 
-    ASSERT(callIt->second.m_query, m_executorEnvironment.logger())
+    ASSERT(callIt->second.m_callExecutionManager, m_executorEnvironment.logger())
 
     auto batchIt = m_batches.find(callIt->second.m_batchIndex);
 
@@ -191,23 +189,23 @@ void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std:
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger());
+    ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger())
 
     auto callIt = m_autorunCallInfos.find(callId);
 
-    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
+    ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
 
-    ASSERT(callIt->second.m_query, m_executorEnvironment.logger())
+    ASSERT(callIt->second.m_callExecutionManager, m_executorEnvironment.logger())
 
-    callIt->second.m_query.reset();
+    callIt->second.m_callExecutionManager.reset();
     callIt->second.m_repeatTimer.cancel();
 
     callIt->second.m_repeatTimer = Timer(m_executorEnvironment.threadManager().context(),
                                          m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
                                          [callId = callIt->first, this] {
                                              auto callIt = m_autorunCallInfos.find(callId);
-                                             ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger());
-                                             callIt->second.m_query = runAutorunCall(callId);
+                                             ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
+                                             callIt->second.m_callExecutionManager = runAutorunCall(callId);
                                          });
 }
 

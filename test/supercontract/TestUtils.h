@@ -60,7 +60,7 @@ public:
 
     void addSynchronizationTask() override {}
 
-    void delayBatchExecution(Batch&& batch) override {}
+    void delayBatchExecution(Batch batch) override {}
 };
 
 class ExecutorEventHandlerMock : public ExecutorEventHandler {

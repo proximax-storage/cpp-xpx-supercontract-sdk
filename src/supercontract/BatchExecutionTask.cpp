@@ -21,11 +21,12 @@ BatchExecutionTask::BatchExecutionTask(Batch&& batch,
                                        std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
                                        std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo)
         : BaseContractTask(executorEnvironment, contractEnvironment)
-        , m_batch(std::move(batch))
-        , m_publishedEndBatchInfo(std::move(publishedEndBatchInfo))
-        , m_otherSuccessfulExecutorEndBatchOpinions(
+          , m_batch(std::move(batch))
+          , m_callIterator(m_batch.m_callRequests.begin())
+          , m_publishedEndBatchInfo(std::move(publishedEndBatchInfo))
+          , m_otherSuccessfulExecutorEndBatchOpinions(
                 std::move(otherSuccessfulExecutorEndBatchOpinions))
-        , m_otherUnsuccessfulExecutorEndBatchOpinions(
+          , m_otherUnsuccessfulExecutorEndBatchOpinions(
                 std::move(otherSuccessfulExecutorEndBatchOpinions)) {}
 
 void BatchExecutionTask::run() {
@@ -58,7 +59,7 @@ void BatchExecutionTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_callManager.reset();
+    m_callExecutionManager.reset();
 
     m_storageQuery.reset();
 
@@ -73,7 +74,8 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_callManager, m_executorEnvironment.logger())
+    ASSERT(m_callExecutionManager, m_executorEnvironment.logger())
+    m_callExecutionManager.reset();
 
     auto success = executionResult.m_success;
 
@@ -266,8 +268,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
             auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
             messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
         }
-    }
-    else {
+    } else {
         m_executorEnvironment.logger().warn("Messenger not available");
     }
 
@@ -497,13 +498,15 @@ void BatchExecutionTask::executeNextCall() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(!m_callManager, m_executorEnvironment.logger())
+    ASSERT(!m_callExecutionManager, m_executorEnvironment.logger())
 
     ASSERT(!m_storageQuery, m_executorEnvironment.logger())
 
-    const auto& callRequest = m_batch.m_callRequests.front();
+    if (m_callIterator != m_batch.m_callRequests.end()) {
 
-    if (!m_batch.m_callRequests.empty()) {
+        const auto& callRequest = *m_callIterator;
+        m_callIterator++;
+
         auto callEnvironment = std::make_shared<CallExecutionEnvironment>(
                 callRequest,
                 m_executorEnvironment,
@@ -511,19 +514,19 @@ void BatchExecutionTask::executeNextCall() {
 
         auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
                 [this, callId = callRequest.m_callId](auto&& res) {
+                    // TODO process error
                     ASSERT(res, m_executorEnvironment.logger())
                     onSuperContractCallExecuted(callId, std::move(*res));
                 }, [] {}, m_executorEnvironment, false, false);
 
-        m_callManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
-                                                               m_executorEnvironment.virtualMachine(),
-                                                               m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
-                                                               callRequest,
-                                                               callEnvironment,
-                                                               callEnvironment,
-                                                               callback);
+        m_callExecutionManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
+                                                                        callEnvironment,
+                                                                        callEnvironment,
+                                                                        callEnvironment,
+                                                                        std::move(query));
 
-        m_batch.m_callRequests.pop_front();
+        m_callExecutionManager->run(callRequest, std::move(callback));
+
     } else {
 
         auto storage = m_executorEnvironment.storageModifier().lock();
@@ -574,8 +577,7 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
             auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
             messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
         }
-    }
-    else {
+    } else {
         m_executorEnvironment.logger().warn("Messenger not available");
     }
 }
@@ -587,7 +589,7 @@ void BatchExecutionTask::computeProofOfExecution() {
 void BatchExecutionTask::onStorageUnavailable() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_contractEnvironment.delayBatchExecution(std::move(m_batch));
+    m_contractEnvironment.delayBatchExecution(m_batch);
 
     m_contractEnvironment.addSynchronizationTask();
 

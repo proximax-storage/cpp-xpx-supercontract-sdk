@@ -5,62 +5,36 @@
 */
 
 #include "CallExecutionManager.h"
+#include <virtualMachine/VirtualMachineErrorCode.h>
 
 namespace sirius::contract {
 
-CallExecutionManager::CallExecutionManager(GlobalEnvironment& environment,
-                                           std::weak_ptr<vm::VirtualMachine> virtualMachine,
-                                           int repeatTimeout,
-                                           const vm::CallRequest& request,
+CallExecutionManager::CallExecutionManager(ExecutorEnvironment& environment,
                                            std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                            std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                                           std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback)
+                                           std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
+                                           std::shared_ptr<AsyncQuery>&& virtualMachineQuery)
         : m_environment(environment)
-        , m_virtualMachine(std::move(virtualMachine))
-        , m_repeatTimeout(repeatTimeout)
-        , m_callRequest(request)
         , m_internetQueryHandler(std::move(internetQueryHandler))
         , m_blockchainQueryHandler(std::move(blockchainQueryHandler))
-        , m_callback(std::move(callback)) {
-    execute();
-}
+        , m_storageQueryHandler(std::move(storageQueryHandler))
+        , m_virtualMachineQuery(std::move(virtualMachineQuery)) {}
 
-void CallExecutionManager::execute() {
+void CallExecutionManager::run(const vm::CallRequest& callRequest,
+                               std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback) {
 
-    ASSERT(isSingleThread(), m_environment.logger())
+    ASSERT(isSingleThread(), m_environment.logger());
 
-    ASSERT(!m_virtualMachineQuery, m_environment.logger())
-
-    auto [query, callback] = createAsyncQuery<vm::CallExecutionResult>([this] (auto&& result) {
-        if (result) {
-            m_repeatTimer.cancel();
-            m_callback->postReply(std::move(result));
-        }
-        else {
-            ASSERT(result.error() == std::errc::connection_aborted, m_environment.logger());
-            runTimer();
-        }
-    }, [] {}, m_environment, true, true);
-
-    m_virtualMachineQuery = std::move(query);
-
-    auto virtualMachine = m_virtualMachine.lock();
+    auto virtualMachine = m_environment.virtualMachine().lock();
 
     if (!virtualMachine) {
-        runTimer();
+        callback->postReply(
+                tl::unexpected<std::error_code>(vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
         return;
     }
 
-    virtualMachine->executeCall(m_callRequest, m_internetQueryHandler, m_blockchainQueryHandler, {}, callback);
-}
-
-void CallExecutionManager::runTimer() {
-    // We have failed to obtain the result because of some reasons and should try to repeat the effort
-    m_environment.logger().warn("Failed To Obtain The Result Of {} Contract Call", m_callRequest.m_callId);
-    m_virtualMachineQuery.reset();
-    m_repeatTimer = Timer(m_environment.threadManager().context(), m_repeatTimeout, [this] {
-        execute();
-    });
+    virtualMachine->executeCall(callRequest, m_internetQueryHandler, m_blockchainQueryHandler, m_storageQueryHandler,
+                                std::move(callback));
 }
 
 }

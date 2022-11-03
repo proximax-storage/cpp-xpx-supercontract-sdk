@@ -6,47 +6,34 @@
 
 #pragma once
 
-#include "supercontract/GlobalEnvironment.h"
+#include "ExecutorEnvironment.h"
 
 #include <virtualMachine/VirtualMachine.h>
 
 namespace sirius::contract {
 
-class CallExecutionManager: private SingleThread {
+class CallExecutionManager : private SingleThread {
 
 private:
 
-    GlobalEnvironment& m_environment;
-
-    std::weak_ptr<vm::VirtualMachine> m_virtualMachine;
-
-    Timer   m_repeatTimer;
-    int     m_repeatTimeout;
-
-    vm::CallRequest m_callRequest;
+    ExecutorEnvironment& m_environment;
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> m_internetQueryHandler;
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> m_blockchainQueryHandler;
-
-    std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> m_callback;
+    std::shared_ptr<vm::VirtualMachineStorageQueryHandler> m_storageQueryHandler;
 
     std::shared_ptr<AsyncQuery> m_virtualMachineQuery;
 
 public:
 
-    CallExecutionManager(GlobalEnvironment& environment,
-                         std::weak_ptr<vm::VirtualMachine> virtualMachine,
-                         int repeatTimeout,
-                         const vm::CallRequest& request,
+    CallExecutionManager(ExecutorEnvironment& environment,
                          std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
-                         std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback);
+                         std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
+                         std::shared_ptr<AsyncQuery>&& virtualMachineQuery);
 
-private:
-
-    void execute();
-
-    void runTimer();
+    void run(const vm::CallRequest& callRequest,
+             std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback);
 
 };
 
