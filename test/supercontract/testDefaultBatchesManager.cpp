@@ -26,6 +26,7 @@ TEST(TEST_NAME, BatchTest) {
     // addCall
     // addBlockInfo - false
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -148,6 +149,7 @@ TEST(TEST_NAME, AllFalseTest) {
     // addBlockInfo - false  (batch3)
     // addBlockInfo - false
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -289,6 +291,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -405,6 +408,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -523,6 +527,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     // addBlockInfo - false (batch4)
     // storageSynchronised = 2
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -641,6 +646,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     // addCall
     // addBlockInfo(height 23) - false
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
