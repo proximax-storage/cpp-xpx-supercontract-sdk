@@ -44,9 +44,14 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
     if (!m_automaticExecutionsEnabledSince) {
         for (auto&[_, batch]: m_batches) {
             if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
+                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger());
                 batch.m_requests.pop_back();
             }
+            else if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
+                batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
+            }
         }
+        m_autorunCallInfos.clear();
     }
 }
 
