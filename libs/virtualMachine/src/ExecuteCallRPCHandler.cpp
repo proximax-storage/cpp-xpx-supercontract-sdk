@@ -319,7 +319,7 @@ void ExecuteCallRPCHandler::processOpenInternetConnection(const supercontractser
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::internet_unavailable) {
+            if (!res && res.error() == ExecutionError::internet_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -351,7 +351,7 @@ void ExecuteCallRPCHandler::processReadInternetConnection(const supercontractser
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::internet_unavailable) {
+            if (!res && res.error() == ExecutionError::internet_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -383,7 +383,7 @@ void ExecuteCallRPCHandler::processCloseInternetConnection(const supercontractse
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::internet_unavailable) {
+            if (!res && res.error() == ExecutionError::internet_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -415,7 +415,7 @@ void ExecuteCallRPCHandler::processOpenFile(const supercontractserver::OpenFile&
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -447,7 +447,7 @@ void ExecuteCallRPCHandler::processWriteFile(const supercontractserver::WriteFil
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -479,7 +479,7 @@ void ExecuteCallRPCHandler::processReadFile(const supercontractserver::ReadFileS
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -511,7 +511,7 @@ void ExecuteCallRPCHandler::processFlush(const supercontractserver::Flush& reque
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -543,7 +543,7 @@ void ExecuteCallRPCHandler::processCloseFile(const supercontractserver::CloseFil
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -575,7 +575,7 @@ void ExecuteCallRPCHandler::processPathExist(const supercontractserver::PathExis
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -607,7 +607,7 @@ void ExecuteCallRPCHandler::processIsFile(const supercontractserver::IsFile& req
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -639,7 +639,7 @@ void ExecuteCallRPCHandler::processCreateDir(const supercontractserver::CreateDi
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -671,7 +671,7 @@ void ExecuteCallRPCHandler::processMoveFile(const supercontractserver::MoveFile&
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -703,7 +703,7 @@ void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveF
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -735,7 +735,7 @@ void ExecuteCallRPCHandler::processCreateIterator(const supercontractserver::Cre
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -767,7 +767,7 @@ void ExecuteCallRPCHandler::processHasNext(const supercontractserver::HasNextIte
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -799,7 +799,7 @@ void ExecuteCallRPCHandler::processNext(const supercontractserver::NextDirIterat
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -831,7 +831,7 @@ void ExecuteCallRPCHandler::processRemoveFileIterator(const supercontractserver:
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }
@@ -863,7 +863,7 @@ void ExecuteCallRPCHandler::processDestroyIterator(const supercontractserver::De
 
             m_responseHandler.reset();
 
-            if (res.error() == ExecutionError::storage_unavailable) {
+            if (!res && res.error() == ExecutionError::storage_unavailable) {
                 postResponse(tl::unexpected<std::error_code>(res.error()));
                 return;
             }

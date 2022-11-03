@@ -47,7 +47,7 @@ void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& res) {
 
     supercontractserver::OpenConnectionReturn status;
 
-    if (res.error() == ExecutionError::internet_unavailable) {
+    if (!res && res.error() == ExecutionError::internet_unavailable) {
         m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
         return;
     }
