@@ -8,18 +8,17 @@
 
 namespace sirius::contract::test {
 
-VirtualMachineMock::VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result)
+VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager, std::deque<bool> result)
         : m_threadManager(threadManager), m_result(std::move(result)) {}
 
-void VirtualMachineMock::executeCall(const vm::CallRequest& request,
+void VirtualMachineMock::executeCall(const vm::CallRequest &request,
                                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                                     std::weak_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
                                      std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
     auto executionResult = m_result.front();
     m_result.pop_front();
-    auto random = rand();
-    std::cout << random << std::endl;
-    m_timers[request.m_callId] = m_threadManager.startTimer(random%1000, [=, this]() mutable {
+    m_timers[request.m_callId] = m_threadManager.startTimer(rand() % 1000, [=, this]() mutable {
         vm::CallExecutionResult result{
                 executionResult,
                 0,

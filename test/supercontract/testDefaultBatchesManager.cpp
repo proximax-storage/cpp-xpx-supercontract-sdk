@@ -6,7 +6,7 @@
 
 #include <supercontract/DefaultBatchesManager.h>
 #include "ContractEnvironmentMock.h"
-#include "ExecutionEnvironmentMock.h"
+#include "ExecutorEnvironmentMock.h"
 #include "VirtualMachineMock.h"
 
 #include "utils/Random.h"
