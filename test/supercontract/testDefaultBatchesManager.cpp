@@ -26,7 +26,7 @@ TEST(TEST_NAME, BatchTest) {
     // addCall
     // addBlockInfo - false
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -56,11 +56,10 @@ TEST(TEST_NAME, BatchTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -149,7 +148,7 @@ TEST(TEST_NAME, AllFalseTest) {
     // addBlockInfo - false  (batch3)
     // addBlockInfo - false
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -179,11 +178,10 @@ TEST(TEST_NAME, AllFalseTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -291,7 +289,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -321,11 +319,10 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -408,7 +405,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -439,11 +436,10 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -527,7 +523,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     // addBlockInfo - false (batch4)
     // storageSynchronised = 2
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -558,11 +554,10 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -637,16 +632,16 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     // Test procedure:
     // enabledSince = 0
     // addCall
-    // addBLockInfo(height 20) - true
+    // addBLockInfo - true
     // addCall
-    // addBLockInfo(height 21) - false
+    // addBLockInfo - false
     // enabledSince = null opt (disabled)
     // addCall
-    // addBLockInfo(height 22) - true
+    // addBLockInfo - true
     // addCall
-    // addBlockInfo(height 23) - false
+    // addBlockInfo - false
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -677,11 +672,10 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
@@ -817,11 +811,10 @@ TEST(TEST_NAME, MultipleEnableSincedTest) {
     std::vector<Block> blocks;
     std::vector<CallRequestParameters> requests;
 
-    for(auto i=1; i<=4; i++){
-        uint64_t height = 0;
+    for(uint64_t i=1; i<=12; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                ++height
+                i
         };
         blocks.push_back(block);
     }
