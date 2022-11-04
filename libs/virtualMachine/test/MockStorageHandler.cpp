@@ -26,8 +26,9 @@ void MockStorageHandler::read(
         std::vector<uint8_t> buffer;
         std::string myText;
         int i = 0;
-        while (getline(m_reader, myText) || i < 16 * 1024) {
+        while (getline(m_reader, myText) && i < 16 * 1024) {
             std::vector<uint8_t> temp(myText.begin(), myText.end());
+            temp.push_back((int)'\n');
             buffer.insert(buffer.end(), temp.begin(), temp.end());
             i += myText.size();
         }
@@ -87,11 +88,11 @@ void MockStorageHandler::hasNext(
     if (iteratorID != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
-        try {
-            m_iterator++; // Idk what is the corresponding function to hasNext
-            callback->postReply(std::move(true));
-        } catch (...) {
+        if (m_iterator->path().string() == "../../libs/internet") {
             callback->postReply(std::move(false));
+        } else {
+            m_iterator++;
+            callback->postReply(std::move(true));
         }
     }
 }
@@ -149,22 +150,28 @@ void MockStorageHandler::isFile(
 void MockStorageHandler::createDir(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    auto ret = std::filesystem::create_directory(path);
-    callback->postReply(std::move(ret));
+    if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
+        auto ret = std::filesystem::create_directory(path);
+        callback->postReply(std::move(ret));
+    }
+    callback->postReply(std::move(true));
 }
 
 void MockStorageHandler::moveFile(
     const std::string& oldPath,
     const std::string& newPath,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    std::filesystem::rename(oldPath, newPath);
-    callback->postReply(std::move(true));
+    if (!std::filesystem::is_regular_file(newPath) || !std::filesystem::exists(newPath)) {
+        std::filesystem::rename(oldPath, newPath);
+        callback->postReply(std::move(true));
+    }
+    callback->postReply(std::move(false));
 }
 
 void MockStorageHandler::removeFile(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    auto ret = std::filesystem::remove(path);
+    auto ret = std::filesystem::remove_all(path);
     callback->postReply(std::move(ret));
 }
 

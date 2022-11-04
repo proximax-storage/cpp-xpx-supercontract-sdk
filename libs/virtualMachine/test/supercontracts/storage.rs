@@ -4,29 +4,41 @@ pub mod file;
 pub mod filesystem;
 pub mod internet;
 
-use sdk::file::FileWriter;
-use serial_test::serial;
-use std::{
-    cmp::min,
-    io::{BufWriter, Write},
-};
+use crate::file::{FileReader, FileWriter};
+use crate::filesystem::*;
+use std::io::{BufReader, BufWriter, Read, Write};
 
 #[no_mangle]
 pub unsafe extern "C" fn run() -> u32 {
     let test_case = "Hi wasmer.\nGood to see you.\n".as_bytes();
-    let file = unsafe { FileWriter::new("../../test.txt".to_string()).unwrap() };
+    let file = FileWriter::new("../../test.txt").unwrap();
     let mut writer = BufWriter::new(file);
-    let ret = writer.write(test_case).unwrap();
+    writer.write(test_case).unwrap();
     // flush to ensure the buffer wrapped by the BufWriter is all written in the file
     writer.flush().unwrap(); // https://stackoverflow.com/questions/69819990/whats-the-difference-between-flush-and-sync-all#:~:text=So%20what%20is,%27s%20documentation).
 
-    let file = unsafe { FileReader::new("../../test.txt".to_string()).unwrap() };
+    let file = FileReader::new("../../test.txt").unwrap();
     let mut reader = BufReader::new(file);
     let mut big_buffer = Vec::new();
     reader.read_to_end(&mut big_buffer).unwrap();
 
-    if test_case == big_buffer {
-        return 1;
+    if test_case != big_buffer {
+        return 0;
     }
-    return 0;
+
+    create_dir("../../move").unwrap();
+
+    move_file("../../test.txt", "../../move/moved.txt").unwrap();
+
+    if !path_exists("../../move/moved.txt") {
+        return 888;
+    }
+
+    if !is_file("../../move/moved.txt") {
+        return 999;
+    }
+
+    remove_file("../../move").unwrap();
+
+    return 1;
 }
