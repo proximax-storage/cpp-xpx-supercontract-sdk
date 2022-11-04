@@ -33,6 +33,7 @@ private:
 
     std::unique_ptr<grpc::ClientAsyncReaderWriter<supercontractserver::Request, supercontractserver::Response>> m_stream;
 
+    bool                                                     m_receivedExecutionResult = false;
     std::shared_ptr<AsyncQueryCallback<CallExecutionResult>> m_callback;
 
     std::weak_ptr<VirtualMachineInternetQueryHandler> m_internetQueryHandler;

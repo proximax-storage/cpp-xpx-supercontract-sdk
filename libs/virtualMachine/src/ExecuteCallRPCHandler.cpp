@@ -137,6 +137,7 @@ void ExecuteCallRPCHandler::processExecuteCallResponse(
         // m_proofOfExecution
     };
 
+    m_receivedExecutionResult = true;
     postResponse(std::move(executionResult));
 }
 
@@ -287,7 +288,7 @@ void ExecuteCallRPCHandler::finish() {
     m_tagQuery.reset();
     m_responseHandler.reset();
 
-    if (m_callback) {
+    if (!m_receivedExecutionResult) {
         m_context.TryCancel();
     }
 

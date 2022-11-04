@@ -447,7 +447,6 @@ TEST(VirtualMachine, WrongIP) {
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             
             p.set_value();
-            // TODO res == true
             ASSERT_FALSE(res);
         }, [] {}, environment, false, false);
 
@@ -1082,7 +1081,7 @@ TEST(VirtualMachine, FaultyStorage) {
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             p.set_value();
             ASSERT_FALSE(res);
-            ASSERT_EQ(res.error(), storage::StorageError::storage_unavailable);
+            ASSERT_EQ(res.error(), ExecutionError::storage_unavailable);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
@@ -1146,9 +1145,8 @@ TEST(VirtualMachine, NullStorageHandler) {
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
             
             p.set_value();
-            ASSERT_TRUE(res);
             ASSERT_FALSE(res);
-            ASSERT_EQ(res.error(), storage::StorageError::storage_unavailable);
+            ASSERT_EQ(res.error(), ExecutionError::storage_unavailable);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
