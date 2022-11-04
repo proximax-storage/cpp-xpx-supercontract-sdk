@@ -934,22 +934,23 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //    threadManager.stop();
 //}
 
-TEST(TEST_NAME, DisableAndEnableEnabledSinceTest) {
+TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     // Test procedure:
-    // enabledSince = 0 (enabled)
+    // enabledSince = 0         (enabled)
     // addBLockInfo1 - true
     // addBLockInfo2 - false
     // addCall
     // addBLockInfo3 - true
     // addCall
     // addBlockInfo4 - false
-    // enabledSince = 9 (disabled at addBlock 5-8, enabled at addBlock 9-12
+    // enabledSince = null ptr  (disabled)
     // addBlockInfo5 - true
     // addBlockInfo6 - false
     // addCall
     // addBlockInfo7 - true
     // addCall
     // addBlockInfo8 - false
+    // enabledSince = 9         (enabled)
     // addBlockInfo9  - true
     // addBlockInfo10 - false
     // addCall
@@ -1031,8 +1032,9 @@ TEST(TEST_NAME, DisableAndEnableEnabledSinceTest) {
         batchesManager->addBlockInfo(blocks[2]);
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[3]);
-
-        batchesManager->setAutomaticExecutionsEnabledSince(9);
+        std::cout << "here \n";
+        batchesManager->setAutomaticExecutionsEnabledSince(std::nullopt);
+        std::cout << "here2 \n";
         batchesManager->addBlockInfo(blocks[4]);
         batchesManager->addBlockInfo(blocks[5]);
         batchesManager->addManualCall(requests[2]);
@@ -1040,6 +1042,7 @@ TEST(TEST_NAME, DisableAndEnableEnabledSinceTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[7]);
 
+        batchesManager->setAutomaticExecutionsEnabledSince(9);
         batchesManager->addBlockInfo(blocks[8]);
         batchesManager->addBlockInfo(blocks[9]);
         batchesManager->addManualCall(requests[4]);
@@ -1050,46 +1053,38 @@ TEST(TEST_NAME, DisableAndEnableEnabledSinceTest) {
     sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
-        // enabled
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 1);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
-        ASSERT_EQ(batch2.m_callRequests.size(), 2);
+        ASSERT_EQ(batch2.m_callRequests.size(), 1);
         ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
-        // disabled
         auto batch4 = batchesManager->nextBatch();
         ASSERT_EQ(batch4.m_batchIndex, 4);
-        ASSERT_EQ(batch4.m_callRequests.size(), 1);
-        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
-        ASSERT_TRUE(batchesManager->hasNextBatch());
-        auto batch5 = batchesManager->nextBatch();
-        ASSERT_EQ(batch5.m_batchIndex, 5);
-        ASSERT_EQ(batch5.m_callRequests.size(), 2);
-        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch5.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch4.m_callRequests.size(), 2);
+        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch4.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         // enabled
+        auto batch5 = batchesManager->nextBatch();
+        ASSERT_EQ(batch5.m_batchIndex, 5);
+        ASSERT_EQ(batch5.m_callRequests.size(), 1);
+        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_FALSE(batchesManager->hasNextBatch());
         auto batch6 = batchesManager->nextBatch();
         ASSERT_EQ(batch6.m_batchIndex, 6);
-        ASSERT_EQ(batch6.m_callRequests.size(), 1);
-        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
-        ASSERT_FALSE(batchesManager->hasNextBatch());
-        auto batch7 = batchesManager->nextBatch();
-        ASSERT_EQ(batch7.m_batchIndex, 7);
-        ASSERT_EQ(batch7.m_callRequests.size(), 2);
-        ASSERT_EQ(batch7.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch7.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch6.m_callRequests.size(), 2);
+        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch6.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch8 = batchesManager->nextBatch();
         ASSERT_EQ(batch8.m_batchIndex, 8);
