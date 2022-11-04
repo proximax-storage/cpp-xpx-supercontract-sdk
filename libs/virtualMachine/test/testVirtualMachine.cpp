@@ -5,7 +5,9 @@
 */
 
 #include "MockInternetHandler.h"
+#include "FaultyMockStorageHandler.h"
 #include "MockStorageHandler.h"
+#include <storage/StorageErrorCode.h>
 #include "TestUtils.h"
 #include <gtest/gtest.h>
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
@@ -1017,6 +1019,140 @@ TEST(VirtualMachine, IteratorTest) {
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
                                      std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), storageHandler, callback);
+    });
+
+    barrier.get();
+
+    threadManager.execute([&] { pVirtualMachine.reset(); });
+
+    threadManager.stop();
+    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+}
+
+TEST(VirtualMachine, FaultyStorage) {
+
+    GlobalEnvironmentMock environment;
+    auto& threadManager = environment.threadManager();
+
+    auto storageObserver = std::make_shared<StorageObserverMock>();
+
+    std::shared_ptr<VirtualMachine> pVirtualMachine;
+
+    std::shared_ptr<FaultyMockStorageHandler> storageHandler;
+
+    std::promise<void> p;
+    auto barrier = p.get_future();
+
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+    threadManager.execute([&] {
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/storage_faulty.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
+        exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
+        // TODO Fill in the address
+        std::string address = "127.0.0.1:50051";
+        RPCVirtualMachineBuilder builder;
+        pVirtualMachine = builder.build(storageObserver, environment, address);
+
+        // TODO fill in the callRequest fields
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+                ContractKey(),
+                CallId(),
+                "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                25000000000,
+                26 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        BlockHash(),
+                        0,
+                        0,
+                        {}
+                }
+        }, CallRequest::CallLevel::MANUAL);
+
+        storageHandler = std::make_shared<FaultyMockStorageHandler>();
+
+        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
+            p.set_value();
+            ASSERT_FALSE(res);
+            ASSERT_EQ(res.error(), storage::StorageError::storage_unavailable);
+        }, [] {}, environment, false, false);
+
+        pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), storageHandler, callback);
+    });
+
+    barrier.get();
+
+    threadManager.execute([&] { pVirtualMachine.reset(); });
+
+    threadManager.stop();
+    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+    std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
+                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+}
+
+TEST(VirtualMachine, NullStorageHandler) {
+
+    GlobalEnvironmentMock environment;
+    auto& threadManager = environment.threadManager();
+
+    auto storageObserver = std::make_shared<StorageObserverMock>();
+
+    std::shared_ptr<VirtualMachine> pVirtualMachine;
+
+    std::promise<void> p;
+    auto barrier = p.get_future();
+
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+    threadManager.execute([&] {
+        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
+        std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/storage.rs",
+                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
+                              copyOptions);
+        exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
+        // TODO Fill in the address
+        std::string address = "127.0.0.1:50051";
+        RPCVirtualMachineBuilder builder;
+        pVirtualMachine = builder.build(storageObserver, environment, address);
+
+        // TODO fill in the callRequest fields
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+                ContractKey(),
+                CallId(),
+                "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                25000000000,
+                26 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        BlockHash(),
+                        0,
+                        0,
+                        {}
+                }
+        }, CallRequest::CallLevel::MANUAL);
+
+        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
+            
+            p.set_value();
+            ASSERT_TRUE(res);
+            ASSERT_FALSE(res);
+            ASSERT_EQ(res.error(), storage::StorageError::storage_unavailable);
+        }, [] {}, environment, false, false);
+
+        pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
