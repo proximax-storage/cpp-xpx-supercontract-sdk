@@ -763,17 +763,30 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     threadManager.stop();
 }
 
-TEST(TEST_NAME, AllInOneTest) {
+TEST(TEST_NAME, MultipleEnableSincedTest) {
     // Test procedure:
-    // enabledSince = 0
-    // addCall x2
-    // addBLockInfo(height 20) - true (batch1)
-    // addBLockInfo(height 21) - true (batch2)
-    // addBLockInfo(height 22) - false
-    // addCall x2
-    // addBlockInfo(height 23) - false (batch3 only 2 addCall)
+    // enabledSince = 0 (enabled)
+    // addBLockInfo1 - true
+    // addBLockInfo2 - false
+    // addCall
+    // addBLockInfo3 - true
+    // addCall
+    // addBlockInfo4 - false
+    // enabledSince = 9 (disabled at addBlock 5-8, enabled at addBlock 9-12
+    // addBlockInfo5 - true
+    // addBlockInfo6 - false
+    // addCall
+    // addBlockInfo7 - true
+    // addCall
+    // addBlockInfo8 - false
+    // addBlockInfo9  - true
+    // addBlockInfo10 - false
+    // addCall
+    // addBlockInfo11 - true
+    // addCall
+    // addBlockInfo12 - false
     // create contract environment
-    srand(time(0));
+    srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -788,7 +801,7 @@ TEST(TEST_NAME, AllInOneTest) {
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
     ThreadManager threadManager;
-    std::deque<bool> result = {true, true, false, false};
+    std::deque<bool> result = {true, false, true, false, true, false, true, false, true, false, true, false};
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
@@ -813,7 +826,7 @@ TEST(TEST_NAME, AllInOneTest) {
         blocks.push_back(block);
     }
 
-    for(auto i=1; i<=4; i++){
+    for(auto i=1; i<=6; i++){
         std::vector<uint8_t> params;
         CallRequestParameters request = {
                 utils::generateRandomByteValue<ContractKey>(),
@@ -842,40 +855,76 @@ TEST(TEST_NAME, AllInOneTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addManualCall(requests[0]);
-        batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[0]);
-
         batchesManager->addBlockInfo(blocks[1]);
-
+        batchesManager->addManualCall(requests[0]);
         batchesManager->addBlockInfo(blocks[2]);
-
-        batchesManager->addManualCall(requests[2]);
-        batchesManager->addManualCall(requests[3]);
+        batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[3]);
+
+        batchesManager->setAutomaticExecutionsEnabledSince(9);
+        batchesManager->addBlockInfo(blocks[4]);
+        batchesManager->addBlockInfo(blocks[5]);
+        batchesManager->addManualCall(requests[2]);
+        batchesManager->addBlockInfo(blocks[6]);
+        batchesManager->addManualCall(requests[3]);
+        batchesManager->addBlockInfo(blocks[7]);
+
+        batchesManager->addBlockInfo(blocks[8]);
+        batchesManager->addBlockInfo(blocks[9]);
+        batchesManager->addManualCall(requests[4]);
+        batchesManager->addBlockInfo(blocks[10]);
+        batchesManager->addManualCall(requests[5]);
+        batchesManager->addBlockInfo(blocks[11]);
     });
     sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
+        // enabled
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
-        ASSERT_EQ(batch1.m_callRequests.size(), 3);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[2].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch1.m_callRequests.size(), 1);
+        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
-
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
-        ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch2.m_callRequests.size(), 2);
+        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
-
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
-        ASSERT_EQ(batch3.m_callRequests.size(), 2);
+        ASSERT_EQ(batch3.m_callRequests.size(), 1);
         ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch3.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        // disabled
+        auto batch4 = batchesManager->nextBatch();
+        ASSERT_EQ(batch4.m_batchIndex, 4);
+        ASSERT_EQ(batch4.m_callRequests.size(), 1);
+        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        auto batch5 = batchesManager->nextBatch();
+        ASSERT_EQ(batch5.m_batchIndex, 5);
+        ASSERT_EQ(batch5.m_callRequests.size(), 2);
+        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch5.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        // enabled
+        auto batch6 = batchesManager->nextBatch();
+        ASSERT_EQ(batch6.m_batchIndex, 6);
+        ASSERT_EQ(batch6.m_callRequests.size(), 1);
+        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_FALSE(batchesManager->hasNextBatch());
+        auto batch7 = batchesManager->nextBatch();
+        ASSERT_EQ(batch7.m_batchIndex, 7);
+        ASSERT_EQ(batch7.m_callRequests.size(), 2);
+        ASSERT_EQ(batch7.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch7.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        auto batch8 = batchesManager->nextBatch();
+        ASSERT_EQ(batch8.m_batchIndex, 8);
+        ASSERT_EQ(batch8.m_callRequests.size(), 1);
+        ASSERT_EQ(batch8.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_FALSE(batchesManager->hasNextBatch());
 
         barrier.set_value();
@@ -891,8 +940,6 @@ TEST(TEST_NAME, AllInOneTest) {
 }
 
 //    TODO
-//    1. add multiple enable and disable storage synchronize test case
-//    2. add random loop
-//    3. add virtual machine postReply error
-//    4. add delayBatch test case
+//    1. add virtual machine postReply error
+//    2. add delayBatch test case
 }
