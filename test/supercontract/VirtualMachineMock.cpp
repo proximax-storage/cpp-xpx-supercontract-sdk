@@ -5,11 +5,16 @@
 */
 
 #include "VirtualMachineMock.h"
+#include "virtualMachine/VirtualMachineErrorCode.h"
 
 namespace sirius::contract::test {
 
-VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager, std::deque<bool> result)
-        : m_threadManager(threadManager), m_result(std::move(result)) {}
+VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager,
+                                       std::deque<bool> result,
+                                       bool virtualMachineIsFail)
+        : m_threadManager(threadManager),
+        m_result(std::move(result)),
+        m_virtualMachineIsFail(virtualMachineIsFail) {}
 
 void VirtualMachineMock::executeCall(const vm::CallRequest &request,
                                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
@@ -19,14 +24,20 @@ void VirtualMachineMock::executeCall(const vm::CallRequest &request,
     auto executionResult = m_result.front();
     auto random = rand()%3000;
     m_result.pop_front();
+    count++;
     m_timers[request.m_callId] = m_threadManager.startTimer(random, [=, this]() mutable {
-        vm::CallExecutionResult result{
-                executionResult,
-                0,
-                0,
-                0,
-        };
-        callback->postReply(result);
+        if(m_virtualMachineIsFail == true && count <= 3){
+            callback->postReply(tl::unexpected<std::error_code>
+                    (vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
+        }else{
+            vm::CallExecutionResult result{
+                    executionResult,
+                    0,
+                    0,
+                    0,
+            };
+            callback->postReply(result);
+        }
     });
 }
 }
