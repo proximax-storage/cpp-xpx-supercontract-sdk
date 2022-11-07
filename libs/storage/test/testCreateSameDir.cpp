@@ -18,26 +18,38 @@ namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
-namespace {
+namespace move::createDirAndMove {
 
+namespace {
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
 private:
     bool rootFolderVisited = false;
     T m_fileHandler;
+    bool m_before;
 
 public:
-    FilesystemSimpleTraversal(T&& fileHandler)
-        : m_fileHandler(std::move(fileHandler)) {}
+    FilesystemSimpleTraversal(T&& fileHandler, bool before)
+        : m_fileHandler(std::move(fileHandler)), m_before(before) {}
 
     void acceptFolder(const Folder& folder) override {
-        ASSERT_FALSE(rootFolderVisited);
-        rootFolderVisited = true;
+        // ASSERT_TRUE(rootFolderVisited);
+        // rootFolderVisited = true;
 
         const auto& children = folder.children();
 
-        ASSERT_EQ(children.size(), 1);
+        if (m_before) {
+            ASSERT_EQ(children.size(), 1);
+        } else {
+            if (folder.name() == "moved") {
+                ASSERT_EQ(children.size(), 1);
+            } else if (folder.name() == "tests") {
+                ASSERT_EQ(children.size(), 0);
+            } else {
+                ASSERT_EQ(children.size(), 2);
+            }
+        }
 
         for (const auto& [name, entry] : children) {
             entry->acceptTraversal(*this);
@@ -49,38 +61,23 @@ public:
         m_fileHandler(file.name());
     }
 };
+} // namespace
 
-void onPathReceived(const DriveKey& driveKey,
-                    GlobalEnvironment& environment,
-                    std::shared_ptr<Storage> pStorage,
-                    std::promise<void>& promise,
-                    const std::string& path) {
-    ASSERT_TRUE(fs::exists(path));
-
-    std::ifstream stream(path.c_str());
-
-    std::ostringstream stringStream;
-    stringStream << stream.rdbuf();
-
-    std::string content = stringStream.str();
-
-    ASSERT_EQ(content, "");
-
-    promise.set_value();
-}
-
+namespace move::write {
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
                           std::shared_ptr<Storage> pStorage,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
-    FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
-        auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
-            ASSERT_TRUE(res);
-            onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
-        pStorage->absolutePath(driveKey, "test.txt", callback);
-    });
-    traversal.acceptFolder(*folder);
+    // move::createDirAndMove::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
+    //     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
+    //         ASSERT_TRUE(res);
+    //         onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
+    //     pStorage->absolutePath(driveKey, "tests/test.txt", callback);
+    // },
+    //                                                             true);
+    // traversal.acceptFolder(*folder);
+    promise.set_value();
 }
 
 void onAppliedStorageModifications(const DriveKey& driveKey,
@@ -117,10 +114,10 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
     pStorage->evaluateStorageHash(driveKey, callback);
 }
 
-void onClosedFile(const DriveKey& driveKey,
-                  GlobalEnvironment& environment,
-                  std::shared_ptr<Storage> pStorage,
-                  std::promise<void>& barrier) {
+void onCreatedDirectory2(const DriveKey& driveKey,
+                         GlobalEnvironment& environment,
+                         std::shared_ptr<Storage> pStorage,
+                         std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
@@ -128,52 +125,27 @@ void onClosedFile(const DriveKey& driveKey,
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
 }
 
-void onFlushed(const DriveKey& driveKey,
-               GlobalEnvironment& environment,
-               std::shared_ptr<Storage> pStorage,
-               std::promise<void>& barrier, uint64_t fileId) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
-
-    pStorage->closeFile(driveKey, fileId, callback);
-}
-
-void onWrittenFile(const DriveKey& driveKey,
-                   GlobalEnvironment& environment,
-                   std::shared_ptr<Storage> pStorage,
-                   std::promise<void>& barrier,
-                   uint64_t fileId) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        onFlushed(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
-
-    pStorage->flush(driveKey, fileId, callback);
-}
-
-void onOpenedFile(const DriveKey& driveKey,
-                  GlobalEnvironment& environment,
-                  std::shared_ptr<Storage> pStorage,
-                  std::promise<void>& barrier,
-                  uint64_t fileId) {
+void onCreatedDirectory(const DriveKey& driveKey,
+                        GlobalEnvironment& environment,
+                        std::shared_ptr<Storage> pStorage,
+                        std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         ASSERT_FALSE(res);
-        ASSERT_EQ(res.error(), storage::StorageError::write_file_error);
-        onWrittenFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
+        ASSERT_EQ(res.error(), storage::StorageError::create_directory_error);
+        onCreatedDirectory2(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
-    std::string s("data");
-    pStorage->writeFile(driveKey, 1315646, {s.begin(), s.end()}, callback);
+    pStorage->createDirectories(driveKey, "tests", callback);
 }
 
 void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      GlobalEnvironment& environment,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onOpenedFile(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
+        onCreatedDirectory(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
-    pStorage->openFile(driveKey, "test.txt", OpenFileMode::WRITE, callback);
+    pStorage->createDirectories(driveKey, "tests", callback);
 }
 
 void onModificationsInitiated(const DriveKey& driveKey,
@@ -186,8 +158,9 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
+} // namespace move::write
 
-TEST(Storage, WriteWithWrongID) {
+TEST(Storage, CreateSameDir) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -195,7 +168,7 @@ TEST(Storage, WriteWithWrongID) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{15}};
+    DriveKey driveKey{{17}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -204,7 +177,7 @@ TEST(Storage, WriteWithWrongID) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
-            onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
+            move::write::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
@@ -213,4 +186,4 @@ TEST(Storage, WriteWithWrongID) {
     threadManager.stop();
 }
 }
-} // namespace sirius::contract::storage::test
+} // namespace sirius::contract::storage::test::move::createDirAndMove

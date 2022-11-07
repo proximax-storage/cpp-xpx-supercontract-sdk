@@ -64,7 +64,7 @@ void onPathReceived(const DriveKey& driveKey,
 
     std::string content = stringStream.str();
 
-    ASSERT_EQ(content, "");
+    ASSERT_EQ(content, "data");
 
     promise.set_value();
 }
@@ -145,10 +145,11 @@ void onWrittenFile(const DriveKey& driveKey,
                    std::promise<void>& barrier,
                    uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
+        ASSERT_FALSE(res);
+        ASSERT_EQ(res.error(), storage::StorageError::flush_error);
         onFlushed(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
-    pStorage->flush(driveKey, fileId, callback);
+    pStorage->flush(driveKey, 123456789, callback);
 }
 
 void onOpenedFile(const DriveKey& driveKey,
@@ -157,12 +158,11 @@ void onOpenedFile(const DriveKey& driveKey,
                   std::promise<void>& barrier,
                   uint64_t fileId) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_FALSE(res);
-        ASSERT_EQ(res.error(), storage::StorageError::write_file_error);
+        ASSERT_TRUE(res);
         onWrittenFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
 
     std::string s("data");
-    pStorage->writeFile(driveKey, 1315646, {s.begin(), s.end()}, callback);
+    pStorage->writeFile(driveKey, fileId, {s.begin(), s.end()}, callback);
 }
 
 void onSandboxModificationsInitiated(const DriveKey& driveKey,
@@ -187,7 +187,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
 
-TEST(Storage, WriteWithWrongID) {
+TEST(Storage, FlushWithWrongID) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -195,7 +195,7 @@ TEST(Storage, WriteWithWrongID) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{15}};
+    DriveKey driveKey{{18}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
