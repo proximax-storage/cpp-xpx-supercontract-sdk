@@ -70,7 +70,6 @@ public:
         m_fileHandler(file.name());
     }
 };
-} // namespace
 
 namespace createFolders {
 static const std::string folders[6] = {"test", "drive", "mod", "sc", "mod/gs", "drive/unit"};
@@ -357,7 +356,7 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
 void onIteratorDestroyed(const DriveKey& driveKey,
                          GlobalEnvironment& environment,
                          std::shared_ptr<Storage> pStorage,
-                         std::promise<void>& barrier, uint64_t id) {
+                         std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
@@ -372,9 +371,9 @@ void onIteratorHasEnded(const DriveKey& driveKey,
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
         ASSERT_FALSE(res);
         ASSERT_EQ(res.error(), storage::StorageError::destroy_iterator_error);
-        onIteratorDestroyed(driveKey, environment, pStorage, barrier, 1234564612); }, [] {}, environment, false, true);
+        onIteratorDestroyed(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
-    pStorage->directoryIteratorDestroy(driveKey, id, callback);
+    pStorage->directoryIteratorDestroy(driveKey, 1231643435, callback);
 }
 
 void onIteratorHasNext(const DriveKey& driveKey,
@@ -429,7 +428,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 }
 } // namespace iterator
 
-TEST(Storage, Iterator) {
+TEST(Storage, IteratorDestroyError) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -437,7 +436,7 @@ TEST(Storage, Iterator) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{19}};
+    DriveKey driveKey{{8}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -485,5 +484,6 @@ TEST(Storage, Iterator) {
     barrierIterate.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

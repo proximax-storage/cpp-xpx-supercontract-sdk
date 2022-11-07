@@ -35,7 +35,7 @@ public:
         rootFolderVisited = true;
 
         const auto& children = folder.children();
-        
+
         ASSERT_EQ(children.size(), 0);
 
         for (const auto& [name, entry] : children) {
@@ -196,7 +196,7 @@ TEST(Storage, DiscardSandboxModification) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{12}};
+    DriveKey driveKey{{4}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";

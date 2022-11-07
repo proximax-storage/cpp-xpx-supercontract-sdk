@@ -51,8 +51,6 @@ public:
     }
 };
 
-namespace remove {
-
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
                           std::shared_ptr<Storage> pStorage,
@@ -129,14 +127,13 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace remove
 
 TEST(Storage, RemoveNonExisting) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{9}};
+    DriveKey driveKey{{16}};
 
     std::promise<void> pRemove;
     auto barrierRemove = pRemove.get_future();
@@ -148,7 +145,7 @@ TEST(Storage, RemoveNonExisting) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRemove](auto&& res) {
             ASSERT_TRUE(res);
-            remove::onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
+            onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 

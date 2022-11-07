@@ -50,8 +50,6 @@ public:
     }
 };
 
-namespace read {
-
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
                           std::shared_ptr<Storage> pStorage,
@@ -157,14 +155,13 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace read
 
 TEST(Storage, ReadNonExisting) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{8}};
+    DriveKey driveKey{{13}};
 
     std::promise<void> pRead;
     auto barrierRead = pRead.get_future();
@@ -176,7 +173,7 @@ TEST(Storage, ReadNonExisting) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRead](auto&& res) {
             ASSERT_TRUE(res);
-            read::onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
+            onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 

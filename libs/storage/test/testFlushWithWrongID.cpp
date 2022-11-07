@@ -195,7 +195,7 @@ TEST(Storage, FlushWithWrongID) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{18}};
+    DriveKey driveKey{{6}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";

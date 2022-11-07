@@ -17,6 +17,8 @@ namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
+namespace {
+
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -48,7 +50,7 @@ public:
     }
 };
 
-namespace remove::write {
+namespace write {
 void onPathReceived(const DriveKey& driveKey,
                     GlobalEnvironment& environment,
                     std::shared_ptr<Storage> pStorage,
@@ -174,7 +176,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace remove::write
+} // namespace write
 
 namespace remove {
 
@@ -264,7 +266,7 @@ TEST(Storage, Remove) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{3}};
+    DriveKey driveKey{{15}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -273,7 +275,7 @@ TEST(Storage, Remove) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
-            remove::write::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
+            write::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
@@ -296,5 +298,6 @@ TEST(Storage, Remove) {
     barrierRemove.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

@@ -18,7 +18,7 @@ namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
-namespace iterator::fs {
+namespace {
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -70,9 +70,8 @@ public:
         m_fileHandler(file.name());
     }
 };
-} // namespace iterator::fs
 
-namespace iteratorNoNext::createFiles {
+namespace createFiles {
 void onFileOpened(const DriveKey& driveKey,
                   GlobalEnvironment& environment,
                   std::shared_ptr<Storage> pStorage,
@@ -200,7 +199,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace iteratorNoNext::createFiles
+} // namespace createFiles
 
 namespace iteratorNoNext {
 static bool flag = false;
@@ -319,7 +318,7 @@ TEST(Storage, IteratorNoNext) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{7}};
+    DriveKey driveKey{{10}};
 
     std::promise<void> pCreateFile;
     auto barrierCreateFile = pCreateFile.get_future();
@@ -331,7 +330,7 @@ TEST(Storage, IteratorNoNext) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pCreateFile](auto&& res) {
             ASSERT_TRUE(res);
-            iteratorNoNext::createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
+            createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
@@ -354,5 +353,6 @@ TEST(Storage, IteratorNoNext) {
     barrierIterate.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

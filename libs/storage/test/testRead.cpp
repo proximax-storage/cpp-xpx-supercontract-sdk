@@ -17,6 +17,8 @@ namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
+namespace {
+
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -310,7 +312,7 @@ TEST(Storage, Read) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{2}};
+    DriveKey driveKey{{12}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -342,5 +344,6 @@ TEST(Storage, Read) {
     barrierRead.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

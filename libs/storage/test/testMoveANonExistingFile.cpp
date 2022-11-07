@@ -53,8 +53,6 @@ public:
     }
 };
 
-namespace move {
-
 void onPathReceived(const DriveKey& driveKey,
                     GlobalEnvironment& environment,
                     std::shared_ptr<Storage> pStorage,
@@ -166,7 +164,6 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace move
 
 TEST(Storage, MoveNonExistingFile) {
 
@@ -185,7 +182,7 @@ TEST(Storage, MoveNonExistingFile) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRemove](auto&& res) {
             ASSERT_TRUE(res);
-            move::onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
+            onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
