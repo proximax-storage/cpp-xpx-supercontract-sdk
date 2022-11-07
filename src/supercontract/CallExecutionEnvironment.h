@@ -12,6 +12,7 @@
 
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
+#include <virtualMachine/VirtualMachineStorageQueryHandler.h>
 #include "internet/InternetConnection.h"
 #include "ExecutorEnvironment.h"
 #include "ContractEnvironment.h"
@@ -21,7 +22,8 @@ namespace sirius::contract {
 class CallExecutionEnvironment
         : private SingleThread
         , public vm::VirtualMachineInternetQueryHandler
-        , public vm::VirtualMachineBlockchainQueryHandler {
+        , public vm::VirtualMachineBlockchainQueryHandler
+        , public vm::VirtualMachineStorageQueryHandler {
 
 private:
 
@@ -144,6 +146,38 @@ public:
 //    }
 //
 //    // endregion
+
+    void openFile(const std::string& path, const std::string& mode,
+                  std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void write(uint64_t fileId, std::vector<uint8_t> buffer,
+               std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void flush(uint64_t fileId, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void closeFile(uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+    void createFSIterator(const std::string& path, bool recursive,
+                          std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void hasNext(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void next(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
+
+    void removeFileIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void destroyFSIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+    void pathExist(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void isFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void createDir(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void moveFile(const std::string& oldPath, const std::string& newPath,
+                  std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void removeFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
 };
 

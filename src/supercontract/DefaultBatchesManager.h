@@ -10,6 +10,7 @@
 
 #include "ExecutorEnvironment.h"
 #include "ContractEnvironment.h"
+#include "CallExecutionManager.h"
 
 #include <supercontract/SingleThread.h>
 
@@ -33,7 +34,7 @@ private:
     struct AutorunCallInfo {
         uint64_t m_batchIndex;
         BlockHash m_blockHash;
-        std::shared_ptr<AsyncQuery> m_query;
+        std::unique_ptr<CallExecutionManager> m_callExecutionManager;
         Timer m_repeatTimer;
     };
 
@@ -79,7 +80,7 @@ private:
 
     void onSuperContractCallFailed(const CallId& callId, std::error_code&& ec);
 
-    std::shared_ptr<AsyncQuery> runAutorunCall(const CallId& callId);
+    std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId);
 
 public:
 

@@ -7,6 +7,7 @@
 #include "BaseContractTask.h"
 #include "CallExecutionManager.h"
 #include "BatchesManager.h"
+#include "CallExecutionEnvironment.h"
 
 namespace sirius::contract {
 
@@ -15,11 +16,12 @@ class BatchExecutionTask
 
 private:
 
-    Batch m_batch;
+    const Batch m_batch;
+    decltype(m_batch.m_callRequests.begin()) m_callIterator;
 
     std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
 
-    std::unique_ptr<CallExecutionManager> m_callManager;
+    std::unique_ptr<CallExecutionManager> m_callExecutionManager;
 
     std::shared_ptr<AsyncQuery> m_storageQuery;
 

@@ -5,7 +5,9 @@
 */
 
 #include <supercontract/DefaultBatchesManager.h>
-#include "TestUtils.h"
+#include "ContractEnvironmentMock.h"
+#include "ExecutorEnvironmentMock.h"
+#include "VirtualMachineMock.h"
 
 #include "utils/Random.h"
 #include "gtest/gtest.h"
@@ -23,8 +25,8 @@ TEST(TEST_NAME, BatchTest) {
     // addCall
     // addCall
     // addBlockInfo - false
-
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -89,27 +91,19 @@ TEST(TEST_NAME, BatchTest) {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
     });
+
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[2]);
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -132,6 +126,7 @@ TEST(TEST_NAME, BatchTest) {
         ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_EQ(batch3.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_FALSE(batchesManager->hasNextBatch());
+
         barrier.set_value();
     });
 
@@ -154,6 +149,7 @@ TEST(TEST_NAME, AllFalseTest) {
     // addBlockInfo - false  (batch3)
     // addBlockInfo - false
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -229,26 +225,17 @@ TEST(TEST_NAME, AllFalseTest) {
         batchesManager->addManualCall(requests[6]);
         batchesManager->addManualCall(requests[7]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[8]);
         batchesManager->addManualCall(requests[9]);
         batchesManager->addManualCall(requests[10]);
         batchesManager->addManualCall(requests[11]);
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[12]);
         batchesManager->addManualCall(requests[13]);
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -304,6 +291,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -373,23 +361,14 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         batchesManager->onStorageSynchronized(2);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[2]);
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -429,6 +408,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     // addCall
     // addBlockInfo - false (batch4)
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -499,24 +479,15 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->onStorageSynchronized(2);
         batchesManager->addManualCall(requests[2]);
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -556,6 +527,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     // addBlockInfo - false (batch4)
     // storageSynchronised = 2
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -626,23 +598,14 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[2]);
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         batchesManager->onStorageSynchronized(2);
@@ -683,6 +646,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     // addCall
     // addBlockInfo(height 23) - false
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -753,24 +717,15 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlockInfo(blocks[0]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[1]);
         batchesManager->addBlockInfo(blocks[1]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(std::nullopt);
         batchesManager->addManualCall(requests[2]);
         batchesManager->addBlockInfo(blocks[2]);
-    });
-    sleep(1);
-    threadManager.execute([&] {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -808,7 +763,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     threadManager.stop();
 }
 
-TEST(TEST_NAME, OneExecuteTest) {
+TEST(TEST_NAME, AllInOneTest) {
     // Test procedure:
     // enabledSince = 0
     // addCall x2
@@ -818,6 +773,7 @@ TEST(TEST_NAME, OneExecuteTest) {
     // addCall x2
     // addBlockInfo(height 23) - false (batch3 only 2 addCall)
     // create contract environment
+    srand(time(0));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
@@ -898,7 +854,7 @@ TEST(TEST_NAME, OneExecuteTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlockInfo(blocks[3]);
     });
-    sleep(1);
+    sleep(3);
     std::promise<void> barrier;
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
@@ -933,4 +889,10 @@ TEST(TEST_NAME, OneExecuteTest) {
 
     threadManager.stop();
 }
+
+//    TODO
+//    1. add multiple enable and disable storage synchronize test case
+//    2. add random loop
+//    3. add virtual machine postReply error
+//    4. add delayBatch test case
 }

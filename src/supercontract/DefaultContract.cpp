@@ -273,7 +273,7 @@ void DefaultContract::runSynchronizationTask() {
     m_task->run();
 }
 
-void DefaultContract::delayBatchExecution(Batch&& batch) {
+void DefaultContract::delayBatchExecution(Batch batch) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

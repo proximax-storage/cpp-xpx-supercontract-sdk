@@ -127,4 +127,67 @@ CallExecutionEnvironment::closeConnection(uint64_t connectionId, std::shared_ptr
     callback->postReply(expected<void>());
 }
 
+void CallExecutionEnvironment::openFile(const std::string& path, const std::string& mode,
+                                        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+
+}
+
+void CallExecutionEnvironment::write(uint64_t fileId, std::vector<uint8_t> buffer,
+                                     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+
+}
+
+void CallExecutionEnvironment::flush(uint64_t fileId, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::closeFile(uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) {
+
+}
+
+void CallExecutionEnvironment::createFSIterator(const std::string& path, bool recursive,
+                                                std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+
+}
+
+void CallExecutionEnvironment::hasNext(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::next(uint64_t iteratorID,
+                                    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+
+}
+
+void
+CallExecutionEnvironment::removeFileIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void
+CallExecutionEnvironment::destroyFSIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<void>> callback) {
+
+}
+
+void CallExecutionEnvironment::pathExist(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::isFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::createDir(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::moveFile(const std::string& oldPath, const std::string& newPath,
+                                        std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
+void CallExecutionEnvironment::removeFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+
+}
+
 }
