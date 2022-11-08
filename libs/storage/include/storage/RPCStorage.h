@@ -6,23 +6,21 @@
 
 #pragma once
 
-#include <memory>
-#include <thread>
+#include "RPCTag.h"
+#include "storage/Storage.h"
+#include "storageServer.grpc.pb.h"
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/SingleThread.h"
-#include "storage/Storage.h"
-#include "RPCTag.h"
-
-#include "storageServer.grpc.pb.h"
-
+#include <memory>
+#include <thread>
 
 namespace sirius::contract::storage {
 
 class RPCStorage
-        : private SingleThread, public Storage {
+    : private SingleThread,
+      public Storage {
 
 private:
-
     GlobalEnvironment& m_environment;
 
     std::unique_ptr<storageServer::StorageServer::Stub> m_stub;
@@ -34,10 +32,9 @@ private:
     std::set<RPCTag*> m_activeTags;
 
 public:
-
     RPCStorage(
-            GlobalEnvironment& environment,
-            const std::string& serverAddress);
+        GlobalEnvironment& environment,
+        const std::string& serverAddress);
 
     ~RPCStorage() override;
 
@@ -101,9 +98,14 @@ public:
     void moveFilesystemEntry(const DriveKey& driveKey, const std::string& src, const std::string& dst,
                              std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
-private:
+    void pathExist(const DriveKey& driveKey, const std::string& path,
+                   std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
+    void isFile(const DriveKey& driveKey, const std::string& path,
+                std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+private:
     void waitForRPCResponse();
 };
 
-}
+} // namespace sirius::contract::storage

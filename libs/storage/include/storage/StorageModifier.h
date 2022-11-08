@@ -6,9 +6,8 @@
 
 #pragma once
 
-#include "supercontract/AsyncQuery.h"
 #include "storage/StorageRequests.h"
-
+#include "supercontract/AsyncQuery.h"
 #include <vector>
 
 namespace sirius::contract::storage {
@@ -21,7 +20,6 @@ enum class OpenFileMode {
 class StorageModifier {
 
 public:
-
     virtual ~StorageModifier() = default;
 
     virtual void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
@@ -79,6 +77,12 @@ public:
 
     virtual void moveFilesystemEntry(const DriveKey& driveKey, const std::string& src, const std::string& dst,
                                      std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
+
+    virtual void pathExist(const DriveKey& driveKey, const std::string& path,
+                           std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
+
+    virtual void isFile(const DriveKey& driveKey, const std::string& path,
+                        std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
 };
 
-}
+} // namespace sirius::contract::storage
