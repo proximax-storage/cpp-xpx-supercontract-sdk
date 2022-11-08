@@ -38,7 +38,7 @@ void MockStorageHandler::read(
 
 void MockStorageHandler::write(
     uint64_t fileId,
-    std::vector<uint8_t> buffer,
+    const std::vector<uint8_t>& buffer,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
     if (fileId != 102112022) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::write_file_error)));
@@ -51,12 +51,13 @@ void MockStorageHandler::write(
 
 void MockStorageHandler::flush(
     uint64_t fileId,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
     if (fileId != 102112022) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::flush_error)));
     } else {
         m_writer.flush();
-        callback->postReply(std::move(true));
+        expected<void> res;
+        callback->postReply(std::move(res));
     }
 }
 
@@ -82,10 +83,10 @@ void MockStorageHandler::createFSIterator(
     callback->postReply(231546131);
 }
 
-void MockStorageHandler::hasNext(
-    uint64_t iteratorID,
+void MockStorageHandler::hasNextIterator(
+    uint64_t iteratorId,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    if (iteratorID != 231546131) {
+    if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
         if (m_iterator->path().string() == "../../libs/internet") {
@@ -97,10 +98,10 @@ void MockStorageHandler::hasNext(
     }
 }
 
-void MockStorageHandler::next(
-    uint64_t iteratorID,
+void MockStorageHandler::nextIterator(
+    uint64_t iteratorId,
     std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
-    if (iteratorID != 231546131) {
+    if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
         auto ret = m_iterator->path().string();
@@ -110,21 +111,22 @@ void MockStorageHandler::next(
 }
 
 void MockStorageHandler::removeFileIterator(
-    uint64_t iteratorID,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    if (iteratorID != 231546131) {
+    uint64_t iteratorId,
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::remove_file_error)));
     } else {
         auto path = m_iterator->path();
         auto ret = std::filesystem::remove(path);
-        callback->postReply(std::move(ret));
+        expected<void> res;
+        callback->postReply(std::move(res));
     }
 }
 
 void MockStorageHandler::destroyFSIterator(
-    uint64_t iteratorID,
+    uint64_t iteratorId,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
-    if (iteratorID != 231546131) {
+    if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::destroy_iterator_error)));
     } else {
         m_iterator.~directory_iterator();
@@ -149,30 +151,33 @@ void MockStorageHandler::isFile(
 
 void MockStorageHandler::createDir(
     const std::string& path,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
     if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
         auto ret = std::filesystem::create_directory(path);
-        callback->postReply(std::move(ret));
+        expected<void> res;
+        callback->postReply(std::move(res));
     }
-    callback->postReply(std::move(true));
+    callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::create_directory_error)));
 }
 
 void MockStorageHandler::moveFile(
     const std::string& oldPath,
     const std::string& newPath,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
     if (!std::filesystem::is_regular_file(newPath) || !std::filesystem::exists(newPath)) {
         std::filesystem::rename(oldPath, newPath);
-        callback->postReply(std::move(true));
+        expected<void> res;
+        callback->postReply(std::move(res));
     }
-    callback->postReply(std::move(false));
+    callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::move_file_error)));
 }
 
 void MockStorageHandler::removeFile(
     const std::string& path,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {
     auto ret = std::filesystem::remove_all(path);
-    callback->postReply(std::move(ret));
+    expected<void> res;
+    callback->postReply(std::move(res));
 }
 
 } // namespace sirius::contract::vm::test

@@ -27,14 +27,14 @@ void MoveFileRPCHandler::process() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
 
     handler->moveFile(m_request.old_path(), m_request.new_path(), callback);
 }
 
-void MoveFileRPCHandler::onResult(const expected<bool>& res) {
+void MoveFileRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -45,11 +45,7 @@ void MoveFileRPCHandler::onResult(const expected<bool>& res) {
 
     supercontractserver::MoveFileReturn status;
 
-    if (res.has_value()) {
-        status.set_success(*res);
-    } else {
-        status.set_success(false);
-    }
+    status.set_success(res.has_value());
 
     m_callback->postReply(std::move(status));
 }

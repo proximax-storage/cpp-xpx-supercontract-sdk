@@ -34,12 +34,12 @@ public:
 
     void write(
         uint64_t fileId,
-        std::vector<uint8_t> buffer,
+        const std::vector<uint8_t>& buffer,
         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
 
     void flush(
         uint64_t fileId,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback);
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void closeFile(
         uint64_t fileId,
@@ -50,20 +50,20 @@ public:
         bool recursive,
         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
 
-    void hasNext(
+    void hasNextIterator(
         uint64_t iteratorID,
         std::shared_ptr<AsyncQueryCallback<bool>> callback);
 
-    void next(
-        uint64_t iteratorID,
+    void nextIterator(
+        uint64_t iteratorId,
         std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback);
 
     void removeFileIterator(
-        uint64_t iteratorID,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback);
+        uint64_t iteratorId,
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void destroyFSIterator(
-        uint64_t iteratorID,
+        uint64_t iteratorId,
         std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void pathExist(
@@ -76,16 +76,16 @@ public:
 
     void createDir(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback);
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void moveFile(
         const std::string& oldPath,
         const std::string& newPath,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback);
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     void removeFile(
         const std::string& path,
-        std::shared_ptr<AsyncQueryCallback<bool>> callback);
+        std::shared_ptr<AsyncQueryCallback<void>> callback);
 
     ~FaultyMockStorageHandler() = default;
 };

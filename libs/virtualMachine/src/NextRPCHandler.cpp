@@ -32,7 +32,7 @@ void NextRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->next(m_request.identifier(), callback);
+    handler->nextIterator(m_request.identifier(), callback);
 }
 
 void NextRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {

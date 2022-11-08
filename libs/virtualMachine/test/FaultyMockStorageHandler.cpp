@@ -19,12 +19,12 @@ void FaultyMockStorageHandler::read(
 
 void FaultyMockStorageHandler::write(
     uint64_t fileId,
-    std::vector<uint8_t> buffer,
+    const std::vector<uint8_t>& buffer,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {}
 
 void FaultyMockStorageHandler::flush(
     uint64_t fileId,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {}
 
 void FaultyMockStorageHandler::closeFile(
     uint64_t fileId,
@@ -38,17 +38,17 @@ void FaultyMockStorageHandler::createFSIterator(
     bool recursive,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {}
 
-void FaultyMockStorageHandler::hasNext(
+void FaultyMockStorageHandler::hasNextIterator(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
 
-void FaultyMockStorageHandler::next(
+void FaultyMockStorageHandler::nextIterator(
     uint64_t iteratorID,
     std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {}
 
 void FaultyMockStorageHandler::removeFileIterator(
     uint64_t iteratorID,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {}
 
 void FaultyMockStorageHandler::destroyFSIterator(
     uint64_t iteratorID,
@@ -64,15 +64,15 @@ void FaultyMockStorageHandler::isFile(
 
 void FaultyMockStorageHandler::createDir(
     const std::string& path,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {}
 
 void FaultyMockStorageHandler::moveFile(
     const std::string& oldPath,
     const std::string& newPath,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {}
 
 void FaultyMockStorageHandler::removeFile(
     const std::string& path,
-    std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+    std::shared_ptr<AsyncQueryCallback<void>> callback) {}
 
 } // namespace sirius::contract::vm::test

@@ -31,7 +31,7 @@ void HasNextRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->hasNext(m_request.identifier(), callback);
+    handler->hasNextIterator(m_request.identifier(), callback);
 }
 
 void HasNextRPCHandler::onResult(const expected<bool>& res) {

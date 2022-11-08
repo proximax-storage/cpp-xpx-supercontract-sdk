@@ -27,14 +27,14 @@ void CreateDirRPCHandler::process() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
 
     handler->createDir(m_request.path(), callback);
 }
 
-void CreateDirRPCHandler::onResult(const expected<bool>& res) {
+void CreateDirRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -45,11 +45,7 @@ void CreateDirRPCHandler::onResult(const expected<bool>& res) {
 
     supercontractserver::CreateDirReturn status;
 
-    if (res.has_value()) {
-        status.set_success(*res);
-    } else {
-        status.set_success(false);
-    }
+    status.set_success(res.has_value());
 
     m_callback->postReply(std::move(status));
 }

@@ -33,7 +33,7 @@ public:
     void process() override;
 
 private:
-    void onResult(const expected<bool>& res);
+    void onResult(const expected<void>& res);
 };
 
 } // namespace sirius::contract::vm
