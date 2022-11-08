@@ -46,10 +46,11 @@ void CreateIteratorRPCHandler::onResult(const expected<uint64_t>& res) {
     supercontractserver::CreateDirIteratorReturn status;
 
     if (res.has_value()) {
-        status.set_identifier(*res);
+        status.set_success(true);
     } else {
-        status.set_identifier(-1);
+        status.set_success(false);
     }
+    status.set_identifier(*res);
     m_callback->postReply(std::move(status));
 }
 

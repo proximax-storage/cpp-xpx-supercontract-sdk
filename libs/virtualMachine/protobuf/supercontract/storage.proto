@@ -9,11 +9,11 @@ message OpenFile {
 
 message OpenFileReturn {
   bool success = 1;
-  int64 identifier = 2;
+  uint64 identifier = 2;
 }
 
 message WriteFileStream {
-  int64 identifier = 1;
+  uint64 identifier = 1;
   bytes buffer = 2;
 }
 
@@ -23,7 +23,7 @@ message WriteFileStreamReturn {
 }
 
 message Flush {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message FlushReturn {
@@ -31,7 +31,7 @@ message FlushReturn {
 }
 
 message ReadFileStream {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message ReadFileStreamReturn {
@@ -40,7 +40,7 @@ message ReadFileStreamReturn {
 }
 
 message CloseFile {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message CloseFileReturn {
@@ -94,11 +94,12 @@ message CreateDirIterator {
 }
 
 message CreateDirIteratorReturn {
-  int64 identifier = 1;
+  bool success = 1;
+  uint64 identifier = 2;
 }
 
 message HasNextIterator {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message HasNextIteratorReturn {
@@ -106,7 +107,7 @@ message HasNextIteratorReturn {
 }
 
 message NextDirIterator {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message NextDirIteratorReturn {
@@ -115,7 +116,7 @@ message NextDirIteratorReturn {
 }
 
 message RemoveDirIterator {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message RemoveDirIteratorReturn {
@@ -123,7 +124,7 @@ message RemoveDirIteratorReturn {
 }
 
 message DestroyDirIterator {
-  int64 identifier = 1;
+  uint64 identifier = 1;
 }
 
 message DestroyDirIteratorReturn {
