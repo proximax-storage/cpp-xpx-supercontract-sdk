@@ -9,7 +9,7 @@
 namespace sirius::contract::test {
 
 GlobalEnvironmentMock::GlobalEnvironmentMock()
-        : m_logger(getLoggerConfig(), "executor") {}
+    : m_logger(getLoggerConfig(), "executor") {}
 
 ThreadManager& GlobalEnvironmentMock::threadManager() {
     return m_threadManager;
@@ -25,4 +25,13 @@ logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
     config.setLogPath({});
     return config;
 }
+
+void StorageObserverMock::absolutePath(const DriveKey& driveKey, const std::string& relativePath,
+                                       std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+    callback->postReply(std::filesystem::absolute(relativePath));
 }
+
+void StorageObserverMock::filesystem(const DriveKey& key,
+                                     std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) {
+}
+} // namespace sirius::contract::test

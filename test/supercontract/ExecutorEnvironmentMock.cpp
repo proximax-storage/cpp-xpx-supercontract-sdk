@@ -8,7 +8,7 @@
 
 namespace sirius::contract::test {
 ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair &&keyPair,
-                                                 std::weak_ptr<VirtualMachineMock> virtualMachineMock,
+                                                 std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                                                  const ExecutorConfig &executorConfig,
                                                  ThreadManager &threadManager)
         : m_keyPair(std::move(keyPair)), m_virtualMachineMock(std::move(virtualMachineMock)), m_executorConfig(

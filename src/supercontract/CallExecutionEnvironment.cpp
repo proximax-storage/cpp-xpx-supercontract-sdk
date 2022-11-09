@@ -140,7 +140,7 @@ void CallExecutionEnvironment::openFile(const std::string& path, const std::stri
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     m_asyncQuery = asyncQuery;
 
@@ -168,7 +168,12 @@ void CallExecutionEnvironment::write(uint64_t fileId, const std::vector<uint8_t>
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { 
+        if (!res) {
+            callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::write_file_error)));
+        }
+            callback->postReply(std::move(buffer.size())); 
+        }, [] {}, m_executorEnvironment, true, true);
 
     storage->writeFile(m_contractEnvironment.driveKey(), fileId, {buffer.begin(), buffer.end()}, storageCallback);
 }
@@ -187,7 +192,7 @@ void CallExecutionEnvironment::flush(uint64_t fileId, std::shared_ptr<AsyncQuery
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->flush(m_contractEnvironment.driveKey(), fileId, storageCallback);
 }
@@ -206,7 +211,7 @@ void CallExecutionEnvironment::closeFile(uint64_t fileId, std::shared_ptr<AsyncQ
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->closeFile(m_contractEnvironment.driveKey(), fileId, storageCallback);
 }
@@ -226,7 +231,7 @@ void CallExecutionEnvironment::createFSIterator(const std::string& path, bool re
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->directoryIteratorCreate(m_contractEnvironment.driveKey(), path, recursive, storageCallback);
 }
@@ -245,7 +250,7 @@ void CallExecutionEnvironment::hasNextIterator(uint64_t iteratorID, std::shared_
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->directoryIteratorHasNext(m_contractEnvironment.driveKey(), iteratorID, storageCallback);
 }
@@ -265,7 +270,14 @@ void CallExecutionEnvironment::nextIterator(uint64_t iteratorID,
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<std::string>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<std::string>([=, this](auto&& res) { 
+        if (!res) {
+            callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::iterator_next_error)));
+        } else {
+            std::vector<uint8_t> reply(res->begin(), res->end());
+            callback->postReply(std::move(reply)); 
+        }
+        }, [] {}, m_executorEnvironment, true, true);
 
     storage->directoryIteratorNext(m_contractEnvironment.driveKey(), iteratorID, storageCallback);
 }
@@ -304,7 +316,7 @@ void CallExecutionEnvironment::destroyFSIterator(uint64_t iteratorID, std::share
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->directoryIteratorDestroy(m_contractEnvironment.driveKey(), iteratorID, storageCallback);
 }
@@ -323,7 +335,7 @@ void CallExecutionEnvironment::pathExist(const std::string& path, std::shared_pt
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->pathExist(m_contractEnvironment.driveKey(), path, storageCallback);
 }
@@ -342,7 +354,7 @@ void CallExecutionEnvironment::isFile(const std::string& path, std::shared_ptr<A
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<bool>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->isFile(m_contractEnvironment.driveKey(), path, storageCallback);
 }
@@ -361,7 +373,7 @@ void CallExecutionEnvironment::createDir(const std::string& path, std::shared_pt
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->createDirectories(m_contractEnvironment.driveKey(), path, storageCallback);
 }
@@ -381,7 +393,7 @@ void CallExecutionEnvironment::moveFile(const std::string& oldPath, const std::s
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->moveFilesystemEntry(m_contractEnvironment.driveKey(), oldPath, newPath, storageCallback);
 }
@@ -400,7 +412,7 @@ void CallExecutionEnvironment::removeFile(const std::string& path, std::shared_p
         return;
     }
 
-    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(res); }, [] {}, m_executorEnvironment, true, true);
+    auto [asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) { callback->postReply(std::move(res)); }, [] {}, m_executorEnvironment, true, true);
 
     storage->removeFilesystemEntry(m_contractEnvironment.driveKey(), path, storageCallback);
 }

@@ -14,46 +14,44 @@ namespace sirius::contract::test {
 
 class ExecutorEventHandlerMock : public ExecutorEventHandler {
 public:
-    void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo &) override {}
+    void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {}
 
-    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo &) override {}
+    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {}
 };
 
 class ExecutorEnvironmentMock : public ExecutorEnvironment {
 private:
     crypto::KeyPair m_keyPair;
-    std::weak_ptr <VirtualMachineMock> m_virtualMachineMock;
+    std::weak_ptr<vm::VirtualMachine> m_virtualMachineMock;
     ExecutorConfig m_executorConfig;
-    std::weak_ptr <storage::Storage> m_storage;
+    std::weak_ptr<storage::Storage> m_storage;
     ExecutorEventHandlerMock m_executorEventHandlerMock;
     boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
-    ThreadManager &m_threadManager;
+    ThreadManager& m_threadManager;
     logging::Logger m_logger;
 
-
 public:
-    ExecutorEnvironmentMock(crypto::KeyPair &&keyPair,
-                            std::weak_ptr <VirtualMachineMock> virtualMachineMock,
-                            const ExecutorConfig &executorConfig,
-                            ThreadManager &threadManager);
+    ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
+                            std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
+                            const ExecutorConfig& executorConfig,
+                            ThreadManager& threadManager);
 
-    const crypto::KeyPair &keyPair() const override;
+    const crypto::KeyPair& keyPair() const override;
 
-    std::weak_ptr <messenger::Messenger> messenger() override;
+    std::weak_ptr<messenger::Messenger> messenger() override;
 
-    std::weak_ptr <storage::StorageModifier> storageModifier() override;
+    std::weak_ptr<storage::StorageModifier> storageModifier() override;
 
-    ExecutorEventHandler &executorEventHandler() override;
+    ExecutorEventHandler& executorEventHandler() override;
 
-    std::weak_ptr <vm::VirtualMachine> virtualMachine() override;
+    std::weak_ptr<vm::VirtualMachine> virtualMachine() override;
 
-    ExecutorConfig &executorConfig() override;
+    ExecutorConfig& executorConfig() override;
 
-    boost::asio::ssl::context &sslContext() override;
+    boost::asio::ssl::context& sslContext() override;
 
-    ThreadManager &threadManager() override;
+    ThreadManager& threadManager() override;
 
-    logging::Logger &logger() override;
-
+    logging::Logger& logger() override;
 };
-}
+} // namespace sirius::contract::test

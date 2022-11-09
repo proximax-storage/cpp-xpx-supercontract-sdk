@@ -6,27 +6,36 @@
 
 #pragma once
 
-#include <storage/Storage.h>
 #include "../../src/supercontract/ContractEnvironment.h"
-#include "virtualMachine/VirtualMachine.h"
 #include "../../src/supercontract/ExecutorEnvironment.h"
+#include "virtualMachine/VirtualMachine.h"
+#include <storage/Storage.h>
 
 namespace sirius::contract::test {
 
-    class GlobalEnvironmentMock : public GlobalEnvironment {
+class GlobalEnvironmentMock : public GlobalEnvironment {
 
-    private:
-        ThreadManager m_threadManager;
-        logging::Logger m_logger;
+private:
+    ThreadManager m_threadManager;
+    logging::Logger m_logger;
 
-    public:
-        GlobalEnvironmentMock();
+public:
+    GlobalEnvironmentMock();
 
-        ThreadManager& threadManager() override;
+    ThreadManager& threadManager() override;
 
-        logging::Logger& logger() override;
+    logging::Logger& logger() override;
 
-    private:
-        logging::LoggerConfig getLoggerConfig();
-    };
-}
+private:
+    logging::LoggerConfig getLoggerConfig();
+};
+
+class StorageObserverMock : public storage::StorageObserver {
+public:
+    void absolutePath(const DriveKey& driveKey, const std::string& relativePath,
+                      std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+
+    void
+    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) override;
+};
+} // namespace sirius::contract::test
