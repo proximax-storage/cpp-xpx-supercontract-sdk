@@ -36,7 +36,7 @@ void PathExistTag::process(bool ok) {
         // TODO Maybe change error type
         m_callback->postReply(std::move(false));
     } else {
-        m_callback->postReply(std::move(false));
+        m_callback->postReply(std::move(true));
     }
 }
 

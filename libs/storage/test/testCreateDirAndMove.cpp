@@ -324,7 +324,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 }
 } // namespace move
 
-TEST(Storage, CreateDirAndRemove) {
+TEST(Storage, CreateDirAndMove) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -347,21 +347,21 @@ TEST(Storage, CreateDirAndRemove) {
 
     barrier.get();
 
-    std::promise<void> pRemove;
-    auto barrierRemove = pRemove.get_future();
+    std::promise<void> pMove;
+    auto barrierMove = pMove.get_future();
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
 
         auto pStorage = std::make_shared<RPCStorage>(environment, address);
 
-        auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRemove](auto&& res) {
+        auto [_, callback] = createAsyncQuery<void>([=, &environment, &pMove](auto&& res) {
             ASSERT_TRUE(res);
-            move::onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
+            move::onModificationsInitiated(driveKey, environment, pStorage, pMove); }, [] {}, environment, false, true);
         pStorage->initiateModifications(driveKey, callback);
     });
 
-    barrierRemove.get();
+    barrierMove.get();
 
     threadManager.stop();
 }
