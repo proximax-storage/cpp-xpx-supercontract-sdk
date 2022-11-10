@@ -1,6 +1,7 @@
 #include "ContractEnvironmentMock.h"
 #include "ExecutorEnvironmentMock.h"
 #include "TestUtils.h"
+#include "storage/RPCStorage.h"
 #include "supercontract/CallExecutionEnvironment.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "virtualMachine/VirtualMachine.h"
@@ -22,10 +23,11 @@ std::string exec(const char* cmd) {
     return result;
 }
 
-TEST(VirtualMachine, SimpleStorage) {
+TEST(Supercontract, Storage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
+    executorConfig.setRpcStorageAddress("127.0.0.1:5551");
     ThreadManager threadManager;
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), pVirtualMachine, executorConfig,
@@ -40,6 +42,23 @@ TEST(VirtualMachine, SimpleStorage) {
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
     std::shared_ptr<CallExecutionEnvironment> rpcHandler;
+    std::shared_ptr<storage::Storage> pStorage;
+
+    std::promise<void> pInit;
+    auto barrierInit = pInit.get_future();
+
+    threadManager.execute([&] {
+        pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
+        environment.m_storage = pStorage;
+        auto [_, storageCallback] = createAsyncQuery<void>([=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
+            auto [_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) {
+                pInit.set_value();
+            }, [] {}, environment, true, true);
+            pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback); }, [] {}, environment, true, true);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
+    });
+
+    barrierInit.get();
 
     std::promise<void> p;
     auto barrier = p.get_future();
@@ -55,6 +74,7 @@ TEST(VirtualMachine, SimpleStorage) {
         std::string address = "127.0.0.1:50051";
         vm::RPCVirtualMachineBuilder builder;
         pVirtualMachine = builder.build(storageObserver, environment, address);
+        environment.m_virtualMachineMock = pVirtualMachine;
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -89,6 +109,20 @@ TEST(VirtualMachine, SimpleStorage) {
     });
 
     barrier.get();
+
+    std::promise<void> pApply;
+    auto barrierApply = pApply.get_future();
+
+    threadManager.execute([&] {
+        auto [_, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>([=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+            auto [_, applyStorageCallback] = createAsyncQuery<void>([&pApply](auto&& res) {
+                pApply.set_value();
+            }, [] {}, environment, true, true);
+            pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true, applyStorageCallback); }, [] {}, environment, true, true);
+        pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
+    });
+
+    barrierApply.get();
 
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
