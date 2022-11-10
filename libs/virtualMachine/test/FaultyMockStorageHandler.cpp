@@ -13,11 +13,11 @@ void FaultyMockStorageHandler::openFile(
     callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::storage_unavailable)));
 }
 
-void FaultyMockStorageHandler::read(
+void FaultyMockStorageHandler::readFile(
     uint64_t fileId,
     std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {}
 
-void FaultyMockStorageHandler::write(
+void FaultyMockStorageHandler::writeFile(
     uint64_t fileId,
     const std::vector<uint8_t>& buffer,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {}

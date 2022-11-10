@@ -20,11 +20,11 @@ public:
         const std::string& mode,
         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;
 
-    virtual void read(
+    virtual void readFile(
         uint64_t fileId,
         std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
 
-    virtual void write(
+    virtual void writeFile(
         uint64_t fileId,
         const std::vector<uint8_t>& buffer,
         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;

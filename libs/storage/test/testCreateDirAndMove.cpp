@@ -268,15 +268,26 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
     pStorage->evaluateStorageHash(driveKey, callback);
 }
 
-void onFileMoved(const DriveKey& driveKey,
-                 GlobalEnvironment& environment,
-                 std::shared_ptr<Storage> pStorage,
-                 std::promise<void>& barrier) {
+void onChecking(const DriveKey& driveKey,
+                GlobalEnvironment& environment,
+                std::shared_ptr<Storage> pStorage,
+                std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
+}
+
+void onFileMoved(const DriveKey& driveKey,
+                 GlobalEnvironment& environment,
+                 std::shared_ptr<Storage> pStorage,
+                 std::promise<void>& barrier) {
+    auto [_, callback] = createAsyncQuery<bool>([=, &environment, &barrier](auto&& res) {
+        ASSERT_TRUE(res);
+        onChecking(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+
+    pStorage->pathExist(driveKey, "moved/test.txt", callback);
 }
 
 void onCreatedDirectory(const DriveKey& driveKey,

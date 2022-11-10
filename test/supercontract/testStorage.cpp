@@ -38,6 +38,7 @@ TEST(Supercontract, Storage) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
+    contractEnvironmentMock.m_driveKey = DriveKey({1});
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
@@ -53,8 +54,8 @@ TEST(Supercontract, Storage) {
         auto [_, storageCallback] = createAsyncQuery<void>([=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
             auto [_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) {
                 pInit.set_value();
-            }, [] {}, environment, true, true);
-            pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback); }, [] {}, environment, true, true);
+            }, [] {}, environment, false, true);
+            pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback); }, [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
     });
 
@@ -117,8 +118,8 @@ TEST(Supercontract, Storage) {
         auto [_, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>([=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
             auto [_, applyStorageCallback] = createAsyncQuery<void>([&pApply](auto&& res) {
                 pApply.set_value();
-            }, [] {}, environment, true, true);
-            pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true, applyStorageCallback); }, [] {}, environment, true, true);
+            }, [] {}, environment, false, true);
+            pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true, applyStorageCallback); }, [] {}, environment, false, true);
         pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
     });
 

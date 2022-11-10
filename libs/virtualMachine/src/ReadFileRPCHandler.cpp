@@ -32,7 +32,7 @@ void ReadFileRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->read(m_request.identifier(), callback);
+    handler->readFile(m_request.identifier(), callback);
 }
 
 void ReadFileRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {

@@ -33,7 +33,7 @@ void WriteFileRPCHandler::process() {
 
     std::vector<uint8_t> buffer(m_request.buffer().begin(), m_request.buffer().end());
 
-    handler->write(m_request.identifier(), buffer, callback);
+    handler->writeFile(m_request.identifier(), buffer, callback);
 }
 
 void WriteFileRPCHandler::onResult(const expected<uint64_t>& res) {

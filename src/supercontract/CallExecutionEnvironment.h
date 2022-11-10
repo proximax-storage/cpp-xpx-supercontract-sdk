@@ -146,8 +146,11 @@ public:
     void openFile(const std::string& path, const std::string& mode,
                   std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
-    void write(uint64_t fileId, const std::vector<uint8_t>& buffer,
-               std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+    void writeFile(uint64_t fileId, const std::vector<uint8_t>& buffer,
+                   std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void readFile(uint64_t fileId,
+                  std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
 
     void flush(uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
