@@ -33,10 +33,9 @@ void PathExistTag::process(bool ok) {
         m_environment.logger().warn("Failed to query path: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.exist()) {
-        // TODO Maybe change error type
-        m_callback->postReply(std::move(false));
+        m_callback->postReply(false);
     } else {
-        m_callback->postReply(std::move(true));
+        m_callback->postReply(true);
     }
 }
 

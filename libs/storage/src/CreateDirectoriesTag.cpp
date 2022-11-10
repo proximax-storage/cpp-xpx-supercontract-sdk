@@ -34,7 +34,6 @@ void CreateDirectoriesTag::process(bool ok) {
         m_environment.logger().warn("Failed to create directory: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
-        // TODO Maybe change error type
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::create_directory_error)));
     } else {
         m_callback->postReply(expected<void>());

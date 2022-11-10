@@ -34,7 +34,6 @@ void DirectoryIteratorDestroyTag::process(bool ok) {
         m_environment.logger().warn("Failed to destroy directory iterator: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
-        // TODO Maybe change error type
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::destroy_iterator_error)));
     }
     else {
