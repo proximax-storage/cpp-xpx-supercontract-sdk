@@ -1052,7 +1052,8 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     threadManager.execute([&] {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
-        ASSERT_EQ(batch1.m_callRequests.size(), 0);
+        ASSERT_EQ(batch1.m_callRequests.size(), 1);
+        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
@@ -1072,23 +1073,18 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         auto batch5 = batchesManager->nextBatch();
         ASSERT_EQ(batch5.m_batchIndex, 5);
         ASSERT_EQ(batch5.m_callRequests.size(), 1);
-        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch6 = batchesManager->nextBatch();
         ASSERT_EQ(batch6.m_batchIndex, 6);
-        ASSERT_EQ(batch6.m_callRequests.size(), 1);
-        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_EQ(batch6.m_callRequests.size(), 2);
+        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch6.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch7 = batchesManager->nextBatch();
         ASSERT_EQ(batch7.m_batchIndex, 7);
-        ASSERT_EQ(batch7.m_callRequests.size(), 2);
+        ASSERT_EQ(batch7.m_callRequests.size(), 1);
         ASSERT_EQ(batch7.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch7.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
-        ASSERT_TRUE(batchesManager->hasNextBatch());
-        auto batch8 = batchesManager->nextBatch();
-        ASSERT_EQ(batch8.m_batchIndex, 8);
-        ASSERT_EQ(batch8.m_callRequests.size(), 1);
-        ASSERT_EQ(batch8.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
