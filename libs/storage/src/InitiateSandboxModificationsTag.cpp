@@ -33,7 +33,7 @@ void InitiateSandboxModificationsTag::process(bool ok) {
     if (m_status.ok()) {
         m_callback->postReply(expected<void>());
     } else {
-        m_environment.logger().warn("Failed To Execute Initiate Modifications: {}", m_status.error_message());
+        m_environment.logger().warn("Failed To Execute Initiate Sandbox Modifications: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
 }

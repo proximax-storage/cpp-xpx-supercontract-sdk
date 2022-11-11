@@ -37,7 +37,7 @@ void FlushFileTag::process(bool ok) {
             m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::flush_error)));
         }
     } else {
-        m_environment.logger().warn("Failed to close file: {}", m_status.error_message());
+        m_environment.logger().warn("Failed to flush buffer to file: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
 }

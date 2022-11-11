@@ -31,7 +31,7 @@ void RemoveFilesystemEntryTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to create directory: {}", m_status.error_message());
+        m_environment.logger().warn("Failed to remove file: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::remove_file_error)));

@@ -30,7 +30,7 @@ void IsFileTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to query path: {}", m_status.error_message());
+        m_environment.logger().warn("Failed to check whether the entry is a regular file at path: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.is_file()) {
         m_callback->postReply(false);
