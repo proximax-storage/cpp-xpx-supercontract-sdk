@@ -22,8 +22,11 @@ enum class StorageError {
     remove_file_error,
     create_iterator_error,
     iterator_next_error,
+    iterator_has_next_error,
     iterator_remove_error,
-    destroy_iterator_error
+    destroy_iterator_error,
+    path_exist_error,
+    is_file_error,
 };
 
 class StorageErrorCategory

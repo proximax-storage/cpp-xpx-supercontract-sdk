@@ -36,10 +36,16 @@ std::string StorageErrorCategory::message(int ev) const {
         return "Fail to create an iterator for the directory";
     case static_cast<unsigned int>(StorageError::iterator_next_error):
         return "Fail to query the next entry";
+    case static_cast<unsigned int>(StorageError::iterator_has_next_error):
+        return "Fail to check whether there's any more entry in the iterator";
     case static_cast<unsigned int>(StorageError::iterator_remove_error):
         return "Fail to remove the file pointed by the iterator";
     case static_cast<unsigned int>(StorageError::destroy_iterator_error):
         return "Fail to destroy the directory iterator";
+    case static_cast<unsigned int>(StorageError::path_exist_error):
+        return "Fail to query whether a path exists";
+    case static_cast<unsigned int>(StorageError::is_file_error):
+        return "Fail to query whether an entry is a regular file";
     default:
         return "Other error";
     }
