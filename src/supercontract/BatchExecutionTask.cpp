@@ -11,6 +11,8 @@
 #include "Messages.h"
 #include "CallExecutionManager.h"
 #include <magic_enum.hpp>
+#include <storage/StorageErrorCode.h>
+#include <virtualMachine/ExecutionErrorConidition.h>
 
 namespace sirius::contract {
 
@@ -33,13 +35,15 @@ void BatchExecutionTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto[query, callback] = createAsyncQuery<void>([this](auto&& success) {
-        if (!success.has_value()) {
-            onStorageUnavailable();
+    auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
+        if (!res) {
+            const auto& ec = res.error();
+            ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
+            onUnableToExecuteBatch();
             return;
         }
 
-        onInitiatedModifications();
+        onInitiatedStorageModifications();
     }, [] {}, m_executorEnvironment, true, true);
 
     m_storageQuery = std::move(query);
@@ -47,7 +51,7 @@ void BatchExecutionTask::run() {
     auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
-        onStorageUnavailable();
+        onUnableToExecuteBatch();
         return;
     }
 
@@ -77,13 +81,13 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
     ASSERT(m_callExecutionManager, m_executorEnvironment.logger())
     m_callExecutionManager.reset();
 
-    auto success = executionResult.m_success;
-
     auto[query, callback] = createAsyncQuery<storage::SandboxModificationDigest>(
             [this, callId, result = std::move(executionResult)](auto&& digest) mutable {
 
                 if (!digest) {
-                    onStorageUnavailable();
+                    const auto& ec = digest.error();
+                    ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
+                    onUnableToExecuteBatch();
                     return;
                 }
 
@@ -96,7 +100,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
     auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
-        onStorageUnavailable();
+        onUnableToExecuteBatch();
         return;
     }
 
@@ -130,7 +134,7 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecut
 
 // endregion
 
-void BatchExecutionTask::onInitiatedModifications() {
+void BatchExecutionTask::onInitiatedStorageModifications() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -139,6 +143,46 @@ void BatchExecutionTask::onInitiatedModifications() {
     m_storageQuery.reset();
 
     executeNextCall();
+}
+
+void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRequest) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(m_storageQuery, m_executorEnvironment.logger())
+
+    m_storageQuery.reset();
+
+    ASSERT(!m_callExecutionManager, m_executorEnvironment.logger())
+
+    callRequest.m_proofOfExecutionPrefix = m_proofOfExecutionSecretData;
+
+    auto callEnvironment = std::make_shared<CallExecutionEnvironment>(
+            callRequest,
+            m_executorEnvironment,
+            m_contractEnvironment);
+
+    auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
+            [this, callId = callRequest.m_callId](auto&& res) {
+
+                if (!res) {
+                    const auto& ec = res.error();
+                    ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable ||
+                           ec == vm::ExecutionError::storage_unavailable, m_executorEnvironment.logger())
+                    onUnableToExecuteBatch();
+                    return;
+                }
+
+                onSuperContractCallExecuted(callId, std::move(*res));
+            }, [] {}, m_executorEnvironment, false, false);
+
+    m_callExecutionManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
+                                                                    callEnvironment,
+                                                                    callEnvironment,
+                                                                    callEnvironment,
+                                                                    std::move(query));
+
+    m_callExecutionManager->run(callRequest, std::move(callback));
 }
 
 void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& callId,
@@ -154,6 +198,8 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& call
     if (!executionResult.m_success) {
         ASSERT(digest.m_success, m_executorEnvironment.logger())
     }
+
+    m_proofOfExecutionSecretData = executionResult.m_proofOfExecutionSecretData;
 
     m_callsExecutionOpinions.push_back(CallExecutionOpinion{
             callId,
@@ -254,9 +300,11 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_executorKey = m_executorEnvironment.keyPair().publicKey();
 
+    auto verificationInformation = m_contractEnvironment.proofOfExecution().addToProof(m_proofOfExecutionSecretData);
     m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{storageHash, usedDriveSize,
                                                                              metaFilesSize,
-                                                                             fileStructureSize, {}};
+                                                                             fileStructureSize,
+                                                                             verificationInformation};
 
     m_successfulEndBatchOpinion->m_callsExecutionInfo = std::move(m_callsExecutionOpinions);
 
@@ -301,8 +349,14 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
     bool batchIsSuccessful = m_publishedEndBatchInfo->m_batchSuccess;
 
-    if (batchIsSuccessful && m_publishedEndBatchInfo->m_driveState !=
-                             m_successfulEndBatchOpinion->m_successfulBatchInfo->m_storageHash) {
+    if (!batchIsSuccessful) {
+        m_contractEnvironment.proofOfExecution().popFromProof();
+    }
+
+    if (batchIsSuccessful && (m_publishedEndBatchInfo->m_driveState !=
+                              m_successfulEndBatchOpinion->m_successfulBatchInfo->m_storageHash ||
+                              m_publishedEndBatchInfo->m_PoExVerificationInfo !=
+                              m_successfulEndBatchOpinion->m_successfulBatchInfo->m_PoExVerificationInfo)) {
         // The received result differs from the common one, synchronization is needed
 
         m_executorEnvironment.logger().warn("Calculated storage hash differs from the published one");
@@ -316,13 +370,15 @@ void BatchExecutionTask::processPublishedEndBatch() {
         auto storage = m_executorEnvironment.storageModifier().lock();
 
         if (!storage) {
-            onStorageUnavailable();
+            onUnableToExecuteBatch();
             return;
         }
 
         auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
             if (!res) {
-                onStorageUnavailable();
+                const auto& ec = res.error();
+                ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
+                onUnableToExecuteBatch();
                 return;
             }
 
@@ -350,9 +406,9 @@ bool BatchExecutionTask::validateOtherBatchInfo(const EndBatchExecutionOpinion& 
         const auto& otherSuccessfulBatchInfo = *other.m_successfulBatchInfo;
         const auto& successfulBatchInfo = *m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
-//            if (otherSuccessfulBatchInfo.m_verificationInfo != successfulBatchInfo.m_verificationInfo) {
-//                return false;
-//            }
+        if (otherSuccessfulBatchInfo.m_PoExVerificationInfo != successfulBatchInfo.m_PoExVerificationInfo) {
+            return false;
+        }
 
         if (otherSuccessfulBatchInfo.m_storageHash != successfulBatchInfo.m_storageHash) {
             return false;
@@ -503,36 +559,37 @@ void BatchExecutionTask::executeNextCall() {
     ASSERT(!m_storageQuery, m_executorEnvironment.logger())
 
     if (m_callIterator != m_batch.m_callRequests.end()) {
-
-        const auto& callRequest = *m_callIterator;
+        auto callRequest = *m_callIterator;
         m_callIterator++;
 
-        auto callEnvironment = std::make_shared<CallExecutionEnvironment>(
-                callRequest,
-                m_executorEnvironment,
-                m_contractEnvironment);
+        auto storage = m_executorEnvironment.storageModifier().lock();
 
-        auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
-                [this, callId = callRequest.m_callId](auto&& res) {
-                    // TODO process error
-                    ASSERT(res, m_executorEnvironment.logger())
-                    onSuperContractCallExecuted(callId, std::move(*res));
-                }, [] {}, m_executorEnvironment, false, false);
+        if (!storage) {
+            onUnableToExecuteBatch();
+            return;
+        }
 
-        m_callExecutionManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
-                                                                        callEnvironment,
-                                                                        callEnvironment,
-                                                                        callEnvironment,
-                                                                        std::move(query));
+        auto[query, callback] = createAsyncQuery<void>([=, this](auto&& res) mutable {
+            if (!res) {
+                const auto& ec = res.error();
+                ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
+                onUnableToExecuteBatch();
+                return;
+            }
 
-        m_callExecutionManager->run(callRequest, std::move(callback));
+            onInitiatedSandboxModification(std::move(callRequest));
+        }, [] {}, m_executorEnvironment, true, true);
 
+        m_storageQuery = std::move(query);
+
+        storage->initiateSandboxModifications(m_contractEnvironment.driveKey(),
+                                              callback);
     } else {
 
         auto storage = m_executorEnvironment.storageModifier().lock();
 
         if (!storage) {
-            onStorageUnavailable();
+            onUnableToExecuteBatch();
             return;
         }
 
@@ -541,7 +598,9 @@ void BatchExecutionTask::executeNextCall() {
         auto[query, callback] = createAsyncQuery<storage::StorageState>([this](auto&& state) {
 
             if (!state) {
-                onStorageUnavailable();
+                const auto& ec = state.error();
+                ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
+                onUnableToExecuteBatch();
                 return;
             }
 
@@ -586,12 +645,12 @@ void BatchExecutionTask::computeProofOfExecution() {
 
 }
 
-void BatchExecutionTask::onStorageUnavailable() {
+void BatchExecutionTask::onUnableToExecuteBatch() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_contractEnvironment.delayBatchExecution(m_batch);
 
-    m_contractEnvironment.addSynchronizationTask();
+    // TODO add timer
 
     m_contractEnvironment.finishTask();
 }

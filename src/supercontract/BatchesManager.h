@@ -16,22 +16,23 @@
 
 namespace sirius::contract {
 
-class BaseBatchesManager
-        : public ContractBlockchainEventHandler {
+class BaseBatchesManager {
 
 public:
 
     virtual void addManualCall(const CallRequestParameters&) = 0;
 
-    virtual void addBlockInfo( const Block& block ) = 0;
+    virtual void addBlockInfo(const Block& block) = 0;
 
     virtual bool hasNextBatch() = 0;
 
     virtual Batch nextBatch() = 0;
 
-    virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
+    virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void delayBatch( Batch&& batch ) = 0;
+    virtual void delayBatch(Batch&& batch) = 0;
+
+    virtual void cancelBatchesTill(uint64_t batchIndex) = 0;
 };
 
 }

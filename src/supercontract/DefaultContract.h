@@ -15,11 +15,6 @@
 
 namespace sirius::contract {
 
-struct KnownStorageState {
-    uint64_t m_batchIndex = 0;
-    StorageHash m_storageHash;
-};
-
 class DefaultContract
         : private SingleThread
         , public Contract
@@ -38,9 +33,9 @@ private:
     ExecutorEnvironment& m_executorEnvironment;
     ContractConfig m_contractConfig;
 
-    // ProofOfExecution m_proofOfExecution; TODO PoEx
+    ProofOfExecution m_proofOfExecution;
 
-    KnownStorageState m_lastKnownStorageState;
+    SynchronizationRequest m_lastKnownStorageState;
 
     // Requests
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
@@ -48,8 +43,6 @@ private:
     std::optional<RemoveRequest> m_contractRemoveRequest;
 
     std::unique_ptr<BaseContractTask> m_task;
-
-
 
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
     std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
@@ -81,7 +74,7 @@ public:
 
     bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override;
 
-    bool onStorageSynchronized(uint64_t batchIndex) override;
+    bool onStorageSynchronizedPublished(uint64_t batchIndex) override;
 
     // endregion
 
@@ -114,6 +107,10 @@ public:
     void addSynchronizationTask() override;
 
     void delayBatchExecution(Batch batch) override;
+
+    void cancelBatchesUpTo(uint64_t index) override;
+
+    ProofOfExecution& proofOfExecution() override;
 
     // endregion
 

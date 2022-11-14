@@ -6,7 +6,8 @@
 
 #pragma once
 
-#include "../../src/supercontract/ContractEnvironment.h"
+#include "supercontract/ContractEnvironment.h"
+#include "supercontract/ExecutorEnvironment.h"
 
 namespace sirius::contract::test {
 
@@ -17,10 +18,12 @@ private:
     uint64_t m_automaticExecutionsSCLimit;
     uint64_t m_automaticExecutionsSMLimit;
     ContractConfig m_contractConfig;
+    ProofOfExecution m_proofOfExecution;
 
 public:
     DriveKey m_driveKey;
-    ContractEnvironmentMock(ContractKey& contractKey,
+    ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
+                            ContractKey& contractKey,
                             uint64_t automaticExecutionsSCLimit,
                             uint64_t automaticExecutionsSMLimit);
 
@@ -41,5 +44,10 @@ public:
     void addSynchronizationTask() override {}
 
     void delayBatchExecution(Batch batch) override {}
+
+    void cancelBatchesUpTo(uint64_t index) override;
+
+    ProofOfExecution& proofOfExecution() override;
+
 };
 }

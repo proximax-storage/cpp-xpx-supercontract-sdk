@@ -9,25 +9,10 @@
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/SingleThread.h"
 #include "utils/types.h"
-#include <crypto/CurvePoint.h>
 #include <crypto/Hashes.h>
+#include <supercontract/Proofs.h>
 
 namespace sirius::contract {
-
-struct TProof {
-    sirius::crypto::CurvePoint m_F;
-    sirius::crypto::Scalar m_k;
-};
-
-struct BatchProof {
-    sirius::crypto::CurvePoint m_T;
-    sirius::crypto::Scalar m_r;
-};
-
-struct Proofs {
-    TProof m_tProof;
-    BatchProof m_batchProof;
-};
 
 class ProofOfExecution : private SingleThread {
 
@@ -39,12 +24,14 @@ private:
 
     const crypto::KeyPair& m_keyPair;
 
+    uint64_t m_initialBatch = 0;
+
 public:
     ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
     Proofs buildProof();
-    void reset();
+    void reset(uint64_t nextBatch);
 
 private:
 

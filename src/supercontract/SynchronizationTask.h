@@ -15,7 +15,7 @@ class SynchronizationTask
 
 private:
 
-    SynchronizationRequest m_request;
+    const SynchronizationRequest m_request;
 
     std::shared_ptr<AsyncQuery> m_storageQuery;
 
@@ -33,7 +33,7 @@ public:
 
     bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
 
-    bool onStorageSynchronized(uint64_t) override;
+    bool onStorageSynchronizedPublished(uint64_t) override;
 
     // endregion
 

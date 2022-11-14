@@ -84,6 +84,7 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
     pRpcRequest->set_sc_prepayment(m_request.m_scLimit);
     pRpcRequest->set_sm_prepayment(m_request.m_smLimit);
     pRpcRequest->set_call_mode((uint32_t)m_request.m_callLevel);
+    pRpcRequest->set_poex_secret_data_prefix(m_request.m_proofOfExecutionPrefix);
 
     supercontractserver::Request requestWrapper;
     requestWrapper.set_allocated_request(pRpcRequest);
@@ -134,8 +135,8 @@ void ExecuteCallRPCHandler::processExecuteCallResponse(
         executeCallResponse.success(),
         executeCallResponse.return_val(),
         executeCallResponse.sc_consumed(),
-        executeCallResponse.sm_consumed()
-        // m_proofOfExecution
+        executeCallResponse.sm_consumed(),
+        executeCallResponse.poex_secret_data()
     };
 
     m_receivedExecutionResult = true;

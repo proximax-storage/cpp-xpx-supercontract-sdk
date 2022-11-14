@@ -44,7 +44,7 @@ sirius::crypto::CurvePoint ProofOfExecution::addToProof(uint64_t digest) {
 
     sirius::crypto::Sha3_512_Builder hasher_h2;
     Hash512 c;
-    hasher_h2.update({Beta.tobytes(), Y.tobytes(), m_keyPair.publicKey()});
+    hasher_h2.update({Beta.toBytes(), Y.toBytes(), m_keyPair.publicKey()});
     hasher_h2.final(c);
     sirius::crypto::Scalar c_scalar(c.array());
 
@@ -74,20 +74,21 @@ Proofs ProofOfExecution::buildProof() {
 
     Hash512 d_hash;
     sirius::crypto::Sha3_512_Builder hasher_h;
-    hasher_h.update({F.tobytes(), T.tobytes(), m_keyPair.publicKey()});
+    hasher_h.update({F.toBytes(), T.toBytes(), m_keyPair.publicKey()});
     hasher_h.final(d_hash);
 
     sirius::crypto::Scalar d(d_hash.array());
     auto k = w - d * v;
 
     TProof q{F, k};
-    return Proofs{q, b};
+    return Proofs{m_initialBatch, q, b};
 }
 
-void ProofOfExecution::reset() {
+void ProofOfExecution::reset(uint64_t nextBatch) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_x = sirius::crypto::Scalar();
     m_xPrevious = sirius::crypto::Scalar();
+    m_initialBatch = nextBatch;
 }
 } // namespace sirius::contract

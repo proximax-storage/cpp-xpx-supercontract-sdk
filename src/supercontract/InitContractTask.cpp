@@ -8,8 +8,6 @@
 
 namespace sirius::contract {
 
-// TODO The class is not fully implemented
-
 InitContractTask::InitContractTask(
         AddContractRequest&& request,
         ContractEnvironment& contractEnvironment,
@@ -21,16 +19,15 @@ void InitContractTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_request.m_batchesExecuted > 0) {
-        // The corresponding storage is not yet fully controlled by the Contract,
-        // so the Storage performs necessary synchronization by himself
-        m_contractEnvironment.finishTask();
-    }
+    m_contractEnvironment.finishTask();
 }
 
 
 void InitContractTask::terminate() {
-    m_contractEnvironment.finishTask();
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(false, m_executorEnvironment.logger())
 }
 
 // region blockchain event handler
@@ -39,20 +36,7 @@ bool InitContractTask::onEndBatchExecutionPublished(const PublishedEndBatchExecu
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    const auto& cosigners = info.m_cosigners;
-
-    if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) !=
-        cosigners.end()) {
-        // We are in the actual state from the point of blockchain view
-        // At the same time storage actually may not be in the actual state
-        // So we should try to synchronize storage without expecting approval in the blockchain
-        // TODO Synchronize
-//        m_executorEnvironment.storage().synchronizeStorage(m_contractEnvironment.driveKey(), info.m_driveState);
-    } else {
-        m_contractEnvironment.addSynchronizationTask();
-    }
-
-    m_contractEnvironment.finishTask();
+    ASSERT(false, m_executorEnvironment.logger())
 
     return true;
 }

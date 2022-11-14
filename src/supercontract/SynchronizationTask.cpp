@@ -6,8 +6,6 @@
 
 #include "SynchronizationTask.h"
 
-// TODO The class is not fully implemented
-
 namespace sirius::contract {
 
 SynchronizationTask::SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
@@ -22,27 +20,18 @@ bool SynchronizationTask::onEndBatchExecutionPublished(const PublishedEndBatchEx
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    const auto& cosigners = info.m_cosigners;
+    m_contractEnvironment.addSynchronizationTask();
 
-    if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
-        cosigners.end()) {
-        m_request = {info.m_driveState};
-
-        run();
-    }
-
-    // TODO What if we are among the cosigners? Is it possible?
+    terminate();
 
     return true;
 }
 
-bool SynchronizationTask::onStorageSynchronized(uint64_t) {
+bool SynchronizationTask::onStorageSynchronizedPublished(uint64_t) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_contractEnvironment.finishTask();
-
-    return true;
+    return false;
 }
 
 // endregion
@@ -51,23 +40,26 @@ void SynchronizationTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(!m_storageQuery, m_executorEnvironment.logger());
+    ASSERT(!m_storageQuery, m_executorEnvironment.logger())
+
+    m_storageTimer.cancel();
 
     auto storage = m_executorEnvironment.storageModifier().lock();
 
     if (!storage) {
-
+        onStorageUnavailable();
+        return;
     }
 
     auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) {
-
         if (!res) {
             onStorageUnavailable();
             return;
         }
-
         onStorageStateSynchronized();
     }, [] {}, m_executorEnvironment, true, true);
+
+    m_storageQuery = std::move(query);
 
     storage->synchronizeStorage(m_contractEnvironment.driveKey(), m_request.m_storageHash, callback);
 }
@@ -76,12 +68,19 @@ void SynchronizationTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_storageQuery.reset();
+    m_storageTimer.cancel();
+
     m_contractEnvironment.finishTask();
 }
 
 void SynchronizationTask::onStorageUnavailable() {
 
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
     m_storageQuery.reset();
+
+    ASSERT(!m_storageTimer, m_executorEnvironment.logger())
 
     m_storageTimer = Timer(m_executorEnvironment.threadManager().context(), 5000, [this] {
         run();
@@ -90,6 +89,13 @@ void SynchronizationTask::onStorageUnavailable() {
 
 void SynchronizationTask::onStorageStateSynchronized() {
 
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_contractEnvironment.cancelBatchesUpTo(m_request.m_batchIndex);
+
+    m_contractEnvironment.proofOfExecution().reset(m_request.m_batchIndex + 1);
+
+    m_contractEnvironment.finishTask();
 }
 
 }

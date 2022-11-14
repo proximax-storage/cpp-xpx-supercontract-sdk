@@ -8,11 +8,14 @@
 
 namespace sirius::contract::test {
 
-ContractEnvironmentMock::ContractEnvironmentMock(ContractKey& contractKey,
+ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
+                                                 ContractKey& contractKey,
                                                  uint64_t automaticExecutionsSCLimit,
                                                  uint64_t automaticExecutionsSMLimit)
-        : m_contractKey(contractKey), m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
-        , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit) {}
+        : m_contractKey(contractKey)
+          , m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
+          , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
+          , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair()) {}
 
 const ContractKey& ContractEnvironmentMock::contractKey() const { return m_contractKey; }
 
@@ -25,5 +28,13 @@ uint64_t ContractEnvironmentMock::automaticExecutionsSCLimit() const { return m_
 uint64_t ContractEnvironmentMock::automaticExecutionsSMLimit() const { return m_automaticExecutionsSMLimit; }
 
 const ContractConfig& ContractEnvironmentMock::contractConfig() const { return m_contractConfig; }
+
+void ContractEnvironmentMock::cancelBatchesUpTo(uint64_t index) {
+
+}
+
+ProofOfExecution& ContractEnvironmentMock::proofOfExecution() {
+    return m_proofOfExecution;
+}
 
 }

@@ -9,6 +9,7 @@
 #include "Identifiers.h"
 
 #include <memory>
+#include "Proofs.h"
 
 namespace sirius::contract {
 
@@ -45,27 +46,13 @@ struct CallExecutionInfo {
     std::vector<CallExecutorParticipation> m_executorsParticipation;
 };
 
-// Temporary
-struct PoExVerificationInfo {
-    template<class Archive>
-    void serialize( Archive& arch ) {
-    }
-};
-
-// Temporary
-struct PoEx {
-    template<class Archive>
-    void serialize( Archive& arch ) {
-    }
-};
-
 struct SuccessfulBatchInfo {
     StorageHash  m_storageHash;
     uint64_t    m_usedStorageSize;
     uint64_t    m_metaFilesSize;
     uint64_t    m_fileStructureSize;
 
-    PoExVerificationInfo m_verificationInfo;
+    crypto::CurvePoint m_PoExVerificationInfo;
 
     template<class Archive>
     void serialize( Archive& arch ) {
@@ -73,6 +60,7 @@ struct SuccessfulBatchInfo {
         arch( m_usedStorageSize );
         arch( m_metaFilesSize );
         arch( m_fileStructureSize );
+        arch( m_PoExVerificationInfo );
     }
 };
 
@@ -83,7 +71,7 @@ struct EndBatchExecutionTransactionInfo {
     std::optional<SuccessfulBatchInfo>  m_successfulBatchInfo;
     std::vector<CallExecutionInfo>      m_callsExecutionInfo;
 
-    std::vector<PoEx>                   m_proofs;
+    std::vector<Proofs>                 m_proofs;
     std::vector<ExecutorKey>            m_executorKeys;
     std::vector<Signature>              m_signatures;
 };
@@ -91,7 +79,7 @@ struct EndBatchExecutionTransactionInfo {
 struct EndBatchExecutionSingleTransactionInfo {
     ContractKey m_contractKey;
     uint64_t    m_batchIndex = 0;
-    PoEx        m_proofOfExecution;
+    Proofs      m_proofOfExecution;
 };
 
 struct PublishedEndBatchExecutionTransactionInfo {
@@ -99,6 +87,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     uint64_t                    m_batchIndex;
     bool                        m_batchSuccess;
     Hash256                     m_driveState;
+    crypto::CurvePoint          m_PoExVerificationInfo;
     std::vector <ExecutorKey>   m_cosigners;
 
 //    bool isSuccessful() const {

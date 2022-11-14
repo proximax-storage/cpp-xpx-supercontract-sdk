@@ -82,13 +82,7 @@ private:
 
     std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId);
 
-public:
-
-    // region blockchain event handler
-
-    bool onStorageSynchronized(uint64_t batchIndex) override;
-
-    // endregion
+    void cancelBatchesTill(uint64_t batchIndex) override;
 
 private:
 

@@ -253,7 +253,7 @@ void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransacti
     });
 }
 
-void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint64_t batchIndex) {
+void DefaultExecutor::onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) {
     m_pThreadManager->execute([=, this] {
         auto contractIt = m_contracts.find(contractKey);
 
@@ -263,7 +263,7 @@ void DefaultExecutor::onStorageSynchronized(const ContractKey& contractKey, uint
             return;
         }
 
-        contractIt->second->onStorageSynchronized(batchIndex);
+        contractIt->second->onStorageSynchronizedPublished(batchIndex);
     });
 }
 

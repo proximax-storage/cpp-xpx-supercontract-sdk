@@ -43,7 +43,7 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
     if (!m_automaticExecutionsEnabledSince) {
         for (auto&[_, batch]: m_batches) {
             if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
-                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger());
+                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger())
                 batch.m_requests.pop_back();
             }
             else if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
@@ -214,13 +214,11 @@ void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std:
                                          });
 }
 
-bool DefaultBatchesManager::onStorageSynchronized(uint64_t batchIndex) {
+void DefaultBatchesManager::cancelBatchesTill(uint64_t batchIndex) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_storageSynchronizedBatchIndex = batchIndex;
-
-    return true;
 }
 
 void DefaultBatchesManager::clearOutdatedBatches() {

@@ -19,7 +19,7 @@ void tProofVerification(Proofs p, crypto::KeyPair& key) {
     auto k = p.m_tProof.m_k;
     sirius::crypto::Sha3_512_Builder hasher_h;
     Hash512 d_h;
-    hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
+    hasher_h.update({F.toBytes(), T.toBytes(), key.publicKey()});
     hasher_h.final(d_h);
     sirius::crypto::Scalar d(d_h.array());
     auto beta = sirius::crypto::CurvePoint::BasePoint();
@@ -36,7 +36,7 @@ void tProofVerificationFalse(Proofs p, crypto::KeyPair& key) {
     auto k = p.m_tProof.m_k;
     sirius::crypto::Sha3_512_Builder hasher_h;
     Hash512 d_h;
-    hasher_h.update({F.tobytes(), T.tobytes(), key.publicKey()});
+    hasher_h.update({F.toBytes(), T.toBytes(), key.publicKey()});
     hasher_h.final(d_h);
     sirius::crypto::Scalar d(d_h.array());
     auto beta = sirius::crypto::CurvePoint::BasePoint();
@@ -98,7 +98,7 @@ TEST(TEST_NAME, PoEx) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -115,7 +115,7 @@ TEST(TEST_NAME, PoEx) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -149,7 +149,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -166,7 +166,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -200,7 +200,7 @@ TEST(TEST_NAME, PoExPopProof) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -242,7 +242,7 @@ TEST(TEST_NAME, PoExNonPopProof) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -284,7 +284,7 @@ TEST(TEST_NAME, PoExReset) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;
@@ -292,7 +292,7 @@ TEST(TEST_NAME, PoExReset) {
         }
 
         sirius::crypto::CurvePoint empty;
-        poex.reset();
+        poex.reset(10);
         auto n = poex.buildProof();
 
         batchProofVerification(n, m, empty);
@@ -318,7 +318,7 @@ TEST(TEST_NAME, PoExNonReset) {
 
             sirius::crypto::Sha3_512_Builder hasher_h;
             Hash512 cHash;
-            hasher_h.update({beta.tobytes(), Y.tobytes(), key.publicKey()});
+            hasher_h.update({beta.toBytes(), Y.toBytes(), key.publicKey()});
             hasher_h.final(cHash);
             sirius::crypto::Scalar c(cHash.array());
             auto part = Y * c;

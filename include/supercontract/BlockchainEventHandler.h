@@ -22,7 +22,7 @@ public:
 
     virtual void onEndBatchExecutionFailed( FailedEndBatchExecutionTransactionInfo&& ) = 0;
 
-    virtual void onStorageSynchronized( const ContractKey& contractKey, uint64_t batchIndex ) = 0;
+    virtual void onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex ) = 0;
 };
 
 }

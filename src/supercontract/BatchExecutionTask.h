@@ -41,6 +41,8 @@ private:
     bool m_successfulEndBatchSent = false;
     bool m_unsuccessfulEndBatchSent = false;
 
+    uint64_t m_proofOfExecutionSecretData = 0;
+
 public:
 
     BatchExecutionTask(Batch&& batch,
@@ -66,9 +68,11 @@ public:
 
     // endregion
 
-public:
+private:
 
-    void onInitiatedModifications();
+    void onInitiatedStorageModifications();
+
+    void onInitiatedSandboxModification(vm::CallRequest&& callRequest);
 
     void onAppliedSandboxStorageModifications(const CallId& callId,
                                               vm::CallExecutionResult&& executionResult,
@@ -109,7 +113,7 @@ private:
 
     void computeProofOfExecution();
 
-    void onStorageUnavailable();
+    void onUnableToExecuteBatch();
 
     void onAppliedStorageModifications();
 };

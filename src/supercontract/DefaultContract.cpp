@@ -30,6 +30,7 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
         , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
         , m_executorEnvironment(contractContext)
         , m_contractConfig()
+        , m_proofOfExecution(m_executorEnvironment, m_executorEnvironment.keyPair())
         , m_batchesManager(std::make_unique<DefaultBatchesManager>(addContractRequest.m_batchesExecuted, *this,
                                                                    m_executorEnvironment)) {
     runInitializeContractTask(std::move(addContractRequest));
@@ -124,19 +125,14 @@ bool DefaultContract::onEndBatchExecutionFailed(const FailedEndBatchExecutionTra
     return m_task->onEndBatchExecutionFailed(info);
 }
 
-bool DefaultContract::onStorageSynchronized(uint64_t batchIndex) {
+bool DefaultContract::onStorageSynchronizedPublished(uint64_t batchIndex) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_batchesManager->onStorageSynchronized(batchIndex);
-
-    if (!m_task) {
-        return false;
+    if (m_task) {
+        m_task->onStorageSynchronizedPublished(batchIndex);
     }
 
-    m_task->onStorageSynchronized(batchIndex);
-
-    // TODO should we always return true?
     return true;
 }
 
@@ -216,7 +212,7 @@ void DefaultContract::addSynchronizationTask() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_synchronizationRequest = {m_lastKnownStorageState.m_storageHash};
+    m_synchronizationRequest = m_lastKnownStorageState;
 }
 
 // endregion
@@ -278,6 +274,17 @@ void DefaultContract::delayBatchExecution(Batch batch) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_batchesManager->delayBatch(std::move(batch));
+}
+
+void DefaultContract::cancelBatchesUpTo(uint64_t index) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_batchesManager->cancelBatchesTill(index);
+}
+
+ProofOfExecution& DefaultContract::proofOfExecution() {
+    return m_proofOfExecution;
 }
 
 void DefaultContract::runBatchExecutionTask() {

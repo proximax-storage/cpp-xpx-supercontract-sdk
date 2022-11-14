@@ -28,7 +28,7 @@ public:
         return false;
     }
 
-    virtual bool onStorageSynchronized( uint64_t batchIndex ) {
+    virtual bool onStorageSynchronizedPublished(uint64_t batchIndex ) {
         return false;
     }
 };

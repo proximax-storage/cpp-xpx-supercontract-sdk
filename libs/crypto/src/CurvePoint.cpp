@@ -1,6 +1,7 @@
 #include "crypto/CurvePoint.h"
 
-namespace sirius { namespace crypto {
+namespace sirius {
+namespace crypto {
 CurvePoint::CurvePoint() {
     ge_p3 a;
     ge_p3_0(&a);
@@ -104,10 +105,18 @@ bool CurvePoint::operator!=(const CurvePoint& a) const {
     return this_bytes != a_bytes;
 }
 
-Key CurvePoint::tobytes() const {
-    Key ret;
-    ge_p3_tobytes(ret.data(), &m_ge_p3);
-    return ret;
+std::array<uint8_t, 32> CurvePoint::toBytes() const {
+    std::array<uint8_t, 32> buffer{};
+    ge_p3_tobytes(buffer.data(), &m_ge_p3);
+    return buffer;
 }
+
+void CurvePoint::fromBytes(const std::array<uint8_t, 32>& buffer) {
+    ge_p3 tmp;
+    CurvePoint tmpPoint;
+    tmpPoint.m_ge_p3 = tmp;
+    *this = -tmpPoint;
+}
+
 }
 } // namespace sirius::crypto

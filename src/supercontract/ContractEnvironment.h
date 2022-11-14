@@ -15,6 +15,7 @@
 #include "TaskRequests.h"
 #include "ContractConfig.h"
 #include "Batch.h"
+#include "ProofOfExecution.h"
 
 namespace sirius::contract {
 
@@ -42,6 +43,9 @@ public:
 
     virtual void delayBatchExecution(Batch batch) = 0;
 
+    virtual void cancelBatchesUpTo(uint64_t index) = 0;
+
+    virtual ProofOfExecution& proofOfExecution() = 0;
 };
 
 }

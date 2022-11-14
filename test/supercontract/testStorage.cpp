@@ -36,7 +36,7 @@ TEST(Supercontract, Storage) {
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+    ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
     contractEnvironmentMock.m_driveKey = DriveKey({1});
 

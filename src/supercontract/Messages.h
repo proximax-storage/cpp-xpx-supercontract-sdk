@@ -49,7 +49,7 @@ struct EndBatchExecutionOpinion {
     std::optional<SuccessfulBatchInfo> m_successfulBatchInfo;
     std::vector<CallExecutionOpinion> m_callsExecutionInfo;
 
-    PoEx m_proof;
+    Proofs m_proof;
 
     ExecutorKey m_executorKey;
     Signature m_signature;

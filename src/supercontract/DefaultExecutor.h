@@ -110,7 +110,7 @@ public:
 
     void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) override;
 
-    void onStorageSynchronized(const ContractKey& contractKey, uint64_t batchIndex) override;
+    void onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) override;
 
     // endregion
 
