@@ -1101,9 +1101,9 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
 TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     // Test procedure:
     // enabledSince = 0         (enabled)
-    // addBLockInfo1 - false
+    // addBLockInfo1 - true
     // addCall
-    // addBLockInfo2 - false
+    // addBLockInfo2 - true
     // addBLockInfo3 - false
     // addCall
     // addBLockInfo4 - false
@@ -1213,6 +1213,141 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
 
     threadManager.stop();
 }
-//    TODO
-//    2. add delayBatch test case
+
+TEST(TEST_NAME, DelayBatchesTest) {
+    // Test procedure:
+    // enabledSince = 0         (enabled)
+    // addBLockInfo1 - true
+    // addCall
+    // addBLockInfo2 - true
+    // addBLockInfo3 - false
+    // addCall
+    // addBLockInfo4 - false
+    // create contract environment
+    srand(time(nullptr));
+    ContractKey contractKey;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
+    DriveKey driveKey;
+    std::set<ExecutorKey> executors;
+
+    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
+
+    // create executor environment
+    crypto::PrivateKey privateKey;
+    crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+    ExecutorConfig executorConfig;
+    ThreadManager threadManager;
+    std::deque<bool> result = {true, true, false, false};
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result, true);
+    std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+
+    ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
+                                                    threadManager);
+
+    // create default batches manager
+    uint64_t index = 1;
+
+    std::unique_ptr<BaseBatchesManager> batchesManager;
+
+    //create block and request
+    std::vector<Block> blocks;
+    std::vector<CallRequestParameters> requests;
+
+    for(uint64_t i=1; i<=4; i++){
+        Block block = {
+                utils::generateRandomByteValue<BlockHash>(),
+                i
+        };
+        blocks.push_back(block);
+    }
+
+    for(auto i=1; i<=2; i++){
+        std::vector<uint8_t> params;
+        CallRequestParameters request = {
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        requests.push_back(request);
+    }
+
+    threadManager.execute([&] {
+        batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
+                                                                 executorEnvironmentMock);
+    });
+
+    threadManager.execute([&] {
+        batchesManager->setAutomaticExecutionsEnabledSince(0);
+        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addManualCall(requests[0]);
+        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addManualCall(requests[1]);
+        batchesManager->addBlockInfo(blocks[3]);
+    });
+    sleep(10);
+    std::promise<void> barrier;
+    threadManager.execute([&] {
+        auto batch1 = batchesManager->nextBatch();
+        ASSERT_EQ(batch1.m_batchIndex, 1);
+        ASSERT_EQ(batch1.m_callRequests.size(), 1);
+        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        batchesManager->delayBatch(std::move(batch1));
+        auto delay1 = batchesManager->nextBatch();
+        ASSERT_EQ(delay1.m_batchIndex, 1);
+        ASSERT_EQ(delay1.m_callRequests.size(), 1);
+        ASSERT_EQ(delay1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+
+        auto batch2 = batchesManager->nextBatch();
+        ASSERT_EQ(batch2.m_batchIndex, 2);
+        ASSERT_EQ(batch2.m_callRequests.size(), 2);
+        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+        batchesManager->delayBatch(std::move(batch2));
+        auto delay2 = batchesManager->nextBatch();
+        ASSERT_EQ(delay2.m_batchIndex, 2);
+        ASSERT_EQ(delay2.m_callRequests.size(), 2);
+        ASSERT_EQ(delay2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_EQ(delay2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batchesManager->hasNextBatch());
+
+        auto batch3 = batchesManager->nextBatch();
+        ASSERT_EQ(batch3.m_batchIndex, 3);
+        ASSERT_EQ(batch3.m_callRequests.size(), 1);
+        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_FALSE(batchesManager->hasNextBatch());
+        batchesManager->delayBatch(std::move(batch3));
+        auto delay3 = batchesManager->nextBatch();
+        ASSERT_EQ(delay3.m_batchIndex, 3);
+        ASSERT_EQ(delay3.m_callRequests.size(), 1);
+        ASSERT_EQ(delay3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_FALSE(batchesManager->hasNextBatch());
+        barrier.set_value();
+    });
+
+    barrier.get_future().wait();
+
+    threadManager.execute([&] {
+        batchesManager.reset();
+    });
+
+    threadManager.stop();
+}
 }
