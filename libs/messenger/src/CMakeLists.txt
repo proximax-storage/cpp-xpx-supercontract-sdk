@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 
 find_package(OpenSSL REQUIRED)
 
-supercontract_sdk_shared_library_target(contract-messenger)
+supercontract_sdk_library_target(contract-messenger)
 
 foreach(_service messengerServer)
 

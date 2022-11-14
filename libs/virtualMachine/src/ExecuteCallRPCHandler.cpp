@@ -29,6 +29,7 @@
 #include "WriteFileRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
+#include <blockchain.pb.h>
 
 namespace sirius::contract::vm {
 
@@ -182,6 +183,8 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         break;
     }
     case supercontractserver::Response::kAddTransaction: {
+        // TODO placeholder to correctly link blockchain proto
+        supercontractserver::AddTransaction query;
         break;
     }
     case supercontractserver::Response::kGetTransactionBlockHeight: {

@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 
 find_package(OpenSSL REQUIRED)
 
-supercontract_sdk_shared_library_target(contract-virtualMachine)
+supercontract_sdk_library(contract-virtualMachine)
 
 foreach(_service blockchain internet storage supercontract_server)
 
