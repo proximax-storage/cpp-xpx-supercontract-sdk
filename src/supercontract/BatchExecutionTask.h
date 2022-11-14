@@ -38,6 +38,8 @@ private:
     Timer m_successfulApprovalExpectationTimer;
     Timer m_unsuccessfulApprovalExpectationTimer;
 
+    Timer m_unableToExecuteBatchTimer;
+
     bool m_successfulEndBatchSent = false;
     bool m_unsuccessfulEndBatchSent = false;
 

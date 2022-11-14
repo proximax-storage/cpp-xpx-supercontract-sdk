@@ -70,6 +70,7 @@ void BatchExecutionTask::terminate() {
     m_unsuccessfulExecutionTimer.cancel();
     m_successfulApprovalExpectationTimer.cancel();
     m_unsuccessfulApprovalExpectationTimer.cancel();
+    m_unableToExecuteBatchTimer.cancel();
 
     m_contractEnvironment.finishTask();
 }
@@ -114,6 +115,10 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (m_unableToExecuteBatchTimer) {
+        return false;
+    }
 
     if (opinion.m_batchIndex != m_batch.m_batchIndex) {
         return false;
@@ -237,6 +242,10 @@ bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExe
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    if (m_unableToExecuteBatchTimer) {
+        return false;
+    }
+
     if (info.m_batchIndex != m_batch.m_batchIndex) {
         return false;
     }
@@ -255,6 +264,10 @@ bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExe
 bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (m_unableToExecuteBatchTimer) {
+        return false;
+    }
 
     if (m_batch.m_batchIndex != info.m_batchIndex) {
         return false;
@@ -650,9 +663,10 @@ void BatchExecutionTask::onUnableToExecuteBatch() {
 
     m_contractEnvironment.delayBatchExecution(m_batch);
 
-    // TODO add timer
-
-    m_contractEnvironment.finishTask();
+    m_unableToExecuteBatchTimer = Timer(m_executorEnvironment.threadManager().context(),
+                                        m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(), [this] {
+                m_contractEnvironment.finishTask();
+            });
 }
 
 void BatchExecutionTask::onAppliedStorageModifications() {
