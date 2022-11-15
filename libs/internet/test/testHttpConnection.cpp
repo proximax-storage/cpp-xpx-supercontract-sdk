@@ -428,6 +428,9 @@ void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code
 }
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo ip without password
+*/
 TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -461,7 +464,6 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
                     sharedConnection->read(readCallback);
                     std::ostringstream ss;
                     ss << "sudo ip link set " << interface << " down";
-                    // std::cout << ss.str() << std::endl;
                     exec_http(ss.str().c_str());
                 },
                 [] {},
@@ -480,13 +482,15 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
     ASSERT_TRUE(read_flag);
     std::ostringstream ss;
     ss << "sudo ip link set " << interface << " up";
-    // std::cout << ss.str() << std::endl;
     exec_http(ss.str().c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
 #endif
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo iptables and sudo ip6tables without password
+*/
 TEST(TEST_NAME, ConnectWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -524,6 +528,9 @@ TEST(TEST_NAME, ConnectWhenBlockingConnection) {
 #endif
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo iptables without password
+*/
 TEST(TEST_NAME, ReadWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;

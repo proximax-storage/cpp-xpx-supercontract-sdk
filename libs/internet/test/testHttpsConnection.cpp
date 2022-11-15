@@ -272,6 +272,9 @@ void readFuncDisconneted(expected<std::vector<uint8_t>>&& res, bool& read_flag, 
 }
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo ip without password
+*/
 TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -341,6 +344,9 @@ TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
 #endif
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo iptables and sudo ip6tables without password
+*/
 TEST(HttpsConnection, ConnectWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;
@@ -385,6 +391,9 @@ TEST(HttpsConnection, ConnectWhenBlockingConnection) {
 #endif
 
 #ifdef __linux__
+/**
+Prerequisites: the user must be allowed to run sudo iptables and sudo ip6tables without password
+*/
 TEST(HttpsConnection, ReadWhenBlockingConnection) {
 
     GlobalEnvironmentImpl globalEnvironment;
