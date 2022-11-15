@@ -89,7 +89,7 @@ void MockStorageHandler::hasNextIterator(
     if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
-        if (m_iterator->path().string() == "../../libs/internet") {
+        if (m_iterator->path().string() == "testFolder/internet") {
             callback->postReply(std::move(false));
         } else {
             m_iterator++;

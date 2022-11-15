@@ -940,7 +940,7 @@ TEST(VirtualMachine, SimpleStorage) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 4402851510);
+            ASSERT_EQ(res->m_scConsumed, 4402853086);
             ASSERT_EQ(res->m_smConsumed, 56);
         }, [] {}, environment, false, false);
 
@@ -1012,8 +1012,8 @@ TEST(VirtualMachine, IteratorTest) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 11684106652);
-            ASSERT_EQ(res->m_smConsumed, 28);
+            ASSERT_EQ(res->m_scConsumed, 10239795955);
+            ASSERT_EQ(res->m_smConsumed, 261);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
