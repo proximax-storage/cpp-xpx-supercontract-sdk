@@ -22,14 +22,14 @@ pub unsafe extern "C" fn run() -> u32 {
 
     {
         let test_case = "cmake_minimum_required(VERSION 3.9)\n
-\n
-add_subdirectory(utils)\n
-add_subdirectory(crypto)\n
-add_subdirectory(logging)\n
-add_subdirectory(storage)\n
-add_subdirectory(virtualMachine)\n
-add_subdirectory(internet)\n
-add_subdirectory(messenger)"
+                        \n
+                        add_subdirectory(utils)\n
+                        add_subdirectory(crypto)\n
+                        add_subdirectory(logging)\n
+                        add_subdirectory(storage)\n
+                        add_subdirectory(virtualMachine)\n
+                        add_subdirectory(internet)\n
+                        add_subdirectory(messenger)"
             .as_bytes();
         let file = FileWriter::new("testFolder/CMakeLists.txt").unwrap();
         let mut writer = BufWriter::new(file);
@@ -44,33 +44,29 @@ add_subdirectory(messenger)"
     create_dir("testFolder/messenger").unwrap();
     create_dir("testFolder/internet").unwrap();
 
-    let mut iterator = DirIterator::new("testFolder", true);
+    {
+        let mut iterator = DirIterator::new("testFolder", true);
 
-    let expected = [
-        "CMakeLists.txt",
-        "crypto",
-        "internet",
-        "logging",
-        "messenger",
-        "test.txt",
-        "utils",
-        "virtualMachine",
-        "testFolder/CMakeLists.txt",
-        "testFolder/crypto",
-        "testFolder/internet",
-        "testFolder/logging",
-        "testFolder/messenger",
-        "testFolder/test.txt",
-        "testFolder/utils",
-        "testFolder/virtualMachine",
-    ];
+        let expected = [
+            "CMakeLists.txt",
+            "crypto",
+            "internet",
+            "logging",
+            "messenger",
+            "test.txt",
+            "utils",
+            "virtualMachine"
+        ];
 
-    while let Some(path) = iterator.next() {
-        if !expected.contains(&path.as_str()) {
-            return 0;
-        }
-        if path == "testFolder/test.txt" || path == "test.txt" {
-            iterator.remove().unwrap();
+        while let Some(path) = iterator.next() {
+            if !expected.contains(&path.as_str()) {
+                return 0;
+            }
+            if path == "testFolder/test.txt" || path == "test.txt" {
+                if iterator.remove().is_ok() {
+                    return 777;
+                }
+            }
         }
     }
 

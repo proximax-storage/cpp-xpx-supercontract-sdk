@@ -52,12 +52,13 @@ TEST(Supercontract, Storage) {
     threadManager.execute([&] {
         pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
         environment.m_storage = pStorage;
-        auto [_, storageCallback] = createAsyncQuery<void>(
-            [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                auto [_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); }, [] {}, environment, false, true);
-                pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
-            },
-            [] {}, environment, false, true);
+        auto[_, storageCallback] = createAsyncQuery<void>(
+                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
+                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
+                                                                      [] {}, environment, false, true);
+                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+                },
+                [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
     });
 
@@ -82,31 +83,32 @@ TEST(Supercontract, Storage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                          ContractKey(),
-                                                          CallId(),
-                                                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                          "run",
-                                                          params,
-                                                          25000000000,
-                                                          26 * 1024,
-                                                          CallReferenceInfo{
-                                                              {},
-                                                              0,
-                                                              BlockHash(),
-                                                              0,
-                                                              0,
-                                                              {}}},
+                                                              ContractKey(),
+                                                              CallId(),
+                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                                                              "run",
+                                                              params,
+                                                              25000000000,
+                                                              26 * 1024,
+                                                              CallReferenceInfo{
+                                                                      {},
+                                                                      0,
+                                                                      BlockHash(),
+                                                                      0,
+                                                                      0,
+                                                                      {}}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
 
-        auto [_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
+        auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_scConsumed, 4402853086);
-            ASSERT_EQ(res->m_smConsumed, 56); }, [] {}, environment, false, false);
+            ASSERT_EQ(res->m_smConsumed, 0);
+        }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
     });
@@ -117,18 +119,19 @@ TEST(Supercontract, Storage) {
     auto barrierApply = pApply.get_future();
 
     threadManager.execute([&] {
-        auto [q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                auto [q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                    [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                        auto [q3, applyStorageCallback] = createAsyncQuery<void>([&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                        pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                            applyStorageCallback);
-                    },
-                    [] {}, environment, false, true);
-                pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
-            },
-            [] {}, environment, false, true);
+        auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
+                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                    auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
+                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                                auto[q3, applyStorageCallback] = createAsyncQuery<void>(
+                                        [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
+                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
+                                                                    applyStorageCallback);
+                            },
+                            [] {}, environment, false, true);
+                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                },
+                [] {}, environment, false, true);
 
         pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
     });
@@ -161,7 +164,7 @@ TEST(Supercontract, Iterator) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
-    contractEnvironmentMock.m_driveKey = DriveKey({1});
+    contractEnvironmentMock.m_driveKey = DriveKey({2});
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
@@ -174,12 +177,13 @@ TEST(Supercontract, Iterator) {
     threadManager.execute([&] {
         pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
         environment.m_storage = pStorage;
-        auto [_, storageCallback] = createAsyncQuery<void>(
-            [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                auto [_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); }, [] {}, environment, false, true);
-                pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
-            },
-            [] {}, environment, false, true);
+        auto[_, storageCallback] = createAsyncQuery<void>(
+                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
+                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
+                                                                      [] {}, environment, false, true);
+                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+                },
+                [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
     });
 
@@ -204,31 +208,32 @@ TEST(Supercontract, Iterator) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                          ContractKey(),
-                                                          CallId(),
-                                                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                          "run",
-                                                          params,
-                                                          25000000000,
-                                                          26 * 1024,
-                                                          CallReferenceInfo{
-                                                              {},
-                                                              0,
-                                                              BlockHash(),
-                                                              0,
-                                                              0,
-                                                              {}}},
+                                                              ContractKey(),
+                                                              CallId(),
+                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                                                              "run",
+                                                              params,
+                                                              25000000000,
+                                                              26 * 1024,
+                                                              CallReferenceInfo{
+                                                                      {},
+                                                                      0,
+                                                                      BlockHash(),
+                                                                      0,
+                                                                      0,
+                                                                      {}}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
 
-        auto [_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
+        auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 11690289255);
-            ASSERT_EQ(res->m_smConsumed, 261); }, [] {}, environment, false, false);
+            ASSERT_EQ(res->m_scConsumed, 11693614002);
+            ASSERT_EQ(res->m_smConsumed, 0);
+        }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
     });
@@ -239,18 +244,19 @@ TEST(Supercontract, Iterator) {
     auto barrierApply = pApply.get_future();
 
     threadManager.execute([&] {
-        auto [q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                auto [q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                    [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                        auto [q3, applyStorageCallback] = createAsyncQuery<void>([&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                        pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                            applyStorageCallback);
-                    },
-                    [] {}, environment, false, true);
-                pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
-            },
-            [] {}, environment, false, true);
+        auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
+                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                    auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
+                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                                auto[q3, applyStorageCallback] = createAsyncQuery<void>(
+                                        [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
+                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
+                                                                    applyStorageCallback);
+                            },
+                            [] {}, environment, false, true);
+                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                },
+                [] {}, environment, false, true);
 
         pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
     });
@@ -268,7 +274,7 @@ TEST(Supercontract, Iterator) {
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
-TEST(VirtualMachine, FaultyStorage) {
+TEST(Supercontract, FaultyStorage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
@@ -283,7 +289,7 @@ TEST(VirtualMachine, FaultyStorage) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
-    contractEnvironmentMock.m_driveKey = DriveKey({1});
+    contractEnvironmentMock.m_driveKey = DriveKey({3});
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
@@ -296,12 +302,13 @@ TEST(VirtualMachine, FaultyStorage) {
     threadManager.execute([&] {
         pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
         environment.m_storage = pStorage;
-        auto [_, storageCallback] = createAsyncQuery<void>(
-            [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                auto [_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); }, [] {}, environment, false, true);
-                pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
-            },
-            [] {}, environment, false, true);
+        auto[_, storageCallback] = createAsyncQuery<void>(
+                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
+                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
+                                                                      [] {}, environment, false, true);
+                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+                },
+                [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
     });
 
@@ -326,31 +333,32 @@ TEST(VirtualMachine, FaultyStorage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                          ContractKey(),
-                                                          CallId(),
-                                                          "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                          "run",
-                                                          params,
-                                                          25000000000,
-                                                          26 * 1024,
-                                                          CallReferenceInfo{
-                                                              {},
-                                                              0,
-                                                              BlockHash(),
-                                                              0,
-                                                              0,
-                                                              {}}},
+                                                              ContractKey(),
+                                                              CallId(),
+                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                                                              "run",
+                                                              params,
+                                                              25000000000,
+                                                              26 * 1024,
+                                                              CallReferenceInfo{
+                                                                      {},
+                                                                      0,
+                                                                      BlockHash(),
+                                                                      0,
+                                                                      0,
+                                                                      {}}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
 
-        auto [_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
+        auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_scConsumed, 1437180);
-            ASSERT_EQ(res->m_smConsumed, 0); }, [] {}, environment, false, false);
+            ASSERT_EQ(res->m_smConsumed, 0);
+        }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
     });
@@ -361,18 +369,19 @@ TEST(VirtualMachine, FaultyStorage) {
     auto barrierApply = pApply.get_future();
 
     threadManager.execute([&] {
-        auto [q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                auto [q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                    [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
-                        auto [q3, applyStorageCallback] = createAsyncQuery<void>([&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                        pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                            applyStorageCallback);
-                    },
-                    [] {}, environment, false, true);
-                pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
-            },
-            [] {}, environment, false, true);
+        auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
+                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                    auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
+                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                                auto[q3, applyStorageCallback] = createAsyncQuery<void>(
+                                        [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
+                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
+                                                                    applyStorageCallback);
+                            },
+                            [] {}, environment, false, true);
+                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                },
+                [] {}, environment, false, true);
 
         pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
     });
