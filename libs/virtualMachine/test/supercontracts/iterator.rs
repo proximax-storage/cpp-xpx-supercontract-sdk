@@ -55,19 +55,26 @@ add_subdirectory(messenger)"
         "test.txt",
         "utils",
         "virtualMachine",
+        "testFolder/CMakeLists.txt",
+        "testFolder/crypto",
+        "testFolder/internet",
+        "testFolder/logging",
+        "testFolder/messenger",
+        "testFolder/test.txt",
+        "testFolder/utils",
+        "testFolder/virtualMachine",
     ];
 
-    let mut i = 0;
-
     while let Some(path) = iterator.next() {
-        if path != expected[i] {
+        if !expected.contains(&path.as_str()) {
             return 0;
         }
-        if path == "testFolder/test.txt" {
+        if path == "testFolder/test.txt" || path == "test.txt" {
             iterator.remove().unwrap();
         }
-        i += 1;
     }
+
+    remove_file("testFolder").unwrap();
 
     return 1;
 }

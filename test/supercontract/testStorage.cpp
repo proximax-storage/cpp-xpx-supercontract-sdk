@@ -227,7 +227,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 11685055770);
+            ASSERT_EQ(res->m_scConsumed, 11690289255);
             ASSERT_EQ(res->m_smConsumed, 261); }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
