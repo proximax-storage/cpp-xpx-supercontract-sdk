@@ -35,12 +35,14 @@ private:
     std::string             m_rpcStorageAddress = "localhost:50052";
     std::string             m_rpcMessengerAddress = "localhost:50052";
 
-    int                     m_virtualMachineRepeatTimeoutMs = 5000;
+    int                     m_serviceUnavailableTimeoutMs = 5000;
 
     int                     m_internetBufferSize = 16 * 1024;
     int                     m_internetConnectionTimeoutMilliseconds = 10000;
     int                     m_ocspQueryTimerMilliseconds = 500;
     int                     m_ocspQueryMaxEfforts = 60;
+
+    int                     m_shareOpinionTimeoutMs = 2 * 1000 * 60;
 
     logging::LoggerConfig   m_loggerConfig;
 
@@ -158,12 +160,12 @@ public:
         m_ocspQueryMaxEfforts = ocspQueryMaxEfforts;
     }
 
-    int virtualMachineRepeatTimeoutMs() const {
-        return m_virtualMachineRepeatTimeoutMs;
+    int serviceUnavailableTimeoutMs() const {
+        return m_serviceUnavailableTimeoutMs;
     }
 
-    void setVirtualMachineRepeatTimeoutMs(int virtualMachineRepeatTimeoutMs) {
-        m_virtualMachineRepeatTimeoutMs = virtualMachineRepeatTimeoutMs;
+    void setServiceUnavailableTimeoutMs(int serviceUnavailableTimeoutMs) {
+        m_serviceUnavailableTimeoutMs = serviceUnavailableTimeoutMs;
     }
 
     const logging::LoggerConfig& loggerConfig() const {
@@ -172,6 +174,14 @@ public:
 
     void setLoggerConfig(const logging::LoggerConfig& loggerConfig) {
         m_loggerConfig = loggerConfig;
+    }
+
+    int shareOpinionTimeoutMs() const {
+        return m_shareOpinionTimeoutMs;
+    }
+
+    void setShareOpinionTimeoutMs(int shareOpinionTimeoutMs) {
+        m_shareOpinionTimeoutMs = shareOpinionTimeoutMs;
     }
 };
 

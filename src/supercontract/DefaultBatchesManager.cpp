@@ -206,7 +206,7 @@ void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std:
     callIt->second.m_repeatTimer.cancel();
 
     callIt->second.m_repeatTimer = Timer(m_executorEnvironment.threadManager().context(),
-                                         m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(),
+                                         m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(),
                                          [callId = callIt->first, this] {
                                              auto callIt = m_autorunCallInfos.find(callId);
                                              ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())

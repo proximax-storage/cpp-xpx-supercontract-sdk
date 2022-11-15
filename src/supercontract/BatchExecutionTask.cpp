@@ -71,6 +71,9 @@ void BatchExecutionTask::terminate() {
     m_successfulApprovalExpectationTimer.cancel();
     m_unsuccessfulApprovalExpectationTimer.cancel();
     m_unableToExecuteBatchTimer.cancel();
+    m_shareOpinionTimer.cancel();
+
+    m_finished = true;
 
     m_contractEnvironment.finishTask();
 }
@@ -116,7 +119,7 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_unableToExecuteBatchTimer) {
+    if (m_finished) {
         return false;
     }
 
@@ -242,7 +245,7 @@ bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExe
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_unableToExecuteBatchTimer) {
+    if (m_finished) {
         return false;
     }
 
@@ -265,7 +268,7 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecution
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_unableToExecuteBatchTimer) {
+    if (m_finished) {
         return false;
     }
 
@@ -321,17 +324,12 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
 
     m_successfulEndBatchOpinion->m_callsExecutionInfo = std::move(m_callsExecutionOpinions);
 
-    auto messenger = m_executorEnvironment.messenger().lock();
-
-    if (messenger) {
-        for (const auto& executor: m_contractEnvironment.executors()) {
-            auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
-            auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
-            messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
-        }
-    } else {
-        m_executorEnvironment.logger().warn("Messenger not available");
+    if (m_publishedEndBatchInfo) {
+        processPublishedEndBatch();
+        return;
     }
+
+    shareOpinions();
 
     m_unsuccessfulExecutionTimer = m_executorEnvironment.threadManager().startTimer(
             m_contractEnvironment.contractConfig().unsuccessfulApprovalDelayMs(), [this] {
@@ -346,11 +344,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
         return !validateOtherBatchInfo(item.second);
     });
 
-    if (m_publishedEndBatchInfo) {
-        processPublishedEndBatch();
-    } else {
-        checkEndBatchTransactionReadiness();
-    }
+    checkEndBatchTransactionReadiness();
 }
 
 void BatchExecutionTask::processPublishedEndBatch() {
@@ -375,6 +369,8 @@ void BatchExecutionTask::processPublishedEndBatch() {
         m_executorEnvironment.logger().warn("Calculated storage hash differs from the published one");
 
         m_contractEnvironment.addSynchronizationTask();
+
+        m_finished = true;
 
         m_contractEnvironment.finishTask();
 
@@ -641,17 +637,7 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
         callInfo.m_successfulCallExecutionInfo.reset();
     }
 
-    auto messenger = m_executorEnvironment.messenger().lock();
-
-    if (messenger) {
-        for (const auto& executor: m_contractEnvironment.executors()) {
-            auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
-            auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
-            messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
-        }
-    } else {
-        m_executorEnvironment.logger().warn("Messenger not available");
-    }
+    // The opinion will be shared when the share opinion timer ticks
 }
 
 void BatchExecutionTask::computeProofOfExecution() {
@@ -663,8 +649,10 @@ void BatchExecutionTask::onUnableToExecuteBatch() {
 
     m_contractEnvironment.delayBatchExecution(m_batch);
 
+    m_finished = true;
+
     m_unableToExecuteBatchTimer = Timer(m_executorEnvironment.threadManager().context(),
-                                        m_executorEnvironment.executorConfig().virtualMachineRepeatTimeoutMs(), [this] {
+                                        m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(), [this] {
                 m_contractEnvironment.finishTask();
             });
 }
@@ -676,14 +664,47 @@ void BatchExecutionTask::onAppliedStorageModifications() {
     const auto& cosigners = m_publishedEndBatchInfo->m_cosigners;
     if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
         cosigners.end()) {
-        // TODO PoEx
         EndBatchExecutionSingleTransactionInfo singleTx = {m_contractEnvironment.contractKey(),
                                                            m_batch.m_batchIndex,
-                                                           {}};
+                                                           m_contractEnvironment.proofOfExecution().buildProof()};
         m_executorEnvironment.executorEventHandler().endBatchSingleTransactionIsReady(singleTx);
     }
 
+    m_finished = true;
+
     m_contractEnvironment.finishTask();
+}
+
+void BatchExecutionTask::shareOpinions() {
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    auto messenger = m_executorEnvironment.messenger().lock();
+
+    if (messenger) {
+
+        ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+
+        for (const auto& executor: m_contractEnvironment.executors()) {
+            auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
+            auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
+            messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
+        }
+
+        if (m_unsuccessfulEndBatchOpinion) {
+            for (const auto& executor: m_contractEnvironment.executors()) {
+                auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
+                auto tag = magic_enum::enum_name(MessageTag::END_BATCH);
+                messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
+            }
+        }
+    } else {
+        m_executorEnvironment.logger().warn("Messenger not available");
+    }
+
+    m_shareOpinionTimer = Timer(m_executorEnvironment.threadManager().context(),
+                                m_executorEnvironment.executorConfig().shareOpinionTimeoutMs(), [this] {
+                shareOpinions();
+            });
 }
 
 }

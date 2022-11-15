@@ -832,6 +832,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     exec("sudo systemctl stop supercontract_server");
+    std::cout << "stopped" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     exec("sudo systemctl start supercontract_server");
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -941,7 +942,7 @@ TEST(VirtualMachine, SimpleStorage) {
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_scConsumed, 4402853086);
-            ASSERT_EQ(res->m_smConsumed, 56);
+            ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),

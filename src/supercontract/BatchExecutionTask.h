@@ -40,10 +40,14 @@ private:
 
     Timer m_unableToExecuteBatchTimer;
 
+    Timer m_shareOpinionTimer;
+
     bool m_successfulEndBatchSent = false;
     bool m_unsuccessfulEndBatchSent = false;
 
     uint64_t m_proofOfExecutionSecretData = 0;
+
+    bool     m_finished = false;
 
 public:
 
@@ -118,6 +122,8 @@ private:
     void onUnableToExecuteBatch();
 
     void onAppliedStorageModifications();
+
+    void shareOpinions();
 };
 
 }

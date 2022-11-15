@@ -63,8 +63,9 @@ pub unsafe extern "C" fn run() -> u32 {
                 return 0;
             }
             if path == "testFolder/test.txt" || path == "test.txt" {
-                if iterator.remove().is_ok() {
-                    return 777;
+                match iterator.remove() {
+                    Err(_) => (),
+                    _ => ()
                 }
             }
         }
