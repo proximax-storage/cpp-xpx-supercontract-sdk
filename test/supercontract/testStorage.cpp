@@ -231,7 +231,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 11693583718);
+            ASSERT_EQ(res->m_scConsumed, 11693600352);
             ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 

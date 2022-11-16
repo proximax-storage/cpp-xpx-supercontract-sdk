@@ -44,6 +44,8 @@ pub unsafe extern "C" fn run() -> u32 {
     create_dir("testFolder/messenger").unwrap();
     create_dir("testFolder/internet").unwrap();
 
+    let mut res = true;
+
     {
         let mut iterator = DirIterator::new("testFolder", true);
 
@@ -55,17 +57,25 @@ pub unsafe extern "C" fn run() -> u32 {
             "messenger",
             "test.txt",
             "utils",
-            "virtualMachine"
+            "virtualMachine",
+            "testFolder/CMakeLists.txt",
+            "testFolder/crypto",
+            "testFolder/internet",
+            "testFolder/logging",
+            "testFolder/messenger",
+            "testFolder/test.txt",
+            "testFolder/utils",
+            "testFolder/virtualMachine",
         ];
 
         while let Some(path) = iterator.next() {
             if !expected.contains(&path.as_str()) {
-                return 0;
+                res = false;
             }
             if path == "testFolder/test.txt" || path == "test.txt" {
                 match iterator.remove() {
                     Err(_) => (),
-                    _ => ()
+                    _ => (),
                 }
             }
         }
@@ -73,5 +83,8 @@ pub unsafe extern "C" fn run() -> u32 {
 
     remove_file("testFolder").unwrap();
 
-    return 1;
+    if res {
+        return 1;
+    }
+    return 0;
 }
