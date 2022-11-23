@@ -81,7 +81,7 @@ pub unsafe extern "C" fn run() -> u32 {
         }
     }
 
-    remove_file("testFolder").unwrap();
+    remove_filesystem_entry("testFolder").unwrap();
 
     if res {
         return 1;

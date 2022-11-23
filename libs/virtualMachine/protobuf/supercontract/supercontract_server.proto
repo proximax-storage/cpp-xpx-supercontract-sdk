@@ -81,7 +81,7 @@ message Request {
     IsFileReturn is_file_return = 19;
     CreateDirReturn create_dir_return = 20;
     MoveFileReturn move_file_return = 21;
-    RemoveFileReturn remove_file_return = 22;
+    RemoveFsEntryReturn remove_filesystem_entry_return = 22;
     OpenConnectionReturn open_connection_return = 23;
     ReadConnectionStreamReturn read_connection_stream_return = 24;
     CloseConnectionReturn close_connection_return = 25;
@@ -116,7 +116,7 @@ message Response {
     IsFile is_file = 19;
     CreateDir create_dir = 20;
     MoveFile move_file = 21;
-    RemoveFile remove_file = 22;
+    RemoveFsEntry remove_filesystem_entry = 22;
     OpenConnection open_connection = 23;
     ReadConnectionStream read_connection_stream = 24;
     CloseConnection close_connection = 25;

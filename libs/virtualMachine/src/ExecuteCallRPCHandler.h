@@ -98,7 +98,7 @@ private:
 
     void processMoveFile(const supercontractserver::MoveFile&);
 
-    void processRemoveFile(const supercontractserver::RemoveFile&);
+    void processRemoveFile(const supercontractserver::RemoveFsEntry&);
 
     void processCreateIterator(const supercontractserver::CreateDirIterator&);
 

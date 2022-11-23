@@ -233,8 +233,8 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         processMoveFile(response->move_file());
         break;
     }
-    case supercontractserver::Response::kRemoveFile: {
-        processRemoveFile(response->remove_file());
+    case supercontractserver::Response::kRemoveFilesystemEntry: {
+        processRemoveFile(response->remove_filesystem_entry());
         break;
     }
     case supercontractserver::Response::kOpenConnection: {
@@ -698,8 +698,8 @@ void ExecuteCallRPCHandler::processMoveFile(const supercontractserver::MoveFile&
     m_responseHandler->process();
 }
 
-void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveFile& request) {
-    auto [_, callback] = createAsyncQuery<supercontractserver::RemoveFileReturn>(
+void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveFsEntry& request) {
+    auto [_, callback] = createAsyncQuery<supercontractserver::RemoveFsEntryReturn>(
         [this](auto&& res) {
             ASSERT(isSingleThread(), m_environment.logger())
 
@@ -715,9 +715,9 @@ void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveF
 
             ASSERT(res, m_environment.logger())
 
-            auto* status = new supercontractserver::RemoveFileReturn(std::move(*res));
+            auto* status = new supercontractserver::RemoveFsEntryReturn(std::move(*res));
             supercontractserver::Request requestWrapper;
-            requestWrapper.set_allocated_remove_file_return(status);
+            requestWrapper.set_allocated_remove_filesystem_entry_return(status);
             writeRequest(std::move(requestWrapper));
         },
         [] {}, m_environment, false, false);

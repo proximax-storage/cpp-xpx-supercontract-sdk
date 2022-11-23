@@ -43,7 +43,7 @@ pub unsafe extern "C" fn run() -> u32 {
         return 999;
     }
 
-    remove_file("move").unwrap();
+    remove_filesystem_entry("move").unwrap();
 
     return 1;
 }

@@ -467,7 +467,7 @@ void CallExecutionEnvironment::moveFile(const std::string& oldPath, const std::s
     storage->moveFilesystemEntry(m_contractEnvironment.driveKey(), oldPath, newPath, storageCallback);
 }
 
-void CallExecutionEnvironment::removeFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) {
+void CallExecutionEnvironment::removeFsEntry(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(!m_asyncQuery, m_executorEnvironment.logger())

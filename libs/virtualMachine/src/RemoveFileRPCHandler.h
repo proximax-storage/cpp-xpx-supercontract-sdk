@@ -19,16 +19,16 @@ class RemoveFileRPCHandler
       private SingleThread {
 
     GlobalEnvironment& m_environment;
-    supercontractserver::RemoveFile m_request;
+    supercontractserver::RemoveFsEntry m_request;
     std::weak_ptr<VirtualMachineStorageQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFileReturn>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
     RemoveFileRPCHandler(GlobalEnvironment& environment,
-                         const supercontractserver::RemoveFile& request,
+                         const supercontractserver::RemoveFsEntry& request,
                          std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                         std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFileReturn>> callback);
+                         std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> callback);
 
     void process() override;
 

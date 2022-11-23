@@ -176,7 +176,7 @@ public:
     void moveFile(const std::string& oldPath, const std::string& newPath,
                   std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
-    void removeFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+    void removeFsEntry(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 };
 
 } // namespace sirius::contract

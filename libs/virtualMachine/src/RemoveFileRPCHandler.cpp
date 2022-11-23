@@ -10,9 +10,9 @@
 namespace sirius::contract::vm {
 
 RemoveFileRPCHandler::RemoveFileRPCHandler(GlobalEnvironment& environment,
-                                           const supercontractserver::RemoveFile& request,
+                                           const supercontractserver::RemoveFsEntry& request,
                                            std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                                           std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFileReturn>> callback)
+                                           std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> callback)
     : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(std::move(callback)) {}
 
 void RemoveFileRPCHandler::process() {
@@ -31,7 +31,7 @@ void RemoveFileRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->removeFile(m_request.path(), callback);
+    handler->removeFsEntry(m_request.path(), callback);
 }
 
 void RemoveFileRPCHandler::onResult(const expected<void>& res) {
@@ -43,7 +43,7 @@ void RemoveFileRPCHandler::onResult(const expected<void>& res) {
         return;
     }
 
-    supercontractserver::RemoveFileReturn status;
+    supercontractserver::RemoveFsEntryReturn status;
 
     status.set_success(res.has_value());
 

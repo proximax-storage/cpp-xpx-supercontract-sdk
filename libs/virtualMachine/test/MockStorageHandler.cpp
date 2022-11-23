@@ -172,7 +172,7 @@ void MockStorageHandler::moveFile(
     callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::move_file_error)));
 }
 
-void MockStorageHandler::removeFile(
+void MockStorageHandler::removeFsEntry(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
     auto ret = std::filesystem::remove_all(path);

@@ -80,11 +80,11 @@ message MoveFileReturn {
   bool success = 1;
 }
 
-message RemoveFile {
+message RemoveFsEntry {
   string path = 1;
 }
 
-message RemoveFileReturn {
+message RemoveFsEntryReturn {
   bool success = 1;
 }
 

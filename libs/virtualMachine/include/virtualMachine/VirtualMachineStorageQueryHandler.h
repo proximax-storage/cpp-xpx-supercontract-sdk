@@ -75,7 +75,7 @@ public:
         const std::string& newPath,
         std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
-    virtual void removeFile(
+    virtual void removeFsEntry(
         const std::string& path,
         std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
