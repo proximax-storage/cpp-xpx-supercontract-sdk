@@ -20,6 +20,8 @@ private:
 public:
     VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result);
 
+    VirtualMachineMock(ThreadManager& threadManager);
+
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,

@@ -16,6 +16,16 @@ ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                                                                                               executorConfig),
       m_threadManager(threadManager), m_logger(executorConfig.loggerConfig(), "executor") {}
 
+ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
+                                             std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
+                                             const ExecutorConfig& executorConfig,
+                                             ThreadManager& threadManager,
+                                             std::weak_ptr<storage::Storage> storageMock)
+    : m_keyPair(std::move(keyPair)), m_virtualMachineMock(std::move(virtualMachineMock)), m_executorConfig(
+    executorConfig),
+      m_threadManager(threadManager), m_logger(executorConfig.loggerConfig(), "executor"), m_storage(std::move(storageMock))
+      {}
+
 const crypto::KeyPair& ExecutorEnvironmentMock::keyPair() const { return m_keyPair; }
 
 ExecutorEventHandler& ExecutorEnvironmentMock::executorEventHandler() { return m_executorEventHandlerMock; }

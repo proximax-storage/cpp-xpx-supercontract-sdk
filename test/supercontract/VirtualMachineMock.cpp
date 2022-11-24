@@ -11,6 +11,9 @@ namespace sirius::contract::test {
 VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager, std::deque<bool> result)
         : m_threadManager(threadManager), m_result(std::move(result)) {}
 
+VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager)
+        : m_threadManager(threadManager){}
+
 void VirtualMachineMock::executeCall(const vm::CallRequest &request,
                                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
