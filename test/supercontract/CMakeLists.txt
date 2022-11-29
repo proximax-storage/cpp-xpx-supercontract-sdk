@@ -8,7 +8,7 @@ find_package(GTest REQUIRED)
 
 file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
-add_executable(supercontract-tests ${TEST_FILES} TestUtils.cpp ContractEnvironmentMock.cpp ContractEnvironmentMock.h ExecutorEnvironmentMock.cpp ExecutorEnvironmentMock.h VirtualMachineMock.cpp VirtualMachineMock.h testBatchExecutionTask.cpp StorageMock.cpp StorageMock.h)
+add_executable(supercontract-tests ${TEST_FILES} TestUtils.cpp ContractEnvironmentMock.cpp ContractEnvironmentMock.h ExecutorEnvironmentMock.cpp ExecutorEnvironmentMock.h VirtualMachineMock.cpp VirtualMachineMock.h StorageMock.cpp StorageMock.h)
 enable_testing()
 add_test(supercontract-tests "./test")
 target_include_directories(supercontract-tests PRIVATE ../../src)

@@ -100,6 +100,10 @@ void RPCMessenger::onSessionInitiated(expected<void>&& res) {
         return;
     }
 
+    for (const auto& tag: m_subscribedTags) {
+        m_queuedTags.push(tag);
+    }
+
     read();
     write();
 }
@@ -175,8 +179,6 @@ void RPCMessenger::startSession() {
 void RPCMessenger::restartSession() {
 
     ASSERT(isSingleThread(), m_environment.logger())
-
-    ASSERT(!m_restartTimer, m_environment.logger())
 
     stopSession();
     m_restartTimer = Timer(m_environment.threadManager().context(), 15000, [this] {
