@@ -13,6 +13,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -446,7 +447,7 @@ TEST(Storage, IteratorDestroyError) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             createFolders::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
@@ -462,7 +463,7 @@ TEST(Storage, IteratorDestroyError) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pCreateFile](auto&& res) {
             ASSERT_TRUE(res);
             createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierCreateFile.get();
@@ -478,7 +479,7 @@ TEST(Storage, IteratorDestroyError) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pIterate](auto&& res) {
             ASSERT_TRUE(res);
             iterator::onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierIterate.get();

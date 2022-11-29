@@ -6,6 +6,7 @@
 
 #include "DefaultBatchesManager.h"
 #include <virtualMachine/ExecutionErrorConidition.h>
+#include <crypto/Hashes.h>
 
 namespace sirius::contract {
 

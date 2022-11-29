@@ -7,6 +7,7 @@
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "virtualMachine/VirtualMachine.h"
 #include <gtest/gtest.h>
+#include <utils/Random.h>
 
 namespace sirius::contract::test {
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
@@ -59,7 +60,7 @@ TEST(Supercontract, Storage) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();
@@ -184,7 +185,7 @@ TEST(Supercontract, Iterator) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();
@@ -309,7 +310,7 @@ TEST(Supercontract, FaultyStorage) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();

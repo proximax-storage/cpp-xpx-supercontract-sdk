@@ -15,11 +15,14 @@ public:
     StorageMock()= default;;
 
     // Storage modifier virtual functions
-    void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+    void synchronizeStorage(const DriveKey& driveKey,
+                            const ModificationId& modificationId,
+                            const StorageHash& storageHash,
                             std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
     void
     initiateModifications(const DriveKey& driveKey,
+                          const ModificationId& modificationId,
                           std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
     void initiateSandboxModifications(const DriveKey& driveKey,

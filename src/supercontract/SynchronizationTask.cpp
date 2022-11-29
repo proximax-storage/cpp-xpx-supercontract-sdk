@@ -61,7 +61,7 @@ void SynchronizationTask::run() {
 
     m_storageQuery = std::move(query);
 
-    storage->synchronizeStorage(m_contractEnvironment.driveKey(), m_request.m_storageHash, callback);
+    storage->synchronizeStorage(m_contractEnvironment.driveKey(), storageModificationId(m_request.m_batchIndex), m_request.m_storageHash, callback);
 }
 
 void SynchronizationTask::terminate() {

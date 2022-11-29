@@ -67,12 +67,16 @@ void RPCStorage::waitForRPCResponse() {
     }
 }
 
-void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+void RPCStorage::synchronizeStorage(const DriveKey& driveKey,
+                                    const ModificationId& modificationId,
+                                    const StorageHash& storageHash,
                                     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::SynchronizeStorageRequest request;
     request.set_drive_key(driveKey.toString());
+    request.set_modification_identifier(modificationId.toString());
+    request.set_storage_hash(storageHash.toString());
     auto* tag = new SynchronizeStorageTag(m_environment, std::move(request), *m_stub, m_completionQueue,
                                           std::move(callback));
     m_activeTags.insert(tag);
@@ -80,12 +84,14 @@ void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash&
 }
 
 void RPCStorage::initiateModifications(const DriveKey& driveKey,
+                                       const ModificationId& modificationId,
                                        std::shared_ptr<AsyncQueryCallback<void>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::InitModificationsRequest request;
     request.set_drive_key(driveKey.toString());
+    request.set_modification_identifier(modificationId.toString());
     auto* tag = new InitiateModificationsTag(m_environment, std::move(request), *m_stub, m_completionQueue,
                                              std::move(callback));
     m_activeTags.insert(tag);

@@ -13,4 +13,13 @@ BaseContractTask::BaseContractTask(ExecutorEnvironment& executorEnvironment,
         : m_executorEnvironment(executorEnvironment)
         , m_contractEnvironment(contractEnvironment) {}
 
+ModificationId BaseContractTask::storageModificationId(uint64_t batchId) {
+    crypto::Sha3_256_Builder hashBuilder;
+    hashBuilder.update(m_contractEnvironment.contractKey());
+    hashBuilder.update(utils::RawBuffer{reinterpret_cast<const uint8_t*>(&batchId), sizeof(batchId)});
+    ModificationId modificationId;
+    hashBuilder.final(modificationId);
+    return modificationId;
+}
+
 }

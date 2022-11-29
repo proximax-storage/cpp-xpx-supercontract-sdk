@@ -13,6 +13,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -174,7 +175,7 @@ TEST(Storage, ReadNonExisting) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRead](auto&& res) {
             ASSERT_TRUE(res);
             onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierRead.get();

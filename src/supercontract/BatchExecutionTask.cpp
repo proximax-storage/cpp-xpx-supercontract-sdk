@@ -56,6 +56,7 @@ void BatchExecutionTask::run() {
     }
 
     storage->initiateModifications(m_contractEnvironment.driveKey(),
+                                   storageModificationId(m_batch.m_batchIndex),
                                    callback);
 }
 

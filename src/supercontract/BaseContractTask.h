@@ -23,6 +23,8 @@ protected:
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
 
+    ModificationId storageModificationId(uint64_t batchId);
+
 public:
 
     explicit BaseContractTask(
@@ -32,6 +34,7 @@ public:
     virtual void run() = 0;
 
     virtual void terminate() = 0;
+
 
 };
 

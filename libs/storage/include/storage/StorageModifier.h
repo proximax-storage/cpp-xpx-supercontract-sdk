@@ -22,11 +22,14 @@ class StorageModifier {
 public:
     virtual ~StorageModifier() = default;
 
-    virtual void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+    virtual void synchronizeStorage(const DriveKey& driveKey,
+                                    const ModificationId& modificationId,
+                                    const StorageHash& storageHash,
                                     std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
 
     virtual void
     initiateModifications(const DriveKey& driveKey,
+                          const ModificationId& modificationId,
                           std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
     virtual void initiateSandboxModifications(const DriveKey& driveKey,

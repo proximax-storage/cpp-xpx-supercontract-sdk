@@ -12,6 +12,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -342,7 +343,7 @@ TEST(Storage, CreateDirAndMove) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             write::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
@@ -358,7 +359,7 @@ TEST(Storage, CreateDirAndMove) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pMove](auto&& res) {
             ASSERT_TRUE(res);
             move::onModificationsInitiated(driveKey, environment, pStorage, pMove); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierMove.get();

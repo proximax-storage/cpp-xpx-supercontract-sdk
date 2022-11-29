@@ -19,6 +19,7 @@ namespace sirius::contract {
     DECL_HASH( CallId )
     DECL_HASH( SessionId )
     DECL_HASH( StorageHash )
+    DECL_HASH( ModificationId )
     DECL_HASH( BlockHash )
     DECL_HASH( TransactionHash )
     DECL_HASH( RequestId )
