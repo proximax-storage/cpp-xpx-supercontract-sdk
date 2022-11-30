@@ -16,10 +16,16 @@ void StorageMock::synchronizeStorage(const DriveKey& driveKey,
 void
 StorageMock::initiateModifications(const DriveKey& driveKey,
                                    const ModificationId& modificationId,
-                                   std::shared_ptr<AsyncQueryCallback<void>> callback) {}
+                                   std::shared_ptr<AsyncQueryCallback<void>> callback) {
+        std::cout << "initiateModifications  \n";
+        callback->postReply(expected<void>());
+}
 
 void StorageMock::initiateSandboxModifications(const DriveKey& driveKey,
-                                               std::shared_ptr<AsyncQueryCallback<void>> callback) {}
+                                               std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    std::cout << "initiateSandboxModifications  \n";
+    callback->postReply(expected<void>());
+}
 
 void StorageMock::openFile(const DriveKey& driveKey, const std::string& path, storage::OpenFileMode mode,
                            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {}
@@ -36,14 +42,29 @@ void StorageMock::flush(const DriveKey&, uint64_t fileId, std::shared_ptr<AsyncQ
 
 void StorageMock::applySandboxStorageModifications(const DriveKey& driveKey,
                                                    bool success,
-                                                   std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) {}
+                                                   std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) {
+    std::cout << "applySandboxStorageModifications  \n";
+    storage::SandboxModificationDigest digest{
+            true,
+            0,
+            0
+    };
+    callback->postReply(std::move(digest));
+}
 
 void
 StorageMock::evaluateStorageHash(const DriveKey& driveKey,
-                                 std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) {}
+                                 std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) {
+    std::cout << "evaluateStorageHash  \n";
+    storage::StorageState state;
+    callback->postReply(std::move(state));
+}
 
 void StorageMock::applyStorageModifications(const DriveKey& driveKey, bool success,
-                                            std::shared_ptr<AsyncQueryCallback<void>> callback) {}
+                                            std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    std::cout << "applyStorageModifications  \n";
+    callback->postReply(expected<void>());
+}
 
 void
 StorageMock::createDirectories(const DriveKey& driveKey, const std::string& path,
