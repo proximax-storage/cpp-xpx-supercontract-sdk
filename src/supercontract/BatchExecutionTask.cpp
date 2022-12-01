@@ -311,12 +311,15 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
                                                        uint64_t fileStructureSize) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
-
+    std::cout<<"form batch \n";
     m_successfulEndBatchOpinion = EndBatchExecutionOpinion();
     m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_executorKey = m_executorEnvironment.keyPair().publicKey();
 
+    std::cout << m_successfulEndBatchOpinion->m_callsExecutionInfo.size()<<std::endl;
+    std::cout << m_successfulEndBatchOpinion->isSuccessful()<<std::endl;
+    std::cout << m_successfulEndBatchOpinion->m_batchIndex<<std::endl;
     auto verificationInformation = m_contractEnvironment.proofOfExecution().addToProof(m_proofOfExecutionSecretData);
     m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{storageHash, usedDriveSize,
                                                                              metaFilesSize,

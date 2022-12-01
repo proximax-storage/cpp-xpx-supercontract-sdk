@@ -9,15 +9,9 @@
 #include "../../src/supercontract/ExecutorEnvironment.h"
 #include "VirtualMachineMock.h"
 #include "storage/Storage.h"
+#include "ExecutorEventHandlerMock.h"
 
 namespace sirius::contract::test {
-
-class ExecutorEventHandlerMock : public ExecutorEventHandler {
-public:
-    void endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) override {}
-
-    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {}
-};
 
 class ExecutorEnvironmentMock : public ExecutorEnvironment {
 private:
@@ -27,6 +21,7 @@ private:
     boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
     ThreadManager& m_threadManager;
     logging::Logger m_logger;
+    std::weak_ptr<messenger::Messenger> m_messenger;
 
 public:
     std::weak_ptr<storage::Storage> m_storage;
@@ -40,7 +35,8 @@ public:
                             std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                             const ExecutorConfig& executorConfig,
                             ThreadManager& threadManager,
-                            std::weak_ptr<storage::Storage> storageMock);
+                            std::weak_ptr<storage::Storage> storageMock,
+                            std::weak_ptr<messenger::Messenger> messengerMock);
 
     const crypto::KeyPair& keyPair() const override;
 

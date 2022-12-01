@@ -5,6 +5,8 @@
 */
 
 #include "ExecutorEnvironmentMock.h"
+
+#include <utility>
 #include "storage/RPCStorage.h"
 
 namespace sirius::contract::test {
@@ -20,11 +22,12 @@ ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                                              std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                                              const ExecutorConfig& executorConfig,
                                              ThreadManager& threadManager,
-                                             std::weak_ptr<storage::Storage> storageMock)
+                                             std::weak_ptr<storage::Storage> storageMock,
+                                             std::weak_ptr<messenger::Messenger> messengerMock)
     : m_keyPair(std::move(keyPair)), m_virtualMachineMock(std::move(virtualMachineMock)), m_executorConfig(
     executorConfig),
-      m_threadManager(threadManager), m_logger(executorConfig.loggerConfig(), "executor"), m_storage(std::move(storageMock))
-      {}
+      m_threadManager(threadManager), m_logger(executorConfig.loggerConfig(), "executor"),
+      m_storage(std::move(storageMock)), m_messenger(std::move(messengerMock)) {}
 
 const crypto::KeyPair& ExecutorEnvironmentMock::keyPair() const { return m_keyPair; }
 
@@ -41,7 +44,7 @@ ThreadManager& ExecutorEnvironmentMock::threadManager() { return m_threadManager
 logging::Logger& ExecutorEnvironmentMock::logger() { return m_logger; }
 
 std::weak_ptr<messenger::Messenger> ExecutorEnvironmentMock::messenger() {
-    return std::weak_ptr<messenger::Messenger>();
+    return m_messenger;
 }
 
 std::weak_ptr<storage::StorageModifier> ExecutorEnvironmentMock::storageModifier() {
