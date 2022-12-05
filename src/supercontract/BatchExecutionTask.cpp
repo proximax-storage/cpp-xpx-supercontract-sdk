@@ -317,9 +317,6 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_executorKey = m_executorEnvironment.keyPair().publicKey();
 
-    std::cout << m_successfulEndBatchOpinion->m_callsExecutionInfo.size()<<std::endl;
-    std::cout << m_successfulEndBatchOpinion->isSuccessful()<<std::endl;
-    std::cout << m_successfulEndBatchOpinion->m_batchIndex<<std::endl;
     auto verificationInformation = m_contractEnvironment.proofOfExecution().addToProof(m_proofOfExecutionSecretData);
     m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{storageHash, usedDriveSize,
                                                                              metaFilesSize,
@@ -529,10 +526,10 @@ BatchExecutionTask::createMultisigTransactionInfo(const EndBatchExecutionOpinion
     multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
     multisigTransactionInfo.m_successfulBatchInfo = transactionOpinion.m_successfulBatchInfo;
 
-    for (const auto& call: multisigTransactionInfo.m_callsExecutionInfo) {
+    for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
         CallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
-        callInfo.m_callExecutionInfo = call.m_callExecutionInfo;
+        callInfo.m_callExecutionInfo = call.m_successfulCallExecutionInfo;
         multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
     }
 
