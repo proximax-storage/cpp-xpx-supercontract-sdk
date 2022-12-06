@@ -7,6 +7,9 @@
 #include "StorageMock.h"
 
 namespace sirius::contract::test {
+
+StorageMock::StorageMock():m_storageHash(utils::generateRandomByteValue<StorageHash>()){}
+
 void StorageMock::synchronizeStorage(const DriveKey& driveKey,
                                      const ModificationId& modificationId,
                                      const StorageHash& storageHash,
@@ -57,6 +60,7 @@ StorageMock::evaluateStorageHash(const DriveKey& driveKey,
                                  std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) {
     std::cout << "evaluateStorageHash  \n";
     storage::StorageState state;
+    state.m_storageHash = m_storageHash;
     callback->postReply(std::move(state));
 }
 

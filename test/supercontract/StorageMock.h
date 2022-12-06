@@ -7,12 +7,15 @@
 #pragma once
 
 #include "storage/Storage.h"
+#include "utils/Random.h"
 
 namespace sirius::contract::test {
 
 class StorageMock: public storage::Storage {
 public:
-    StorageMock()= default;;
+    StorageHash m_storageHash;
+
+    StorageMock();
 
     // Storage modifier virtual functions
     void synchronizeStorage(const DriveKey& driveKey,
