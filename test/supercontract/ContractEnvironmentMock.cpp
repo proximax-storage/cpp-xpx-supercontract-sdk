@@ -29,9 +29,9 @@ uint64_t ContractEnvironmentMock::automaticExecutionsSMLimit() const { return m_
 
 const ContractConfig& ContractEnvironmentMock::contractConfig() const { return m_contractConfig; }
 
-void ContractEnvironmentMock::cancelBatchesUpTo(uint64_t index) {
+void ContractEnvironmentMock::cancelBatchesUpTo(uint64_t index) {}
 
-}
+void ContractEnvironmentMock::addSynchronizationTask() {}
 
 ProofOfExecution& ContractEnvironmentMock::proofOfExecution() {
     return m_proofOfExecution;

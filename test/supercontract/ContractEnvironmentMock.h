@@ -41,7 +41,7 @@ public:
 
     void finishTask() override {}
 
-    void addSynchronizationTask() override {}
+    void addSynchronizationTask() override;
 
     void delayBatchExecution(Batch batch) override {}
 
