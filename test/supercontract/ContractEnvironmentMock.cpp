@@ -17,6 +17,17 @@ ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEn
           , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
           , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair()) {}
 
+ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
+                                                 ContractKey& contractKey,
+                                                 uint64_t automaticExecutionsSCLimit,
+                                                 uint64_t automaticExecutionsSMLimit,
+                                                 ContractConfig config)
+        : m_contractKey(contractKey)
+        , m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
+        , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
+        , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair())
+        , m_contractConfig(config){}
+
 const ContractKey& ContractEnvironmentMock::contractKey() const { return m_contractKey; }
 
 const DriveKey& ContractEnvironmentMock::driveKey() const { return m_driveKey; }

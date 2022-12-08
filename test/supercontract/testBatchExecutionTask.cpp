@@ -16,7 +16,7 @@
 namespace sirius::contract::test {
 #define TEST_NAME BatchExecutionTaskTest
 
-TEST(TEST_NAME, OpinionTest) {
+TEST(TEST_NAME, SuccessfulOpinionTest) {
     // create executor environment
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
@@ -186,6 +186,8 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
+    ContractConfig config;
+    config.setUnsuccessfulApprovalDelayMs(2000);
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
@@ -222,7 +224,8 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     std::promise<void> barrier;
     threadManager.execute([&]{
         pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
-                executorEnvironmentMock, contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
+                executorEnvironmentMock, contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit
+                , config);
 
         pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
                                                                    *pContractEnvironmentMock,
@@ -232,8 +235,10 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
                                                                    std::nullopt);
         pBatchExecutionTask->run();
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
+    });
+    sleep(3);
+    threadManager.execute([&] {
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
-
         barrier.set_value();
     });
     sleep(3);

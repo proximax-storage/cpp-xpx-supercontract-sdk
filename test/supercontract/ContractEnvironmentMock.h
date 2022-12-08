@@ -27,6 +27,12 @@ public:
                             uint64_t automaticExecutionsSCLimit,
                             uint64_t automaticExecutionsSMLimit);
 
+    ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
+                            ContractKey& contractKey,
+                            uint64_t automaticExecutionsSCLimit,
+                            uint64_t automaticExecutionsSMLimit,
+                            ContractConfig config);
+
     const ContractKey& contractKey() const override;
 
     const DriveKey& driveKey() const override;
