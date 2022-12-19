@@ -311,7 +311,6 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
                                                        uint64_t fileStructureSize) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
-    std::cout<<"form batch \n";
     m_successfulEndBatchOpinion = EndBatchExecutionOpinion();
     m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
