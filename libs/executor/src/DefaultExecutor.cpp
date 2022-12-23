@@ -16,7 +16,7 @@
 #include <messenger/RPCMessenger.h>
 #include <storage/RPCStorage.h>
 
-#include "supercontract/Executor.h"
+#include "executor/Executor.h"
 #include "crypto/KeyPair.h"
 #include "supercontract/Identifiers.h"
 

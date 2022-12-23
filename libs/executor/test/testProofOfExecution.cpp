@@ -5,7 +5,7 @@
 */
 
 #include "TestUtils.h"
-#include "supercontract/ProofOfExecution.h"
+#include "ProofOfExecution.h"
 #include "gtest/gtest.h"
 
 namespace sirius::contract::test {

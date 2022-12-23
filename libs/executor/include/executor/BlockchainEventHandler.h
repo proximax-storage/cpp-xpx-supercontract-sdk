@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "supercontract/Transactions.h"
+#include "executor/Transactions.h"
 
 namespace sirius::contract {
 

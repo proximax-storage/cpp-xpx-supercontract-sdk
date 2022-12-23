@@ -10,8 +10,8 @@
 
 #include <storage/StorageModifier.h>
 #include <messenger/Messenger.h>
-#include "supercontract/ExecutorEventHandler.h"
-#include "supercontract/ExecutorConfig.h"
+#include "executor/ExecutorEventHandler.h"
+#include "executor/ExecutorConfig.h"
 #include "supercontract/GlobalEnvironment.h"
 #include <virtualMachine/VirtualMachine.h>
 #include "crypto/KeyPair.h"

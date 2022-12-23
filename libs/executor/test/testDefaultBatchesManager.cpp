@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include <supercontract/DefaultBatchesManager.h>
+#include "DefaultBatchesManager.h"
 #include "ContractEnvironmentMock.h"
 #include "ExecutorEnvironmentMock.h"
 #include "VirtualMachineMock.h"

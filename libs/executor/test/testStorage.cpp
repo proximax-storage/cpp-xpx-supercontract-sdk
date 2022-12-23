@@ -3,7 +3,7 @@
 #include "TestUtils.h"
 #include "storage/RPCStorage.h"
 #include "storage/StorageErrorCode.h"
-#include "supercontract/CallExecutionEnvironment.h"
+#include "CallExecutionEnvironment.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "virtualMachine/VirtualMachine.h"
 #include <gtest/gtest.h>

@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "supercontract/ExecutorConfig.h"
+#include "executor/ExecutorConfig.h"
 
 #include "supercontract/Identifiers.h"
 

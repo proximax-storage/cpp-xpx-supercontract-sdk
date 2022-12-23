@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "../../src/supercontract/ContractEnvironment.h"
-#include "../../src/supercontract/ExecutorEnvironment.h"
+#include "ContractEnvironment.h"
+#include "ExecutorEnvironment.h"
 #include "virtualMachine/VirtualMachine.h"
 #include <storage/Storage.h>
 

@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "supercontract/ExecutorConfig.h"
+#include "executor/ExecutorConfig.h"
 #include "supercontract/Identifiers.h"
 
-#include "supercontract/ExecutorEventHandler.h"
+#include "executor/ExecutorEventHandler.h"
 #include "supercontract/Requests.h"
 #include <messenger/Messenger.h>
 #include <storage/StorageModifier.h>

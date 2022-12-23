@@ -6,11 +6,9 @@
 
 #pragma once
 
-#include "Requests.h"
-
 #include "logging/LoggerConfig.h"
 
-#include "Identifiers.h"
+#include "supercontract/Identifiers.h"
 
 #include <memory>
 

@@ -5,7 +5,7 @@
 */
 
 #include "gtest/gtest.h"
-#include "supercontract/BatchExecutionTask.h"
+#include "BatchExecutionTask.h"
 #include "ContractEnvironmentMock.h"
 #include "VirtualMachineMock.h"
 #include "ExecutorEnvironmentMock.h"

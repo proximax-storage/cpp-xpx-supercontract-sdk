@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "supercontract/DefaultExecutorBuilder.h"
+#include "executor/DefaultExecutorBuilder.h"
 #include "DefaultExecutor.h"
 
 namespace sirius::contract {

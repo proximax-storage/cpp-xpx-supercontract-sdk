@@ -6,13 +6,13 @@
 
 #pragma once
 
-#include "Requests.h"
+#include "supercontract/Requests.h"
 #include "ExecutorConfig.h"
 #include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
 
 
-#include "Identifiers.h"
+#include "supercontract/Identifiers.h"
 
 #include <memory>
 namespace sirius::contract {

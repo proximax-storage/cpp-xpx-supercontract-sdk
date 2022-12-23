@@ -10,7 +10,7 @@
 #include "supercontract/SingleThread.h"
 #include "utils/types.h"
 #include <crypto/Hashes.h>
-#include <supercontract/Proofs.h>
+#include <executor/Proofs.h>
 
 namespace sirius::contract {
 

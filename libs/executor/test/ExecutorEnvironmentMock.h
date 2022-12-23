@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "../../src/supercontract/ExecutorEnvironment.h"
+#include "ExecutorEnvironment.h"
 #include "VirtualMachineMock.h"
 #include "storage/Storage.h"
 #include "ExecutorEventHandlerMock.h"

@@ -9,7 +9,7 @@
 #include <crypto/KeyPair.h>
 #include "Executor.h"
 #include "ExecutorEventHandler.h"
-#include "ThreadManager.h"
+#include "supercontract/ThreadManager.h"
 
 namespace sirius::contract {
 

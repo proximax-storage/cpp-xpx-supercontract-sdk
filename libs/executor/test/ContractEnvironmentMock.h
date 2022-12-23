@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "supercontract/ContractEnvironment.h"
-#include "supercontract/ExecutorEnvironment.h"
+#include "ContractEnvironment.h"
+#include "ExecutorEnvironment.h"
 
 namespace sirius::contract::test {
 
