@@ -5,19 +5,19 @@
 */
 
 #include "OpenFileTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
 OpenFileTag::OpenFileTag(
         GlobalEnvironment& environment,
-        rpc::OpenFileRequest&& request,
-        rpc::StorageContentManagerServer::Stub& stub,
+        storageServer::OpenFileRequest&& request,
+        storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
         std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback)
-        : m_environment(environment)
-        , m_request(std::move(request))
-        , m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue))
-        , m_callback(std::move(callback)) {}
+        : m_environment(environment), m_request(std::move(request)),
+          m_responseReader(stub.PrepareAsyncOpenFile(&m_context, m_request, &completionQueue)),
+          m_callback(std::move(callback)) {}
 
 void OpenFileTag::start() {
     m_responseReader->StartCall();
@@ -31,14 +31,19 @@ void OpenFileTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
-        m_callback->postReply(
-                tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory)));
+        m_environment.logger().warn("Failed to open file: {}", m_status.error_message());
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::open_file_error)));
     } else {
         m_callback->postReply(m_response.id());
     }
+}
+
+void OpenFileTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }

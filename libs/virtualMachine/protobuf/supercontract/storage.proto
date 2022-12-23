@@ -2,73 +2,53 @@ syntax = "proto3";
 
 package supercontractserver;
 
-message Empty {
-
-}
-
 message OpenFile {
-  string path = 3;
-  string mode = 4;
+  string path = 1;
+  string mode = 2;
 }
 
 message OpenFileReturn {
   bool success = 1;
-  int64 identifier = 2;
+  uint64 identifier = 2;
 }
 
-message WriteFileReturn {
+message WriteFileStream {
+  uint64 identifier = 1;
+  bytes buffer = 2;
+}
+
+message WriteFileStreamReturn {
   bool success = 1;
   uint64 num_bytes_written = 2;
 }
 
-message WriteFileStream {
-  int64 identifier = 3;
-  bytes buffer = 4;
+message Flush {
+  uint64 identifier = 1;
 }
 
-message FileReadBufferReturn {
+message FlushReturn {
+  bool success = 1;
+}
+
+message ReadFileStream {
+  uint64 identifier = 1;
+}
+
+message ReadFileStreamReturn {
   bool success = 1;
   bytes buffer = 2;
 }
 
-message MoveFile {
-  string old_path = 3;
-  string new_path = 4;
-}
-
-message ReadFileStream {
-  int64 identifier = 3;
-}
-
 message CloseFile {
-  int64 identifier = 3;
+  uint64 identifier = 1;
 }
 
-
-message Flush {
-  int64 identifier = 3;
-}
-
-
-message FileOperationReturn {
+message CloseFileReturn {
   bool success = 1;
-}
-
-message RemoveFile {
-  string path = 3;
-}
-
-message ListDir {
-  string path = 4;
-}
-
-message ListDirReturn {
-  bool success = 1;
-  string entries = 2;
 }
 
 message PathExist {
-  string path = 4;
+  string path = 1;
 }
 
 message PathExistReturn {
@@ -76,13 +56,77 @@ message PathExistReturn {
 }
 
 message IsFile {
-  string path = 4;
+  string path = 1;
 }
 
-message IsFIleReturn {
+message IsFileReturn {
   bool is_file = 1;
 }
 
-message CreatDir {
-  string path = 4;
+message CreateDir {
+  string path = 1;
+}
+
+message CreateDirReturn {
+  bool success = 1;
+}
+
+message MoveFile {
+  string old_path = 1;
+  string new_path = 2;
+}
+
+message MoveFileReturn {
+  bool success = 1;
+}
+
+message RemoveFsEntry {
+  string path = 1;
+}
+
+message RemoveFsEntryReturn {
+  bool success = 1;
+}
+
+message CreateDirIterator {
+  string path = 1;
+  bool recursive = 2;
+}
+
+message CreateDirIteratorReturn {
+  bool success = 1;
+  uint64 identifier = 2;
+}
+
+message HasNextIterator {
+  uint64 identifier = 1;
+}
+
+message HasNextIteratorReturn {
+  bool has_next = 1;
+}
+
+message NextDirIterator {
+  uint64 identifier = 1;
+}
+
+message NextDirIteratorReturn {
+  string name = 1;
+  bool success = 2;
+}
+
+message RemoveDirIterator {
+  uint64 identifier = 1;
+}
+
+message RemoveDirIteratorReturn {
+  bool success = 1;
+}
+
+message DestroyDirIterator {
+  uint64 identifier = 1;
+}
+
+message DestroyDirIteratorReturn {
+  bool success = 1;
 }

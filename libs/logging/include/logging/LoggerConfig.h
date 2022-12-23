@@ -7,6 +7,7 @@
 #pragma once
 
 #include <filesystem>
+#include <optional>
 
 namespace sirius::logging {
 

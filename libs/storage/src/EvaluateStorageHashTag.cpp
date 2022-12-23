@@ -5,13 +5,14 @@
 */
 
 #include "EvaluateStorageHashTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
 EvaluateStorageHashTag::EvaluateStorageHashTag(
         GlobalEnvironment& environment,
-        rpc::EvaluateStorageHashRequest&& request,
-        rpc::StorageServer::Stub& stub,
+        storageServer::EvaluateStorageHashRequest&& request,
+        storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
         std::shared_ptr<AsyncQueryCallback<StorageState>>&& callback)
         : m_environment(environment)
@@ -36,8 +37,14 @@ void EvaluateStorageHashTag::process(bool ok) {
         m_callback->postReply(std::move(response));
     } else {
         m_environment.logger().warn("Failed To Evaluate Storage Hash: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
+}
+
+void EvaluateStorageHashTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }

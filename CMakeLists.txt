@@ -17,7 +17,7 @@ include(FetchContent)
 FetchContent_Declare(
         grpc
         GIT_REPOSITORY https://github.com/grpc/grpc.git
-        GIT_TAG        v1.45.2)
+        GIT_TAG        v1.49.1)
 FetchContent_MakeAvailable(grpc)
 
 FetchContent_Declare(
@@ -25,6 +25,12 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/TartanLlama/expected
         GIT_TAG        v1.0.0)
 FetchContent_MakeAvailable(expected)
+
+FetchContent_Declare(
+        magic_enum
+        GIT_REPOSITORY https://github.com/Neargye/magic_enum
+        GIT_TAG        v0.8.1)
+FetchContent_MakeAvailable(magic_enum)
 
 FetchContent_Declare(
         cereal
@@ -45,5 +51,5 @@ else()
 endif()
 
 add_subdirectory(libs)
-add_subdirectory(src)
-add_subdirectory(test)
+#add_subdirectory(src)
+#add_subdirectory(test)

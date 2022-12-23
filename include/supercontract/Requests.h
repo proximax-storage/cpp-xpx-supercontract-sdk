@@ -32,14 +32,7 @@ struct CallReferenceInfo {
     std::optional<TransactionHash> m_transactionHash;
 };
 
-struct CallRequest {
-
-    enum class CallLevel {
-        AUTORUN,
-        AUTOMATIC,
-        MANUAL
-    };
-
+struct CallRequestParameters {
     ContractKey m_contractKey;
     CallId m_callId;
     std::string m_file;
@@ -47,7 +40,6 @@ struct CallRequest {
     std::vector<uint8_t> m_params;
     uint64_t m_scLimit;
     uint64_t m_smLimit;
-    CallLevel m_callLevel;
     CallReferenceInfo m_referenceInfo;
 };
 

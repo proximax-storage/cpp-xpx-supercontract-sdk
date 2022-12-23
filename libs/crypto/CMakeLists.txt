@@ -2,3 +2,4 @@ cmake_minimum_required(VERSION 3.9)
 
 add_subdirectory(external)
 add_subdirectory(src)
+add_subdirectory(test)

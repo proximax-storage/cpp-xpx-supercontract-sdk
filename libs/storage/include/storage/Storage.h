@@ -6,38 +6,12 @@
 
 #pragma once
 
-#include "supercontract/AsyncQuery.h"
-#include "storage/StorageRequests.h"
+#include "StorageModifier.h"
+#include "StorageObserver.h"
 
 namespace sirius::contract::storage {
 
-class Storage {
-
-public:
-
-    virtual ~Storage() = default;
-
-    virtual void synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
-                                    std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
-
-    virtual void
-    initiateModifications(const DriveKey& driveKey,
-                          std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
-
-    virtual void applySandboxStorageModifications(const DriveKey& driveKey,
-                                                  bool success,
-                                                  std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) = 0;
-
-    virtual void
-    evaluateStorageHash(const DriveKey& driveKey,
-                        std::shared_ptr<AsyncQueryCallback<StorageState>> callback) = 0;
-
-    virtual void applyStorageModifications(const DriveKey& driveKey, bool success,
-                                           std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
-
-    virtual void
-    getAbsolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                    std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
+class Storage: public StorageModifier, public StorageObserver {
 
 };
 

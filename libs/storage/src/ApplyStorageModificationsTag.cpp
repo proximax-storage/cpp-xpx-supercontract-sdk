@@ -5,15 +5,16 @@
 */
 
 #include "ApplyStorageModificationsTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
 ApplyStorageModificationsTag::ApplyStorageModificationsTag(
         GlobalEnvironment& environment,
-        rpc::ApplyStorageModificationsRequest&& request,
-        rpc::StorageServer::Stub& stub,
+        storageServer::ApplyStorageModificationsRequest&& request,
+        storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<bool>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<void>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncApplyStorageModifications(&m_context, m_request, &completionQueue))
@@ -31,11 +32,17 @@ void ApplyStorageModificationsTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (m_status.ok()) {
-        m_callback->postReply(m_response.status());
+        m_callback->postReply(expected<void>());
     } else {
         m_environment.logger().warn("Failed To Apply Storage Modifications: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
+}
+
+void ApplyStorageModificationsTag::cancel() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_context.TryCancel();
 }
 
 }

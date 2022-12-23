@@ -6,22 +6,22 @@
 
 #pragma once
 
-#include <virtualMachine/VirtualMachine.h>
-#include "supercontract/AsyncQuery.h"
-
-#include "supercontract/SingleThread.h"
-#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
-#include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
 #include "ExecuteCallRPCRequest.h"
-#include <storage/StorageContentManager.h>
+#include "supercontract/AsyncQuery.h"
+#include "supercontract/SingleThread.h"
+#include <storage/StorageObserver.h>
+#include <virtualMachine/VirtualMachine.h>
+#include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
+#include <virtualMachine/VirtualMachineInternetQueryHandler.h>
+#include <virtualMachine/VirtualMachineStorageQueryHandler.h>
 
 namespace sirius::contract::vm {
 
 class RPCVirtualMachine
-        : public VirtualMachine, private SingleThread {
+    : public VirtualMachine,
+      private SingleThread {
 
 private:
-
     struct CallContext {
         ExecuteCallRPCRequest m_request;
         std::shared_ptr<AsyncQuery> m_query;
@@ -33,7 +33,7 @@ private:
         CallContext& operator=(CallContext&& other) noexcept = default;
     };
 
-    std::weak_ptr<storage::StorageContentManager> m_storageContentManager;
+    std::weak_ptr<storage::StorageObserver> m_storageContentManager;
 
     GlobalEnvironment& m_environment;
 
@@ -47,26 +47,26 @@ private:
     std::map<CallId, CallContext> m_callContexts;
 
 public:
-
     RPCVirtualMachine(
-            std::weak_ptr<storage::StorageContentManager> storageContentManager,
-            GlobalEnvironment& environment,
-            const std::string& serverAddress);
+        std::weak_ptr<storage::StorageObserver> storageContentManager,
+        GlobalEnvironment& environment,
+        const std::string& serverAddress);
 
     ~RPCVirtualMachine() override;
 
     void executeCall(const CallRequest& request,
                      std::weak_ptr<VirtualMachineInternetQueryHandler> internetQueryHandler,
                      std::weak_ptr<VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
+                     std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
                      std::shared_ptr<AsyncQueryCallback<CallExecutionResult>> callback) override;
 
 private:
-
     void
     onReceivedCallAbsolutePath(CallRequest&& request,
                                expected<std::string>&& callAbsolutePath,
                                std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                                std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                               std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
                                std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     void waitForRPCResponse();
@@ -74,4 +74,4 @@ private:
     void onCallExecuted(const CallId&);
 };
 
-}
+} // namespace sirius::contract::vm
