@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -12,6 +13,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -48,8 +50,6 @@ public:
         m_fileHandler(file.name());
     }
 };
-
-namespace read {
 
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
@@ -140,7 +140,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::open_file_error);
         onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->openFile(driveKey, "test.txt", OpenFileMode::READ, callback);
@@ -156,14 +156,13 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace read
 
 TEST(Storage, ReadNonExisting) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{8}};
+    DriveKey driveKey{{13}};
 
     std::promise<void> pRead;
     auto barrierRead = pRead.get_future();
@@ -175,8 +174,8 @@ TEST(Storage, ReadNonExisting) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRead](auto&& res) {
             ASSERT_TRUE(res);
-            read::onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+            onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierRead.get();

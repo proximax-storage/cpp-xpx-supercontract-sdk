@@ -20,6 +20,7 @@ struct CallRequest : CallRequestParameters {
     };
 
     CallLevel m_callLevel;
+    uint64_t m_proofOfExecutionPrefix = 0;
 
     CallRequest(const CallRequestParameters& parameters, const CallLevel& callLevel)
             : CallRequestParameters(parameters)
@@ -31,7 +32,7 @@ struct CallExecutionResult {
     uint32_t m_return;
     uint64_t m_scConsumed;
     uint64_t m_smConsumed;
-    // m_proofOfExecution
+    uint64_t m_proofOfExecutionSecretData;
 };
 
 }

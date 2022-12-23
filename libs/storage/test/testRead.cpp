@@ -12,10 +12,13 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
+
+namespace {
 
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
@@ -310,7 +313,7 @@ TEST(Storage, Read) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{2}};
+    DriveKey driveKey{{12}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -320,7 +323,7 @@ TEST(Storage, Read) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             write::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
@@ -336,11 +339,12 @@ TEST(Storage, Read) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRead](auto&& res) {
             ASSERT_TRUE(res);
             read::onModificationsInitiated(driveKey, environment, pStorage, pRead); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierRead.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

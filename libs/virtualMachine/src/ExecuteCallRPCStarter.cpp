@@ -4,6 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
+#include <virtualMachine/VirtualMachineErrorCode.h>
 #include "ExecuteCallRPCStarter.h"
 
 namespace sirius::contract::vm {
@@ -19,9 +20,7 @@ void ExecuteCallRPCStarter::process(bool ok) {
     ASSERT(!isSingleThread(), m_environment.logger());
 
     if (!ok) {
-        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted));
-        m_callback->postReply(error);
-    }
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(VirtualMachineError::vm_unavailable)));    }
     else {
         m_callback->postReply(expected<void>());
     }

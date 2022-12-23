@@ -11,21 +11,20 @@
 
 namespace sirius::contract::vm {
 
-class ExecuteCallRPCRequest: private SingleThread{
+class ExecuteCallRPCRequest : private SingleThread {
 
 private:
-
     GlobalEnvironment& m_environment;
     std::shared_ptr<ExecuteCallRPCHandler> m_handler;
 
 public:
-
     ExecuteCallRPCRequest(GlobalEnvironment& environment,
                           CallRequest&& callRequest,
                           supercontractserver::SupercontractServer::Stub& stub,
                           grpc::CompletionQueue& completionQueue,
                           std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
                           std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                          std::weak_ptr<VirtualMachineStorageQueryHandler>&& storageQueryHandler,
                           std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     ExecuteCallRPCRequest(const ExecuteCallRPCRequest&) = delete;
@@ -36,5 +35,4 @@ public:
     ~ExecuteCallRPCRequest();
 };
 
-}
-
+} // namespace sirius::contract::vm

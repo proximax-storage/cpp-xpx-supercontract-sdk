@@ -12,12 +12,13 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
-namespace iterator::fs {
+namespace {
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -69,7 +70,6 @@ public:
         m_fileHandler(file.name());
     }
 };
-} // namespace iterator::fs
 
 namespace createFolders {
 static const std::string folders[6] = {"test", "drive", "mod", "sc", "mod/gs", "drive/unit"};
@@ -80,8 +80,8 @@ void onFilesystemReceived(const DriveKey& driveKey,
                           std::shared_ptr<Storage> pStorage,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
-    iterator::fs::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {},
-                                                      1, environment);
+    FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {},
+                                        1, environment);
     traversal.acceptFolder(*folder);
     promise.set_value();
 }
@@ -192,13 +192,13 @@ void onFilesystemReceived(const DriveKey& driveKey,
                           std::shared_ptr<Storage> pStorage,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
-    iterator::fs::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
+    FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
         auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
             ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
         pStorage->absolutePath(driveKey, createFiles::files[i++], callback);
     },
-                                                      2, environment);
+                                        2, environment);
     traversal.acceptFolder(*folder);
     promise.set_value();
 }
@@ -435,7 +435,7 @@ TEST(Storage, Iterator) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{5}};
+    DriveKey driveKey{{7}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -445,7 +445,7 @@ TEST(Storage, Iterator) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             createFolders::onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
@@ -461,7 +461,7 @@ TEST(Storage, Iterator) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pCreateFile](auto&& res) {
             ASSERT_TRUE(res);
             createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierCreateFile.get();
@@ -477,11 +477,12 @@ TEST(Storage, Iterator) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pIterate](auto&& res) {
             ASSERT_TRUE(res);
             iterator::onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierIterate.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

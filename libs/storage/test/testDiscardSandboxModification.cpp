@@ -12,6 +12,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -35,7 +36,7 @@ public:
         rootFolderVisited = true;
 
         const auto& children = folder.children();
-        
+
         ASSERT_EQ(children.size(), 0);
 
         for (const auto& [name, entry] : children) {
@@ -196,7 +197,7 @@ TEST(Storage, DiscardSandboxModification) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{12}};
+    DriveKey driveKey{{4}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -206,7 +207,7 @@ TEST(Storage, DiscardSandboxModification) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();

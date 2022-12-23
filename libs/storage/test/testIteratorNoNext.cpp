@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -12,12 +13,13 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
-namespace iterator::fs {
+namespace {
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -69,9 +71,8 @@ public:
         m_fileHandler(file.name());
     }
 };
-} // namespace iterator::fs
 
-namespace iteratorNoNext::createFiles {
+namespace createFiles {
 void onFileOpened(const DriveKey& driveKey,
                   GlobalEnvironment& environment,
                   std::shared_ptr<Storage> pStorage,
@@ -199,7 +200,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace iteratorNoNext::createFiles
+} // namespace createFiles
 
 namespace iteratorNoNext {
 static bool flag = false;
@@ -267,7 +268,7 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        std::promise<void>& barrier, uint64_t id) {
     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &barrier](auto&& res) {
         if (!res) {
-            ASSERT_EQ(res.error(), std::errc::io_error);
+            ASSERT_EQ(res.error(), StorageError::iterator_next_error);
             flag = true;
         }
         onIteratorCreated(driveKey, environment, pStorage, barrier, id); }, [] {}, environment, false, true);
@@ -318,7 +319,7 @@ TEST(Storage, IteratorNoNext) {
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{7}};
+    DriveKey driveKey{{10}};
 
     std::promise<void> pCreateFile;
     auto barrierCreateFile = pCreateFile.get_future();
@@ -330,8 +331,8 @@ TEST(Storage, IteratorNoNext) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pCreateFile](auto&& res) {
             ASSERT_TRUE(res);
-            iteratorNoNext::createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+            createFiles::onModificationsInitiated(driveKey, environment, pStorage, pCreateFile); }, [] {}, environment, false, true);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierCreateFile.get();
@@ -347,11 +348,12 @@ TEST(Storage, IteratorNoNext) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pIterate](auto&& res) {
             ASSERT_TRUE(res);
             iteratorNoNext::onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierIterate.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

@@ -4,6 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 #include "OpenConnectionRPCHandler.h"
+#include "virtualMachine/ExecutionErrorConidition.h"
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -25,7 +27,7 @@ void OpenConnectionRPCHandler::process() {
 
     if (!handler) {
         m_environment.logger().warn("Internet Handler Is Absent");
-        onResult(tl::make_unexpected(std::make_error_code(std::errc::not_supported)));
+        onResult(tl::make_unexpected(internet::make_error_code(internet::InternetError::internet_unavailable)));
         return;
     }
 
@@ -38,15 +40,20 @@ void OpenConnectionRPCHandler::process() {
     handler->openConnection(m_request.url(), callback);
 }
 
-void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& connectionId) {
+void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     supercontractserver::OpenConnectionReturn status;
 
-    if (connectionId.has_value()) {
+    if (!res && res.error() == ExecutionError::internet_unavailable) {
+        m_callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        return;
+    }
+
+    if (res.has_value()) {
         status.set_success(true);
-        status.set_identifier(*connectionId);
+        status.set_identifier(*res);
     } else {
         status.set_success(false);
     }

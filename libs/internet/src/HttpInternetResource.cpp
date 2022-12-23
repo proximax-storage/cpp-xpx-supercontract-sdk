@@ -5,6 +5,7 @@
 */
 
 #include "HttpInternetResource.h"
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::internet {
 
@@ -132,7 +133,7 @@ void HttpInternetResource::onHostResolved(beast::error_code ec,
     if (ec) {
         m_environment.logger().warn("OnHostResolved Http Connection Error: {}", ec.message());
         close();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::resolve_error)));
         return;
     }
 
@@ -166,7 +167,7 @@ void HttpInternetResource::onConnected(beast::error_code ec, tcp::resolver::resu
     if (ec) {
         m_environment.logger().warn("OnConnected Http Connection Error: {}", ec.message());
         close();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::connection_error)));
         return;
     }
 
@@ -195,7 +196,7 @@ void HttpInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tra
     if (ec) {
         m_environment.logger().warn("OnWritten Http Connection Error: {}", ec.message());
         close();
-        callback->postReply(tl::unexpected(ec));
+        callback->postReply(tl::unexpected(make_error_code(InternetError::write_error)));
         return;
     }
 
@@ -223,7 +224,8 @@ void HttpInternetResource::onRead(beast::error_code ec, std::size_t bytes_transf
 
     if (ec) {
         m_environment.logger().warn("OnRead Http Connection Error {}", ec.message());
-        callback->postReply(tl::unexpected(ec));        return;
+        callback->postReply(tl::unexpected(make_error_code(InternetError::read_error)));
+        return;
     }
 
     if (m_res.is_done() || m_res.get().body().size == 0) {

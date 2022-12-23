@@ -1,6 +1,7 @@
 use std::io::{BufReader, Read};
 
 pub mod blockchain;
+pub mod dir_iterator;
 pub mod file;
 pub mod filesystem;
 pub mod internet;
@@ -11,7 +12,7 @@ pub mod internet;
 
 #[no_mangle]
 pub unsafe extern "C" fn run() -> u32 {
-    let internet = internet::Internet::new("example.com".to_string()).unwrap();
+    let internet = internet::Internet::new("example.com").unwrap();
     let mut reader = BufReader::with_capacity(16 * 1024, internet);
     // let identifier = 123456789i64;
     let mut buf = Vec::new();

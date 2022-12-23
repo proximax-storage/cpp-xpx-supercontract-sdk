@@ -4,45 +4,46 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include <grpcpp/security/credentials.h>
-#include <grpcpp/create_channel.h>
-#include <storage/RPCStorage.h>
-#include "storage/RPCTag.h"
-#include "InitiateModificationsTag.h"
-#include "ApplySandboxStorageModificationsTag.h"
-#include "EvaluateStorageHashTag.h"
-#include "SynchronizeStorageTag.h"
-#include "ApplyStorageModificationsTag.h"
-#include "InitiateSandboxModificationsTag.h"
-#include "OpenFileTag.h"
-#include "ReadFileTag.h"
-#include "WriteFileTag.h"
-#include "CloseFileTag.h"
-#include "FlushFileTag.h"
 #include "AbsolutePathTag.h"
-#include "FilesystemTag.h"
+#include "ApplySandboxStorageModificationsTag.h"
+#include "ApplyStorageModificationsTag.h"
+#include "CloseFileTag.h"
 #include "CreateDirectoriesTag.h"
 #include "DirectoryIteratorCreateTag.h"
 #include "DirectoryIteratorDestroyTag.h"
 #include "DirectoryIteratorHasNextTag.h"
 #include "DirectoryIteratorNextTag.h"
-#include "RemoveFilesystemEntryTag.h"
+#include "EvaluateStorageHashTag.h"
+#include "FilesystemTag.h"
+#include "FlushFileTag.h"
+#include "InitiateModificationsTag.h"
+#include "InitiateSandboxModificationsTag.h"
+#include "IsFileTag.h"
 #include "MoveFilesystemEntryTag.h"
+#include "OpenFileTag.h"
+#include "PathExistTag.h"
+#include "ReadFileTag.h"
+#include "RemoveFilesystemEntryTag.h"
+#include "SynchronizeStorageTag.h"
+#include "WriteFileTag.h"
+#include "storage/RPCTag.h"
+#include <grpcpp/create_channel.h>
+#include <grpcpp/security/credentials.h>
+#include <storage/RPCStorage.h>
 
 namespace sirius::contract::storage {
 
 RPCStorage::RPCStorage(GlobalEnvironment& environment, const std::string& serverAddress)
-        : m_environment(environment)
-        , m_stub(storageServer::StorageServer::NewStub(
-                grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials())))
-        , m_completionQueueThread([this] {
-            waitForRPCResponse();
-        }) {}
+    : m_environment(environment), m_stub(storageServer::StorageServer::NewStub(
+                                      grpc::CreateChannel(serverAddress, grpc::InsecureChannelCredentials()))),
+      m_completionQueueThread([this] {
+          waitForRPCResponse();
+      }) {}
 
 RPCStorage::~RPCStorage() {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    for (auto* pTag: m_activeTags) {
+    for (auto* pTag : m_activeTags) {
         pTag->cancel();
     }
 
@@ -66,12 +67,16 @@ void RPCStorage::waitForRPCResponse() {
     }
 }
 
-void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash& storageHash,
+void RPCStorage::synchronizeStorage(const DriveKey& driveKey,
+                                    const ModificationId& modificationId,
+                                    const StorageHash& storageHash,
                                     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::SynchronizeStorageRequest request;
     request.set_drive_key(driveKey.toString());
+    request.set_modification_identifier(modificationId.toString());
+    request.set_storage_hash(storageHash.toString());
     auto* tag = new SynchronizeStorageTag(m_environment, std::move(request), *m_stub, m_completionQueue,
                                           std::move(callback));
     m_activeTags.insert(tag);
@@ -79,12 +84,14 @@ void RPCStorage::synchronizeStorage(const DriveKey& driveKey, const StorageHash&
 }
 
 void RPCStorage::initiateModifications(const DriveKey& driveKey,
+                                       const ModificationId& modificationId,
                                        std::shared_ptr<AsyncQueryCallback<void>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::InitModificationsRequest request;
     request.set_drive_key(driveKey.toString());
+    request.set_modification_identifier(modificationId.toString());
     auto* tag = new InitiateModificationsTag(m_environment, std::move(request), *m_stub, m_completionQueue,
                                              std::move(callback));
     m_activeTags.insert(tag);
@@ -107,9 +114,8 @@ void RPCStorage::applySandboxStorageModifications(const DriveKey& driveKey,
     tag->start();
 }
 
-void
-RPCStorage::evaluateStorageHash(const DriveKey& driveKey,
-                                std::shared_ptr<AsyncQueryCallback<StorageState>> callback) {
+void RPCStorage::evaluateStorageHash(const DriveKey& driveKey,
+                                     std::shared_ptr<AsyncQueryCallback<StorageState>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::EvaluateStorageHashRequest request;
@@ -133,9 +139,8 @@ void RPCStorage::applyStorageModifications(const DriveKey& driveKey, bool succes
     tag->start();
 }
 
-void
-RPCStorage::initiateSandboxModifications(const DriveKey& driveKey,
-                                         std::shared_ptr<AsyncQueryCallback<void>> callback) {
+void RPCStorage::initiateSandboxModifications(const DriveKey& driveKey,
+                                              std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::InitSandboxRequest request;
@@ -200,8 +205,7 @@ void RPCStorage::readFile(const DriveKey& driveKey, uint64_t fileId, uint64_t by
     tag->start();
 }
 
-void
-RPCStorage::closeFile(const DriveKey& driveKey, uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) {
+void RPCStorage::closeFile(const DriveKey& driveKey, uint64_t fileId, std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::CloseFileRequest request;
@@ -248,9 +252,8 @@ void RPCStorage::absolutePath(const DriveKey& driveKey,
     tag->start();
 }
 
-void
-RPCStorage::filesystem(const DriveKey& driveKey,
-                       std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) {
+void RPCStorage::filesystem(const DriveKey& driveKey,
+                            std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::FilesystemRequest request;
@@ -297,7 +300,6 @@ void RPCStorage::directoryIteratorCreate(const DriveKey& driveKey, const std::st
     tag->start();
 }
 
-
 void RPCStorage::removeFilesystemEntry(const DriveKey& driveKey, const std::string& path,
                                        std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
@@ -327,6 +329,38 @@ void RPCStorage::moveFilesystemEntry(const DriveKey& driveKey, const std::string
                                            *m_stub,
                                            m_completionQueue,
                                            std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::isFile(const DriveKey& driveKey, const std::string& path,
+                        std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::IsFileRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_path(path);
+    auto* tag = new IsFileTag(m_environment,
+                              std::move(request),
+                              *m_stub,
+                              m_completionQueue,
+                              std::move(callback));
+    m_activeTags.insert(tag);
+    tag->start();
+}
+
+void RPCStorage::pathExist(const DriveKey& driveKey, const std::string& path,
+                           std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    storageServer::PathExistRequest request;
+    request.set_drive_key(driveKey.toString());
+    request.set_path(path);
+    auto* tag = new PathExistTag(m_environment,
+                                 std::move(request),
+                                 *m_stub,
+                                 m_completionQueue,
+                                 std::move(callback));
     m_activeTags.insert(tag);
     tag->start();
 }
@@ -379,4 +413,4 @@ void RPCStorage::directoryIteratorDestroy(const DriveKey& driveKey, uint64_t id,
     tag->start();
 }
 
-}
+} // namespace sirius::contract::storage

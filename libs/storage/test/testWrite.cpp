@@ -12,10 +12,13 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
+
+namespace {
 
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
@@ -191,7 +194,7 @@ TEST(Storage, Write) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{4}};
+    DriveKey driveKey{{17}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
@@ -201,11 +204,12 @@ TEST(Storage, Write) {
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
             ASSERT_TRUE(res);
             onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test

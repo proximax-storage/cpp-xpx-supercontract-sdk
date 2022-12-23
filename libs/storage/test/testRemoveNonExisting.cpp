@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -12,6 +13,7 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
@@ -49,8 +51,6 @@ public:
         m_fileHandler(file.name());
     }
 };
-
-namespace remove {
 
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
@@ -112,7 +112,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::remove_file_error);
         onFileRemoved(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
 
     pStorage->removeFilesystemEntry(driveKey, "test.txt", callback);
@@ -128,14 +128,13 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace remove
 
 TEST(Storage, RemoveNonExisting) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{9}};
+    DriveKey driveKey{{16}};
 
     std::promise<void> pRemove;
     auto barrierRemove = pRemove.get_future();
@@ -147,8 +146,8 @@ TEST(Storage, RemoveNonExisting) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pRemove](auto&& res) {
             ASSERT_TRUE(res);
-            remove::onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+            onModificationsInitiated(driveKey, environment, pStorage, pRemove); }, [] {}, environment, false, true);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierRemove.get();

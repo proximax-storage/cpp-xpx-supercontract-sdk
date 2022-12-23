@@ -5,6 +5,7 @@
 */
 
 #include "SynchronizeStorageTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
@@ -34,7 +35,7 @@ void SynchronizeStorageTag::process(bool ok) {
         m_callback->postReply(m_response.status());
     } else {
         m_environment.logger().warn("Failed To Synchronize Storage: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     }
 }
 

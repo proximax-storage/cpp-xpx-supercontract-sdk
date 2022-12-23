@@ -1,10 +1,12 @@
 extern "C" {
 #include <external/ref10/ge.h>
 }
+
 #include "Scalar.h"
 #include "crypto/KeyPair.h"
+#include <cereal/types/array.hpp>
 
-namespace sirius { namespace crypto {
+namespace sirius::crypto {
 
 class CurvePoint {
 
@@ -12,18 +14,44 @@ class CurvePoint {
 
 public:
     CurvePoint();
+
     static CurvePoint BasePoint();
-    CurvePoint operator+(CurvePoint& a) const;
-    CurvePoint operator-(CurvePoint& a) const;
+
+    CurvePoint operator+(const CurvePoint& a) const;
+
+    CurvePoint operator-(const CurvePoint& a) const;
+
     CurvePoint operator-() const;
-    CurvePoint operator*(Scalar& a) const;
-    friend CurvePoint operator*(Scalar& a, CurvePoint& b);
-    CurvePoint& operator+=(CurvePoint& a);
-    CurvePoint& operator-=(CurvePoint& a);
-    CurvePoint& operator*=(Scalar& a);
+
+    CurvePoint operator*(const Scalar& a) const;
+
+    friend CurvePoint operator*(const Scalar& a, const CurvePoint& b);
+
+    CurvePoint& operator+=(const CurvePoint& a);
+
+    CurvePoint& operator-=(const CurvePoint& a);
+
+    CurvePoint& operator*=(const Scalar& a);
+
     bool operator==(const CurvePoint& a) const;
+
     bool operator!=(const CurvePoint& a) const;
-    Key tobytes() const;
+
+    std::array<uint8_t, 32> toBytes() const;
+
+    void fromBytes(const std::array<uint8_t, 32>& buffer);
+
+    template<class Archive>
+    void save(Archive& archive) const {
+        archive(toBytes());
+    }
+
+    template<class Archive>
+    void load(Archive& archive) {
+        std::array<uint8_t, 32> buffer{};
+        archive(buffer);
+        fromBytes(buffer);
+    }
 };
 
-}} // namespace sirius::crypto
+}

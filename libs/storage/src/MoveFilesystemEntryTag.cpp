@@ -5,6 +5,7 @@
 */
 
 #include "MoveFilesystemEntryTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
@@ -30,11 +31,10 @@ void MoveFilesystemEntryTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to create directory: {}", m_status.error_message());
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted)));
+        m_environment.logger().warn("Failed to move filesystem entry: {}", m_status.error_message());
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
-        // TODO Maybe change error type
-        m_callback->postReply(tl::unexpected<std::error_code>(std::make_error_code(std::errc::io_error)));
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::move_file_error)));
     } else {
         m_callback->postReply(expected<void>());
     }

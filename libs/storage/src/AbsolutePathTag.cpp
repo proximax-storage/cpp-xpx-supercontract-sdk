@@ -5,6 +5,7 @@
 */
 
 #include "AbsolutePathTag.h"
+#include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
@@ -31,7 +32,7 @@ void AbsolutePathTag::process(bool ok) {
 
     if (!m_status.ok()) {
         m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
-        auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::connection_aborted));
+        auto error = tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable));
         m_callback->postReply(error);
     } else if (m_response.absolute_path().empty()) {
         auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory));

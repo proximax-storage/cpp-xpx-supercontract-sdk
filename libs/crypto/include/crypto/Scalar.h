@@ -27,6 +27,11 @@ public:
     Scalar& operator*=(const Scalar& a);
     Scalar& operator-=(const Scalar& a);
     Scalar addProduct(const Scalar& r, const Scalar& h) const;
+
+    template<class Archive>
+    void serialize(Archive& arch) {
+        arch(m_array);
+    }
 };
 
 }} // namespace sirius::crypto

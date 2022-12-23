@@ -1,6 +1,7 @@
 #include "crypto/CurvePoint.h"
 
-namespace sirius { namespace crypto {
+namespace sirius {
+namespace crypto {
 CurvePoint::CurvePoint() {
     ge_p3 a;
     ge_p3_0(&a);
@@ -17,7 +18,7 @@ CurvePoint CurvePoint::BasePoint() {
     return temp;
 }
 
-CurvePoint CurvePoint::operator+(CurvePoint& a) const {
+CurvePoint CurvePoint::operator+(const CurvePoint& a) const {
     CurvePoint temp;
     ge_cached cache;
     ge_p3_to_cached(&cache, &a.m_ge_p3);
@@ -28,7 +29,7 @@ CurvePoint CurvePoint::operator+(CurvePoint& a) const {
     return temp;
 }
 
-CurvePoint CurvePoint::operator-(CurvePoint& a) const {
+CurvePoint CurvePoint::operator-(const CurvePoint& a) const {
     CurvePoint temp;
     ge_cached cache;
     ge_p3_to_cached(&cache, &a.m_ge_p3);
@@ -47,7 +48,7 @@ CurvePoint CurvePoint::operator-() const {
     return temp;
 }
 
-CurvePoint CurvePoint::operator*(Scalar& a) const {
+CurvePoint CurvePoint::operator*(const Scalar& a) const {
     CurvePoint ret;
     Scalar zero;
     ge_p2 ans;
@@ -59,7 +60,7 @@ CurvePoint CurvePoint::operator*(Scalar& a) const {
     return -ret;
 }
 
-CurvePoint operator*(Scalar& a, CurvePoint& b) {
+CurvePoint operator*(const Scalar& a, const  CurvePoint& b) {
     CurvePoint ret;
     Scalar zero;
     ge_p2 ans;
@@ -71,17 +72,17 @@ CurvePoint operator*(Scalar& a, CurvePoint& b) {
     return -ret;
 }
 
-CurvePoint& CurvePoint::operator+=(CurvePoint& a) {
+CurvePoint& CurvePoint::operator+=(const CurvePoint& a) {
     *this = *this + a;
     return *this;
 }
 
-CurvePoint& CurvePoint::operator-=(CurvePoint& a) {
+CurvePoint& CurvePoint::operator-=(const CurvePoint& a) {
     *this = *this - a;
     return *this;
 }
 
-CurvePoint& CurvePoint::operator*=(Scalar& a) {
+CurvePoint& CurvePoint::operator*=(const Scalar& a) {
     *this = *this * a;
     return *this;
 }
@@ -104,10 +105,18 @@ bool CurvePoint::operator!=(const CurvePoint& a) const {
     return this_bytes != a_bytes;
 }
 
-Key CurvePoint::tobytes() const {
-    Key ret;
-    ge_p3_tobytes(ret.data(), &m_ge_p3);
-    return ret;
+std::array<uint8_t, 32> CurvePoint::toBytes() const {
+    std::array<uint8_t, 32> buffer{};
+    ge_p3_tobytes(buffer.data(), &m_ge_p3);
+    return buffer;
 }
+
+void CurvePoint::fromBytes(const std::array<uint8_t, 32>& buffer) {
+    ge_p3 tmp;
+    CurvePoint tmpPoint;
+    tmpPoint.m_ge_p3 = tmp;
+    *this = -tmpPoint;
+}
+
 }
 } // namespace sirius::crypto

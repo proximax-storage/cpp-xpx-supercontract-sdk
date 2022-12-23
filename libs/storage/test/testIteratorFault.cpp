@@ -5,6 +5,7 @@
 */
 
 #include "TestUtils.h"
+#include "storage/StorageErrorCode.h"
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -12,12 +13,13 @@
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
 #include <storage/RPCStorage.h>
+#include <utils/Random.h>
 
 namespace fs = std::filesystem;
 
 namespace sirius::contract::storage::test {
 
-namespace iterator::fs {
+namespace {
 template <class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
@@ -69,9 +71,7 @@ public:
         m_fileHandler(file.name());
     }
 };
-} // namespace iterator::fs
 
-namespace iteratorFault {
 void onIteratorCreated(const DriveKey& driveKey,
                        GlobalEnvironment& environment,
                        std::shared_ptr<Storage> pStorage,
@@ -123,7 +123,7 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      std::shared_ptr<Storage> pStorage,
                                      std::promise<void>& barrier) {
     auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
-        ASSERT_EQ(res.error(), std::errc::io_error);
+        ASSERT_EQ(res.error(), StorageError::create_iterator_error);
         onIteratorCreated(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
 
     pStorage->directoryIteratorCreate(driveKey, "tests", true, callback);
@@ -139,14 +139,13 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
     pStorage->initiateSandboxModifications(driveKey, callback);
 }
-} // namespace iteratorFault
 
 TEST(Storage, IteratorFault) {
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
-    DriveKey driveKey{{6}};
+    DriveKey driveKey{{9}};
 
     std::promise<void> pIterate;
     auto barrierIterate = pIterate.get_future();
@@ -158,12 +157,13 @@ TEST(Storage, IteratorFault) {
 
         auto [_, callback] = createAsyncQuery<void>([=, &environment, &pIterate](auto&& res) {
             ASSERT_TRUE(res);
-            iteratorFault::onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, callback);
+            onModificationsInitiated(driveKey, environment, pStorage, pIterate); }, [] {}, environment, false, true);
+        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrierIterate.get();
 
     threadManager.stop();
+}
 }
 } // namespace sirius::contract::storage::test
