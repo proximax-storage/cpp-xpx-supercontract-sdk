@@ -29,18 +29,18 @@ foreach(_service blockchain internet storage supercontract_server)
     target_include_directories(contract-virtualMachine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
 
     # vm_client_grpc_proto
-    add_library(${_service}_grpc_proto
+    add_library(${_service}_contract_grpc_proto
             ${${_service}_grpc_srcs}
             ${${_service}_grpc_hdrs}
             ${${_service}_proto_srcs}
             ${${_service}_proto_hdrs})
-    target_link_libraries(${_service}_grpc_proto
+    target_link_libraries(${_service}_contract_grpc_proto
             ${_REFLECTION}
             ${_GRPC_GRPCPP}
             ${_PROTOBUF_LIBPROTOBUF})
 
     target_link_libraries(contract-virtualMachine
-            ${_service}_grpc_proto
+            ${_service}_contract_grpc_proto
             ${_REFLECTION}
             ${_GRPC_GRPCPP}
             ${_PROTOBUF_LIBPROTOBUF})
@@ -49,4 +49,4 @@ endforeach()
 target_include_directories(contract-virtualMachine PUBLIC ../include ../../../include)
 target_include_directories(contract-virtualMachine PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(contract-virtualMachine expected contract-logging utils OpenSSL::SSL contract-storage contract-internet)
+target_link_libraries(contract-virtualMachine expected contract-logging contract-utils OpenSSL::SSL contract-storage contract-internet)

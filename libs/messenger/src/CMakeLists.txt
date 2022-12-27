@@ -29,18 +29,18 @@ foreach(_service messengerServer)
     target_include_directories(contract-messenger PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
 
     # vm_client_grpc_proto
-    add_library(${_service}_grpc_proto
+    add_library(${_service}_messenger_grpc_proto
             ${${_service}_grpc_srcs}
             ${${_service}_grpc_hdrs}
             ${${_service}_proto_srcs}
             ${${_service}_proto_hdrs})
-    target_link_libraries(${_service}_grpc_proto
+    target_link_libraries(${_service}_messenger_grpc_proto
             ${_REFLECTION}
             ${_GRPC_GRPCPP}
             ${_PROTOBUF_LIBPROTOBUF})
 
     target_link_libraries(contract-messenger
-            ${_service}_grpc_proto
+            ${_service}_messenger_grpc_proto
             ${_REFLECTION}
             ${_GRPC_GRPCPP}
             ${_PROTOBUF_LIBPROTOBUF})
@@ -49,4 +49,4 @@ endforeach()
 target_include_directories(contract-messenger PUBLIC ../include ../../../include)
 target_include_directories(contract-messenger PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(contract-messenger expected contract-logging utils OpenSSL::SSL)
+target_link_libraries(contract-messenger expected contract-logging contract-utils OpenSSL::SSL)
