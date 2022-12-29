@@ -11,15 +11,20 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(BUILD_SHARED_LIBS ON)
 
 ### setup boost
-find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
+find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random stacktrace_backtrace REQUIRED)
 
-set(gRPC_SSL_PROVIDER package)
 include(FetchContent)
+set(gRPC_SSL_PROVIDER "package" CACHE STRING "Provider of ssl library")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_TMP ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../lib)
+option(BUILD_SHARED_LIBS "build shared libraries" ON)
 FetchContent_Declare(
         grpc
         GIT_REPOSITORY https://github.com/grpc/grpc.git
         GIT_TAG        v1.49.1)
 FetchContent_MakeAvailable(grpc)
+option(BUILD_SHARED_LIBS "build shared libraries" OFF)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_TMP})
 
 FetchContent_Declare(
         expected
