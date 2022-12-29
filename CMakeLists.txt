@@ -16,13 +16,14 @@ include(FetchContent)
 set(gRPC_SSL_PROVIDER "package" CACHE STRING "Provider of ssl library")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_TMP ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/../lib)
-option(BUILD_SHARED_LIBS "build shared libraries" ON)
+set(BUILD_SHARED_LIBS_COPY ${BUILD_SHARED_LIBS})
+set(BUILD_SHARED_LIBS ON)
 FetchContent_Declare(
         grpc
         GIT_REPOSITORY https://github.com/grpc/grpc.git
         GIT_TAG        v1.49.1)
 FetchContent_MakeAvailable(grpc)
-option(BUILD_SHARED_LIBS "build shared libraries" OFF)
+set(BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS_COPY})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY_TMP})
 
 FetchContent_Declare(
