@@ -8,7 +8,6 @@ set(ABSL_PROPAGATE_CXX_STD ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-set(BUILD_SHARED_LIBS ON)
 
 ### setup boost
 find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random stacktrace_backtrace REQUIRED)
