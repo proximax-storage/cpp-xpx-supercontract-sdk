@@ -16,9 +16,9 @@ syntax = "proto3";
 
 package supercontractserver;
 
-import "blockchain.proto";
-import "storage.proto";
-import "internet.proto";
+import "blockchain_vm.proto";
+import "storage_vm.proto";
+import "internet_vm.proto";
 
 // The Supercontract service definition.
 service SupercontractServer {

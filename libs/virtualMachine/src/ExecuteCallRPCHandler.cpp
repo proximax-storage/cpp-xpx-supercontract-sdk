@@ -29,7 +29,7 @@
 #include "WriteFileRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
-#include <blockchain.pb.h>
+#include <blockchain_vm.pb.h>
 
 namespace sirius::contract::vm {
 

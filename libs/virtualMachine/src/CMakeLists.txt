@@ -4,7 +4,7 @@ find_package(OpenSSL REQUIRED)
 
 supercontract_sdk_shared_library_target(contract-virtualMachine)
 
-foreach(_service blockchain internet storage supercontract_server)
+foreach(_service blockchain_vm internet_vm storage_vm supercontract_server)
 
     # Proto file
     get_filename_component(${_service}_proto "../protobuf/supercontract/${_service}.proto" ABSOLUTE)
