@@ -70,7 +70,7 @@ public:
 
     // region message event handler
 
-    bool onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) override;
+    bool onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) override;
 
     // endregion
 
