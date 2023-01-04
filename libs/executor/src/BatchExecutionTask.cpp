@@ -19,8 +19,8 @@ namespace sirius::contract {
 BatchExecutionTask::BatchExecutionTask(Batch&& batch,
                                        ContractEnvironment& contractEnvironment,
                                        ExecutorEnvironment& executorEnvironment,
-                                       std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
-                                       std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
+                                       std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
+                                       std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
                                        std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo)
         : BaseContractTask(executorEnvironment, contractEnvironment)
           , m_batch(std::move(batch))
@@ -29,7 +29,7 @@ BatchExecutionTask::BatchExecutionTask(Batch&& batch,
           , m_otherSuccessfulExecutorEndBatchOpinions(
                 std::move(otherSuccessfulExecutorEndBatchOpinions))
           , m_otherUnsuccessfulExecutorEndBatchOpinions(
-                std::move(otherSuccessfulExecutorEndBatchOpinions)) {}
+                std::move(otherUnsuccessfulExecutorEndBatchOpinions)) {}
 
 void BatchExecutionTask::run() {
 
@@ -116,7 +116,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, vm::C
 
 // region message event handler
 
-bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
+bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -129,11 +129,7 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const EndBatchExecut
     }
 
     if (!m_successfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
-        if (opinion.isSuccessful()) {
-            m_otherSuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
-        } else {
-            m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
-        }
+        m_otherSuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
     }
 
     checkEndBatchTransactionReadiness();
@@ -210,7 +206,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& call
 
     m_proofOfExecutionSecretData = executionResult.m_proofOfExecutionSecretData;
 
-    m_callsExecutionOpinions.push_back(CallExecutionOpinion{
+    m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
             callId,
             SuccessfulBatchCallInfo{
                     digest.m_success,
@@ -287,7 +283,7 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecution
 
             m_successfulEndBatchSent = false;
 
-        } else {
+        } /*else {
 
             std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
                 return !validateOtherBatchInfo(item.second);
@@ -295,7 +291,7 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecution
 
             m_unsuccessfulEndBatchSent = false;
 
-        }
+        }*/
 
         checkEndBatchTransactionReadiness();
 
@@ -311,7 +307,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
                                                        uint64_t fileStructureSize) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
-    m_successfulEndBatchOpinion = EndBatchExecutionOpinion();
+    m_successfulEndBatchOpinion = SuccessfulEndBatchExecutionOpinion();
     m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_executorKey = m_executorEnvironment.keyPair().publicKey();
@@ -340,9 +336,9 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
         return !validateOtherBatchInfo(item.second);
     });
 
-    std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
-        return !validateOtherBatchInfo(item.second);
-    });
+//    std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+//        return !validateOtherBatchInfo(item.second);
+//    });
 
     checkEndBatchTransactionReadiness();
 }
@@ -361,9 +357,9 @@ void BatchExecutionTask::processPublishedEndBatch() {
     }
 
     if (batchIsSuccessful && (m_publishedEndBatchInfo->m_driveState !=
-                              m_successfulEndBatchOpinion->m_successfulBatchInfo->m_storageHash ||
+                              m_successfulEndBatchOpinion->m_successfulBatchInfo.m_storageHash ||
                               m_publishedEndBatchInfo->m_PoExVerificationInfo !=
-                              m_successfulEndBatchOpinion->m_successfulBatchInfo->m_PoExVerificationInfo)) {
+                              m_successfulEndBatchOpinion->m_successfulBatchInfo.m_PoExVerificationInfo)) {
         // The received result differs from the common one, synchronization is needed
 
         m_executorEnvironment.logger().warn("Calculated storage hash differs from the published one");
@@ -403,37 +399,37 @@ void BatchExecutionTask::processPublishedEndBatch() {
     }
 }
 
-bool BatchExecutionTask::validateOtherBatchInfo(const EndBatchExecutionOpinion& other) {
+bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutionOpinion& other) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
 
-    bool otherSuccessfulBatch = other.m_successfulBatchInfo.has_value();
+//    bool otherSuccessfulBatch = other.m_successfulBatchInfo.has_value();
+//
+//    if (otherSuccessfulBatch) {
+//    }
+    const auto& otherSuccessfulBatchInfo = other.m_successfulBatchInfo;
+    const auto& successfulBatchInfo = m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
-    if (otherSuccessfulBatch) {
-        const auto& otherSuccessfulBatchInfo = *other.m_successfulBatchInfo;
-        const auto& successfulBatchInfo = *m_successfulEndBatchOpinion->m_successfulBatchInfo;
+    if (otherSuccessfulBatchInfo.m_PoExVerificationInfo != successfulBatchInfo.m_PoExVerificationInfo) {
+        return false;
+    }
 
-        if (otherSuccessfulBatchInfo.m_PoExVerificationInfo != successfulBatchInfo.m_PoExVerificationInfo) {
-            return false;
-        }
+    if (otherSuccessfulBatchInfo.m_storageHash != successfulBatchInfo.m_storageHash) {
+        return false;
+    }
 
-        if (otherSuccessfulBatchInfo.m_storageHash != successfulBatchInfo.m_storageHash) {
-            return false;
-        }
+    if (otherSuccessfulBatchInfo.m_usedStorageSize != successfulBatchInfo.m_usedStorageSize) {
+        return false;
+    }
 
-        if (otherSuccessfulBatchInfo.m_usedStorageSize != successfulBatchInfo.m_usedStorageSize) {
-            return false;
-        }
+    if (otherSuccessfulBatchInfo.m_metaFilesSize != successfulBatchInfo.m_metaFilesSize) {
+        return false;
+    }
 
-        if (otherSuccessfulBatchInfo.m_metaFilesSize != successfulBatchInfo.m_metaFilesSize) {
-            return false;
-        }
-
-        if (otherSuccessfulBatchInfo.m_fileStructureSize != successfulBatchInfo.m_fileStructureSize) {
-            return false;
-        }
+    if (otherSuccessfulBatchInfo.m_fileStructureSize != successfulBatchInfo.m_fileStructureSize) {
+        return false;
     }
 
     if (other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
@@ -447,23 +443,23 @@ bool BatchExecutionTask::validateOtherBatchInfo(const EndBatchExecutionOpinion& 
             return false;
         }
 
-        if (otherSuccessfulBatch) {
-            const auto& otherSuccessfulCallInfo = *otherCallIt->m_successfulCallExecutionInfo;
-            const auto& successfulCallInfo = *callIt->m_successfulCallExecutionInfo;
+//        if (otherSuccessfulBatch) {
+//        }
+        const auto& otherSuccessfulCallInfo = otherCallIt->m_successfulCallExecutionInfo;
+        const auto& successfulCallInfo = callIt->m_successfulCallExecutionInfo;
 
-            if (otherSuccessfulCallInfo.m_callExecutionSuccess != successfulCallInfo.m_callExecutionSuccess) {
-                return false;
-            }
+        if (otherSuccessfulCallInfo.m_callExecutionSuccess != successfulCallInfo.m_callExecutionSuccess) {
+            return false;
+        }
 
-            if (otherSuccessfulCallInfo.m_callSandboxSizeDelta !=
-                successfulCallInfo.m_callSandboxSizeDelta) {
-                return false;
-            }
+        if (otherSuccessfulCallInfo.m_callSandboxSizeDelta !=
+            successfulCallInfo.m_callSandboxSizeDelta) {
+            return false;
+        }
 
-            if (otherSuccessfulCallInfo.m_callStateSizeDelta !=
-                successfulCallInfo.m_callStateSizeDelta) {
-                return false;
-            }
+        if (otherSuccessfulCallInfo.m_callStateSizeDelta !=
+            successfulCallInfo.m_callStateSizeDelta) {
+            return false;
         }
     }
 
@@ -493,7 +489,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                     });
 
         }
-    } else if (m_unsuccessfulEndBatchOpinion &&
+    } /*else if (m_unsuccessfulEndBatchOpinion &&
                2 * m_otherUnsuccessfulExecutorEndBatchOpinions.size() >=
                3 * (m_contractEnvironment.executors().size() + 1)) {
 
@@ -509,12 +505,12 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                         sendEndBatchTransaction(tx);
                     });
         }
-    }
+    }*/
 }
 
 EndBatchExecutionTransactionInfo
-BatchExecutionTask::createMultisigTransactionInfo(const EndBatchExecutionOpinion& transactionOpinion,
-                                                  std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherTransactionOpinions) {
+BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
+                                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -630,12 +626,12 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
     ASSERT(!m_unsuccessfulEndBatchOpinion, m_executorEnvironment.logger())
 
-    m_unsuccessfulEndBatchOpinion = m_successfulEndBatchOpinion;
-
-    m_unsuccessfulEndBatchOpinion->m_successfulBatchInfo.reset();
-    for (auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo) {
-        callInfo.m_successfulCallExecutionInfo.reset();
-    }
+//    m_unsuccessfulEndBatchOpinion = m_successfulEndBatchOpinion;
+//
+//    m_unsuccessfulEndBatchOpinion->m_successfulBatchInfo.reset();
+//    for (auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo) {
+//        callInfo.m_successfulCallExecutionInfo.reset();
+//    }
 
     // The opinion will be shared when the share opinion timer ticks
 }

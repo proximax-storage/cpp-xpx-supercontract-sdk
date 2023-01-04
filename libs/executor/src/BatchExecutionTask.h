@@ -19,19 +19,19 @@ private:
     const Batch m_batch;
     decltype(m_batch.m_callRequests.begin()) m_callIterator;
 
-    std::vector<CallExecutionOpinion> m_callsExecutionOpinions;
+    std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionOpinions;
 
     std::unique_ptr<CallExecutionManager> m_callExecutionManager;
 
     std::shared_ptr<AsyncQuery> m_storageQuery;
 
-    std::optional<EndBatchExecutionOpinion> m_successfulEndBatchOpinion;
-    std::optional<EndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
+    std::optional<SuccessfulEndBatchExecutionOpinion> m_successfulEndBatchOpinion;
+    std::optional<UnsuccessfulEndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
 
     std::optional<PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
 
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
 
     Timer m_unsuccessfulExecutionTimer;
 
@@ -54,8 +54,8 @@ public:
     BatchExecutionTask(Batch&& batch,
                        ContractEnvironment& contractEnvironment,
                        ExecutorEnvironment& executorEnvironment,
-                       std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
-                       std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
+                       std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
+                       std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
                        std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo);
 
     void terminate() override;
@@ -103,13 +103,13 @@ private:
 
     void processPublishedEndBatch();
 
-    bool validateOtherBatchInfo(const EndBatchExecutionOpinion& other);
+    bool validateOtherBatchInfo(const SuccessfulEndBatchExecutionOpinion& other);
 
     void checkEndBatchTransactionReadiness();
 
     EndBatchExecutionTransactionInfo
-    createMultisigTransactionInfo(const EndBatchExecutionOpinion& transactionOpinion,
-                                  std::map<ExecutorKey, EndBatchExecutionOpinion>&& otherTransactionOpinions);
+    createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
+                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions);
 
     void sendEndBatchTransaction(const EndBatchExecutionTransactionInfo& transactionInfo);
 
