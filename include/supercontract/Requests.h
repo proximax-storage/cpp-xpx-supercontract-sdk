@@ -26,14 +26,9 @@ struct AddContractRequest {
 struct CallReferenceInfo {
     std::optional<CallerKey> m_callerKey;
     uint64_t m_blockHeight;
-    BlockHash m_blockHash;
-    uint64_t m_blockTime;
-    uint64_t m_blockGenerationTime;
-    std::optional<TransactionHash> m_transactionHash;
 };
 
 struct CallRequestParameters {
-    ContractKey m_contractKey;
     CallId m_callId;
     std::string m_file;
     std::string m_function;
@@ -44,7 +39,6 @@ struct CallRequestParameters {
 };
 
 struct RemoveRequest {
-    Hash256 m_closeId;
 };
 
 struct Block{

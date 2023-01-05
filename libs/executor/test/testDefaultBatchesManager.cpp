@@ -68,7 +68,6 @@ TEST(TEST_NAME, BatchTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -77,11 +76,7 @@ TEST(TEST_NAME, BatchTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);
@@ -191,7 +186,6 @@ TEST(TEST_NAME, BatchTest) {
      for(auto i=1; i<=13; i++){
          std::vector<uint8_t> params;
          CallRequestParameters request = {
-                 utils::generateRandomByteValue<ContractKey>(),
                  utils::generateRandomByteValue<CallId>(),
                  "",
                  "",
@@ -200,11 +194,7 @@ TEST(TEST_NAME, BatchTest) {
                  20 * 1024,
                  CallReferenceInfo{
                          {},
-                         0,
-                         utils::generateRandomByteValue<BlockHash>(),
-                         0,
-                         0,
-                         {}
+                         0
                  }
          };
          requests.push_back(request);
@@ -333,7 +323,6 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -342,11 +331,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);
@@ -451,7 +436,6 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -460,11 +444,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);
@@ -570,7 +550,6 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -579,11 +558,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);
@@ -689,7 +664,6 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -698,11 +672,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);
@@ -816,7 +786,6 @@ TEST(TEST_NAME, AllInOneTest) {
     for (auto i = 1; i <= 4; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -825,11 +794,7 @@ TEST(TEST_NAME, AllInOneTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         requests.push_back(request);

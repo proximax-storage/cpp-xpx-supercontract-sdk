@@ -77,8 +77,6 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
     }
 
     auto* pRpcRequest = new supercontractserver::ExecuteRequest();
-    pRpcRequest->set_contract_key(std::string(m_request.m_contractKey.begin(), m_request.m_contractKey.end()));
-    pRpcRequest->set_call_id(std::string(m_request.m_callId.begin(), m_request.m_callId.end()));
     pRpcRequest->set_file_to_call(std::move(m_request.m_file));
     pRpcRequest->set_function_to_call(std::move(m_request.m_function));
     pRpcRequest->set_sc_prepayment(m_request.m_scLimit);

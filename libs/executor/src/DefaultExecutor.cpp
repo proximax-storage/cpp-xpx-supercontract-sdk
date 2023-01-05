@@ -253,9 +253,9 @@ void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransacti
     });
 }
 
-void DefaultExecutor::onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) {
+void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) {
     m_pThreadManager->execute([=, this] {
-        auto contractIt = m_contracts.find(contractKey);
+        auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
 
@@ -263,8 +263,24 @@ void DefaultExecutor::onStorageSynchronizedPublished(const ContractKey& contract
             return;
         }
 
-        contractIt->second->onStorageSynchronizedPublished(batchIndex);
+        contractIt->second->onStorageSynchronizedPublished(info.m_batchIndex);
     });
+}
+
+void DefaultExecutor::setAutomaticExecutionsEnabledSince(
+		const ContractKey& contractKey,
+		const std::optional<uint64_t>& blockHeight) {
+	m_pThreadManager->execute([=, this] {
+	  auto contractIt = m_contracts.find(contractKey);
+
+	  if (contractIt == m_contracts.end()) {
+
+	  	// TODO maybe error?
+	  	return;
+	  }
+
+	  contractIt->second->setAutomaticExecutionsEnabledSince(blockHeight);
+	});
 }
 
 // endregion

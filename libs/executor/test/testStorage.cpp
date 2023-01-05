@@ -84,7 +84,6 @@ TEST(Supercontract, Storage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              ContractKey(),
                                                               CallId(),
                                                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                                                               "run",
@@ -93,11 +92,7 @@ TEST(Supercontract, Storage) {
                                                               26 * 1024,
                                                               CallReferenceInfo{
                                                                       {},
-                                                                      0,
-                                                                      BlockHash(),
-                                                                      0,
-                                                                      0,
-                                                                      {}}},
+                                                                      0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
@@ -209,7 +204,6 @@ TEST(Supercontract, Iterator) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              ContractKey(),
                                                               CallId(),
                                                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                                                               "run",
@@ -218,11 +212,7 @@ TEST(Supercontract, Iterator) {
                                                               26 * 1024,
                                                               CallReferenceInfo{
                                                                       {},
-                                                                      0,
-                                                                      BlockHash(),
-                                                                      0,
-                                                                      0,
-                                                                      {}}},
+                                                                      0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
@@ -334,7 +324,6 @@ TEST(Supercontract, FaultyStorage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              ContractKey(),
                                                               CallId(),
                                                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                                                               "run",
@@ -343,11 +332,7 @@ TEST(Supercontract, FaultyStorage) {
                                                               26 * 1024,
                                                               CallReferenceInfo{
                                                                       {},
-                                                                      0,
-                                                                      BlockHash(),
-                                                                      0,
-                                                                      0,
-                                                                      {}}},
+                                                                      0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
         rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);

@@ -110,9 +110,11 @@ public:
 
     void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) override;
 
-    void onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) override;
+    void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) override;
 
-    // endregion
+	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) override;
+
+	// endregion
 
 private:
 

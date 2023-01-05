@@ -16,13 +16,13 @@ public:
 
     virtual ~BlockchainEventHandler() = default;
 
-    virtual void onEndBatchExecutionPublished( PublishedEndBatchExecutionTransactionInfo&& ) = 0;
+    virtual void onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&&) = 0;
 
-    virtual void onEndBatchExecutionSingleTransactionPublished( PublishedEndBatchExecutionSingleTransactionInfo&& ) = 0;
+    virtual void onEndBatchExecutionSingleTransactionPublished(PublishedEndBatchExecutionSingleTransactionInfo&&) = 0;
 
-    virtual void onEndBatchExecutionFailed( FailedEndBatchExecutionTransactionInfo&& ) = 0;
+    virtual void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&&) = 0;
 
-    virtual void onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex ) = 0;
+    virtual void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&&) = 0;
 };
 
 }

@@ -88,16 +88,17 @@ struct PublishedEndBatchExecutionTransactionInfo {
     bool                        m_batchSuccess;
     Hash256                     m_driveState;
     crypto::CurvePoint          m_PoExVerificationInfo;
-    std::vector <ExecutorKey>   m_cosigners;
-
-//    bool isSuccessful() const {
-//        return m_success;
-//    }
+    std::set<ExecutorKey>   	m_cosigners;
 };
 
 struct PublishedEndBatchExecutionSingleTransactionInfo {
     ContractKey m_contractKey;
     uint64_t    m_batchIndex;
+};
+
+struct PublishedSynchronizeSingleTransactionInfo {
+	ContractKey m_contractKey;
+	uint64_t    m_batchIndex;
 };
 
 struct FailedEndBatchExecutionTransactionInfo {

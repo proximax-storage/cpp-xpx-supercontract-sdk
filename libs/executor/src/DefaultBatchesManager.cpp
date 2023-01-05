@@ -127,8 +127,7 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    vm::CallRequest request(CallRequestParameters{m_contractEnvironment.contractKey(),
-                                                  callId,
+    vm::CallRequest request(CallRequestParameters{callId,
                                                   m_executorEnvironment.executorConfig().autorunFile(),
                                                   m_executorEnvironment.executorConfig().autorunFunction(),
                                                   {},
@@ -172,7 +171,6 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
         CallReferenceInfo info;
         info.m_callerKey = CallerKey();
         batchIt->second.m_requests.emplace_back(CallRequestParameters{
-                m_contractEnvironment.contractKey(),
                 CallId{callIt->second.m_blockHash.array()},
                 m_executorEnvironment.executorConfig().automaticExecutionFile(),
                 m_executorEnvironment.executorConfig().automaticExecutionFunction(),
