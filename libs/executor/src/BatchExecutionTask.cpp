@@ -357,9 +357,9 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
         return !validateOtherBatchInfo(item.second);
     });
 
-//    std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
-//        return !validateOtherBatchInfo(item.second);
-//    });
+    std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+        return !validateOtherBatchInfo(item.second);
+    });
 
     checkEndBatchTransactionReadiness();
 }
@@ -531,7 +531,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                     });
 
         }
-    } /*else if (m_unsuccessfulEndBatchOpinion &&
+    } else if (m_unsuccessfulEndBatchOpinion &&
                2 * m_otherUnsuccessfulExecutorEndBatchOpinions.size() >=
                3 * (m_contractEnvironment.executors().size() + 1)) {
 
@@ -547,16 +547,16 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                         sendEndBatchTransaction(tx);
                     });
         }
-    }*/
+    }
 }
 
-EndBatchExecutionTransactionInfo
+SuccessfulEndBatchExecutionTransactionInfo
 BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
                                                   std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    EndBatchExecutionTransactionInfo multisigTransactionInfo;
+    SuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
 
     // Fill common information
     multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
@@ -590,7 +590,51 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
     return multisigTransactionInfo;
 }
 
-void BatchExecutionTask::sendEndBatchTransaction(const EndBatchExecutionTransactionInfo& transactionInfo) {
+UnsuccessfulEndBatchExecutionTransactionInfo
+BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExecutionOpinion& transactionOpinion,
+                                                  std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    UnsuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
+
+    // Fill common information
+    multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
+    multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
+
+    for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
+        CallExecutionInfo callInfo;
+        callInfo.m_callId = call.m_callId;
+        multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
+    }
+
+    otherTransactionOpinions[m_executorEnvironment.keyPair().publicKey()] = transactionOpinion;
+
+    for (const auto&[_, otherOpinion]: otherTransactionOpinions) {
+        multisigTransactionInfo.m_executorKeys.push_back(otherOpinion.m_executorKey);
+        multisigTransactionInfo.m_signatures.push_back(otherOpinion.m_signature);
+        multisigTransactionInfo.m_proofs.push_back(otherOpinion.m_proof);
+        ASSERT(multisigTransactionInfo.m_callsExecutionInfo.size() == otherOpinion.m_callsExecutionInfo.size(),
+               m_executorEnvironment.logger())
+        auto txCallIt = multisigTransactionInfo.m_callsExecutionInfo.begin();
+        auto otherCallIt = otherOpinion.m_callsExecutionInfo.begin();
+        for (; txCallIt != multisigTransactionInfo.m_callsExecutionInfo.end(); txCallIt++, otherCallIt++) {
+            ASSERT(txCallIt->m_callId == otherCallIt->m_callId, m_executorEnvironment.logger())
+            txCallIt->m_executorsParticipation.push_back(otherCallIt->m_executorParticipation);
+        }
+    }
+
+    return multisigTransactionInfo;
+}
+
+void BatchExecutionTask::sendEndBatchTransaction(const SuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.executorEventHandler().endBatchTransactionIsReady(transactionInfo);
+}
+
+void BatchExecutionTask::sendEndBatchTransaction(const UnsuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -668,13 +712,15 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
     ASSERT(!m_unsuccessfulEndBatchOpinion, m_executorEnvironment.logger())
 
-//    m_unsuccessfulEndBatchOpinion = m_successfulEndBatchOpinion;
-//
-//    m_unsuccessfulEndBatchOpinion->m_successfulBatchInfo.reset();
-//    for (auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo) {
-//        callInfo.m_successfulCallExecutionInfo.reset();
-//    }
-
+    m_unsuccessfulEndBatchOpinion = UnsuccessfulEndBatchExecutionOpinion();
+    m_unsuccessfulEndBatchOpinion->m_contractKey = m_successfulEndBatchOpinion->m_contractKey;
+    m_unsuccessfulEndBatchOpinion->m_batchIndex = m_successfulEndBatchOpinion->m_batchIndex;
+    m_unsuccessfulEndBatchOpinion->m_proof = m_successfulEndBatchOpinion->m_proof;
+    m_unsuccessfulEndBatchOpinion->m_executorKey = m_successfulEndBatchOpinion->m_executorKey;
+    m_unsuccessfulEndBatchOpinion->m_signature = m_successfulEndBatchOpinion->m_signature;
+    for (auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo) {
+        callInfo.m_successfulCallExecutionInfo = {};
+    }
     // The opinion will be shared when the share opinion timer ticks
 }
 

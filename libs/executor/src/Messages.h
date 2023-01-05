@@ -139,7 +139,7 @@ struct UnsuccessfulEndBatchExecutionOpinion {
     ContractKey m_contractKey;
     uint64_t m_batchIndex;
 
-    std::vector<UnsuccessfulCallExecutionOpinion> m_callsExecutionInfo;
+    std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
     Proofs m_proof;
 
