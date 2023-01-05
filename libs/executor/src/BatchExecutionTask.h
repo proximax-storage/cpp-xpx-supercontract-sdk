@@ -72,6 +72,8 @@ public:
 
     bool onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) override;
 
+    bool onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) override;
+
     // endregion
 
 private:
@@ -104,6 +106,8 @@ private:
     void processPublishedEndBatch();
 
     bool validateOtherBatchInfo(const SuccessfulEndBatchExecutionOpinion& other);
+
+    bool validateOtherBatchInfo(const UnsuccessfulEndBatchExecutionOpinion& other);
 
     void checkEndBatchTransactionReadiness();
 

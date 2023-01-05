@@ -137,6 +137,27 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const SuccessfulEndB
     return true;
 }
 
+bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (m_finished) {
+        return false;
+    }
+
+    if (opinion.m_batchIndex != m_batch.m_batchIndex) {
+        return false;
+    }
+
+    if (!m_successfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
+        m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
+    }
+
+    checkEndBatchTransactionReadiness();
+
+    return true;
+}
+
 // endregion
 
 void BatchExecutionTask::onInitiatedStorageModifications() {
@@ -459,6 +480,27 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
         if (otherSuccessfulCallInfo.m_callStateSizeDelta !=
             successfulCallInfo.m_callStateSizeDelta) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecutionOpinion& other) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+
+    if (other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
+        return false;
+    }
+
+    auto otherCallIt = other.m_callsExecutionInfo.begin();
+    auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.begin();
+    for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++) {
+        if (otherCallIt->m_callId != callIt->m_callId) {
             return false;
         }
     }
