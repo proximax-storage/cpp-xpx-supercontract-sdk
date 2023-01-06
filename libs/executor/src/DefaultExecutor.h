@@ -21,9 +21,9 @@ class DefaultExecutor
 
 private:
 
-    const crypto::KeyPair& m_keyPair;
+    crypto::KeyPair m_keyPair;
 
-    std::shared_ptr<ThreadManager> m_pThreadManager;
+    ThreadManager m_threadManager;
     logging::Logger m_logger;
 
     boost::asio::ssl::context m_sslContext;
@@ -41,8 +41,7 @@ private:
 
 public:
 
-    DefaultExecutor(const crypto::KeyPair& keyPair,
-                    std::shared_ptr<ThreadManager> pThreadManager,
+    DefaultExecutor(crypto::KeyPair&& keyPair,
                     const ExecutorConfig& config,
                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                     const std::string& dbgPeerName = "executor");

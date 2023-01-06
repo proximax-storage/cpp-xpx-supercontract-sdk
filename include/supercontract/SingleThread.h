@@ -21,6 +21,10 @@ protected:
         return m_threadId == std::this_thread::get_id();
     }
 
+	void setThreadId(const std::thread::id& threadId) {
+		m_threadId = threadId;
+	}
+
 };
 
 }

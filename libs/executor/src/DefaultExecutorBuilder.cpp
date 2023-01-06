@@ -10,13 +10,11 @@
 namespace sirius::contract {
 
 std::unique_ptr<Executor>
-DefaultExecutorBuilder::build(const crypto::KeyPair& keyPair,
-                              std::shared_ptr<ThreadManager> pThreadManager,
+DefaultExecutorBuilder::build(crypto::KeyPair&& keyPair,
                               const ExecutorConfig& config,
                               std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                               const std::string& dbgPeerName) {
-    return std::make_unique<DefaultExecutor>(keyPair,
-                                             pThreadManager,
+    return std::make_unique<DefaultExecutor>(std::move(keyPair),
                                              config,
                                              std::move(eventHandler),
                                              dbgPeerName);
