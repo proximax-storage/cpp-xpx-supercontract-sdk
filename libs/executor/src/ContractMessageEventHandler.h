@@ -19,6 +19,10 @@ public:
     virtual bool onEndBatchExecutionOpinionReceived( const SuccessfulEndBatchExecutionOpinion& ) {
         return false;
     }
+
+    virtual bool onEndBatchExecutionOpinionReceived( const UnsuccessfulEndBatchExecutionOpinion& ) {
+        return false;
+    }
 };
 
 }
