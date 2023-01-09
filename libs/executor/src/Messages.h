@@ -44,19 +44,6 @@ struct SuccessfulCallExecutionOpinion {
     }
 };
 
-struct UnsuccessfulCallExecutionOpinion {
-
-    CallId m_callId;
-
-    CallExecutorParticipation m_executorParticipation;
-
-    template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_callId );
-        arch( m_executorParticipation );
-    }
-};
-
 struct SuccessfulEndBatchExecutionOpinion {
     ContractKey m_contractKey;
     uint64_t m_batchIndex;
