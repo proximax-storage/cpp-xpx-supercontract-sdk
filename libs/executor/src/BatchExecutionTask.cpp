@@ -304,7 +304,7 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecution
 
             m_successfulEndBatchSent = false;
 
-        } /*else {
+        } else {
 
             std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
                 return !validateOtherBatchInfo(item.second);
@@ -312,7 +312,7 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecution
 
             m_unsuccessfulEndBatchSent = false;
 
-        }*/
+        }
 
         checkEndBatchTransactionReadiness();
 

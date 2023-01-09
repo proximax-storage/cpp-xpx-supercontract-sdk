@@ -16,126 +16,127 @@
 namespace sirius::contract::test {
 #define TEST_NAME BatchExecutionTaskTest
 
-//TEST(TEST_NAME, SuccessfulOpinionTest) {
-//    // create executor environment
-//    crypto::PrivateKey privateKey;
-//    crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-//    ThreadManager threadManager;
-//    std::deque<bool> result = {true, true, true};
-//    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
-//    std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
-//    ExecutorConfig executorConfig;
-//    auto storageMock = std::make_shared<StorageMock>();
-//    std::weak_ptr<StorageMock> pStorageMock = storageMock;
-//    auto messengerMock = std::make_shared<MessengerMock>();
-//    std::weak_ptr<MessengerMock> pMessengerMock = messengerMock;
-//
-//    ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
-//                                                    threadManager, pStorageMock, pMessengerMock);
-//    // create batch
-//    std::deque<vm::CallRequest> callRequests;
-//    for(auto i=1; i<2; i++){
-//        std::vector<uint8_t> params;
-//        CallRequestParameters requestParams{
-//                utils::generateRandomByteValue<ContractKey>(),
-//                utils::generateRandomByteValue<CallId>(),
-//                "",
-//                "",
-//                params,
-//                52000000,
-//                20 * 1024,
-//                CallReferenceInfo{
-//                        {},
-//                        0,
-//                        utils::generateRandomByteValue<BlockHash>(),
-//                        0,
-//                        0,
-//                        {}
-//                }
-//        };
-//        vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
-//        callRequests.push_back(request);
-//    }
-//
-//    Batch batch = {
-//            1,
-//            callRequests
-//    };
-//    // create contract environment mock
-//    ContractKey contractKey;
-//    uint64_t automaticExecutionsSCLimit = 0;
-//    uint64_t automaticExecutionsSMLimit = 0;
-//    std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
-//
-//    // create batch execution task
-//    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-//    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
-//    std::unique_ptr<BaseContractTask> pBatchExecutionTask;
-//
-//    // create successful opinions
-//    std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
-//    for(const auto& call: callRequests){
-//        callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
-//            call.m_callId,
-//            SuccessfulBatchCallInfo{
-//                    true,
-//                    0,
-//                    0,
-//            },
-//            CallExecutorParticipation{
-//                    0,
-//                    0
-//            }
-//        });
-//    }
-//    std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
-//    for(int i=0; i<2; i++){
-//        SuccessfulEndBatchExecutionOpinion opinion;
-//        opinion.m_batchIndex = 1;
-//        opinion.m_contractKey = contractKey;
-//        opinion.m_executorKey = utils::generateRandomByteValue<ExecutorKey>();
-//        opinion.m_callsExecutionInfo = callsExecutionOpinions;
-//        SuccessfulBatchInfo successfulBatchInfo {
-//            pStorageMock.lock()->m_storageHash,
-//            0,
-//            0,
-//            0,
-//            // poexVerificationInfo
-//        };
-//        opinion.m_successfulBatchInfo = successfulBatchInfo;
-//        opinionList.push_back(opinion);
-//    }
-//
-//    std::promise<void> barrier;
-//    threadManager.execute([&]{
-//        pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
-//                executorEnvironmentMock, contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
-//
-//        pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
-//                                                                  *pContractEnvironmentMock,
-//                                                                  executorEnvironmentMock,
-//                                                                  std::move(otherSuccessfulExecutorEndBatchOpinions),
-//                                                                  std::move(otherUnsuccessfulExecutorEndBatchOpinions),
-//                                                                  std::nullopt);
-//        pBatchExecutionTask->run();
-//        opinionList[0].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
-//                ->proofOfExecution().addToProof(0);
-//        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
-//        opinionList[1].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
-//                ->proofOfExecution().addToProof(0);
-//        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
-//
-//        barrier.set_value();
-//    });
-//    sleep(3);
-//    barrier.get_future().wait();
-//
-//    threadManager.execute([&] {
-//        pBatchExecutionTask.reset();
-//    });
-//
-//    threadManager.stop();
-//}
+TEST(TEST_NAME, SuccessfulOpinionTest) {
+    // create executor environment
+    crypto::PrivateKey privateKey;
+    crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+    ThreadManager threadManager;
+    std::deque<bool> result = {true, true, true};
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
+    std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+    ExecutorConfig executorConfig;
+    executorConfig.setSuccessfulExecutionDelayMs(1000);
+    auto storageMock = std::make_shared<StorageMock>();
+    std::weak_ptr<StorageMock> pStorageMock = storageMock;
+    auto messengerMock = std::make_shared<MessengerMock>();
+    std::weak_ptr<MessengerMock> pMessengerMock = messengerMock;
+
+    ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
+                                                    threadManager, pStorageMock, pMessengerMock);
+    // create batch
+    std::deque<vm::CallRequest> callRequests;
+    for(auto i=0; i<1; i++){
+        std::vector<uint8_t> params;
+        CallRequestParameters requestParams{
+                utils::generateRandomByteValue<ContractKey>(),
+                utils::generateRandomByteValue<CallId>(),
+                "",
+                "",
+                params,
+                52000000,
+                20 * 1024,
+                CallReferenceInfo{
+                        {},
+                        0,
+                        utils::generateRandomByteValue<BlockHash>(),
+                        0,
+                        0,
+                        {}
+                }
+        };
+        vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
+        callRequests.push_back(request);
+    }
+
+    Batch batch = {
+            1,
+            callRequests
+    };
+    // create contract environment mock
+    ContractKey contractKey;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
+    std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
+
+    // create batch execution task
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::unique_ptr<BaseContractTask> pBatchExecutionTask;
+
+    // create successful opinions
+    std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
+    for(const auto& call: callRequests){
+        callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
+            call.m_callId,
+            SuccessfulBatchCallInfo{
+                    true,
+                    0,
+                    0,
+            },
+            CallExecutorParticipation{
+                    0,
+                    0
+            }
+        });
+    }
+    std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
+    for(int i=0; i<2; i++){
+        SuccessfulEndBatchExecutionOpinion opinion;
+        opinion.m_batchIndex = 1;
+        opinion.m_contractKey = contractKey;
+        opinion.m_executorKey = utils::generateRandomByteValue<ExecutorKey>();
+        opinion.m_callsExecutionInfo = callsExecutionOpinions;
+        SuccessfulBatchInfo successfulBatchInfo {
+            pStorageMock.lock()->m_storageHash,
+            0,
+            0,
+            0,
+            // poexVerificationInfo
+        };
+        opinion.m_successfulBatchInfo = successfulBatchInfo;
+        opinionList.push_back(opinion);
+    }
+
+    std::promise<void> barrier;
+    threadManager.execute([&]{
+        pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
+                executorEnvironmentMock, contractKey, automaticExecutionsSCLimit, automaticExecutionsSMLimit);
+
+        pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
+                                                                  *pContractEnvironmentMock,
+                                                                  executorEnvironmentMock,
+                                                                  std::move(otherSuccessfulExecutorEndBatchOpinions),
+                                                                  std::move(otherUnsuccessfulExecutorEndBatchOpinions),
+                                                                  std::nullopt);
+        pBatchExecutionTask->run();
+        opinionList[0].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
+                ->proofOfExecution().addToProof(0);
+        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
+        opinionList[1].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
+                ->proofOfExecution().addToProof(0);
+        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
+
+        barrier.set_value();
+    });
+    sleep(5);
+    barrier.get_future().wait();
+
+    threadManager.execute([&] {
+        pBatchExecutionTask.reset();
+    });
+
+    threadManager.stop();
+}
 
 TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     // create executor environment
@@ -156,7 +157,7 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for(auto i=0; i<2; i++){
+    for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -199,7 +200,6 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     // create unsuccessful opinions
     std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
     for(const auto& call: callRequests){
-//        callsExecutionOpinions.push_back({});
         callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
                 call.m_callId,
                 SuccessfulBatchCallInfo{},
@@ -267,7 +267,7 @@ TEST(TEST_NAME, PublishedBatchTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for(auto i=1; i<=1; i++){
+    for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -301,8 +301,8 @@ TEST(TEST_NAME, PublishedBatchTest) {
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
 
     // create published end batch txn info
@@ -362,7 +362,7 @@ TEST(TEST_NAME, PublishedBatchNotSynchronizedTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for(auto i=1; i<=1; i++){
+    for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -396,8 +396,8 @@ TEST(TEST_NAME, PublishedBatchNotSynchronizedTest) {
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
 
     // create published end batch txn info
@@ -446,6 +446,7 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     ExecutorConfig executorConfig;
+    executorConfig.setSuccessfulExecutionDelayMs(1000);
     auto storageMock = std::make_shared<StorageMock>();
     std::weak_ptr<StorageMock> pStorageMock = storageMock;
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -455,7 +456,7 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for (auto i = 1; i <= 1; i++) {
+    for (auto i = 0; i < 1; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -489,8 +490,8 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
 
     // create published end batch txn info
@@ -500,9 +501,9 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
     failedEndBatchTxnInfo.m_batchSuccess = true;
 
     // create opinions
-    std::vector<CallExecutionOpinion> callsExecutionOpinions;
+    std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
     for(const auto& call: callRequests){
-        callsExecutionOpinions.push_back(CallExecutionOpinion{
+        callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
                 call.m_callId,
                 SuccessfulBatchCallInfo{
                         true,
@@ -515,9 +516,9 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
                 }
         });
     }
-    std::vector<EndBatchExecutionOpinion> opinionList;
+    std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
     for(int i=0; i<2; i++){
-        EndBatchExecutionOpinion opinion;
+        SuccessfulEndBatchExecutionOpinion opinion;
         opinion.m_batchIndex = 1;
         opinion.m_contractKey = contractKey;
         opinion.m_executorKey = utils::generateRandomByteValue<ExecutorKey>();
@@ -548,20 +549,20 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
                                                                    std::nullopt);
 
         pBatchExecutionTask->run();
-        opinionList[0].m_successfulBatchInfo->m_PoExVerificationInfo = pContractEnvironmentMock
+        opinionList[0].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
                 ->proofOfExecution().addToProof(0);
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
-        opinionList[1].m_successfulBatchInfo->m_PoExVerificationInfo = pContractEnvironmentMock
+        opinionList[1].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
                 ->proofOfExecution().addToProof(0);
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
 
         barrier.set_value();
     });
-    sleep(3);
+    sleep(5);
     threadManager.execute([&] {
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionFailed(failedEndBatchTxnInfo));
     });
-
+    sleep(2);
     barrier.get_future().wait();
 
     threadManager.execute([&] {
@@ -570,6 +571,7 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
 
     threadManager.stop();
 }
+
 TEST(TEST_NAME, TerminateTest) {
     // create executor environment
     crypto::PrivateKey privateKey;
@@ -588,7 +590,7 @@ TEST(TEST_NAME, TerminateTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for (auto i = 1; i <= 1; i++) {
+    for (auto i = 0; i < 2; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -622,8 +624,8 @@ TEST(TEST_NAME, TerminateTest) {
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
 
     // create failed end batch txn info
@@ -641,9 +643,9 @@ TEST(TEST_NAME, TerminateTest) {
     publishedEndBatchTxnInfo.m_cosigners.push_back(utils::generateRandomByteValue<ExecutorKey>());
 
     // create opinions
-    std::vector<CallExecutionOpinion> callsExecutionOpinions;
+    std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
     for (const auto &call: callRequests) {
-        callsExecutionOpinions.push_back(CallExecutionOpinion{
+        callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
                 call.m_callId,
                 SuccessfulBatchCallInfo{
                         true,
@@ -656,9 +658,9 @@ TEST(TEST_NAME, TerminateTest) {
                 }
         });
     }
-    std::vector<EndBatchExecutionOpinion> opinionList;
+    std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
     for (int i = 0; i < 2; i++) {
-        EndBatchExecutionOpinion opinion;
+        SuccessfulEndBatchExecutionOpinion opinion;
         opinion.m_batchIndex = 1;
         opinion.m_contractKey = contractKey;
         opinion.m_executorKey = utils::generateRandomByteValue<ExecutorKey>();
@@ -690,10 +692,10 @@ TEST(TEST_NAME, TerminateTest) {
 
         pBatchExecutionTask->run();
         pBatchExecutionTask->terminate();
-        opinionList[0].m_successfulBatchInfo->m_PoExVerificationInfo = pContractEnvironmentMock
+        opinionList[0].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
                 ->proofOfExecution().addToProof(0);
         ASSERT_FALSE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
-        opinionList[1].m_successfulBatchInfo->m_PoExVerificationInfo = pContractEnvironmentMock
+        opinionList[1].m_successfulBatchInfo.m_PoExVerificationInfo = pContractEnvironmentMock
                 ->proofOfExecution().addToProof(0);
         ASSERT_FALSE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
         ASSERT_FALSE(pBatchExecutionTask->onEndBatchExecutionPublished(publishedEndBatchTxnInfo));
