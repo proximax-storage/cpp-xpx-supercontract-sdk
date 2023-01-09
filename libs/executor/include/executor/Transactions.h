@@ -80,7 +80,6 @@ struct UnsuccessfulEndBatchExecutionTransactionInfo {
     ContractKey                         m_contractKey;
     uint64_t                            m_batchIndex;
 
-    std::optional<SuccessfulBatchInfo>  m_successfulBatchInfo;
     std::vector<CallExecutionInfo>      m_callsExecutionInfo;
 
     std::vector<Proofs>                 m_proofs;

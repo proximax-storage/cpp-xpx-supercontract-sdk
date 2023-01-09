@@ -426,10 +426,6 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
 
-//    bool otherSuccessfulBatch = other.m_successfulBatchInfo.has_value();
-//
-//    if (otherSuccessfulBatch) {
-//    }
     const auto& otherSuccessfulBatchInfo = other.m_successfulBatchInfo;
     const auto& successfulBatchInfo = m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
@@ -464,8 +460,6 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
             return false;
         }
 
-//        if (otherSuccessfulBatch) {
-//        }
         const auto& otherSuccessfulCallInfo = otherCallIt->m_successfulCallExecutionInfo;
         const auto& successfulCallInfo = callIt->m_successfulCallExecutionInfo;
 
@@ -718,6 +712,8 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
     m_unsuccessfulEndBatchOpinion->m_proof = m_successfulEndBatchOpinion->m_proof;
     m_unsuccessfulEndBatchOpinion->m_executorKey = m_successfulEndBatchOpinion->m_executorKey;
     m_unsuccessfulEndBatchOpinion->m_signature = m_successfulEndBatchOpinion->m_signature;
+    m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo = m_successfulEndBatchOpinion->m_callsExecutionInfo;
+
     for (auto& callInfo: m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo) {
         callInfo.m_successfulCallExecutionInfo = {};
     }

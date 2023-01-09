@@ -146,6 +146,7 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, result);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     ExecutorConfig executorConfig;
+    executorConfig.setSuccessfulExecutionDelayMs(1000);
     auto storageMock = std::make_shared<StorageMock>();
     std::weak_ptr<StorageMock> pStorageMock = storageMock;
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -155,7 +156,7 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
                                                     threadManager, pStorageMock, pMessengerMock);
     // create batch
     std::deque<vm::CallRequest> callRequests;
-    for(auto i=1; i<2; i++){
+    for(auto i=0; i<2; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
                 utils::generateRandomByteValue<ContractKey>(),
@@ -187,33 +188,30 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     uint64_t automaticExecutionsSCLimit = 0;
     uint64_t automaticExecutionsSMLimit = 0;
     ContractConfig config;
-    config.setUnsuccessfulApprovalDelayMs(2000);
+    config.setUnsuccessfulApprovalDelayMs(1000);
     std::shared_ptr<ContractEnvironment> pContractEnvironmentMock;
 
     // create batch execution task
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
-    std::map<ExecutorKey, EndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherSuccessfulExecutorEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherUnsuccessfulExecutorEndBatchOpinions;
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
 
-    // create opinions
-    std::vector<CallExecutionOpinion> callsExecutionOpinions;
+    // create unsuccessful opinions
+    std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
     for(const auto& call: callRequests){
-        callsExecutionOpinions.push_back(CallExecutionOpinion{
+//        callsExecutionOpinions.push_back({});
+        callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
                 call.m_callId,
-                SuccessfulBatchCallInfo{
-                        false,
-                        0,
-                        0,
-                },
+                SuccessfulBatchCallInfo{},
                 CallExecutorParticipation{
                         0,
                         0
                 }
         });
     }
-    std::vector<EndBatchExecutionOpinion> opinionList;
+    std::vector<UnsuccessfulEndBatchExecutionOpinion> opinionList;
     for(int i=0; i<2; i++){
-        EndBatchExecutionOpinion opinion;
+        UnsuccessfulEndBatchExecutionOpinion opinion;
         opinion.m_batchIndex = 1;
         opinion.m_contractKey = contractKey;
         opinion.m_executorKey = utils::generateRandomByteValue<ExecutorKey>();
@@ -234,10 +232,10 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
                                                                    std::move(otherUnsuccessfulExecutorEndBatchOpinions),
                                                                    std::nullopt);
         pBatchExecutionTask->run();
-        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
     });
-    sleep(3);
+    sleep(5);
     threadManager.execute([&] {
+        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
         ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
         barrier.set_value();
     });
