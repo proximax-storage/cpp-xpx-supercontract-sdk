@@ -118,7 +118,9 @@ private:
 
     void terminate();
 
-    void onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion);
+    void onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion);
+
+    void onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion);
 };
 
 }
