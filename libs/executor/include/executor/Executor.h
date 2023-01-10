@@ -8,6 +8,7 @@
 
 #include "supercontract/Requests.h"
 #include "ExecutorConfig.h"
+#include "ExecutorInfo.h"
 #include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
 
@@ -35,7 +36,7 @@ public:
 
     virtual void removeContract( const ContractKey&, RemoveRequest&& ) = 0;
 
-    virtual void setExecutors( const ContractKey&, std::set<ExecutorKey>&& executors ) = 0;
+    virtual void setExecutors( const ContractKey&, std::map<ExecutorKey, ExecutorInfo>&& executors ) = 0;
 };
 
 }

@@ -6,6 +6,8 @@
 *** license that can be found in the LICENSE file.
 */
 
+#pragma once
+
 #include <crypto/CurvePoint.h>
 
 namespace sirius::contract {
