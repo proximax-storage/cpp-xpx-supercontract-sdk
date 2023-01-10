@@ -32,7 +32,7 @@ const ContractKey& ContractEnvironmentMock::contractKey() const { return m_contr
 
 const DriveKey& ContractEnvironmentMock::driveKey() const { return m_driveKey; }
 
-const std::set<ExecutorKey>& ContractEnvironmentMock::executors() const { return m_executors; }
+const std::map<ExecutorKey, ExecutorInfo>& ContractEnvironmentMock::executors() const { return m_executors; }
 
 uint64_t ContractEnvironmentMock::automaticExecutionsSCLimit() const { return m_automaticExecutionsSCLimit; }
 

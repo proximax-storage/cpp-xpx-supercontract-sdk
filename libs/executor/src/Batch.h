@@ -10,7 +10,7 @@
 #include <list>
 #include <vector>
 
-#include "supercontract/Requests.h"
+#include <executor/Requests.h>
 #include "virtualMachine/CallRequest.h"
 
 namespace sirius::contract {

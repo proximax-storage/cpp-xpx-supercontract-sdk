@@ -56,7 +56,7 @@ public:
 
     void removeContract(const ContractKey& key, RemoveRequest&& request) override;
 
-    void setExecutors(const ContractKey& key, std::set<ExecutorKey>&& executors) override;
+    void setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
 public:
 

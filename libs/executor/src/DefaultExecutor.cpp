@@ -114,7 +114,7 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
     });
 }
 
-void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>&& executors) {
+void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) {
     m_threadManager.execute([=, this, executors = std::move(executors)]() mutable {
 
         auto contractIt = m_contracts.find(key);

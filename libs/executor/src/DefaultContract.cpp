@@ -66,7 +66,7 @@ void DefaultContract::removeContract(const RemoveRequest& request) {
     }
 }
 
-void DefaultContract::setExecutors(std::set<ExecutorKey>&& executors) {
+void DefaultContract::setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -166,7 +166,7 @@ const ContractKey& DefaultContract::contractKey() const {
     return m_contractKey;
 }
 
-const std::set<ExecutorKey>& DefaultContract::executors() const {
+const std::map<ExecutorKey, ExecutorInfo>& DefaultContract::executors() const {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

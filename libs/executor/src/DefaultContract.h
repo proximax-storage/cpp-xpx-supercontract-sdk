@@ -25,7 +25,7 @@ private:
     ContractKey m_contractKey;
 
     DriveKey m_driveKey;
-    std::set<ExecutorKey> m_executors;
+    std::map<ExecutorKey, ExecutorInfo> m_executors;
 
     uint64_t m_automaticExecutionsSCLimit;
     uint64_t m_automaticExecutionsSMLimit;
@@ -60,7 +60,7 @@ public:
 
     void removeContract(const RemoveRequest& request) override;
 
-    void setExecutors(std::set<ExecutorKey>&& executors) override;
+    void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
     void addBlockInfo(const Block& block) override;
 
@@ -92,7 +92,7 @@ public:
 
     const ContractKey& contractKey() const override;
 
-    const std::set<ExecutorKey>& executors() const override;
+    const std::map<ExecutorKey, ExecutorInfo>& executors() const override;
 
     const DriveKey& driveKey() const override;
 

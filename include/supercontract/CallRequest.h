@@ -10,19 +10,6 @@
 
 namespace sirius::contract {
 
-struct AddContractRequest {
-
-    // state
-    DriveKey                m_driveKey;
-    std::set<ExecutorKey>   m_executors;
-    uint64_t                m_batchesExecuted;
-    uint64_t                m_automaticExecutionsSCLimit;
-    uint64_t                m_automaticExecutionsSMLimit;
-
-    // config
-    uint64_t                m_unsuccessfulApprovalExpectation;
-};
-
 struct CallReferenceInfo {
     std::optional<CallerKey> m_callerKey;
     uint64_t m_blockHeight;
@@ -36,14 +23,6 @@ struct CallRequestParameters {
     uint64_t m_scLimit;
     uint64_t m_smLimit;
     CallReferenceInfo m_referenceInfo;
-};
-
-struct RemoveRequest {
-};
-
-struct Block{
-    BlockHash m_blockHash;
-    uint64_t m_height;
 };
 
 }
