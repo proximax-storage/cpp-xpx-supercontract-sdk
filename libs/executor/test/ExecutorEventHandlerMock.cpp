@@ -4,8 +4,21 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "ExecutorEnvironmentMock.h"
+#include "ExecutorEventHandlerMock.h"
+
 
 namespace sirius::contract::test {
 
+void ExecutorEventHandlerMock::endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) {
+
+}
+
+void ExecutorEventHandlerMock::endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) {
+
+}
+
+void
+ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) {
+
+}
 } // namespace sirius::contract::test

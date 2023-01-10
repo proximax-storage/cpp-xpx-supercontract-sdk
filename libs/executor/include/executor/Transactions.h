@@ -82,6 +82,11 @@ struct EndBatchExecutionSingleTransactionInfo {
     Proofs      m_proofOfExecution;
 };
 
+struct SynchronizationSingleTransactionInfo {
+    ContractKey m_contractKey;
+    uint64_t    m_batchIndex = 0;
+};
+
 struct PublishedEndBatchExecutionTransactionInfo {
     ContractKey                 m_contractKey;
     uint64_t                    m_batchIndex;
