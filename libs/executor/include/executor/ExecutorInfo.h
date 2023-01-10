@@ -12,8 +12,9 @@
 namespace sirius::contract {
 
 struct ExecutorInfo {
-	uint64_t NextBatchToApprove = 0;
-	Proofs PoEx;
+	uint64_t m_nextBatchToApprove = 0;
+	uint64_t m_initialBatch = 0;
+	BatchProof m_batchProof;
 };
 
 }
