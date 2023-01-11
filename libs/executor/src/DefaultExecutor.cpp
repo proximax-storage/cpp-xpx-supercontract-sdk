@@ -139,8 +139,13 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
             auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
             if (tag.has_value()) {
                 switch (tag.value()) {
-                    case MessageTag::END_BATCH : {
+                    case MessageTag::SUCCESSFUL_END_BATCH: {
                         auto info = utils::deserialize<SuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
+                        onEndBatchExecutionOpinionReceived(info);
+                        break;
+                    }
+                    case MessageTag::UNSUCCESSFUL_END_BATCH: {
+                        auto info = utils::deserialize<UnsuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
                         onEndBatchExecutionOpinionReceived(info);
                         break;
                     }
