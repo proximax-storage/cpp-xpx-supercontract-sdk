@@ -558,7 +558,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
     multisigTransactionInfo.m_successfulBatchInfo = transactionOpinion.m_successfulBatchInfo;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
-        CallExecutionInfo callInfo;
+        SuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
         callInfo.m_callExecutionInfo = call.m_successfulCallExecutionInfo;
         multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
@@ -597,7 +597,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExec
     multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
-        CallExecutionInfo callInfo;
+        UnsuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
         multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
     }

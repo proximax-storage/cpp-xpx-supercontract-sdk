@@ -37,11 +37,18 @@ struct SuccessfulBatchCallInfo {
     }
 };
 
-struct CallExecutionInfo {
+struct SuccessfulCallExecutionInfo {
 
     CallId m_callId;
 
-    std::optional<SuccessfulBatchCallInfo> m_callExecutionInfo;
+    SuccessfulBatchCallInfo m_callExecutionInfo;
+
+    std::vector<CallExecutorParticipation> m_executorsParticipation;
+};
+
+struct UnsuccessfulCallExecutionInfo {
+
+    CallId m_callId;
 
     std::vector<CallExecutorParticipation> m_executorsParticipation;
 };
@@ -69,7 +76,7 @@ struct SuccessfulEndBatchExecutionTransactionInfo {
     uint64_t                            m_batchIndex;
 
     SuccessfulBatchInfo  m_successfulBatchInfo;
-    std::vector<CallExecutionInfo>      m_callsExecutionInfo;
+    std::vector<SuccessfulCallExecutionInfo>      m_callsExecutionInfo;
 
     std::vector<Proofs>                 m_proofs;
     std::vector<ExecutorKey>            m_executorKeys;
@@ -80,7 +87,7 @@ struct UnsuccessfulEndBatchExecutionTransactionInfo {
     ContractKey                         m_contractKey;
     uint64_t                            m_batchIndex;
 
-    std::vector<CallExecutionInfo>      m_callsExecutionInfo;
+    std::vector<UnsuccessfulCallExecutionInfo>      m_callsExecutionInfo;
 
     std::vector<Proofs>                 m_proofs;
     std::vector<ExecutorKey>            m_executorKeys;
