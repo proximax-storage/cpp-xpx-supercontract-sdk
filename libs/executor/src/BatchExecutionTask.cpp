@@ -348,7 +348,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
 
     auto verificationInformation = m_contractEnvironment.proofOfExecution().addToProof(m_proofOfExecutionSecretData);
 
-    m_successfulEndBatchOpinion->m_proof = m_contractEnvironment.proofOfExecution().buildProof();
+    m_successfulEndBatchOpinion->m_proof = m_contractEnvironment.proofOfExecution().buildActualProof();
 
     m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{storageHash, usedDriveSize,
                                                                              metaFilesSize,
@@ -723,7 +723,7 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
     m_unsuccessfulEndBatchOpinion = UnsuccessfulEndBatchExecutionOpinion();
     m_unsuccessfulEndBatchOpinion->m_contractKey = m_successfulEndBatchOpinion->m_contractKey;
     m_unsuccessfulEndBatchOpinion->m_batchIndex = m_successfulEndBatchOpinion->m_batchIndex;
-    m_unsuccessfulEndBatchOpinion->m_proof = m_successfulEndBatchOpinion->m_proof;
+    m_unsuccessfulEndBatchOpinion->m_proof = m_contractEnvironment.proofOfExecution().buildPreviousProof();
     m_unsuccessfulEndBatchOpinion->m_executorKey = m_successfulEndBatchOpinion->m_executorKey;
 
 
@@ -767,7 +767,7 @@ void BatchExecutionTask::onAppliedStorageModifications() {
         cosigners.end()) {
         EndBatchExecutionSingleTransactionInfo singleTx = {m_contractEnvironment.contractKey(),
                                                            m_batch.m_batchIndex,
-                                                           m_contractEnvironment.proofOfExecution().buildProof()};
+                                                           m_contractEnvironment.proofOfExecution().buildActualProof()};
         m_executorEnvironment.executorEventHandler().endBatchSingleTransactionIsReady(singleTx);
     }
 

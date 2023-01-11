@@ -60,13 +60,23 @@ void ProofOfExecution::popFromProof() {
     m_x = m_xPrevious;
 }
 
-Proofs ProofOfExecution::buildProof() {
+Proofs ProofOfExecution::buildActualProof() {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    auto v = generateUniqueRandom(m_x);
+    return buildProof(m_x);
+}
+
+Proofs ProofOfExecution::buildPreviousProof() {
+    return buildProof(m_xPrevious);
+}
+
+Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    auto v = generateUniqueRandom(x);
     auto Beta = sirius::crypto::CurvePoint::BasePoint();
     auto T = v * Beta;
-    auto r = v - m_x;
+    auto r = v - x;
     BatchProof b{T, r};
 
     auto w = generateUniqueRandom(v);

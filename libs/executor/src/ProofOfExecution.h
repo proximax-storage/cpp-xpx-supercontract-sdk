@@ -30,8 +30,13 @@ public:
     ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
-    Proofs buildProof();
+    Proofs buildActualProof();
+    Proofs buildPreviousProof();
     void reset(uint64_t nextBatch);
+
+private:
+
+    Proofs buildProof(const crypto::Scalar& x);
 
 private:
 
