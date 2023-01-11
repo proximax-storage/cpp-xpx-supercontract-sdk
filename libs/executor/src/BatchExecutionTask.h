@@ -114,11 +114,11 @@ private:
 
     SuccessfulEndBatchExecutionTransactionInfo
     createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
-                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions);
+                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherTransactionOpinions);
 
     UnsuccessfulEndBatchExecutionTransactionInfo
     createMultisigTransactionInfo(const UnsuccessfulEndBatchExecutionOpinion& transactionOpinion,
-                                  std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions);
+                                  std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherTransactionOpinions);
 
     void sendEndBatchTransaction(const SuccessfulEndBatchExecutionTransactionInfo& transactionInfo);
 

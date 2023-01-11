@@ -527,12 +527,11 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
             m_successfulEndBatchSent = true;
 
-            auto tx = createMultisigTransactionInfo(*m_successfulEndBatchOpinion,
-                                                    std::move(m_otherSuccessfulExecutorEndBatchOpinions));
-
             m_successfulApprovalExpectationTimer = m_executorEnvironment.threadManager().startTimer(
                     m_executorEnvironment.executorConfig().successfulExecutionDelayMs(),
-                    [this, tx = std::move(tx)] {
+                    [this] {
+                        auto tx = createMultisigTransactionInfo(*m_successfulEndBatchOpinion,
+                                                                m_otherSuccessfulExecutorEndBatchOpinions);
                         sendEndBatchTransaction(tx);
                     });
 
@@ -545,11 +544,11 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
             m_unsuccessfulEndBatchSent = true;
 
-            auto tx = createMultisigTransactionInfo(*m_unsuccessfulEndBatchOpinion,
-                                                    std::move(m_otherUnsuccessfulExecutorEndBatchOpinions));
             m_unsuccessfulApprovalExpectationTimer = m_executorEnvironment.threadManager().startTimer(
                     m_executorEnvironment.executorConfig().unsuccessfulExecutionDelayMs(),
-                    [this, tx = std::move(tx)] {
+                    [this] {
+                        auto tx = createMultisigTransactionInfo(*m_unsuccessfulEndBatchOpinion,
+                                                                m_otherUnsuccessfulExecutorEndBatchOpinions);
                         sendEndBatchTransaction(tx);
                     });
         }
@@ -558,7 +557,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
 SuccessfulEndBatchExecutionTransactionInfo
 BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
-                                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions) {
+                                                  std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -600,7 +599,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
 
 UnsuccessfulEndBatchExecutionTransactionInfo
 BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExecutionOpinion& transactionOpinion,
-                                                  std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherTransactionOpinions) {
+                                                  std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
