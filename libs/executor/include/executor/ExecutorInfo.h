@@ -6,18 +6,15 @@
 
 #pragma once
 
-#include <deque>
-#include <list>
-#include <vector>
-
-#include <executor/Requests.h>
-#include "virtualMachine/CallRequest.h"
+#include <crypto/CurvePoint.h>
+#include "Proofs.h"
 
 namespace sirius::contract {
 
-struct Batch {
-    uint64_t m_batchIndex;
-    std::deque<vm::CallRequest> m_callRequests;
+struct ExecutorInfo {
+	uint64_t m_nextBatchToApprove = 0;
+	uint64_t m_initialBatch = 0;
+	BatchProof m_batchProof;
 };
 
 }

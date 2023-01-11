@@ -21,6 +21,8 @@ public:
 
     virtual void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) = 0;
 
+    virtual void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo&) = 0;
+
 };
 
 }

@@ -12,10 +12,12 @@ namespace sirius::contract::test {
 
     class ExecutorEventHandlerMock : public ExecutorEventHandler {
     public:
-        void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo&) override {}
+        void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo&) override;
 
-        void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo&) override {}
+        void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo&) override;
 
-        void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override {}
+        void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override;
+
+        void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) override;
     };
 } // namespace sirius::contract::test

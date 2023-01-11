@@ -764,14 +764,14 @@ void BatchExecutionTask::shareOpinions() {
 
         ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
 
-        for (const auto& executor: m_contractEnvironment.executors()) {
+        for (const auto& [executor, _]: m_contractEnvironment.executors()) {
             auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
             auto tag = magic_enum::enum_name(MessageTag::SUCCESSFUL_END_BATCH);
             messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
         }
 
         if (m_unsuccessfulEndBatchOpinion) {
-            for (const auto& executor: m_contractEnvironment.executors()) {
+            for (const auto& [executor, _]: m_contractEnvironment.executors()) {
                 auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
                 auto tag = magic_enum::enum_name(MessageTag::UNSUCCESSFUL_END_BATCH);
                 messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});

@@ -91,6 +91,9 @@ void SynchronizationTask::onStorageStateSynchronized() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.executorEventHandler().synchronizationSingleTransactionIsReady(
+            SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), m_request.m_batchIndex});
+
     m_contractEnvironment.cancelBatchesUpTo(m_request.m_batchIndex);
 
     m_contractEnvironment.proofOfExecution().reset(m_request.m_batchIndex + 1);

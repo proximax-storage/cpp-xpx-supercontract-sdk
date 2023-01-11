@@ -7,7 +7,7 @@
 #pragma once
 
 #include <cstdint>
-#include <supercontract/Requests.h>
+#include <supercontract/CallRequest.h>
 
 namespace sirius::contract::vm {
 

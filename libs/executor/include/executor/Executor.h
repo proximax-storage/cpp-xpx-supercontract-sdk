@@ -6,8 +6,9 @@
 
 #pragma once
 
-#include "supercontract/Requests.h"
+#include <executor/Requests.h>
 #include "ExecutorConfig.h"
+#include "ExecutorInfo.h"
 #include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
 
@@ -29,11 +30,13 @@ public:
 
     virtual void addManualCall(const ContractKey&, CallRequestParameters&& ) = 0;
 
+    virtual void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) = 0;
+
     virtual void addBlockInfo( const ContractKey&, Block&& ) = 0;
 
     virtual void removeContract( const ContractKey&, RemoveRequest&& ) = 0;
 
-    virtual void setExecutors( const ContractKey&, std::set<ExecutorKey>&& executors ) = 0;
+    virtual void setExecutors( const ContractKey&, std::map<ExecutorKey, ExecutorInfo>&& executors ) = 0;
 };
 
 }

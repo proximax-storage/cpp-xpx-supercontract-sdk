@@ -19,8 +19,7 @@ public:
 
     DefaultExecutorBuilder() = default;
 
-    std::unique_ptr<Executor> build(const crypto::KeyPair& keyPair,
-                                    std::shared_ptr<ThreadManager> pThreadManager,
+    std::unique_ptr<Executor> build(crypto::KeyPair&& keyPair,
                                     const ExecutorConfig& config,
                                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                                     const std::string& dbgPeerName = "executor");

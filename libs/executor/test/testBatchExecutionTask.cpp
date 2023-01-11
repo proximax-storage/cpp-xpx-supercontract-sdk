@@ -38,7 +38,6 @@ TEST(TEST_NAME, SuccessfulOpinionTest) {
     for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -47,11 +46,7 @@ TEST(TEST_NAME, SuccessfulOpinionTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -160,7 +155,6 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
     for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -169,11 +163,7 @@ TEST(TEST_NAME, UnsuccessfulOpinionTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -270,7 +260,6 @@ TEST(TEST_NAME, PublishedBatchTest) {
     for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -279,11 +268,7 @@ TEST(TEST_NAME, PublishedBatchTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -311,7 +296,7 @@ TEST(TEST_NAME, PublishedBatchTest) {
     publishedEndBatchTxnInfo.m_batchIndex = 1;
     publishedEndBatchTxnInfo.m_batchSuccess = true;
     publishedEndBatchTxnInfo.m_driveState = pStorageMock.lock()->m_storageHash;
-    publishedEndBatchTxnInfo.m_cosigners.push_back(utils::generateRandomByteValue<ExecutorKey>());
+    publishedEndBatchTxnInfo.m_cosigners.insert(utils::generateRandomByteValue<ExecutorKey>());
 
     std::promise<void> barrier;
     threadManager.execute([&]{
@@ -365,7 +350,6 @@ TEST(TEST_NAME, PublishedBatchNotSynchronizedTest) {
     for(auto i=0; i<1; i++){
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -374,11 +358,7 @@ TEST(TEST_NAME, PublishedBatchNotSynchronizedTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -406,7 +386,7 @@ TEST(TEST_NAME, PublishedBatchNotSynchronizedTest) {
     publishedEndBatchTxnInfo.m_batchIndex = 1;
     publishedEndBatchTxnInfo.m_batchSuccess = true;
     publishedEndBatchTxnInfo.m_driveState = pStorageMock.lock()->m_storageHash;
-    publishedEndBatchTxnInfo.m_cosigners.push_back(utils::generateRandomByteValue<ExecutorKey>());
+    publishedEndBatchTxnInfo.m_cosigners.insert(utils::generateRandomByteValue<ExecutorKey>());
 
     std::promise<void> barrier;
     threadManager.execute([&]{
@@ -459,7 +439,6 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
     for (auto i = 0; i < 1; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -468,11 +447,7 @@ TEST(TEST_NAME, EndBatchExecutionFailedTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -593,7 +568,6 @@ TEST(TEST_NAME, TerminateTest) {
     for (auto i = 0; i < 2; i++) {
         std::vector<uint8_t> params;
         CallRequestParameters requestParams{
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -602,11 +576,7 @@ TEST(TEST_NAME, TerminateTest) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         };
         vm::CallRequest request(requestParams, vm::CallRequest::CallLevel::MANUAL);
@@ -640,7 +610,7 @@ TEST(TEST_NAME, TerminateTest) {
     publishedEndBatchTxnInfo.m_batchIndex = 1;
     publishedEndBatchTxnInfo.m_batchSuccess = true;
     publishedEndBatchTxnInfo.m_driveState = pStorageMock.lock()->m_storageHash;
-    publishedEndBatchTxnInfo.m_cosigners.push_back(utils::generateRandomByteValue<ExecutorKey>());
+    publishedEndBatchTxnInfo.m_cosigners.insert(utils::generateRandomByteValue<ExecutorKey>());
 
     // create opinions
     std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;

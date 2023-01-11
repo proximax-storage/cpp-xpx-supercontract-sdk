@@ -25,35 +25,36 @@
 
 namespace sirius::contract {
 
-DefaultExecutor::DefaultExecutor(const crypto::KeyPair& keyPair,
-                                 std::shared_ptr<ThreadManager> pThreadManager,
+DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
                                  const ExecutorConfig& config,
                                  std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                                  const std::string& dbgPeerName)
-        : m_keyPair(keyPair)
-        , m_pThreadManager(std::move(pThreadManager))
-        , m_logger(config.loggerConfig(), dbgPeerName)
-        , m_sslContext(boost::asio::ssl::context::tlsv12_client)
-        , m_config(config)
-        , m_eventHandler(std::move(eventHandler))
-        , m_storage(std::make_shared<storage::RPCStorage>(*this, m_config.rpcStorageAddress()))
-        , m_messenger(std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this))
-        , m_virtualMachine(
-                vm::RPCVirtualMachineBuilder().build(m_storage, *this, m_config.rpcVirtualMachineAddress())) {
-    m_sslContext.set_default_verify_paths();
-    m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
-}
+								: m_keyPair(std::move(keyPair))
+								, m_logger(config.loggerConfig(), dbgPeerName)
+								, m_sslContext(boost::asio::ssl::context::tlsv12_client)
+								, m_config(config)
+								, m_eventHandler(std::move(eventHandler)) {
+		setThreadId(m_threadManager.threadId());
+		m_threadManager.execute([this] {
+			m_virtualMachine =
+					vm::RPCVirtualMachineBuilder().build(m_storage, *this, m_config.rpcVirtualMachineAddress());
+			m_messenger = std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this);
+		  	m_storage = std::make_shared<storage::RPCStorage>(*this, m_config.rpcStorageAddress());
+		  	m_sslContext.set_default_verify_paths();
+		  	m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
+		});
+	}
 
 DefaultExecutor::~DefaultExecutor() {
-    m_pThreadManager->execute([this] {
+    m_threadManager.execute([this] {
         terminate();
     });
 
-    m_pThreadManager->stop();
+    m_threadManager.stop();
 }
 
 void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& request) {
-    m_pThreadManager->execute([=, this, request = std::move(request)]() mutable {
+    m_threadManager.execute([=, this, request = std::move(request)]() mutable {
         if (m_contracts.contains(key)) {
             return;
         }
@@ -72,7 +73,7 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
 }
 
 void DefaultExecutor::addManualCall(const ContractKey& key, CallRequestParameters&& request) {
-    m_pThreadManager->execute([=, this, request = std::move(request)] {
+    m_threadManager.execute([=, this, request = std::move(request)] {
 
         auto contractIt = m_contracts.find(key);
 
@@ -86,7 +87,7 @@ void DefaultExecutor::addManualCall(const ContractKey& key, CallRequestParameter
 }
 
 void DefaultExecutor::addBlockInfo(const ContractKey& key, Block&& block) {
-    m_pThreadManager->execute([=, this, request = std::move(block)] {
+    m_threadManager.execute([=, this, request = std::move(block)] {
 
         auto contractIt = m_contracts.find(key);
 
@@ -100,7 +101,7 @@ void DefaultExecutor::addBlockInfo(const ContractKey& key, Block&& block) {
 }
 
 void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& request) {
-    m_pThreadManager->execute([=, this, request = std::move(request)] {
+    m_threadManager.execute([=, this, request = std::move(request)] {
 
         auto contractIt = m_contracts.find(key);
 
@@ -113,8 +114,8 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
     });
 }
 
-void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>&& executors) {
-    m_pThreadManager->execute([=, this, executors = std::move(executors)]() mutable {
+void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) {
+    m_threadManager.execute([=, this, executors = std::move(executors)]() mutable {
 
         auto contractIt = m_contracts.find(key);
 
@@ -134,7 +135,7 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::set<ExecutorKey>
 // region message subscriber
 
 void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
-    m_pThreadManager->execute([=, this] {
+    m_threadManager.execute([=, this] {
         try {
             auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
             if (tag.has_value()) {
@@ -178,7 +179,7 @@ std::set<std::string> DefaultExecutor::subscriptions() {
 // region global environment
 
 ThreadManager& DefaultExecutor::threadManager() {
-    return *m_pThreadManager;
+    return m_threadManager;
 }
 
 logging::Logger& DefaultExecutor::logger() {
@@ -222,7 +223,7 @@ boost::asio::ssl::context& DefaultExecutor::sslContext() {
 // region blockchain event handler
 
 void DefaultExecutor::onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&& info) {
-    m_pThreadManager->execute([this, info = std::move(info)] {
+    m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -237,7 +238,7 @@ void DefaultExecutor::onEndBatchExecutionPublished(PublishedEndBatchExecutionTra
 
 void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
         PublishedEndBatchExecutionSingleTransactionInfo&& info) {
-    m_pThreadManager->execute([this, info = std::move(info)] {
+    m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -251,16 +252,16 @@ void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
 }
 
 void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) {
-    m_pThreadManager->execute([this, info = std::move(info)] {
+    m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         contractIt->second->onEndBatchExecutionFailed(info);
     });
 }
 
-void DefaultExecutor::onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) {
-    m_pThreadManager->execute([=, this] {
-        auto contractIt = m_contracts.find(contractKey);
+void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) {
+    m_threadManager.execute([=, this] {
+        auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
 
@@ -268,8 +269,24 @@ void DefaultExecutor::onStorageSynchronizedPublished(const ContractKey& contract
             return;
         }
 
-        contractIt->second->onStorageSynchronizedPublished(batchIndex);
+        contractIt->second->onStorageSynchronizedPublished(info.m_batchIndex);
     });
+}
+
+void DefaultExecutor::setAutomaticExecutionsEnabledSince(
+		const ContractKey& contractKey,
+		const std::optional<uint64_t>& blockHeight) {
+	m_threadManager.execute([=, this] {
+	  auto contractIt = m_contracts.find(contractKey);
+
+	  if (contractIt == m_contracts.end()) {
+
+	  	// TODO maybe error?
+	  	return;
+	  }
+
+	  contractIt->second->setAutomaticExecutionsEnabledSince(blockHeight);
+	});
 }
 
 // endregion

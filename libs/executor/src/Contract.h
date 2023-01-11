@@ -9,8 +9,9 @@
 #include "executor/ExecutorConfig.h"
 #include "supercontract/Identifiers.h"
 
-#include "executor/ExecutorEventHandler.h"
-#include "supercontract/Requests.h"
+#include <executor/ExecutorEventHandler.h>
+#include <executor/ExecutorInfo.h>
+#include <executor/Requests.h>
 #include <messenger/Messenger.h>
 #include <storage/StorageModifier.h>
 #include "ContractMessageEventHandler.h"
@@ -27,13 +28,13 @@ public:
 
     virtual void addManualCall(const CallRequestParameters& ) = 0;
 
-    virtual void setAutomaticExecutionsEnabledSince( const std::optional<uint64_t>& blockHeight ) = 0;
+    virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void addBlockInfo( const Block& ) = 0;
+    virtual void addBlockInfo(const Block&) = 0;
 
-    virtual void removeContract( const RemoveRequest& ) = 0;
+    virtual void removeContract(const RemoveRequest&) = 0;
 
-    virtual void setExecutors( std::set<ExecutorKey>&& executors ) = 0;
+    virtual void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) = 0;
 
     virtual void terminate() = 0;
 

@@ -21,9 +21,9 @@ class DefaultExecutor
 
 private:
 
-    const crypto::KeyPair& m_keyPair;
+    crypto::KeyPair m_keyPair;
 
-    std::shared_ptr<ThreadManager> m_pThreadManager;
+    ThreadManager m_threadManager;
     logging::Logger m_logger;
 
     boost::asio::ssl::context m_sslContext;
@@ -41,8 +41,7 @@ private:
 
 public:
 
-    DefaultExecutor(const crypto::KeyPair& keyPair,
-                    std::shared_ptr<ThreadManager> pThreadManager,
+    DefaultExecutor(crypto::KeyPair&& keyPair,
                     const ExecutorConfig& config,
                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
                     const std::string& dbgPeerName = "executor");
@@ -57,7 +56,7 @@ public:
 
     void removeContract(const ContractKey& key, RemoveRequest&& request) override;
 
-    void setExecutors(const ContractKey& key, std::set<ExecutorKey>&& executors) override;
+    void setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
 public:
 
@@ -110,9 +109,11 @@ public:
 
     void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) override;
 
-    void onStorageSynchronizedPublished(const ContractKey& contractKey, uint64_t batchIndex) override;
+    void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) override;
 
-    // endregion
+	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) override;
+
+	// endregion
 
 private:
 

@@ -56,7 +56,6 @@ TEST(VirtualMachine, SimpleContract) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = CallRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -65,11 +64,7 @@ TEST(VirtualMachine, SimpleContract) {
                 20 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::AUTOMATIC);
 
@@ -126,7 +121,6 @@ TEST(VirtualMachine, InternetRead) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -137,11 +131,7 @@ TEST(VirtualMachine, InternetRead) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -204,7 +194,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -215,11 +204,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -277,7 +262,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -288,11 +272,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
                 25 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -350,7 +330,6 @@ TEST(VirtualMachine, WrongContractPath) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "sdk_bg.wasm",
                 "run",
@@ -361,11 +340,7 @@ TEST(VirtualMachine, WrongContractPath) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -423,7 +398,6 @@ TEST(VirtualMachine, WrongIP) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -434,11 +408,7 @@ TEST(VirtualMachine, WrongIP) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -492,7 +462,6 @@ TEST(VirtualMachine, WrongExecFunction) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "runs",
@@ -503,11 +472,7 @@ TEST(VirtualMachine, WrongExecFunction) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -565,7 +530,6 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -576,11 +540,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::AUTOMATIC);
 
@@ -638,7 +598,6 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -649,11 +608,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -718,7 +673,6 @@ TEST(VirtualMachine, FaultyContract) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -729,11 +683,7 @@ TEST(VirtualMachine, FaultyContract) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -799,7 +749,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -810,11 +759,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -846,7 +791,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         CallRequest callRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -857,11 +801,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -916,7 +856,6 @@ TEST(VirtualMachine, SimpleStorage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = CallRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -925,11 +864,7 @@ TEST(VirtualMachine, SimpleStorage) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -988,7 +923,6 @@ TEST(VirtualMachine, IteratorTest) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = CallRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -997,11 +931,7 @@ TEST(VirtualMachine, IteratorTest) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -1060,7 +990,6 @@ TEST(VirtualMachine, FaultyStorage) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = CallRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -1069,11 +998,7 @@ TEST(VirtualMachine, FaultyStorage) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
@@ -1126,7 +1051,6 @@ TEST(VirtualMachine, NullStorageHandler) {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
         vm::CallRequest callRequest = CallRequest(CallRequestParameters{
-                ContractKey(),
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -1135,11 +1059,7 @@ TEST(VirtualMachine, NullStorageHandler) {
                 26 * 1024,
                 CallReferenceInfo{
                         {},
-                        0,
-                        BlockHash(),
-                        0,
-                        0,
-                        {}
+                        0
                 }
         }, CallRequest::CallLevel::MANUAL);
 
