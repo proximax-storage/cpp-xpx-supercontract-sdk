@@ -9,7 +9,11 @@
 
 namespace sirius::contract::test {
 
-void ExecutorEventHandlerMock::endBatchTransactionIsReady(const EndBatchExecutionTransactionInfo&) {
+void ExecutorEventHandlerMock::endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo&) {
+
+}
+
+void ExecutorEventHandlerMock::endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo&) {
 
 }
 
@@ -17,8 +21,8 @@ void ExecutorEventHandlerMock::endBatchSingleTransactionIsReady(const EndBatchEx
 
 }
 
-void
-ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) {
+void ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) {
 
 }
+
 } // namespace sirius::contract::test
