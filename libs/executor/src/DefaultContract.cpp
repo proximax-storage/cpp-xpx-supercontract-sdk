@@ -24,15 +24,18 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
                                  AddContractRequest&& addContractRequest,
                                  ExecutorEnvironment& contractContext)
         : m_contractKey(contractKey)
-        , m_driveKey(addContractRequest.m_driveKey)
-        , m_executors(std::move(addContractRequest.m_executors))
-        , m_automaticExecutionsSCLimit(addContractRequest.m_automaticExecutionsSCLimit)
-        , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
-        , m_executorEnvironment(contractContext)
-        , m_contractConfig()
-        , m_proofOfExecution(m_executorEnvironment, m_executorEnvironment.keyPair())
-        , m_batchesManager(std::make_unique<DefaultBatchesManager>(addContractRequest.m_batchesExecuted, *this,
-                                                                   m_executorEnvironment)) {
+          , m_driveKey(addContractRequest.m_driveKey)
+          , m_executors(std::move(addContractRequest.m_executors))
+          , m_automaticExecutionsSCLimit(addContractRequest.m_automaticExecutionsSCLimit)
+          , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
+          , m_executorEnvironment(contractContext)
+          , m_contractConfig()
+          , m_proofOfExecution(m_executorEnvironment, m_executorEnvironment.keyPair())
+          , m_batchesManager(std::make_unique<DefaultBatchesManager>(
+                addContractRequest.m_recentBatchesInformation.empty()
+                    ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,
+                *this,
+                m_executorEnvironment)) {
     runInitializeContractTask(std::move(addContractRequest));
 }
 
@@ -92,6 +95,8 @@ void DefaultContract::setAutomaticExecutionsEnabledSince(const std::optional<uin
 bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    proofOfExecution().addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
 
     while (!m_unknownSuccessfulBatchOpinions.empty()
            && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {

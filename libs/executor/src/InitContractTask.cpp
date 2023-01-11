@@ -19,6 +19,10 @@ void InitContractTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    for (const auto& [batchId, verificationInformation]: m_request.m_recentBatchesInformation) {
+        m_contractEnvironment.proofOfExecution().addBatchVerificationInformation(batchId, verificationInformation);
+    }
+
     m_contractEnvironment.finishTask();
 }
 

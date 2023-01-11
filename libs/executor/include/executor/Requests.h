@@ -15,11 +15,11 @@ namespace sirius::contract {
 struct AddContractRequest {
 
     // state
-    DriveKey                              m_driveKey;
-    std::map<ExecutorKey, ExecutorInfo>   m_executors;
-    uint64_t                              m_batchesExecuted;
-    uint64_t                              m_automaticExecutionsSCLimit;
-    uint64_t                              m_automaticExecutionsSMLimit;
+    DriveKey                                m_driveKey;
+    std::map<ExecutorKey, ExecutorInfo>     m_executors;
+    std::map<uint64_t, crypto::CurvePoint>  m_recentBatchesInformation;
+    uint64_t                                m_automaticExecutionsSCLimit;
+    uint64_t                                m_automaticExecutionsSMLimit;
 
     // TODO config
     uint64_t                m_unsuccessfulApprovalExpectation;

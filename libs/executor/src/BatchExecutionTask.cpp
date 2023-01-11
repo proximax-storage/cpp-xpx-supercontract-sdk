@@ -490,7 +490,17 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
         }
     }
 
-    return true;
+    const auto& executors = m_contractEnvironment.executors();
+
+    auto executorIt = executors.find(other.m_executorKey);
+
+    if (executorIt == executors.end()) {
+        return false;
+    }
+
+    return m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
+                                                                other.m_batchIndex,
+                                                                other.m_successfulBatchInfo.m_PoExVerificationInfo);
 }
 
 bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecutionOpinion& other) {
@@ -511,7 +521,17 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
         }
     }
 
-    return true;
+    const auto& executors = m_contractEnvironment.executors();
+
+    auto executorIt = executors.find(other.m_executorKey);
+
+    if (executorIt == executors.end()) {
+        return false;
+    }
+
+    return m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
+                                                                other.m_batchIndex,
+                                                                crypto::CurvePoint());
 }
 
 void BatchExecutionTask::checkEndBatchTransactionReadiness() {
