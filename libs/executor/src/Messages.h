@@ -23,7 +23,6 @@
 namespace sirius::contract {
 
 enum class MessageTag {
-    END_BATCH,
     SUCCESSFUL_END_BATCH,
     UNSUCCESSFUL_END_BATCH
 };
