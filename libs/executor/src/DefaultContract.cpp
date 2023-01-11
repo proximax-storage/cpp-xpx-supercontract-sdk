@@ -24,15 +24,18 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
                                  AddContractRequest&& addContractRequest,
                                  ExecutorEnvironment& contractContext)
         : m_contractKey(contractKey)
-        , m_driveKey(addContractRequest.m_driveKey)
-        , m_executors(std::move(addContractRequest.m_executors))
-        , m_automaticExecutionsSCLimit(addContractRequest.m_automaticExecutionsSCLimit)
-        , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
-        , m_executorEnvironment(contractContext)
-        , m_contractConfig()
-        , m_proofOfExecution(m_executorEnvironment, m_executorEnvironment.keyPair())
-        , m_batchesManager(std::make_unique<DefaultBatchesManager>(addContractRequest.m_batchesExecuted, *this,
-                                                                   m_executorEnvironment)) {
+          , m_driveKey(addContractRequest.m_driveKey)
+          , m_executors(std::move(addContractRequest.m_executors))
+          , m_automaticExecutionsSCLimit(addContractRequest.m_automaticExecutionsSCLimit)
+          , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
+          , m_executorEnvironment(contractContext)
+          , m_contractConfig()
+          , m_proofOfExecution(m_executorEnvironment, m_executorEnvironment.keyPair())
+          , m_batchesManager(std::make_unique<DefaultBatchesManager>(
+                addContractRequest.m_recentBatchesInformation.empty()
+                    ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,
+                *this,
+                m_executorEnvironment)) {
     runInitializeContractTask(std::move(addContractRequest));
 }
 
@@ -93,6 +96,8 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    proofOfExecution().addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
+
     while (!m_unknownSuccessfulBatchOpinions.empty()
            && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
         m_unknownSuccessfulBatchOpinions.erase(m_unknownSuccessfulBatchOpinions.begin());
@@ -140,16 +145,23 @@ bool DefaultContract::onStorageSynchronizedPublished(uint64_t batchIndex) {
 
 // region message event handler
 
-bool DefaultContract::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& info) {
+bool DefaultContract::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
-        if (info.isSuccessful()) {
-            m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
-        } else {
-            m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
-        }
+        m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+    }
+
+    return true;
+}
+
+bool DefaultContract::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& info) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
+        m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
     }
 
     return true;
@@ -295,14 +307,14 @@ void DefaultContract::runBatchExecutionTask() {
 
     auto batch = m_batchesManager->nextBatch();
 
-    std::map<ExecutorKey, EndBatchExecutionOpinion> successfulEndBatchOpinions;
+    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> successfulEndBatchOpinions;
     auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batch.m_batchIndex);
     if (successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
         successfulEndBatchOpinions = std::move(successfulExecutorsEndBatchOpinionsIt->second);
         m_unknownSuccessfulBatchOpinions.erase(successfulExecutorsEndBatchOpinionsIt);
     }
 
-    std::map<ExecutorKey, EndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
+    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
     auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batch.m_batchIndex);
     if (unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
         unsuccessfulEndBatchOpinions = std::move(unsuccessfulExecutorsEndBatchOpinionsIt->second);

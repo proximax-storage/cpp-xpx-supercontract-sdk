@@ -83,7 +83,7 @@ public:
 
     //    // endregion
     //
-    //    // region blockchain
+        // region blockchain
     //
     //    void getCaller(std::function<void(CallerKey)>&& callback, std::function<void()>&& terminateCallback) override {
     //
@@ -141,7 +141,10 @@ public:
     //        callback(*m_callRequest.m_referenceInfo.m_transactionHash);
     //    }
     //
-    //    // endregion
+
+    TransactionHash releasedTransactionHash() const override;
+
+    // endregion
 
     void openFile(const std::string& path, const std::string& mode,
                   std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;

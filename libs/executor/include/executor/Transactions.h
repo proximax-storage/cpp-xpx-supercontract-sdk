@@ -24,33 +24,41 @@ struct CallExecutorParticipation {
     }
 };
 
-struct SuccessfulBatchCallInfo {
-    bool m_callExecutionSuccess;
-    int64_t m_callSandboxSizeDelta;
-    int64_t m_callStateSizeDelta;
+struct SuccessfulCallExecutionInfo {
+    CallId                                  m_callId;
+    bool                                    m_manual;
+    uint16_t                                m_callExecutionStatus;
+    TransactionHash                         m_releasedTransaction;
+    std::vector<CallExecutorParticipation>  m_executorsParticipation;
 
     template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_callExecutionSuccess );
-        arch( m_callSandboxSizeDelta );
-        arch( m_callStateSizeDelta );
+    void serialize(Archive& arch) {
+        arch(m_callId);
+        arch(m_manual);
+        arch(m_callExecutionStatus);
+        arch(m_releasedTransaction);
+        arch(m_executorsParticipation);
     }
 };
 
-struct CallExecutionInfo {
+struct UnsuccessfulCallExecutionInfo {
 
-    CallId m_callId;
+    CallId                                  m_callId;
+    bool                                    m_manual;
+    std::vector<CallExecutorParticipation>  m_executorsParticipation;
 
-    std::optional<SuccessfulBatchCallInfo> m_callExecutionInfo;
-
-    std::vector<CallExecutorParticipation> m_executorsParticipation;
+    template<class Archive>
+    void serialize(Archive& arch) {
+        arch(m_callId);
+        arch(m_manual);
+        arch(m_executorsParticipation);
+    }
 };
 
 struct SuccessfulBatchInfo {
     StorageHash  m_storageHash;
-    uint64_t    m_usedStorageSize;
-    uint64_t    m_metaFilesSize;
-    uint64_t    m_fileStructureSize;
+    uint64_t     m_usedStorageSize;
+    uint64_t     m_metaFilesSize;
 
     crypto::CurvePoint m_PoExVerificationInfo;
 
@@ -59,17 +67,27 @@ struct SuccessfulBatchInfo {
         arch( m_storageHash );
         arch( m_usedStorageSize );
         arch( m_metaFilesSize );
-        arch( m_fileStructureSize );
         arch( m_PoExVerificationInfo );
     }
 };
 
-struct EndBatchExecutionTransactionInfo {
+struct SuccessfulEndBatchExecutionTransactionInfo {
     ContractKey                         m_contractKey;
     uint64_t                            m_batchIndex;
 
-    std::optional<SuccessfulBatchInfo>  m_successfulBatchInfo;
-    std::vector<CallExecutionInfo>      m_callsExecutionInfo;
+    SuccessfulBatchInfo  m_successfulBatchInfo;
+    std::vector<SuccessfulCallExecutionInfo>      m_callsExecutionInfo;
+
+    std::vector<Proofs>                 m_proofs;
+    std::vector<ExecutorKey>            m_executorKeys;
+    std::vector<Signature>              m_signatures;
+};
+
+struct UnsuccessfulEndBatchExecutionTransactionInfo {
+    ContractKey                         m_contractKey;
+    uint64_t                            m_batchIndex;
+
+    std::vector<UnsuccessfulCallExecutionInfo>      m_callsExecutionInfo;
 
     std::vector<Proofs>                 m_proofs;
     std::vector<ExecutorKey>            m_executorKeys;

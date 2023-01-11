@@ -11,6 +11,8 @@
 #include "utils/types.h"
 #include <crypto/Hashes.h>
 #include <executor/Proofs.h>
+#include <executor/ExecutorInfo.h>
+#include <supercontract/Identifiers.h>
 
 namespace sirius::contract {
 
@@ -24,14 +26,29 @@ private:
 
     const crypto::KeyPair& m_keyPair;
 
+    std::map<uint64_t, crypto::CurvePoint> m_batchesVerificationInformation;
+
     uint64_t m_initialBatch = 0;
 
+    uint64_t m_maxBatchesHistorySize;
+
 public:
-    ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key);
+    ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key, uint64_t maxBatchesHistorySize=UINT64_MAX);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
-    Proofs buildProof();
+    Proofs buildActualProof();
+    Proofs buildPreviousProof();
     void reset(uint64_t nextBatch);
+    bool verifyProof(const ExecutorKey& executorKey,
+                     const ExecutorInfo& executorInfo,
+                     const Proofs& proof,
+                     uint64_t batchId,
+                     const crypto::CurvePoint& verificationInformation);
+    void addBatchVerificationInformation(uint64_t batchId, const crypto::CurvePoint& batchVerificationInformation);
+
+private:
+
+    Proofs buildProof(const crypto::Scalar& x);
 
 private:
 

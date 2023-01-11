@@ -42,6 +42,8 @@ private:
 
     int                     m_shareOpinionTimeoutMs = 2 * 1000 * 60;
 
+    uint64_t                m_maxBatchesHistorySize = 10000U;
+
     logging::LoggerConfig   m_loggerConfig;
 
 public:
@@ -180,6 +182,14 @@ public:
 
     void setShareOpinionTimeoutMs(int shareOpinionTimeoutMs) {
         m_shareOpinionTimeoutMs = shareOpinionTimeoutMs;
+    }
+
+    uint64_t maxBatchesHistorySize() const {
+        return m_maxBatchesHistorySize;
+    }
+
+    void setMaxBatchesHistorySize(uint64_t maxBatchesHistorySize) {
+        m_maxBatchesHistorySize = maxBatchesHistorySize;
     }
 };
 

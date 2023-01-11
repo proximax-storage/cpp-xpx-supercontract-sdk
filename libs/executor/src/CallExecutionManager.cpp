@@ -37,4 +37,16 @@ void CallExecutionManager::run(const vm::CallRequest& callRequest,
                                 std::move(callback));
 }
 
+std::shared_ptr<vm::VirtualMachineInternetQueryHandler> CallExecutionManager::internetQueryHandler() const {
+    return m_internetQueryHandler;
+}
+
+std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> CallExecutionManager::blockchainQueryHandler() const {
+    return m_blockchainQueryHandler;
+}
+
+std::shared_ptr<vm::VirtualMachineStorageQueryHandler> CallExecutionManager::storageQueryHandler() const {
+    return m_storageQueryHandler;
+}
+
 }

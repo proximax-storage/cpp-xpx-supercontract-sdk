@@ -16,7 +16,11 @@ public:
 
     virtual ~ContractMessageEventHandler() = default;
 
-    virtual bool onEndBatchExecutionOpinionReceived( const EndBatchExecutionOpinion& ) {
+    virtual bool onEndBatchExecutionOpinionReceived( const SuccessfulEndBatchExecutionOpinion& ) {
+        return false;
+    }
+
+    virtual bool onEndBatchExecutionOpinionReceived( const UnsuccessfulEndBatchExecutionOpinion& ) {
         return false;
     }
 };

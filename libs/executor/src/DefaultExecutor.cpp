@@ -140,8 +140,13 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
             auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
             if (tag.has_value()) {
                 switch (tag.value()) {
-                    case MessageTag::END_BATCH : {
-                        auto info = utils::deserialize<EndBatchExecutionOpinion>(inputMessage.m_content);
+                    case MessageTag::SUCCESSFUL_END_BATCH: {
+                        auto info = utils::deserialize<SuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
+                        onEndBatchExecutionOpinionReceived(info);
+                        break;
+                    }
+                    case MessageTag::UNSUCCESSFUL_END_BATCH: {
+                        auto info = utils::deserialize<UnsuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
                         onEndBatchExecutionOpinionReceived(info);
                         break;
                     }
@@ -298,8 +303,19 @@ void DefaultExecutor::terminate() {
     m_messenger.reset();
 }
 
-void DefaultExecutor::onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& opinion) {
-    if (!opinion.hasValidForm() || !opinion.verify()) {
+void DefaultExecutor::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) {
+    if (!opinion.verify()) {
+        return;
+    }
+
+    auto contractIt = m_contracts.find(opinion.m_contractKey);
+    if (contractIt == m_contracts.end()) {
+        contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
+    }
+}
+
+void DefaultExecutor::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) {
+    if (!opinion.verify()) {
         return;
     }
 

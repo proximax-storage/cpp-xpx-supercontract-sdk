@@ -44,8 +44,8 @@ private:
 
     std::unique_ptr<BaseContractTask> m_task;
 
-    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
-    std::map<uint64_t, std::map<ExecutorKey, EndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
+    std::map<uint64_t, std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
+    std::map<uint64_t, std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
     std::map<uint64_t, PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
 
 public:
@@ -82,7 +82,9 @@ public:
 
     // region message event handler
 
-    bool onEndBatchExecutionOpinionReceived(const EndBatchExecutionOpinion& info) override;
+    bool onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& info) override;
+
+    bool onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& info) override;
 
     // endregion
 

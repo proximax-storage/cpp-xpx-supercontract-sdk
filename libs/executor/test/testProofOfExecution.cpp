@@ -87,7 +87,7 @@ TEST(TEST_NAME, PoEx) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -105,7 +105,7 @@ TEST(TEST_NAME, PoEx) {
             cY += part;
         }
 
-        auto m2 = poex.buildProof();
+        auto m2 = poex.buildActualProof();
         tProofVerification(m2, key);
 
         uint64_t secretInfo2[3] = {354625726501424, 7687354345387, 3546387643};
@@ -122,7 +122,7 @@ TEST(TEST_NAME, PoEx) {
             cY2 += part;
         }
         cY += cY2;
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
         tProofVerification(n, key);
 
         batchProofVerification(n, m, cY);
@@ -138,7 +138,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -156,7 +156,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
             cY += part;
         }
 
-        auto m2 = poex.buildProof();
+        auto m2 = poex.buildActualProof();
         tProofVerification(m2, key);
 
         uint64_t secretInfo2[3] = {354625726501424, 7687354345387, 3546387643};
@@ -173,7 +173,7 @@ TEST(TEST_NAME, PoExWrongBatch) {
             cY2 += part;
         }
         cY += cY2;
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
         tProofVerification(n, key);
 
         batchProofVerificationFalse(n, m, cY2);
@@ -189,7 +189,7 @@ TEST(TEST_NAME, PoExPopProof) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -207,13 +207,13 @@ TEST(TEST_NAME, PoExPopProof) {
             cY += part;
         }
 
-        auto m2 = poex.buildProof();
+        auto m2 = poex.buildActualProof();
         tProofVerification(m2, key);
         batchProofVerification(m2, m, cY);
 
         poex.addToProof(354625726501424);
         poex.popFromProof();
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
         tProofVerification(n, key);
 
         sirius::crypto::CurvePoint empty;
@@ -231,7 +231,7 @@ TEST(TEST_NAME, PoExNonPopProof) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -249,13 +249,13 @@ TEST(TEST_NAME, PoExNonPopProof) {
             cY += part;
         }
 
-        auto m2 = poex.buildProof();
+        auto m2 = poex.buildActualProof();
         tProofVerification(m2, key);
         batchProofVerification(m2, m, cY);
 
         poex.addToProof(354625726501424);
         // poex.popFromProof();
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
         tProofVerification(n, key);
 
         sirius::crypto::CurvePoint empty;
@@ -273,7 +273,7 @@ TEST(TEST_NAME, PoExReset) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -293,7 +293,7 @@ TEST(TEST_NAME, PoExReset) {
 
         sirius::crypto::CurvePoint empty;
         poex.reset(10);
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
 
         batchProofVerification(n, m, empty);
     });
@@ -307,7 +307,7 @@ TEST(TEST_NAME, PoExNonReset) {
         auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
         sirius::contract::ProofOfExecution poex(environment, key);
 
-        auto m = poex.buildProof();
+        auto m = poex.buildActualProof();
         tProofVerification(m, key);
 
         uint64_t secretInfo[3] = {13561546964161623, 1255621556321561123, 431614452611456511};
@@ -327,7 +327,7 @@ TEST(TEST_NAME, PoExNonReset) {
 
         sirius::crypto::CurvePoint empty;
         // poex.reset();
-        auto n = poex.buildProof();
+        auto n = poex.buildActualProof();
 
         batchProofVerificationFalse(n, m, empty);
     });

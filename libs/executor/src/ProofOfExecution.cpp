@@ -9,9 +9,11 @@ extern "C" {
 namespace sirius::contract {
 
 ProofOfExecution::ProofOfExecution(GlobalEnvironment& environment,
-                                   const crypto::KeyPair& key)
+                                   const crypto::KeyPair& key,
+                                   uint64_t maxBatchesHistorySize)
         : m_keyPair(key)
-        , m_environment(environment) {}
+        , m_environment(environment)
+        , m_maxBatchesHistorySize(maxBatchesHistorySize) {}
 
 sirius::crypto::Scalar ProofOfExecution::generateUniqueRandom(const utils::RawBuffer& dataBuffer) {
 
@@ -60,13 +62,23 @@ void ProofOfExecution::popFromProof() {
     m_x = m_xPrevious;
 }
 
-Proofs ProofOfExecution::buildProof() {
+Proofs ProofOfExecution::buildActualProof() {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    auto v = generateUniqueRandom(m_x);
+    return buildProof(m_x);
+}
+
+Proofs ProofOfExecution::buildPreviousProof() {
+    return buildProof(m_xPrevious);
+}
+
+Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    auto v = generateUniqueRandom(x);
     auto Beta = sirius::crypto::CurvePoint::BasePoint();
     auto T = v * Beta;
-    auto r = v - m_x;
+    auto r = v - x;
     BatchProof b{T, r};
 
     auto w = generateUniqueRandom(v);
@@ -91,4 +103,95 @@ void ProofOfExecution::reset(uint64_t nextBatch) {
     m_xPrevious = sirius::crypto::Scalar();
     m_initialBatch = nextBatch;
 }
+
+void ProofOfExecution::addBatchVerificationInformation(uint64_t batchId,
+                                                       const crypto::CurvePoint& batchVerificationInformation) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    if (m_batchesVerificationInformation.contains(batchId)) {
+        return;
+    }
+
+    ASSERT(m_batchesVerificationInformation.empty() || (--m_batchesVerificationInformation.end())->first + 1 == batchId,
+           m_environment.logger())
+
+    m_batchesVerificationInformation[batchId] = batchVerificationInformation;
+
+    if (m_batchesVerificationInformation.size() > m_maxBatchesHistorySize) {
+        m_batchesVerificationInformation.erase(m_batchesVerificationInformation.begin());
+    }
+}
+
+bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
+                                   const ExecutorInfo& executorInfo,
+                                   const Proofs& proof,
+                                   uint64_t batchId,
+                                   const crypto::CurvePoint& verificationInformation) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    Hash512 dHash;
+    crypto::Sha3_512_Builder dHasher;
+    dHasher.update({proof.m_tProof.m_F.toBytes(), proof.m_batchProof.m_T.toBytes(), executorKey});
+    dHasher.final(dHash);
+    crypto::Scalar d(dHash.array());
+
+    const auto base = crypto::CurvePoint::BasePoint();
+
+    if (proof.m_tProof.m_F != proof.m_tProof.m_k * base + d * proof.m_batchProof.m_T) {
+        return false;
+    }
+
+    crypto::CurvePoint previousT;
+    crypto::Scalar previousR;
+    uint64_t verifyStartBatchId = 0;
+
+    if (executorInfo.m_initialBatch == proof.m_initialBatch) {
+        previousT = executorInfo.m_batchProof.m_T;
+        previousR = executorInfo.m_batchProof.m_r;
+        verifyStartBatchId = executorInfo.m_nextBatchToApprove;
+    } else if (executorInfo.m_nextBatchToApprove <= proof.m_initialBatch + 1) {
+        // Actually the condition should be "<" here.
+        // But due to possible executor's restart the situation with "<=" can occur
+        verifyStartBatchId = proof.m_initialBatch;
+    } else {
+        return false;
+    }
+
+    crypto::CurvePoint left = proof.m_batchProof.m_T - previousT;
+    crypto::CurvePoint right = (proof.m_batchProof.m_r - previousR) * crypto::CurvePoint::BasePoint();
+
+    for (uint i = verifyStartBatchId; i < batchId; i++) {
+
+        auto verificationInfoIt = m_batchesVerificationInformation.find(batchId);
+
+        if (verificationInfoIt == m_batchesVerificationInformation.end()) {
+            return false;
+        }
+
+        const auto& verificationInfo = verificationInfoIt->second;
+        crypto::Sha3_512_Builder hasher_h2;
+        Hash512 cHash;
+        hasher_h2.update({base.toBytes(), verificationInfo.toBytes(), executorKey});
+        hasher_h2.final(cHash);
+        crypto::Scalar c(cHash.array());
+        right += c * verificationInfo;
+    }
+
+    {
+        crypto::Sha3_512_Builder hasher_h2;
+        Hash512 cHash;
+        hasher_h2.update({base.toBytes(), verificationInformation.toBytes(), executorKey});
+        hasher_h2.final(cHash);
+        crypto::Scalar c(cHash.array());
+        right += c * verificationInformation;
+    }
+
+    if (left != right) {
+        return false;
+    }
+
+    return true;
+
+}
+
 } // namespace sirius::contract

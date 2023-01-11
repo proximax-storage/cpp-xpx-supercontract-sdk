@@ -489,4 +489,8 @@ void CallExecutionEnvironment::removeFsEntry(const std::string& path, std::share
     storage->removeFilesystemEntry(m_contractEnvironment.driveKey(), path, storageCallback);
 }
 
+TransactionHash CallExecutionEnvironment::releasedTransactionHash() const {
+    return TransactionHash();
+}
+
 } // namespace sirius::contract
