@@ -35,6 +35,12 @@ public:
     void run(const vm::CallRequest& callRequest,
              std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback);
 
+    std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler() const;
+
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler() const;
+
+    std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler() const;
+
 };
 
 }

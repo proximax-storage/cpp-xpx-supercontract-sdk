@@ -35,6 +35,8 @@ public:
 //    virtual void getTransactionHash(std::function<void(TransactionHash)>&& callback,
 //                                    std::function<void()>&& terminateCallback) = 0;
 
+virtual TransactionHash releasedTransactionHash() const = 0;
+
 };
 
 }

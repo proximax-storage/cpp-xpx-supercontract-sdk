@@ -14,22 +14,22 @@
 namespace sirius::utils {
 
 template<class T>
-std::string serialize( const T& value ) {
-    std::ostringstream os( std::ios::binary );
-    cereal::PortableBinaryOutputArchive archive( os );
-    archive( value );
+std::string serialize(const T& value) {
+    std::ostringstream os(std::ios::binary);
+    cereal::PortableBinaryOutputArchive archive(os);
+    archive(value);
     return os.str();
 }
 
 template<class T>
-T deserialize( const std::string& value ) {
-    std::istringstream is( value, std::ios::binary );
+T deserialize(const std::string& value) {
+    std::istringstream is(value, std::ios::binary);
     cereal::PortableBinaryInputArchive iarchive(is);
     T info;
-    iarchive( info );
+    iarchive(info);
     return info;
 }
 
-void copyToVector( std::vector<uint8_t>& data, const uint8_t* p, size_t bytes );
+void copyToVector(std::vector<uint8_t>& data, const uint8_t* p, size_t bytes);
 
 }

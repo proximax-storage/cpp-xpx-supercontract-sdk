@@ -28,7 +28,7 @@ struct CallRequest : CallRequestParameters {
 };
 
 struct CallExecutionResult {
-    bool m_success;
+    bool     m_success;
     uint32_t m_return;
     uint64_t m_scConsumed;
     uint64_t m_smConsumed;

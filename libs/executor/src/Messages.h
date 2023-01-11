@@ -30,16 +30,18 @@ enum class MessageTag {
 struct SuccessfulCallExecutionOpinion {
 
     CallId m_callId;
-
-    SuccessfulBatchCallInfo m_successfulCallExecutionInfo;
-
+    bool m_manual = false;
+    uint16_t m_callExecutionStatus = 0;
+    TransactionHash m_releasedTransaction;
     CallExecutorParticipation m_executorParticipation;
 
     template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_callId );
-        arch( m_successfulCallExecutionInfo );
-        arch( m_executorParticipation );
+    void serialize(Archive& arch) {
+        arch(m_callId);
+        arch(m_manual);
+        arch(m_callExecutionStatus);
+        arch(m_releasedTransaction);
+        arch(m_executorParticipation);
     }
 };
 
@@ -55,69 +57,77 @@ struct SuccessfulEndBatchExecutionOpinion {
     ExecutorKey m_executorKey;
     Signature m_signature;
 
-    void sign( const crypto::KeyPair& keyPair ) {
+    void sign(const crypto::KeyPair& keyPair) {
 
         auto signedInfo = getSignedInfo();
 
-        crypto::Sign( keyPair,
-                      utils::RawBuffer{signedInfo.data(), signedInfo.size()},
-                      m_signature );
+        crypto::Sign(keyPair,
+                     utils::RawBuffer{signedInfo.data(), signedInfo.size()},
+                     m_signature);
     }
 
     bool verify() const {
 
         auto signedInfo = getSignedInfo();
 
-        return crypto::Verify( m_executorKey,
-                               utils::RawBuffer{signedInfo.data(), signedInfo.size()},
-                               m_signature );
+        return crypto::Verify(m_executorKey,
+                              utils::RawBuffer{signedInfo.data(), signedInfo.size()},
+                              m_signature);
     }
 
     template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_contractKey );
-        arch( m_batchIndex );
-        arch( m_successfulBatchInfo );
-        arch( m_callsExecutionInfo );
-//        arch( m_proof );
-//        arch( m_executorKey );
-//        arch( m_signature );
+    void serialize(Archive& arch) {
+        arch(m_contractKey);
+        arch(m_batchIndex);
+        arch(m_successfulBatchInfo);
+        arch(m_callsExecutionInfo);
+        arch(m_proof);
+        arch(m_executorKey);
+        arch(cereal::binary_data(m_signature.data(), m_signature.size()));
     }
 
 private:
 
     std::vector<uint8_t> getSignedInfo() const {
-        std::vector<uint8_t> buffer;
 
-        utils::copyToVector( buffer, m_contractKey.data(), Key_Size );
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(m_batchIndex), sizeof( uint64_t ));
+        std::ostringstream os;
 
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(true), sizeof( bool ));
-        utils::copyToVector( buffer, m_successfulBatchInfo.m_storageHash.data(), sizeof(StorageHash));
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo.m_usedStorageSize),
-                             sizeof( uint64_t ));
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo.m_metaFilesSize),
-                             sizeof( uint64_t ));
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&m_successfulBatchInfo.m_fileStructureSize),
-                             sizeof( uint64_t ));
+        os << utils::serialize(m_contractKey);
+        os << utils::serialize(m_batchIndex);
+        os << utils::serialize(m_successfulBatchInfo.m_storageHash);
+        os << utils::serialize(m_successfulBatchInfo.m_usedStorageSize);
+        os << utils::serialize(m_successfulBatchInfo.m_metaFilesSize);
+        os << utils::serialize(m_successfulBatchInfo.m_PoExVerificationInfo);
 
-        for ( const auto& call: m_callsExecutionInfo ) {
-            utils::copyToVector( buffer, call.m_callId.data(), sizeof(CallId) );
-
-            auto& successfulCallInfo = call.m_successfulCallExecutionInfo;
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&successfulCallInfo.m_callExecutionSuccess),
-                                 sizeof( bool ));
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&successfulCallInfo.m_callSandboxSizeDelta),
-                                 sizeof( int64_t ));
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&successfulCallInfo.m_callStateSizeDelta),
-                                 sizeof( int64_t ));
-
-            const auto& participation = call.m_executorParticipation;
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&participation.m_scConsumed), sizeof( uint64_t ));
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&participation.m_smConsumed), sizeof( uint64_t ));
+        for (const auto& call: m_callsExecutionInfo) {
+            os << utils::serialize(call.m_callId);
+            os << utils::serialize(call.m_manual);
+            os << utils::serialize(call.m_callExecutionStatus);
+            os << utils::serialize(call.m_releasedTransaction);
         }
 
-        return buffer;
+        os << utils::serialize(m_proof);
+
+        for (const auto& call: m_callsExecutionInfo) {
+            os << utils::serialize(call.m_executorParticipation);
+        }
+
+        auto s = os.str();
+        return {s.begin(), s.end()};
+    }
+};
+
+struct UnsuccessfulCallExecutionOpinion {
+
+    CallId m_callId;
+    bool m_manual;
+    CallExecutorParticipation m_executorParticipation;
+
+    template<class Archive>
+    void serialize(Archive& arch) {
+        arch(m_callId);
+        arch(m_manual);
+        arch(m_executorParticipation);
     }
 };
 
@@ -125,60 +135,64 @@ struct UnsuccessfulEndBatchExecutionOpinion {
     ContractKey m_contractKey;
     uint64_t m_batchIndex;
 
-    std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionInfo;
+    std::vector<UnsuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
     Proofs m_proof;
 
     ExecutorKey m_executorKey;
     Signature m_signature;
 
-    void sign( const crypto::KeyPair& keyPair ) {
+    void sign(const crypto::KeyPair& keyPair) {
 
         auto signedInfo = getSignedInfo();
 
-        crypto::Sign( keyPair,
-                      utils::RawBuffer{signedInfo.data(), signedInfo.size()},
-                      m_signature );
+        crypto::Sign(keyPair,
+                     utils::RawBuffer{signedInfo.data(), signedInfo.size()},
+                     m_signature);
     }
 
     bool verify() const {
 
         auto signedInfo = getSignedInfo();
 
-        return crypto::Verify( m_executorKey,
-                               utils::RawBuffer{signedInfo.data(), signedInfo.size()},
-                               m_signature );
+        return crypto::Verify(m_executorKey,
+                              utils::RawBuffer{signedInfo.data(), signedInfo.size()},
+                              m_signature);
     }
 
     template<class Archive>
-    void serialize( Archive& arch ) {
-        arch( m_contractKey );
-        arch( m_batchIndex );
-        arch( m_callsExecutionInfo );
-//        arch( m_proof );
-//        arch( m_executorKey );
-//        arch( m_signature );
+    void serialize(Archive& arch) {
+        arch(m_contractKey);
+        arch(m_batchIndex);
+        arch(m_callsExecutionInfo);
+        arch(m_proof);
+        arch(m_executorKey);
+        arch(cereal::binary_data(m_signature.data(), m_signature.size()));
     }
 
 private:
 
     std::vector<uint8_t> getSignedInfo() const {
-        std::vector<uint8_t> buffer;
 
-        utils::copyToVector( buffer, m_contractKey.data(), Key_Size );
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(m_batchIndex), sizeof( uint64_t ));
 
-        utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(false), sizeof( bool ));
+        std::ostringstream os;
 
-        for ( const auto& call: m_callsExecutionInfo ) {
-            utils::copyToVector( buffer, call.m_callId.data(), sizeof(CallId) );
+        os << utils::serialize(m_contractKey);
+        os << utils::serialize(m_batchIndex);
 
-            const auto& participation = call.m_executorParticipation;
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&participation.m_scConsumed), sizeof( uint64_t ));
-            utils::copyToVector( buffer, reinterpret_cast<const uint8_t*>(&participation.m_smConsumed), sizeof( uint64_t ));
+        for (const auto& call: m_callsExecutionInfo) {
+            os << utils::serialize(call.m_callId);
+            os << utils::serialize(call.m_manual);
         }
 
-        return buffer;
+        os << utils::serialize(m_proof);
+
+        for (const auto& call: m_callsExecutionInfo) {
+            os << utils::serialize(call.m_executorParticipation);
+        }
+
+        auto s = os.str();
+        return {s.begin(), s.end()};
     }
 };
 }

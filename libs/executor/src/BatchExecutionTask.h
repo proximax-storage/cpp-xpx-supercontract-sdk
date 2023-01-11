@@ -64,7 +64,7 @@ public:
 
 private:
 
-    void onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult);
+    void onSuperContractCallExecuted(const CallId& callId, bool isManual, vm::CallExecutionResult&& executionResult);
 
 public:
 
@@ -83,6 +83,7 @@ private:
     void onInitiatedSandboxModification(vm::CallRequest&& callRequest);
 
     void onAppliedSandboxStorageModifications(const CallId& callId,
+                                              bool isManual,
                                               vm::CallExecutionResult&& executionResult,
                                               storage::SandboxModificationDigest&& digest);
 
