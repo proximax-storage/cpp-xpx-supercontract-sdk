@@ -7,6 +7,7 @@
 #include "DefaultBatchesManager.h"
 #include <virtualMachine/ExecutionErrorConidition.h>
 #include <crypto/Hashes.h>
+#include "AutorunBlockchainQueryHandler.h"
 
 namespace sirius::contract {
 
@@ -117,13 +118,13 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
         std::mt19937 rng(seed);
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
-        auto callManager = runAutorunCall(callId);
+        auto callManager = runAutorunCall(callId, block.m_height);
 
-        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_blockHash, std::move(callManager), Timer()};
+        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_height, block.m_blockHash, std::move(callManager), Timer()};
     }
 }
 
-std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(const CallId& callId) {
+std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(const CallId& callId, uint64_t height) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -143,7 +144,12 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
         }
     }, [] {}, m_executorEnvironment, true, true);
 
-    auto callManager = std::make_unique<CallExecutionManager>(m_executorEnvironment, nullptr, nullptr, nullptr, std::move(query));
+    auto callManager = std::make_unique<CallExecutionManager>(
+            m_executorEnvironment,
+            std::make_shared<vm::VirtualMachineInternetQueryHandler>(),
+            std::make_shared<AutorunBlockchainQueryHandler>(m_executorEnvironment, m_contractEnvironment, height),
+            std::make_shared<vm::VirtualMachineStorageQueryHandler>(),
+            std::move(query));
 
     callManager->run(request, std::move(callback));
 
@@ -170,6 +176,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     if (executionResult.m_success && executionResult.m_return == 0) {
         CallReferenceInfo info;
         info.m_callerKey = CallerKey();
+        info.m_blockHeight = callIt->second.m_blockHeight;
         batchIt->second.m_requests.emplace_back(CallRequestParameters{
                 CallId{callIt->second.m_blockHash.array()},
                 m_executorEnvironment.executorConfig().automaticExecutionFile(),
@@ -209,7 +216,7 @@ void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std:
                                          [callId = callIt->first, this] {
                                              auto callIt = m_autorunCallInfos.find(callId);
                                              ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
-                                             callIt->second.m_callExecutionManager = runAutorunCall(callId);
+                                             callIt->second.m_callExecutionManager = runAutorunCall(callId, callIt->second.m_blockHeight);
                                          });
 }
 

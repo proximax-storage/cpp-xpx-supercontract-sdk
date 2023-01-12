@@ -7,7 +7,6 @@
 #include "BaseContractTask.h"
 #include "CallExecutionManager.h"
 #include "BatchesManager.h"
-#include "CallExecutionEnvironment.h"
 
 namespace sirius::contract {
 

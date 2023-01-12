@@ -7,12 +7,14 @@
 #pragma once
 
 #include "Identifiers.h"
+#include "ServicePayment.h"
 
 namespace sirius::contract {
 
 struct CallReferenceInfo {
-    std::optional<CallerKey> m_callerKey;
+    CallerKey m_callerKey;
     uint64_t m_blockHeight;
+	std::vector<ServicePayment> m_servicePayments;
 };
 
 struct CallRequestParameters {

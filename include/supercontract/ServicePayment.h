@@ -6,17 +6,13 @@
 
 #pragma once
 
-#include "supercontract/Identifiers.h"
-#include <virtualMachine/VirtualMachineEventHandler.h>
+#include "Identifiers.h"
 
 namespace sirius::contract {
 
-class ContractVirtualMachineQueryHandler {
-
-public:
-
-    virtual ~ContractVirtualMachineQueryHandler() = default;
-
+struct ServicePayment {
+    uint64_t m_mosaicId;
+    uint64_t m_amount;
 };
 
 }

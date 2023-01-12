@@ -49,4 +49,4 @@ endforeach()
 target_include_directories(contract-virtualMachine PUBLIC ../include ../../../include)
 target_include_directories(contract-virtualMachine PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(contract-virtualMachine expected contract-logging contract-utils OpenSSL::SSL contract-storage contract-internet)
+target_link_libraries(contract-virtualMachine expected contract-logging contract-utils OpenSSL::SSL contract-storage contract-internet contract-blockchain)

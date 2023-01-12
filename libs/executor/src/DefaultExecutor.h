@@ -36,6 +36,7 @@ private:
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
     std::shared_ptr<messenger::Messenger> m_messenger;
     std::shared_ptr<storage::Storage> m_storage;
+    std::shared_ptr<blockchain::Blockchain> m_blockchain;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 
@@ -87,6 +88,8 @@ public:
     std::weak_ptr<messenger::Messenger> messenger() override;
 
     std::weak_ptr<storage::StorageModifier> storageModifier() override;
+
+    std::weak_ptr<blockchain::Blockchain> blockchain() override;
 
     ExecutorEventHandler& executorEventHandler() override;
 

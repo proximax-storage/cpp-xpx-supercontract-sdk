@@ -17,6 +17,7 @@
 #include "crypto/KeyPair.h"
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include <virtualMachine/VirtualMachine.h>
+#include <blockchain/Blockchain.h>
 
 #include "supercontract/ThreadManager.h"
 
@@ -33,6 +34,8 @@ public:
     virtual std::weak_ptr<messenger::Messenger> messenger() = 0;
 
     virtual std::weak_ptr<storage::StorageModifier> storageModifier() = 0;
+
+    virtual std::weak_ptr<blockchain::Blockchain> blockchain() = 0;
 
     virtual ExecutorEventHandler& executorEventHandler() = 0;
 

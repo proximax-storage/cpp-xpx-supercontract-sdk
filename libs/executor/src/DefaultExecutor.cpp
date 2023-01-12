@@ -15,7 +15,7 @@
 #include "DefaultContract.h"
 #include <messenger/RPCMessenger.h>
 #include <storage/RPCStorage.h>
-
+#include <blockchain/Blockchain.h>
 #include "executor/Executor.h"
 #include "crypto/KeyPair.h"
 #include "supercontract/Identifiers.h"
@@ -200,6 +200,10 @@ std::weak_ptr<messenger::Messenger> DefaultExecutor::messenger() {
 
 std::weak_ptr<storage::StorageModifier> DefaultExecutor::storageModifier() {
     return m_storage;
+}
+
+std::weak_ptr<blockchain::Blockchain> DefaultExecutor::blockchain() {
+    return m_blockchain;
 }
 
 ExecutorEventHandler& DefaultExecutor::executorEventHandler() {

@@ -3,11 +3,13 @@
 #include "TestUtils.h"
 #include "storage/RPCStorage.h"
 #include "storage/StorageErrorCode.h"
-#include "CallExecutionEnvironment.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "virtualMachine/VirtualMachine.h"
 #include <gtest/gtest.h>
 #include <utils/Random.h>
+#include <InternetQueryHandler.h>
+#include <StorageQueryHandler.h>
+#include <ManualCallBlockchainQueryHandler.h>
 
 namespace sirius::contract::test {
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
@@ -44,7 +46,9 @@ TEST(Supercontract, Storage) {
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
-    std::shared_ptr<CallExecutionEnvironment> rpcHandler;
+    std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
+    std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
     std::promise<void> pInit;
@@ -95,7 +99,13 @@ TEST(Supercontract, Storage) {
                                                                       0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
-        rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
+                                                                               callRequest.m_referenceInfo.m_callerKey,
+                                                                               callRequest.m_referenceInfo.m_blockHeight,
+                                                                               callRequest.m_callId.array(),
+                                                                               callRequest.m_referenceInfo.m_servicePayments);
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
@@ -106,7 +116,7 @@ TEST(Supercontract, Storage) {
             ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
-        pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
+        pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
     barrier.get();
@@ -164,7 +174,9 @@ TEST(Supercontract, Iterator) {
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
-    std::shared_ptr<CallExecutionEnvironment> rpcHandler;
+    std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
+    std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
     std::promise<void> pInit;
@@ -215,7 +227,13 @@ TEST(Supercontract, Iterator) {
                                                                       0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
-        rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
+                                                                               callRequest.m_referenceInfo.m_callerKey,
+                                                                               callRequest.m_referenceInfo.m_blockHeight,
+                                                                               callRequest.m_callId.array(),
+                                                                               callRequest.m_referenceInfo.m_servicePayments);
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
@@ -226,7 +244,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
-        pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
+        pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
     barrier.get();
@@ -284,7 +302,9 @@ TEST(Supercontract, FaultyStorage) {
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
 
-    std::shared_ptr<CallExecutionEnvironment> rpcHandler;
+    std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
+    std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
     std::promise<void> pInit;
@@ -335,7 +355,13 @@ TEST(Supercontract, FaultyStorage) {
                                                                       0}},
                                                       vm::CallRequest::CallLevel::MANUAL);
 
-        rpcHandler = std::make_shared<CallExecutionEnvironment>(callRequest, environment, contractEnvironmentMock);
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
+                                                                               callRequest.m_referenceInfo.m_callerKey,
+                                                                               callRequest.m_referenceInfo.m_blockHeight,
+                                                                               callRequest.m_callId.array(),
+                                                                               callRequest.m_referenceInfo.m_servicePayments);
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
@@ -346,7 +372,7 @@ TEST(Supercontract, FaultyStorage) {
             ASSERT_EQ(res->m_smConsumed, 0);
         }, [] {}, environment, false, false);
 
-        pVirtualMachine->executeCall(callRequest, rpcHandler, rpcHandler, rpcHandler, callback);
+        pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
     barrier.get();

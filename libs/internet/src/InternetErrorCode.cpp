@@ -16,6 +16,8 @@ std::string InternetErrorCategory::message(int ev) const {
     switch (ev) {
         case static_cast<int>(InternetError::internet_unavailable):
             return "Internet is unavailable";
+        case static_cast<int>(InternetError::incorrect_query):
+            return "Incorrect query";
         case static_cast<int>(InternetError::connection_closed_error):
             return "Connection is closed";
         case static_cast<int>(InternetError::resolve_error):

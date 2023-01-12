@@ -12,6 +12,7 @@ namespace sirius::contract::storage {
 
 enum class StorageError {
     storage_unavailable = 1,
+    incorrect_query,
     open_file_error,
     read_file_error,
     write_file_error,

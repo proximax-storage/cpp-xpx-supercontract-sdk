@@ -16,6 +16,8 @@ std::string StorageErrorCategory::message(int ev) const {
     switch (ev) {
     case static_cast<unsigned int>(StorageError::storage_unavailable):
         return "Storage is unavailable";
+    case static_cast<unsigned int>(StorageError::incorrect_query):
+        return "Incorrect query";
     case static_cast<unsigned int>(StorageError::open_file_error):
         return "Fail to open the file";
     case static_cast<unsigned int>(StorageError::read_file_error):

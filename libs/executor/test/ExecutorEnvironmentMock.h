@@ -44,6 +44,8 @@ public:
 
     std::weak_ptr<storage::StorageModifier> storageModifier() override;
 
+    std::weak_ptr<blockchain::Blockchain> blockchain() override;
+
     ExecutorEventHandler& executorEventHandler() override;
 
     std::weak_ptr<vm::VirtualMachine> virtualMachine() override;
