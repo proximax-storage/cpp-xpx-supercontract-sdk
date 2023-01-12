@@ -10,6 +10,7 @@
 #include <optional>
 
 #include "supercontract/AsyncQuery.h"
+#include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -19,15 +20,21 @@ public:
 
     virtual void openConnection(
             const std::string& url,
-            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;
+            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(internet::make_error_code(internet::InternetError::incorrect_query)));
+    }
 
     virtual void read(
             uint64_t connectionId,
-            std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) = 0;
+            std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(internet::make_error_code(internet::InternetError::incorrect_query)));
+    }
 
     virtual void closeConnection(
             uint64_t connectionId,
-            std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
+            std::shared_ptr<AsyncQueryCallback<void>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(internet::make_error_code(internet::InternetError::incorrect_query)));
+    }
 
     virtual ~VirtualMachineInternetQueryHandler() = default;
 };

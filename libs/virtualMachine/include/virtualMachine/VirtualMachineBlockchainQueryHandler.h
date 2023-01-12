@@ -6,7 +6,9 @@
 
 #pragma once
 
-#include "supercontract/Identifiers.h"
+#include <supercontract/Identifiers.h>
+#include <supercontract/AsyncQuery.h>
+#include <blockchain/BlockchainErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -17,11 +19,12 @@ public:
     virtual ~VirtualMachineBlockchainQueryHandler() = default;
 
 //    virtual void getCaller(
-//            std::function<void(CallerKey)>&& callback,
-//            std::function<void()>&& terminateCallback) = 0;
+//            const std::string& url,
+//            std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) = 0;
 //
-//    virtual void getBlockHeight(std::function<void(uint64_t)>&& callback,
-//                                std::function<void()>&& terminateCallback) = 0;
+    virtual void getBlockHeight(std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
 //
 //    virtual void getBlockHash(std::function<void(BlockHash)>&& callback,
 //                              std::function<void()>&& terminateCallback) = 0;

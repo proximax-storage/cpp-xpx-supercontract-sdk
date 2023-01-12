@@ -8,23 +8,14 @@
 
 #include <system_error>
 
-namespace sirius::contract::internet {
+namespace sirius::contract::blockchain {
 
-enum class InternetError {
-    internet_unavailable = 1,
+enum class BlockchainError {
+    blockchain_unavailable = 1,
     incorrect_query,
-    invalid_url_error,
-    invalid_resource_error,
-    connection_closed_error,
-    resolve_error,
-    connection_error,
-    write_error,
-    read_error,
-    handshake_error,
-    invalid_ocsp_error
-};
+    };
 
-class InternetErrorCategory
+class BlockchainErrorCategory
         : public std::error_category {
 public:
     const char* name() const noexcept override;
@@ -34,16 +25,16 @@ public:
     bool equivalent(int code, const std::error_condition& condition) const noexcept override;
 };
 
-const std::error_category& internetErrorCategory();
+const std::error_category& blockchainErrorCategory();
 
-std::error_code make_error_code(InternetError e);
+std::error_code make_error_code(BlockchainError e);
 
 }
 
 namespace std {
 
 template<>
-struct is_error_code_enum<sirius::contract::internet::InternetError>
+struct is_error_code_enum<sirius::contract::blockchain::BlockchainError>
         : public true_type {
 };
 

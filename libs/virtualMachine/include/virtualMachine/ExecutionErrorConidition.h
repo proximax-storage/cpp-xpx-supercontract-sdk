@@ -15,7 +15,9 @@ enum class ExecutionError {
     storage_unavailable,
     internet_unavailable,
     storage_incorrect_query,
-    internet_incorrect_query
+    internet_incorrect_query,
+    blockchain_incorrect_query,
+    blockchain_unavailable
 };
 
 class ExecutionErrorCategory
