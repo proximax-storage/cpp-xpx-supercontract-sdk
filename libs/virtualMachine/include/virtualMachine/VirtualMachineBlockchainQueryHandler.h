@@ -22,7 +22,19 @@ public:
 //            const std::string& url,
 //            std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) = 0;
 //
-    virtual void getBlockHeight(std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) {
+    virtual void blockHeight(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void blockHash(std::shared_ptr<AsyncQueryCallback<BlockHash>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void blockTime(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void blockGenerationTime(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 //
@@ -38,7 +50,9 @@ public:
 //    virtual void getTransactionHash(std::function<void(TransactionHash)>&& callback,
 //                                    std::function<void()>&& terminateCallback) = 0;
 
-virtual TransactionHash releasedTransactionHash() const = 0;
+    virtual TransactionHash releasedTransactionHash() const {
+        return TransactionHash();
+    };
 
 };
 

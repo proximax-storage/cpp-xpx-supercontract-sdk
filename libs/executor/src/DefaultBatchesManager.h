@@ -33,6 +33,7 @@ private:
 
     struct AutorunCallInfo {
         uint64_t m_batchIndex;
+        uint64_t m_blockHeight;
         BlockHash m_blockHash;
         std::unique_ptr<CallExecutionManager> m_callExecutionManager;
         Timer m_repeatTimer;
@@ -80,7 +81,7 @@ private:
 
     void onSuperContractCallFailed(const CallId& callId, std::error_code&& ec);
 
-    std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId);
+    std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId, uint64_t blockHeight);
 
     void cancelBatchesTill(uint64_t batchIndex) override;
 

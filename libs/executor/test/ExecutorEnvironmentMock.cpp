@@ -50,4 +50,8 @@ std::weak_ptr<messenger::Messenger> ExecutorEnvironmentMock::messenger() {
 std::weak_ptr<storage::StorageModifier> ExecutorEnvironmentMock::storageModifier() {
     return m_storage;
 }
+
+std::weak_ptr<blockchain::Blockchain> ExecutorEnvironmentMock::blockchain() {
+    return std::weak_ptr<blockchain::Blockchain>();
+}
 } // namespace sirius::contract::test
