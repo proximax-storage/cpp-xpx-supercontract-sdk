@@ -14,10 +14,10 @@
 namespace sirius::contract {
 
 class AutorunBlockchainQueryHandler:
-        private SingleThread,
+        protected SingleThread,
         public vm::VirtualMachineBlockchainQueryHandler {
 
-private:
+protected:
 
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;

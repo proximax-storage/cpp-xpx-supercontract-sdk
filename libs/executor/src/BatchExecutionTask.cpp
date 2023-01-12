@@ -6,7 +6,9 @@
 
 #include "BatchExecutionTask.h"
 #include "ProofOfExecution.h"
-#include "CallExecutionEnvironment.h"
+#include "ManualCallBlockchainQueryHandler.h"
+#include "InternetQueryHandler.h"
+#include "StorageQueryHandler.h"
 #include "utils/Serializer.h"
 #include "Messages.h"
 #include "CallExecutionManager.h"
@@ -184,11 +186,6 @@ void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRe
 
     callRequest.m_proofOfExecutionPrefix = m_proofOfExecutionSecretData;
 
-    auto callEnvironment = std::make_shared<CallExecutionEnvironment>(
-            callRequest,
-            m_executorEnvironment,
-            m_contractEnvironment);
-
     bool isManual = callRequest.m_callLevel == vm::CallRequest::CallLevel::MANUAL;
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
@@ -205,11 +202,30 @@ void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRe
                 onSuperContractCallExecuted(callId, isManual, std::move(*res));
             }, [] {}, m_executorEnvironment, true, true);
 
-    m_callExecutionManager = std::make_unique<CallExecutionManager>(m_executorEnvironment,
-                                                                    callEnvironment,
-                                                                    callEnvironment,
-                                                                    callEnvironment,
-                                                                    std::move(query));
+    std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler;
+    if (isManual) {
+        blockchainQueryHandler = std::make_shared<ManualCallBlockchainQueryHandler>(
+                m_executorEnvironment,
+                m_contractEnvironment,
+                callRequest.m_referenceInfo.m_callerKey,
+                callRequest.m_referenceInfo.m_blockHeight,
+                callRequest.m_callId.array(),
+                callRequest.m_referenceInfo.m_servicePayments);
+    }
+    else {
+        blockchainQueryHandler = std::make_shared<AutomaticExecutionBlockchainQueryHandler>(
+                m_executorEnvironment,
+                m_contractEnvironment,
+                callRequest.m_referenceInfo.m_callerKey,
+                callRequest.m_referenceInfo.m_blockHeight);
+    }
+
+    m_callExecutionManager = std::make_unique<CallExecutionManager>(
+            m_executorEnvironment,
+            std::make_shared<InternetQueryHandler>(callRequest.m_callId, m_executorEnvironment, m_contractEnvironment),
+            blockchainQueryHandler,
+            std::make_shared<StorageQueryHandler>(callRequest.m_callId, m_executorEnvironment, m_contractEnvironment),
+            std::move(query));
 
     m_callExecutionManager->run(callRequest, std::move(callback));
 }

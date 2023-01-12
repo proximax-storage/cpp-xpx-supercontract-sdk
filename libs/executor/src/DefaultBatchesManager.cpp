@@ -176,6 +176,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     if (executionResult.m_success && executionResult.m_return == 0) {
         CallReferenceInfo info;
         info.m_callerKey = CallerKey();
+        info.m_blockHeight = callIt->second.m_blockHeight;
         batchIt->second.m_requests.emplace_back(CallRequestParameters{
                 CallId{callIt->second.m_blockHash.array()},
                 m_executorEnvironment.executorConfig().automaticExecutionFile(),

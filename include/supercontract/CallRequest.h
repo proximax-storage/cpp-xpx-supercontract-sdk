@@ -7,13 +7,9 @@
 #pragma once
 
 #include "Identifiers.h"
+#include "ServicePayment.h"
 
 namespace sirius::contract {
-
-struct ServicePayment {
-	uint64_t m_mosaicId;
-	uint64_t m_amount;
-};
 
 struct CallReferenceInfo {
     CallerKey m_callerKey;
