@@ -181,7 +181,7 @@ TEST(TEST_NAME, BatchTest) {
          blocks.push_back(block);
      }
 
-     for(auto i=1; i<=13; i++){
+     for(auto i = 0; i < 14; i++){
          std::vector<uint8_t> params;
          CallRequestParameters request = {
                  utils::generateRandomByteValue<CallId>(),
@@ -1080,9 +1080,6 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
-                                                    automaticExecutionsSMLimit);
-
     // create executor environment
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
@@ -1094,6 +1091,9 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
                                                     threadManager);
+
+    ContractEnvironmentMock contractEnvironmentMock(executorEnvironmentMock, contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create default batches manager
     uint64_t index = 1;
@@ -1115,7 +1115,6 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     for(auto i=1; i<=2; i++){
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -1123,12 +1122,8 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
                 52000000,
                 20 * 1024,
                 CallReferenceInfo{
-                        {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                    {},
+                    0
                 }
         };
         requests.push_back(request);
@@ -1196,9 +1191,6 @@ TEST(TEST_NAME, DelayBatchesTest) {
     DriveKey driveKey;
     std::set<ExecutorKey> executors;
 
-    ContractEnvironmentMock contractEnvironmentMock(contractKey, automaticExecutionsSCLimit,
-                                                    automaticExecutionsSMLimit);
-
     // create executor environment
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
@@ -1210,6 +1202,9 @@ TEST(TEST_NAME, DelayBatchesTest) {
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
                                                     threadManager);
+
+    ContractEnvironmentMock contractEnvironmentMock(executorEnvironmentMock, contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
 
     // create default batches manager
     uint64_t index = 1;
@@ -1231,7 +1226,6 @@ TEST(TEST_NAME, DelayBatchesTest) {
     for(auto i=1; i<=2; i++){
         std::vector<uint8_t> params;
         CallRequestParameters request = {
-                utils::generateRandomByteValue<ContractKey>(),
                 utils::generateRandomByteValue<CallId>(),
                 "",
                 "",
@@ -1239,12 +1233,8 @@ TEST(TEST_NAME, DelayBatchesTest) {
                 52000000,
                 20 * 1024,
                 CallReferenceInfo{
-                        {},
-                        0,
-                        utils::generateRandomByteValue<BlockHash>(),
-                        0,
-                        0,
-                        {}
+                    {},
+                    0
                 }
         };
         requests.push_back(request);
