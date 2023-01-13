@@ -43,13 +43,23 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
     m_automaticExecutionsEnabledSince = blockHeight;
 
     if (!m_automaticExecutionsEnabledSince) {
-        for (auto&[_, batch]: m_batches) {
-            if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
-                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger())
+
+        for (auto it = m_batches.begin(), nextIt = it; it != m_batches.end(); it = nextIt) {
+
+            nextIt++;
+
+            auto& batch = it->second;
+
+            if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
+                batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
+            }
+            else if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
+                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger());
                 batch.m_requests.pop_back();
             }
-            else if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
-                batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
+
+            if (batch.m_requests.empty()) {
+                m_batches.erase(it);
             }
         }
         m_autorunCallInfos.clear();
@@ -83,6 +93,8 @@ Batch DefaultBatchesManager::nextBatch() {
     }
 
     auto batch = std::move(m_batches.extract(m_batches.begin()).mapped());
+
+    ASSERT(!batch.m_requests.empty(), m_executorEnvironment.logger())
 
     return Batch{m_nextBatchIndex++, std::move(batch.m_requests)};
 }

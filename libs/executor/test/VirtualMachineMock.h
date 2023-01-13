@@ -16,9 +16,13 @@ private:
     ThreadManager& m_threadManager;
     std::deque<bool> m_result;
     std::map<CallId, Timer> m_timers;
+    bool m_virtualMachineIsFail;
+    int count = 0;
 
 public:
-    VirtualMachineMock(ThreadManager& threadManager, std::deque<bool> result);
+    VirtualMachineMock(ThreadManager& threadManager,
+                       std::deque<bool> result,
+                       bool m_virtualMachineIsFail);
 
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
