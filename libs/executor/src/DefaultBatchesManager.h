@@ -27,13 +27,19 @@ private:
             MANUAL, AUTOMATIC, FINISHED
         };
 
+        DraftBatch(uint64_t blockHeight): m_blockHeight(blockHeight) {}
+
+        // This implementation of batches manager assumes
+        // that all the calls in the same batch are from the same block
+        uint64_t m_blockHeight;
+
         BatchFormationStatus m_batchFormationStatus = BatchFormationStatus::MANUAL;
         std::deque<vm::CallRequest> m_requests;
     };
 
     struct AutorunCallInfo {
         uint64_t m_batchIndex;
-        uint64_t m_blockHeight;
+        CallId m_callId;
         BlockHash m_blockHash;
         std::unique_ptr<CallExecutionManager> m_callExecutionManager;
         Timer m_repeatTimer;
@@ -50,7 +56,7 @@ private:
 
     std::optional<uint64_t> m_automaticExecutionsEnabledSince;
 
-    std::map<CallId, AutorunCallInfo> m_autorunCallInfos;
+    std::map<uint64_t, AutorunCallInfo> m_autorunCallInfos;
 
     std::optional<Batch> m_delayedBatch;
     std::map<uint64_t, DraftBatch> m_batches;
@@ -77,17 +83,18 @@ public:
 
 private:
 
-    void onSuperContractCallExecuted(const CallId& callId, vm::CallExecutionResult&& executionResult);
+    void onSuperContractCallExecuted(uint64_t blockHeight, vm::CallExecutionResult&& executionResult);
 
-    void onSuperContractCallFailed(const CallId& callId, std::error_code&& ec);
+    void onSuperContractCallFailed(uint64_t blockHeight, std::error_code&& ec);
 
     std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId, uint64_t blockHeight);
 
     void cancelBatchesTill(uint64_t batchIndex) override;
 
-private:
-
     void clearOutdatedBatches();
+
+    // Exclusive
+    void disableAutomaticExecutionsTill(uint64_t batchIndex);
 
 };
 

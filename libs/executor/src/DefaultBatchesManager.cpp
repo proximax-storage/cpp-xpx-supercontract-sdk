@@ -23,7 +23,7 @@ void DefaultBatchesManager::addManualCall(const CallRequestParameters& request) 
 
     if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
                              DraftBatch::BatchFormationStatus::MANUAL) {
-        m_batches[m_nextDraftBatchIndex++] = DraftBatch();
+        m_batches.try_emplace(m_nextDraftBatchIndex++, request.m_referenceInfo.m_blockHeight);
     }
 
     auto batchIt = --m_batches.end();
@@ -35,34 +35,13 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_automaticExecutionsEnabledSince.has_value() == blockHeight.has_value()) {
-        // TODO Can have value but differ?
-        return;
-    }
-
     m_automaticExecutionsEnabledSince = blockHeight;
 
     if (!m_automaticExecutionsEnabledSince) {
-
-        for (auto it = m_batches.begin(), nextIt = it; it != m_batches.end(); it = nextIt) {
-
-            nextIt++;
-
-            auto& batch = it->second;
-
-            if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
-                batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
-            }
-            else if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
-                ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED, m_executorEnvironment.logger());
-                batch.m_requests.pop_back();
-            }
-
-            if (batch.m_requests.empty()) {
-                m_batches.erase(it);
-            }
-        }
-        m_autorunCallInfos.clear();
+        disableAutomaticExecutionsTill(UINT64_MAX);
+     }
+    else {
+        disableAutomaticExecutionsTill(*m_automaticExecutionsEnabledSince);
     }
 }
 
@@ -118,7 +97,7 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
     } else {
         if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
                                  DraftBatch::BatchFormationStatus::MANUAL) {
-            m_batches[m_nextDraftBatchIndex++] = DraftBatch();
+            m_batches.try_emplace(m_nextDraftBatchIndex++, block.m_height);
         }
 
         auto batchIt = --m_batches.end();
@@ -132,7 +111,7 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
 
         auto callManager = runAutorunCall(callId, block.m_height);
 
-        m_autorunCallInfos[callId] = AutorunCallInfo{batchIt->first, block.m_height, block.m_blockHash, std::move(callManager), Timer()};
+        m_autorunCallInfos[block.m_height] = AutorunCallInfo{batchIt->first, callId, block.m_blockHash, std::move(callManager), Timer()};
     }
 }
 
@@ -148,11 +127,11 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
                                                   0},
                             vm::CallRequest::CallLevel::AUTORUN);
 
-    auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([callId = request.m_callId, this](auto&& result) {
+    auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([blockHeight = height, this](auto&& result) {
         if (result) {
-            onSuperContractCallExecuted(callId, std::move(*result));
+            onSuperContractCallExecuted(blockHeight, std::move(*result));
         } else {
-            onSuperContractCallFailed(callId, std::move(result.error()));
+            onSuperContractCallFailed(blockHeight, std::move(result.error()));
         }
     }, [] {}, m_executorEnvironment, true, true);
 
@@ -168,12 +147,12 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
     return callManager;
 }
 
-void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
+void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
                                                         vm::CallExecutionResult&& executionResult) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto callIt = m_autorunCallInfos.find(callId);
+    auto callIt = m_autorunCallInfos.find(blockHeight);
 
     ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
 
@@ -188,7 +167,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     if (executionResult.m_success && executionResult.m_return == 0) {
         CallReferenceInfo info;
         info.m_callerKey = CallerKey();
-        info.m_blockHeight = callIt->second.m_blockHeight;
+        info.m_blockHeight = callIt->first;
         batchIt->second.m_requests.emplace_back(CallRequestParameters{
                 CallId{callIt->second.m_blockHash.array()},
                 m_executorEnvironment.executorConfig().automaticExecutionFile(),
@@ -208,13 +187,13 @@ void DefaultBatchesManager::onSuperContractCallExecuted(const CallId& callId,
     m_autorunCallInfos.erase(callIt);
 }
 
-void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std::error_code&& ec) {
+void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std::error_code&& ec) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger())
 
-    auto callIt = m_autorunCallInfos.find(callId);
+    auto callIt = m_autorunCallInfos.find(blockHeight);
 
     ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
 
@@ -225,10 +204,11 @@ void DefaultBatchesManager::onSuperContractCallFailed(const CallId& callId, std:
 
     callIt->second.m_repeatTimer = Timer(m_executorEnvironment.threadManager().context(),
                                          m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(),
-                                         [callId = callIt->first, this] {
-                                             auto callIt = m_autorunCallInfos.find(callId);
+                                         [blockHeight = callIt->first, this] {
+                                             auto callIt = m_autorunCallInfos.find(blockHeight);
                                              ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
-                                             callIt->second.m_callExecutionManager = runAutorunCall(callId, callIt->second.m_blockHeight);
+                                             auto& info = callIt->second;
+                                             info.m_callExecutionManager = runAutorunCall(info.m_callId, blockHeight);
                                          });
 }
 
@@ -264,6 +244,34 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
     ASSERT(batch.m_batchIndex < m_nextBatchIndex, m_executorEnvironment.logger())
 
     m_delayedBatch = std::move(batch);
+}
+
+void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    for (auto it = m_batches.begin(), nextIt = it;
+         it != m_batches.end() && it->second.m_blockHeight < blockHeight; it = nextIt) {
+
+        nextIt++;
+
+        auto& batch = it->second;
+
+        if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
+            batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
+        } else if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
+            ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED,
+                   m_executorEnvironment.logger());
+            batch.m_requests.pop_back();
+        }
+
+        if (batch.m_requests.empty()) {
+            m_batches.erase(it);
+        }
+    }
+    while (!m_autorunCallInfos.empty() && m_autorunCallInfos.begin()->first < blockHeight) {
+        m_autorunCallInfos.erase(m_autorunCallInfos.begin());
+    }
 }
 
 }
