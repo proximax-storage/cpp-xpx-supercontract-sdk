@@ -76,11 +76,11 @@ void DefaultContract::setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executo
     m_executors = std::move(executors);
 }
 
-void DefaultContract::addBlockInfo(const Block& block) {
+void DefaultContract::addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_batchesManager->addBlockInfo(block);
+    m_batchesManager->addBlockInfo(blockHeight, block);
 }
 
 void DefaultContract::setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) {

@@ -17,6 +17,7 @@
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
 #include <virtualMachine/VirtualMachine.h>
+#include <blockchain/Block.h>
 #include "ExecutorEnvironment.h"
 
 namespace sirius::contract {
@@ -30,7 +31,7 @@ public:
 
     virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void addBlockInfo(const Block&) = 0;
+    virtual void addBlockInfo(uint64_t blockHeight, const blockchain::Block&) = 0;
 
     virtual void removeContract(const RemoveRequest&) = 0;
 

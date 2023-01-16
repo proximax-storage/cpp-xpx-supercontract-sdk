@@ -40,6 +40,10 @@ public:
 
     void blockGenerationTime(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
+private:
+
+    void blockTime(uint64_t height, const std::shared_ptr<AsyncQueryCallback<uint64_t>>& callback);
+
 };
 
 }

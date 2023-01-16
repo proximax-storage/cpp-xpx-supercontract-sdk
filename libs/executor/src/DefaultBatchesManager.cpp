@@ -78,11 +78,11 @@ Batch DefaultBatchesManager::nextBatch() {
     return Batch{m_nextBatchIndex++, std::move(batch.m_requests)};
 }
 
-void DefaultBatchesManager::addBlockInfo(const Block& block) {
+void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (!m_automaticExecutionsEnabledSince || block.m_height < *m_automaticExecutionsEnabledSince) {
+    if (!m_automaticExecutionsEnabledSince || blockHeight < *m_automaticExecutionsEnabledSince) {
         // Automatic Executions Are Disabled For This Block
 
         if (m_batches.empty()) {
@@ -97,7 +97,7 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
     } else {
         if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
                                  DraftBatch::BatchFormationStatus::MANUAL) {
-            m_batches.try_emplace(m_nextDraftBatchIndex++, block.m_height);
+            m_batches.try_emplace(m_nextDraftBatchIndex++, blockHeight);
         }
 
         auto batchIt = --m_batches.end();
@@ -109,9 +109,9 @@ void DefaultBatchesManager::addBlockInfo(const Block& block) {
         std::mt19937 rng(seed);
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
-        auto callManager = runAutorunCall(callId, block.m_height);
+        auto callManager = runAutorunCall(callId, blockHeight);
 
-        m_autorunCallInfos[block.m_height] = AutorunCallInfo{batchIt->first, callId, block.m_blockHash, std::move(callManager), Timer()};
+        m_autorunCallInfos[blockHeight] = AutorunCallInfo{batchIt->first, callId, block.m_blockHash, std::move(callManager), Timer()};
     }
 }
 

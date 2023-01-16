@@ -11,11 +11,12 @@
 #include "ExecutorInfo.h"
 #include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
-
+#include <blockchain/Block.h>
 
 #include "supercontract/Identifiers.h"
 
 #include <memory>
+
 namespace sirius::contract {
 
 class Executor :
@@ -26,17 +27,18 @@ public:
 
     ~Executor() override = default;
 
-    virtual void addContract( const ContractKey&, AddContractRequest&& ) = 0;
+    virtual void addContract(const ContractKey&, AddContractRequest&&) = 0;
 
-    virtual void addManualCall(const ContractKey&, CallRequestParameters&& ) = 0;
+    virtual void addManualCall(const ContractKey&, CallRequestParameters&&) = 0;
 
-    virtual void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) = 0;
+    virtual void
+    setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void addBlockInfo( const ContractKey&, Block&& ) = 0;
+    virtual void addBlockInfo(const ContractKey&, uint64_t blockHeight, blockchain::Block&&) = 0;
 
-    virtual void removeContract( const ContractKey&, RemoveRequest&& ) = 0;
+    virtual void removeContract(const ContractKey&, RemoveRequest&&) = 0;
 
-    virtual void setExecutors( const ContractKey&, std::map<ExecutorKey, ExecutorInfo>&& executors ) = 0;
+    virtual void setExecutors(const ContractKey&, std::map<ExecutorKey, ExecutorInfo>&& executors) = 0;
 };
 
 }

@@ -12,8 +12,8 @@ AutorunBlockchainQueryHandler::AutorunBlockchainQueryHandler(ExecutorEnvironment
                                                              ContractEnvironment& contractEnvironment,
                                                              uint64_t height)
         : m_executorEnvironment(executorEnvironment)
-        , m_contractEnvironment(contractEnvironment)
-        , m_height(height) {}
+          , m_contractEnvironment(contractEnvironment)
+          , m_height(height) {}
 
 void AutorunBlockchainQueryHandler::blockHeight(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
 
@@ -33,40 +33,60 @@ void AutorunBlockchainQueryHandler::blockHash(std::shared_ptr<AsyncQueryCallback
         return;
     }
 
-    auto[asyncQuery, blockchainCallback] = createAsyncQuery<BlockHash>([=, this](auto&& res) {
+    auto[asyncQuery, blockchainCallback] = createAsyncQuery<blockchain::Block>([=, this](auto&& res) {
         m_query.reset();
-        callback->postReply(std::forward<decltype(res)>(res));
+        if (!res) {
+            callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        }
+        callback->postReply(res->m_blockHash);
     }, [=] {
-        callback->postReply(tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
+        callback->postReply(
+                tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
     }, m_executorEnvironment, true, true);
 
     m_query = std::move(asyncQuery);
-    blockchain->blockHash(m_height, blockchainCallback);
+    blockchain->block(m_height, blockchainCallback);
 }
 
 void AutorunBlockchainQueryHandler::blockTime(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto blockchain = m_executorEnvironment.blockchain().lock();
-    if (!blockchain) {
-        callback->postReply(
-                tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
-        return;
-    }
-
-    auto[asyncQuery, blockchainCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) {
-        m_query.reset();
-        callback->postReply(std::forward<decltype(res)>(res));
-        }, [=] {
-        callback->postReply(tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
-        }, m_executorEnvironment, true, true);
-
-    m_query = std::move(asyncQuery);
-    blockchain->blockTime(m_height, blockchainCallback);
+    blockTime(m_height, callback);
 }
 
 void AutorunBlockchainQueryHandler::blockGenerationTime(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (m_height == 0) {
+        callback->postReply(UINT64_MAX);
+        return;
+    }
+
+    auto[_, previousBlockCallback] = createAsyncQuery<uint64_t>([this, callback](auto&& res) {
+        if (!res) {
+            callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        }
+
+        auto[_, actualBlockCallback] = createAsyncQuery<uint64_t>([callback, prevBlockTime = *res](auto&& res) {
+            if (!res) {
+                callback->postReply(tl::unexpected<std::error_code>(res.error()));
+            }
+
+            callback->postReply(*res - prevBlockTime);
+
+        }, [] {}, m_executorEnvironment, false, false);
+
+        blockTime(m_height, actualBlockCallback);
+
+    }, [] {}, m_executorEnvironment, false, false);
+
+    blockTime(m_height - 1, previousBlockCallback);
+}
+
+void AutorunBlockchainQueryHandler::blockTime(uint64_t height,
+                                              const std::shared_ptr<AsyncQueryCallback<uint64_t>>& callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -77,15 +97,19 @@ void AutorunBlockchainQueryHandler::blockGenerationTime(std::shared_ptr<AsyncQue
         return;
     }
 
-    auto[asyncQuery, blockchainCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) {
+    auto[asyncQuery, blockchainCallback] = createAsyncQuery<blockchain::Block>([=, this](auto&& res) {
         m_query.reset();
-        callback->postReply(std::forward<decltype(res)>(res));
-        }, [=] {
-        callback->postReply(tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
-        }, m_executorEnvironment, true, true);
+        if (!res) {
+            callback->postReply(tl::unexpected<std::error_code>(res.error()));
+        }
+        callback->postReply(res->m_blockTime);
+    }, [=] {
+        callback->postReply(
+                tl::make_unexpected(blockchain::make_error_code(blockchain::BlockchainError::blockchain_unavailable)));
+    }, m_executorEnvironment, true, true);
 
     m_query = std::move(asyncQuery);
-    blockchain->blockGenerationTime(m_height, blockchainCallback);
+    blockchain->block(height, blockchainCallback);
 }
 
 }

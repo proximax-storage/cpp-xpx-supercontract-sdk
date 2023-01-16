@@ -62,7 +62,7 @@ public:
 
     void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
-    void addBlockInfo(const Block& block) override;
+    void addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) override;
 
     void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override;
 

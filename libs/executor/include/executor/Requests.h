@@ -28,9 +28,4 @@ struct AddContractRequest {
 struct RemoveRequest {
 };
 
-struct Block{
-    BlockHash m_blockHash;
-    uint64_t m_height;
-};
-
 }
