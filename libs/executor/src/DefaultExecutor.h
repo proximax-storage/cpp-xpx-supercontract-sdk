@@ -11,6 +11,7 @@
 #include "executor/Executor.h"
 #include "ExecutorEnvironment.h"
 #include "Contract.h"
+#include <blockchain/CachedBlockchain.h>
 
 namespace sirius::contract {
 
@@ -36,7 +37,7 @@ private:
     std::unique_ptr<ExecutorEventHandler> m_eventHandler;
     std::shared_ptr<messenger::Messenger> m_messenger;
     std::shared_ptr<storage::Storage> m_storage;
-    std::shared_ptr<blockchain::Blockchain> m_blockchain;
+    std::shared_ptr<blockchain::CachedBlockchain> m_blockchain;
 
     std::shared_ptr<vm::VirtualMachine> m_virtualMachine;
 

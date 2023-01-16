@@ -89,6 +89,8 @@ void DefaultExecutor::addManualCall(const ContractKey& key, CallRequestParameter
 void DefaultExecutor::addBlockInfo(const ContractKey& key, uint64_t blockHeight, blockchain::Block&& block) {
     m_threadManager.execute([=, this, block = std::move(block)] {
 
+        m_blockchain->addBlock(blockHeight, block);
+
         auto contractIt = m_contracts.find(key);
 
         if (contractIt == m_contracts.end()) {
