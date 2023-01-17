@@ -6,22 +6,17 @@
 
 #pragma once
 
-#include "Block.h"
-
 #include <system_error>
+
 #include <supercontract/Identifiers.h>
 #include <supercontract/GlobalEnvironment.h>
 #include <supercontract/AsyncQuery.h>
 
 namespace sirius::contract::blockchain {
 
-class Blockchain {
-
-public:
-
-    virtual ~Blockchain() = default;
-
-    virtual void block(uint64_t height, std::shared_ptr<AsyncQueryCallback<Block>> callback) = 0;
+struct Block {
+    BlockHash m_blockHash;
+    uint64_t m_blockTime;
 };
 
 }

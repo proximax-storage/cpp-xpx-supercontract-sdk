@@ -14,6 +14,8 @@
 
 #include "ContractBlockchainEventHandler.h"
 
+#include <blockchain/Block.h>
+
 namespace sirius::contract {
 
 class BaseBatchesManager {
@@ -22,7 +24,7 @@ public:
 
     virtual void addManualCall(const CallRequestParameters&) = 0;
 
-    virtual void addBlockInfo(const Block& block) = 0;
+    virtual void addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) = 0;
 
     virtual bool hasNextBatch() = 0;
 

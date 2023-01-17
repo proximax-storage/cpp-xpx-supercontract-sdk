@@ -15,6 +15,8 @@
 namespace sirius::contract::test {
 #define TEST_NAME DefaultBatchesManagerTest
 
+using namespace blockchain;
+
 TEST(TEST_NAME, BatchTest) {
     // Test procedure:
     // addCall
@@ -59,7 +61,7 @@ TEST(TEST_NAME, BatchTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -90,12 +92,12 @@ TEST(TEST_NAME, BatchTest) {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[0]);
-        batchesManager->addBlockInfo(blocks[1]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(1, blocks[0]);
+        batchesManager->addBlockInfo(2, blocks[1]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[2]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -176,7 +178,7 @@ TEST(TEST_NAME, BatchTest) {
     for(uint64_t i=1; i<=4; i++){
          Block block = {
                  utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
          };
          blocks.push_back(block);
      }
@@ -212,16 +214,16 @@ TEST(TEST_NAME, BatchTest) {
          batchesManager->addManualCall(requests[5]);
          batchesManager->addManualCall(requests[6]);
          batchesManager->addManualCall(requests[7]);
-         batchesManager->addBlockInfo(blocks[0]);
+         batchesManager->addBlockInfo(1, blocks[0]);
          batchesManager->addManualCall(requests[8]);
          batchesManager->addManualCall(requests[9]);
          batchesManager->addManualCall(requests[10]);
          batchesManager->addManualCall(requests[11]);
-         batchesManager->addBlockInfo(blocks[1]);
+         batchesManager->addBlockInfo(2, blocks[1]);
          batchesManager->addManualCall(requests[12]);
          batchesManager->addManualCall(requests[13]);
-         batchesManager->addBlockInfo(blocks[2]);
-         batchesManager->addBlockInfo(blocks[3]);
+         batchesManager->addBlockInfo(3, blocks[2]);
+         batchesManager->addBlockInfo(4, blocks[3]);
      });
      sleep(3);
      std::promise<void> barrier;
@@ -312,7 +314,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -342,13 +344,13 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->cancelBatchesTill(2);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(2, blocks[1]);
         batchesManager->addManualCall(requests[2]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -424,7 +426,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -454,14 +456,14 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(2, blocks[1]);
         batchesManager->cancelBatchesTill(2);
         batchesManager->addManualCall(requests[2]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -537,7 +539,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -567,13 +569,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(2, blocks[1]);
         batchesManager->addManualCall(requests[2]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -650,7 +652,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -680,14 +682,14 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(2, blocks[1]);
         batchesManager->setAutomaticExecutionsEnabledSince(std::nullopt);
         batchesManager->addManualCall(requests[2]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -786,7 +788,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //    for(uint64_t i=1; i<=12; i++){
 //        Block block = {
 //                utils::generateRandomByteValue<BlockHash>(),
-//                i
+//                0U
 //        };
 //        blocks.push_back(block);
 //    }
@@ -820,27 +822,27 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //
 //    threadManager.execute([&] {
 //        batchesManager->setAutomaticExecutionsEnabledSince(0);
-//        batchesManager->addBlockInfo(blocks[0]);
-//        batchesManager->addBlockInfo(blocks[1]);
+//        batchesManager->addBlockInfo(1, blocks[0]);
+//        batchesManager->addBlockInfo(2, blocks[1]);
 //        batchesManager->addManualCall(requests[0]);
-//        batchesManager->addBlockInfo(blocks[2]);
+//        batchesManager->addBlockInfo(3, blocks[2]);
 //        batchesManager->addManualCall(requests[1]);
-//        batchesManager->addBlockInfo(blocks[3]);
+//        batchesManager->addBlockInfo(4, blocks[3]);
 //
 //        batchesManager->setAutomaticExecutionsEnabledSince(9);
-//        batchesManager->addBlockInfo(blocks[4]);
-//        batchesManager->addBlockInfo(blocks[5]);
+//        batchesManager->addBlockInfo(5, blocks[4]);
+//        batchesManager->addBlockInfo(6, blocks[5]);
 //        batchesManager->addManualCall(requests[2]);
-//        batchesManager->addBlockInfo(blocks[6]);
+//        batchesManager->addBlockInfo(7, blocks[6]);
 //        batchesManager->addManualCall(requests[3]);
-//        batchesManager->addBlockInfo(blocks[7]);
+//        batchesManager->addBlockInfo(8, blocks[7]);
 //
-//        batchesManager->addBlockInfo(blocks[8]);
-//        batchesManager->addBlockInfo(blocks[9]);
+//        batchesManager->addBlockInfo(9, blocks[8]);
+//        batchesManager->addBlockInfo(20, blocks[9]);
 //        batchesManager->addManualCall(requests[4]);
-//        batchesManager->addBlockInfo(blocks[10]);
+//        batchesManager->addBlockInfo(21, blocks[10]);
 //        batchesManager->addManualCall(requests[5]);
-//        batchesManager->addBlockInfo(blocks[11]);
+//        batchesManager->addBlockInfo(22, blocks[11]);
 //    });
 //    sleep(3);
 //    std::promise<void> barrier;
@@ -962,7 +964,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     for(uint64_t i=1; i<=12; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -991,26 +993,26 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addBlockInfo(blocks[0]);
-        batchesManager->addBlockInfo(blocks[1]);
+        batchesManager->addBlockInfo(1, blocks[0]);
+        batchesManager->addBlockInfo(2, blocks[1]);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
         batchesManager->setAutomaticExecutionsEnabledSince(std::nullopt);
-        batchesManager->addBlockInfo(blocks[4]);
-        batchesManager->addBlockInfo(blocks[5]);
+        batchesManager->addBlockInfo(5, blocks[4]);
+        batchesManager->addBlockInfo(6, blocks[5]);
         batchesManager->addManualCall(requests[2]);
-        batchesManager->addBlockInfo(blocks[6]);
+        batchesManager->addBlockInfo(7, blocks[6]);
         batchesManager->addManualCall(requests[3]);
-        batchesManager->addBlockInfo(blocks[7]);
+        batchesManager->addBlockInfo(8, blocks[7]);
         batchesManager->setAutomaticExecutionsEnabledSince(9);
-        batchesManager->addBlockInfo(blocks[8]);
-        batchesManager->addBlockInfo(blocks[9]);
+        batchesManager->addBlockInfo(9, blocks[8]);
+        batchesManager->addBlockInfo(20, blocks[9]);
         batchesManager->addManualCall(requests[4]);
-        batchesManager->addBlockInfo(blocks[10]);
+        batchesManager->addBlockInfo(21, blocks[10]);
         batchesManager->addManualCall(requests[5]);
-        batchesManager->addBlockInfo(blocks[11]);
+        batchesManager->addBlockInfo(22, blocks[11]);
     });
     sleep(3);
     std::promise<void> barrier;
@@ -1107,7 +1109,7 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -1136,12 +1138,12 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[1]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(2, blocks[1]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(10);
     std::promise<void> barrier;
@@ -1218,7 +1220,7 @@ TEST(TEST_NAME, DelayBatchesTest) {
     for(uint64_t i=1; i<=4; i++){
         Block block = {
                 utils::generateRandomByteValue<BlockHash>(),
-                i
+                0U
         };
         blocks.push_back(block);
     }
@@ -1247,12 +1249,12 @@ TEST(TEST_NAME, DelayBatchesTest) {
 
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
-        batchesManager->addBlockInfo(blocks[0]);
+        batchesManager->addBlockInfo(1, blocks[0]);
         batchesManager->addManualCall(requests[0]);
-        batchesManager->addBlockInfo(blocks[1]);
-        batchesManager->addBlockInfo(blocks[2]);
+        batchesManager->addBlockInfo(2, blocks[1]);
+        batchesManager->addBlockInfo(3, blocks[2]);
         batchesManager->addManualCall(requests[1]);
-        batchesManager->addBlockInfo(blocks[3]);
+        batchesManager->addBlockInfo(4, blocks[3]);
     });
     sleep(10);
     std::promise<void> barrier;

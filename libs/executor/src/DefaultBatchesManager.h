@@ -78,7 +78,7 @@ public:
 
     Batch nextBatch() override;
 
-    void addBlockInfo(const Block& block) override;
+    void addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) override;
 
     void delayBatch(Batch&& batch) override;
 
