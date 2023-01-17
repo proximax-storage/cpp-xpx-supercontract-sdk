@@ -249,29 +249,50 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
 void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+	{
+		auto itStart = std::lower_bound(
+				m_batches.begin(),
+				m_batches.end(),
+				m_unmodifiableUpTo,
+				[](const DraftBatch& batch, const uint64_t& height) {
+					return batch.m_blockHeight < height;
+				});
 
-    for (auto it = m_batches.begin(), nextIt = it;
-         it != m_batches.end() && it->second.m_blockHeight < blockHeight; it = nextIt) {
+		for (auto it = itStart, nextIt = it;
+			 it != m_batches.end() && it->second.m_blockHeight < blockHeight; it = nextIt) {
+			nextIt++;
 
-        nextIt++;
+			auto& batch = it->second;
 
-        auto& batch = it->second;
+			if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
+				batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
+			} else if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
+				ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED,
+					   m_executorEnvironment.logger());
+				batch.m_requests.pop_back();
+			}
 
-        if (batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC) {
-            batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
-        } else if (batch.m_requests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC) {
-            ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED,
-                   m_executorEnvironment.logger());
-            batch.m_requests.pop_back();
-        }
+			if (batch.m_requests.empty()) {
+				m_batches.erase(it);
+			}
+		}
+	}
+	{
+		auto itStart = m_autorunCallInfos.lower_bound(m_unmodifiableUpTo);
 
-        if (batch.m_requests.empty()) {
-            m_batches.erase(it);
-        }
-    }
-    while (!m_autorunCallInfos.empty() && m_autorunCallInfos.begin()->first < blockHeight) {
-        m_autorunCallInfos.erase(m_autorunCallInfos.begin());
-    }
+		for (auto it = itStart; it != m_autorunCallInfos.end() && it->first < blockHeight;) {
+			it = m_autorunCallInfos.erase(it);
+		}
+	}
+}
+
+void DefaultBatchesManager::setUnmodifiableUpTo(uint64_t blockHeight) {
+
+	ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+	ASSERT(blockHeight > m_unmodifiableUpTo, m_executorEnvironment.logger())
+
+	m_unmodifiableUpTo = blockHeight;
 }
 
 }

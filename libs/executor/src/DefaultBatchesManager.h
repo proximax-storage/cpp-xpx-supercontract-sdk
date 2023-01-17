@@ -55,6 +55,7 @@ private:
     uint64_t m_nextDraftBatchIndex = 0;
 
     std::optional<uint64_t> m_automaticExecutionsEnabledSince;
+	uint64_t m_unmodifiableUpTo = 0;
 
     std::map<uint64_t, AutorunCallInfo> m_autorunCallInfos;
 
@@ -80,6 +81,8 @@ public:
     void addBlockInfo(const Block& block) override;
 
     void delayBatch(Batch&& batch) override;
+
+	void setUnmodifiableUpTo(uint64_t blockHeight) override;
 
 private:
 
