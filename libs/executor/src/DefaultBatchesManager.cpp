@@ -21,9 +21,10 @@ void DefaultBatchesManager::addManualCall(const CallRequestParameters& request) 
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
-                             DraftBatch::BatchFormationStatus::MANUAL) {
-        m_batches.try_emplace(m_nextDraftBatchIndex++, request.m_referenceInfo.m_blockHeight);
+    auto height = request.m_referenceInfo.m_blockHeight;
+
+    if (m_batches.empty() || (--m_batches.end())->first != height) {
+        m_batches.try_emplace(height);
     }
 
     auto batchIt = --m_batches.end();
@@ -95,9 +96,8 @@ void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain:
             batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
         }
     } else {
-        if (m_batches.empty() || (--m_batches.end())->second.m_batchFormationStatus !=
-                                 DraftBatch::BatchFormationStatus::MANUAL) {
-            m_batches.try_emplace(m_nextDraftBatchIndex++, blockHeight);
+        if (m_batches.empty() || (--m_batches.end())->first < blockHeight) {
+            m_batches.try_emplace(blockHeight);
         }
 
         auto batchIt = --m_batches.end();
@@ -111,7 +111,7 @@ void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain:
 
         auto callManager = runAutorunCall(callId, blockHeight);
 
-        m_autorunCallInfos[blockHeight] = AutorunCallInfo{batchIt->first, callId, block.m_blockHash, std::move(callManager), Timer()};
+        m_autorunCallInfos[blockHeight] = AutorunCallInfo{callId, block.m_blockHash, std::move(callManager), Timer()};
     }
 }
 
@@ -158,7 +158,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
 
     ASSERT(callIt->second.m_callExecutionManager, m_executorEnvironment.logger())
 
-    auto batchIt = m_batches.find(callIt->second.m_batchIndex);
+    auto batchIt = m_batches.find(callIt->first);
 
     ASSERT(batchIt != m_batches.end(), m_executorEnvironment.logger())
     ASSERT(batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::AUTOMATIC,
@@ -250,16 +250,10 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight)
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 	{
-		auto itStart = std::lower_bound(
-				m_batches.begin(),
-				m_batches.end(),
-				m_unmodifiableUpTo,
-				[](const DraftBatch& batch, const uint64_t& height) {
-					return batch.m_blockHeight < height;
-				});
+		auto itStart = m_batches.lower_bound(m_unmodifiableUpTo);
 
 		for (auto it = itStart, nextIt = it;
-			 it != m_batches.end() && it->second.m_blockHeight < blockHeight; it = nextIt) {
+			 it != m_batches.end() && it->first < blockHeight; it = nextIt) {
 			nextIt++;
 
 			auto& batch = it->second;

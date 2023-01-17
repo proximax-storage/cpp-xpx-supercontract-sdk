@@ -27,18 +27,11 @@ private:
             MANUAL, AUTOMATIC, FINISHED
         };
 
-        DraftBatch(uint64_t blockHeight): m_blockHeight(blockHeight) {}
-
-        // This implementation of batches manager assumes
-        // that all the calls in the same batch are from the same block
-        uint64_t m_blockHeight;
-
         BatchFormationStatus m_batchFormationStatus = BatchFormationStatus::MANUAL;
         std::deque<vm::CallRequest> m_requests;
     };
 
     struct AutorunCallInfo {
-        uint64_t m_batchIndex;
         CallId m_callId;
         BlockHash m_blockHash;
         std::unique_ptr<CallExecutionManager> m_callExecutionManager;
@@ -51,8 +44,6 @@ private:
     uint64_t m_nextBatchIndex;
 
     uint64_t m_storageSynchronizedBatchIndex = 0;
-
-    uint64_t m_nextDraftBatchIndex = 0;
 
     std::optional<uint64_t> m_automaticExecutionsEnabledSince;
 	uint64_t m_unmodifiableUpTo = 0;
