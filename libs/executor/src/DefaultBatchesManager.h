@@ -75,6 +75,8 @@ public:
 
 	void setUnmodifiableUpTo(uint64_t blockHeight) override;
 
+    bool isBatchValid(const Batch& batch) override;
+
 private:
 
     void onSuperContractCallExecuted(uint64_t blockHeight, vm::CallExecutionResult&& executionResult);
@@ -90,6 +92,7 @@ private:
     // Exclusive
     void disableAutomaticExecutionsTill(uint64_t batchIndex);
 
+    void delayedBatchExtractAutomaticCall();
 };
 
 }

@@ -38,6 +38,10 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 
     m_automaticExecutionsEnabledSince = blockHeight;
 
+    if (m_delayedBatch && !isBatchValid(*m_delayedBatch)) {
+        delayedBatchExtractAutomaticCall();
+    }
+
     if (!m_automaticExecutionsEnabledSince) {
         disableAutomaticExecutionsTill(UINT64_MAX);
      }
@@ -244,6 +248,10 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
     ASSERT(batch.m_batchIndex < m_nextBatchIndex, m_executorEnvironment.logger())
 
     m_delayedBatch = std::move(batch);
+
+    if (!isBatchValid(*m_delayedBatch)) {
+        delayedBatchExtractAutomaticCall();
+    }
 }
 
 void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight) {
@@ -287,6 +295,50 @@ void DefaultBatchesManager::setUnmodifiableUpTo(uint64_t blockHeight) {
 	ASSERT(blockHeight > m_unmodifiableUpTo, m_executorEnvironment.logger())
 
 	m_unmodifiableUpTo = blockHeight;
+}
+
+bool DefaultBatchesManager::isBatchValid(const Batch& batch) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(!batch.m_callRequests.empty(), m_executorEnvironment.logger())
+
+    const auto& lastCall = batch.m_callRequests.back();
+
+    if (lastCall.m_callLevel == vm::CallRequest::CallLevel::MANUAL) {
+        return true;
+    }
+
+    auto callBlockHeight = lastCall.m_referenceInfo.m_blockHeight;
+
+    if (callBlockHeight < m_unmodifiableUpTo) {
+        return true;
+    }
+
+    if (m_automaticExecutionsEnabledSince && *m_automaticExecutionsEnabledSince <= callBlockHeight) {
+        return true;
+    }
+
+    return false;
+}
+
+void DefaultBatchesManager::delayedBatchExtractAutomaticCall() {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(m_delayedBatch, m_executorEnvironment.logger())
+
+    ASSERT(m_delayedBatch->m_batchIndex + 1 == m_nextBatchIndex, m_executorEnvironment.logger())
+
+    ASSERT(m_delayedBatch->m_callRequests.back().m_callLevel == vm::CallRequest::CallLevel::AUTOMATIC,
+           m_executorEnvironment.logger())
+
+    m_delayedBatch->m_callRequests.pop_back();
+
+    if (m_delayedBatch->m_callRequests.empty()) {
+        m_nextBatchIndex--;
+        m_delayedBatch.reset();
+    }
 }
 
 }

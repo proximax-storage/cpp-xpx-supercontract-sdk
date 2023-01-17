@@ -37,6 +37,8 @@ public:
 
     virtual void delayBatch(Batch&& batch) = 0;
 
+    virtual bool isBatchValid(const Batch& batch) = 0;
+
     virtual void cancelBatchesTill(uint64_t batchIndex) = 0;
 };
 
