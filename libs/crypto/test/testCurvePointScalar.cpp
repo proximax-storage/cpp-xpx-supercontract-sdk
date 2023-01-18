@@ -7,6 +7,7 @@
 #include "crypto/CurvePoint.h"
 #include "utils/types.h"
 #include "gtest/gtest.h"
+#include <random>
 extern "C" {
 #include <external/ref10/ge.h>
 }
@@ -585,4 +586,22 @@ TEST(TEST_NAME, NegativeCurvePointLarge) {
     expected *= num;
     ASSERT_EQ(-a, expected);
 }
+
+TEST(TEST_NAME, Serialization) {
+    Hash256 scalarH;
+    std::seed_seq seed({17});
+    std::mt19937 rng(seed);
+    std::generate_n(scalarH.begin(), sizeof(scalarH), rng);
+
+    crypto::Scalar s(scalarH.array());
+    crypto::CurvePoint a = crypto::CurvePoint::BasePoint() * s;
+
+    auto buffer = a.toBytes();
+
+    crypto::CurvePoint b;
+    b.fromBytes(buffer);
+
+    ASSERT_EQ(a, b);
+}
+
 } // namespace sirius::contract::test
