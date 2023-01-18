@@ -104,7 +104,7 @@ void DefaultExecutor::addBlock(const ContractKey& contractKey, uint64_t height) 
             return;
         }
 
-        contractIt->second->addBlock(height);
+        contractIt->second->onBlockPublished(height);
     });
 }
 

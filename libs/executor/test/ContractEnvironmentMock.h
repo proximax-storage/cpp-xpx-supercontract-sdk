@@ -8,6 +8,7 @@
 
 #include "ContractEnvironment.h"
 #include "ExecutorEnvironment.h"
+#include "BatchesManagerMock.h"
 
 namespace sirius::contract::test {
 
@@ -21,17 +22,17 @@ private:
     ProofOfExecution m_proofOfExecution;
 
 public:
+
+    std::unique_ptr<BaseBatchesManager> m_batchesManager;
+
+public:
     DriveKey m_driveKey;
     ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
                             ContractKey& contractKey,
                             uint64_t automaticExecutionsSCLimit,
-                            uint64_t automaticExecutionsSMLimit);
-
-    ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
-                            ContractKey& contractKey,
-                            uint64_t automaticExecutionsSCLimit,
                             uint64_t automaticExecutionsSMLimit,
-                            ContractConfig config);
+                            ContractConfig contractConfig = ContractConfig(),
+                            std::unique_ptr<BaseBatchesManager> batchesManager = std::make_unique<BatchesManagerMock>());
 
     const ContractKey& contractKey() const override;
 
@@ -49,9 +50,7 @@ public:
 
     void addSynchronizationTask() override;
 
-    void delayBatchExecution(Batch batch) override {}
-
-    void cancelBatchesUpTo(uint64_t index) override;
+    BaseBatchesManager& batchesManager() override;
 
     ProofOfExecution& proofOfExecution() override;
 

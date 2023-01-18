@@ -11,22 +11,15 @@ namespace sirius::contract::test {
 ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
                                                  ContractKey& contractKey,
                                                  uint64_t automaticExecutionsSCLimit,
-                                                 uint64_t automaticExecutionsSMLimit)
+                                                 uint64_t automaticExecutionsSMLimit,
+                                                 ContractConfig contractConfig,
+                                                 std::unique_ptr<BaseBatchesManager> batchesManager)
         : m_contractKey(contractKey)
           , m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
           , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
-          , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair()) {}
-
-ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEnvironment,
-                                                 ContractKey& contractKey,
-                                                 uint64_t automaticExecutionsSCLimit,
-                                                 uint64_t automaticExecutionsSMLimit,
-                                                 ContractConfig config)
-        : m_contractKey(contractKey)
-        , m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
-        , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
-        , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair())
-        , m_contractConfig(config){}
+          , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair())
+          , m_contractConfig(contractConfig)
+          , m_batchesManager(std::move(batchesManager)) {}
 
 const ContractKey& ContractEnvironmentMock::contractKey() const { return m_contractKey; }
 
@@ -40,12 +33,14 @@ uint64_t ContractEnvironmentMock::automaticExecutionsSMLimit() const { return m_
 
 const ContractConfig& ContractEnvironmentMock::contractConfig() const { return m_contractConfig; }
 
-void ContractEnvironmentMock::cancelBatchesUpTo(uint64_t index) {}
-
 void ContractEnvironmentMock::addSynchronizationTask() {}
 
 ProofOfExecution& ContractEnvironmentMock::proofOfExecution() {
     return m_proofOfExecution;
+}
+
+BaseBatchesManager& ContractEnvironmentMock::batchesManager() {
+    return *m_batchesManager;
 }
 
 }

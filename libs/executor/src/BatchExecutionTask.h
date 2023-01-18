@@ -96,6 +96,8 @@ public:
 
     bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override;
 
+    bool onBlockPublished(uint64_t height) override;
+
     // endregion
 
 private:

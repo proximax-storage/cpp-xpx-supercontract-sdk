@@ -793,7 +793,7 @@ void BatchExecutionTask::computeProofOfExecution() {
 void BatchExecutionTask::onUnableToExecuteBatch() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_contractEnvironment.delayBatchExecution(m_batch);
+    m_contractEnvironment.batchesManager().delayBatch(Batch(m_batch));
 
     m_finished = true;
 
@@ -851,6 +851,23 @@ void BatchExecutionTask::shareOpinions() {
                                 m_executorEnvironment.executorConfig().shareOpinionTimeoutMs(), [this] {
                 shareOpinions();
             });
+}
+
+bool BatchExecutionTask::onBlockPublished(uint64_t height) {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    auto& batchesManager = m_contractEnvironment.batchesManager();
+
+    if (!batchesManager.isBatchValid(m_batch)) {
+        m_contractEnvironment.batchesManager().delayBatch(Batch(m_batch));
+
+        m_finished = true;
+
+        m_contractEnvironment.finishTask();
+    }
+
+    return true;
 }
 
 }

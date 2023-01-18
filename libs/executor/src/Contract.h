@@ -31,8 +31,6 @@ public:
 
     virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void addBlock(uint64_t blockHeight) = 0;
-
     virtual void removeContract(const RemoveRequest&) = 0;
 
     virtual void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) = 0;

@@ -31,6 +31,10 @@ public:
     virtual bool onStorageSynchronizedPublished(uint64_t batchIndex ) {
         return false;
     }
+
+    virtual bool onBlockPublished(uint64_t height) {
+        return false;
+    }
 };
 
 }

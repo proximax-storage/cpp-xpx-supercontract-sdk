@@ -62,8 +62,6 @@ public:
 
     void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
-    void addBlock(uint64_t blockHeight) override;
-
     void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override;
 
 public:
@@ -75,6 +73,8 @@ public:
     bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override;
 
     bool onStorageSynchronizedPublished(uint64_t batchIndex) override;
+
+    bool onBlockPublished(uint64_t blockHeight) override;
 
     // endregion
 
@@ -108,9 +108,7 @@ public:
 
     void addSynchronizationTask() override;
 
-    void delayBatchExecution(Batch batch) override;
-
-    void cancelBatchesUpTo(uint64_t index) override;
+    BaseBatchesManager& batchesManager() override;
 
     ProofOfExecution& proofOfExecution() override;
 

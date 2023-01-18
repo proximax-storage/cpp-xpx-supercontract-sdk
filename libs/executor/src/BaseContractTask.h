@@ -34,8 +34,6 @@ public:
     virtual void run() = 0;
 
     virtual void terminate() = 0;
-
-
 };
 
 }

@@ -76,11 +76,17 @@ void DefaultContract::setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executo
     m_executors = std::move(executors);
 }
 
-void DefaultContract::addBlock(uint64_t blockHeight) {
+bool DefaultContract::onBlockPublished(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     m_batchesManager->addBlock(blockHeight);
+
+    if (m_task) {
+        m_task->onBlockPublished(blockHeight);
+    }
+
+    return true;
 }
 
 void DefaultContract::setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) {
@@ -287,18 +293,11 @@ void DefaultContract::runSynchronizationTask() {
     m_task->run();
 }
 
-void DefaultContract::delayBatchExecution(Batch batch) {
+BaseBatchesManager& DefaultContract::batchesManager() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_batchesManager->delayBatch(std::move(batch));
-}
-
-void DefaultContract::cancelBatchesUpTo(uint64_t index) {
-
-    ASSERT(isSingleThread(), m_executorEnvironment.logger())
-
-    m_batchesManager->cancelBatchesTill(index);
+    return *m_batchesManager;
 }
 
 ProofOfExecution& DefaultContract::proofOfExecution() {
