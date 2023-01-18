@@ -7,6 +7,7 @@
 #include "DefaultBatchesManager.h"
 #include <virtualMachine/ExecutionErrorConidition.h>
 #include <crypto/Hashes.h>
+#include <utils/Serializer.h>
 #include "AutorunBlockchainQueryHandler.h"
 
 namespace sirius::contract {
@@ -85,7 +86,7 @@ Batch DefaultBatchesManager::nextBatch() {
     return Batch{m_nextBatchIndex++, blockHeight, std::move(batch.m_requests)};
 }
 
-void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) {
+void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -111,13 +112,18 @@ void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain:
 
         CallId callId;
 
-        std::seed_seq seed(block.m_blockHash.begin(), block.m_blockHash.end());
+        std::ostringstream seedBuilder;
+        seedBuilder << utils::serialize(m_contractEnvironment.contractKey());
+        seedBuilder << utils::serialize(blockHeight);
+        std::string seedStr = seedBuilder.str();
+
+        std::seed_seq seed(seedStr.begin(), seedStr.end());
         std::mt19937 rng(seed);
         std::generate_n(callId.begin(), sizeof(CallId), rng);
 
         auto callManager = runAutorunCall(callId, blockHeight);
 
-        m_autorunCallInfos[blockHeight] = AutorunCallInfo{callId, block.m_blockHash, std::move(callManager), Timer()};
+        m_autorunCallInfos[blockHeight] = AutorunCallInfo{callId, std::move(callManager), Timer()};
     }
 }
 
@@ -171,11 +177,22 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
            m_executorEnvironment.logger())
 
     if (executionResult.m_success && executionResult.m_return == 0) {
+
+        auto height = callIt->first;
+
         CallReferenceInfo info;
         info.m_callerKey = CallerKey();
-        info.m_blockHeight = callIt->first;
+        info.m_blockHeight = height;
+
+        Hash256 callIdH;
+
+        sirius::crypto::Sha3_256_Builder hasher;
+        hasher.update(m_contractEnvironment.contractKey());
+        hasher.update({reinterpret_cast<const uint8_t*>(&height), sizeof(height)});
+        hasher.final(callIdH);
+
         batchIt->second.m_requests.emplace_back(CallRequestParameters{
-                CallId{callIt->second.m_blockHash.array()},
+                CallId{callIdH.array()},
                 m_executorEnvironment.executorConfig().automaticExecutionFile(),
                 m_executorEnvironment.executorConfig().automaticExecutionFunction(),
                 {},

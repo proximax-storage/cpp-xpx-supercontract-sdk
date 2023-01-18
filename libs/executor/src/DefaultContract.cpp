@@ -76,11 +76,11 @@ void DefaultContract::setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executo
     m_executors = std::move(executors);
 }
 
-void DefaultContract::addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) {
+void DefaultContract::addBlock(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_batchesManager->addBlockInfo(blockHeight, block);
+    m_batchesManager->addBlock(blockHeight);
 }
 
 void DefaultContract::setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) {
@@ -96,7 +96,13 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    proofOfExecution().addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
+    m_proofOfExecution.addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
+
+    m_batchesManager->setUnmodifiableUpTo(info.m_automaticExecutionsCheckedUpTo);
+
+    if (!info.m_automaticExecutionsEnabled) {
+        m_batchesManager->setAutomaticExecutionsEnabledSince({});
+    }
 
     while (!m_unknownSuccessfulBatchOpinions.empty()
            && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {

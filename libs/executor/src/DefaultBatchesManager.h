@@ -33,7 +33,6 @@ private:
 
     struct AutorunCallInfo {
         CallId m_callId;
-        BlockHash m_blockHash;
         std::unique_ptr<CallExecutionManager> m_callExecutionManager;
         Timer m_repeatTimer;
     };
@@ -69,7 +68,7 @@ public:
 
     Batch nextBatch() override;
 
-    void addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) override;
+    void addBlock(uint64_t blockHeight) override;
 
     void delayBatch(Batch&& batch) override;
 

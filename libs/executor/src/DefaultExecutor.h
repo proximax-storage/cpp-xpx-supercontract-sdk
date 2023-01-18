@@ -54,7 +54,9 @@ public:
 
     void addManualCall(const ContractKey& key, CallRequestParameters&& request) override;
 
-    void addBlockInfo(const ContractKey& key, uint64_t blockHeight, blockchain::Block&& block) override;
+    void addBlockInfo(uint64_t blockHeight, blockchain::Block&& block) override;
+
+    void addBlock(const ContractKey& contractKey, uint64_t height) override;
 
     void removeContract(const ContractKey& key, RemoveRequest&& request) override;
 

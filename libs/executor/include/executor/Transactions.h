@@ -114,6 +114,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     Hash256                     m_driveState;
     crypto::CurvePoint          m_PoExVerificationInfo;
     uint64_t                    m_automaticExecutionsCheckedUpTo;
+    bool                        m_automaticExecutionsEnabled;
     std::set<ExecutorKey>   	m_cosigners;
 };
 

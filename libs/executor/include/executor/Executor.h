@@ -34,7 +34,9 @@ public:
     virtual void
     setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) = 0;
 
-    virtual void addBlockInfo(const ContractKey&, uint64_t blockHeight, blockchain::Block&&) = 0;
+    virtual void addBlockInfo(uint64_t blockHeight, blockchain::Block&&) = 0;
+
+    virtual void addBlock(const ContractKey& contractKey, uint64_t height) = 0;
 
     virtual void removeContract(const ContractKey&, RemoveRequest&&) = 0;
 

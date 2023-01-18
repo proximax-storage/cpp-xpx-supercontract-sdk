@@ -24,7 +24,7 @@ public:
 
     virtual void addManualCall(const CallRequestParameters&) = 0;
 
-    virtual void addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) = 0;
+    virtual void addBlock(uint64_t blockHeight) = 0;
 
     virtual bool hasNextBatch() = 0;
 
