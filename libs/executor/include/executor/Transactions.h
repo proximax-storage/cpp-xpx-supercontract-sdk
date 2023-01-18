@@ -74,6 +74,7 @@ struct SuccessfulBatchInfo {
 struct SuccessfulEndBatchExecutionTransactionInfo {
     ContractKey                         m_contractKey;
     uint64_t                            m_batchIndex;
+    uint64_t                            m_automaticExecutionsCheckedUpTo;
 
     SuccessfulBatchInfo  m_successfulBatchInfo;
     std::vector<SuccessfulCallExecutionInfo>      m_callsExecutionInfo;
@@ -86,6 +87,7 @@ struct SuccessfulEndBatchExecutionTransactionInfo {
 struct UnsuccessfulEndBatchExecutionTransactionInfo {
     ContractKey                         m_contractKey;
     uint64_t                            m_batchIndex;
+    uint64_t                            m_automaticExecutionsCheckedUpTo;
 
     std::vector<UnsuccessfulCallExecutionInfo>      m_callsExecutionInfo;
 
@@ -111,6 +113,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     bool                        m_batchSuccess;
     Hash256                     m_driveState;
     crypto::CurvePoint          m_PoExVerificationInfo;
+    uint64_t                    m_automaticExecutionsCheckedUpTo;
     std::set<ExecutorKey>   	m_cosigners;
 };
 

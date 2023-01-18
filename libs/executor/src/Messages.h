@@ -48,6 +48,7 @@ struct SuccessfulCallExecutionOpinion {
 struct SuccessfulEndBatchExecutionOpinion {
     ContractKey m_contractKey;
     uint64_t m_batchIndex;
+    uint64_t m_automaticExecutionsCheckedUpTo;
 
     SuccessfulBatchInfo m_successfulBatchInfo;
     std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionInfo;
@@ -79,6 +80,7 @@ struct SuccessfulEndBatchExecutionOpinion {
     void serialize(Archive& arch) {
         arch(m_contractKey);
         arch(m_batchIndex);
+        arch(m_automaticExecutionsCheckedUpTo);
         arch(m_successfulBatchInfo);
         arch(m_callsExecutionInfo);
         arch(m_proof);
@@ -94,6 +96,7 @@ private:
 
         os << utils::serialize(m_contractKey);
         os << utils::serialize(m_batchIndex);
+        os << utils::serialize(m_automaticExecutionsCheckedUpTo);
         os << utils::serialize(m_successfulBatchInfo.m_storageHash);
         os << utils::serialize(m_successfulBatchInfo.m_usedStorageSize);
         os << utils::serialize(m_successfulBatchInfo.m_metaFilesSize);
@@ -134,6 +137,7 @@ struct UnsuccessfulCallExecutionOpinion {
 struct UnsuccessfulEndBatchExecutionOpinion {
     ContractKey m_contractKey;
     uint64_t m_batchIndex;
+    uint64_t m_automaticExecutionsCheckedUpTo;
 
     std::vector<UnsuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
@@ -164,6 +168,7 @@ struct UnsuccessfulEndBatchExecutionOpinion {
     void serialize(Archive& arch) {
         arch(m_contractKey);
         arch(m_batchIndex);
+        arch(m_automaticExecutionsCheckedUpTo);
         arch(m_callsExecutionInfo);
         arch(m_proof);
         arch(m_executorKey);
@@ -179,6 +184,7 @@ private:
 
         os << utils::serialize(m_contractKey);
         os << utils::serialize(m_batchIndex);
+        os << utils::serialize(m_automaticExecutionsCheckedUpTo);
 
         for (const auto& call: m_callsExecutionInfo) {
             os << utils::serialize(call.m_callId);

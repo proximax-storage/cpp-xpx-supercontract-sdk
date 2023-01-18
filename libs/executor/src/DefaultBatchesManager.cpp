@@ -76,11 +76,13 @@ Batch DefaultBatchesManager::nextBatch() {
         return batch;
     }
 
-    auto batch = std::move(m_batches.extract(m_batches.begin()).mapped());
+    auto batchIt = m_batches.extract(m_batches.begin());
+    auto batch = std::move(batchIt.mapped());
+    uint64_t blockHeight = batchIt.key();
 
     ASSERT(!batch.m_requests.empty(), m_executorEnvironment.logger())
 
-    return Batch{m_nextBatchIndex++, std::move(batch.m_requests)};
+    return Batch{m_nextBatchIndex++, blockHeight, std::move(batch.m_requests)};
 }
 
 void DefaultBatchesManager::addBlockInfo(uint64_t blockHeight, const blockchain::Block& block) {

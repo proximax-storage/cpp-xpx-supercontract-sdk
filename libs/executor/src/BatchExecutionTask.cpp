@@ -361,6 +361,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
     m_successfulEndBatchOpinion = SuccessfulEndBatchExecutionOpinion();
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
+    m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo = m_batch.m_automaticExecutionsCheckedUpTo;
 
     auto verificationInformation = m_contractEnvironment.proofOfExecution().addToProof(m_proofOfExecutionSecretData);
 
@@ -464,6 +465,10 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
     const auto& otherSuccessfulBatchInfo = other.m_successfulBatchInfo;
     const auto& successfulBatchInfo = m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
+    if (other.m_automaticExecutionsCheckedUpTo != m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo) {
+        return false;
+    }
+
     if (otherSuccessfulBatchInfo.m_PoExVerificationInfo != successfulBatchInfo.m_PoExVerificationInfo) {
         return false;
     }
@@ -524,6 +529,10 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+
+    if (other.m_automaticExecutionsCheckedUpTo != m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo) {
+        return false;
+    }
 
     if (other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
         return false;
@@ -758,6 +767,7 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
     m_unsuccessfulEndBatchOpinion = UnsuccessfulEndBatchExecutionOpinion();
     m_unsuccessfulEndBatchOpinion->m_contractKey = m_successfulEndBatchOpinion->m_contractKey;
     m_unsuccessfulEndBatchOpinion->m_batchIndex = m_successfulEndBatchOpinion->m_batchIndex;
+    m_unsuccessfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo = m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo;
     m_unsuccessfulEndBatchOpinion->m_proof = m_contractEnvironment.proofOfExecution().buildPreviousProof();
     m_unsuccessfulEndBatchOpinion->m_executorKey = m_successfulEndBatchOpinion->m_executorKey;
 
