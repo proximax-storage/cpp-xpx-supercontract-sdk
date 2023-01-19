@@ -287,7 +287,7 @@ void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleT
 
 void DefaultExecutor::setAutomaticExecutionsEnabledSince(
 		const ContractKey& contractKey,
-		const std::optional<uint64_t>& blockHeight) {
+		uint64_t blockHeight) {
 	m_threadManager.execute([=, this] {
 	  auto contractIt = m_contracts.find(contractKey);
 

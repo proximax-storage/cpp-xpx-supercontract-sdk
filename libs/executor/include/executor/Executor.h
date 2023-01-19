@@ -32,7 +32,7 @@ public:
     virtual void addManualCall(const ContractKey&, CallRequestParameters&&) = 0;
 
     virtual void
-    setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) = 0;
+    setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, uint64_t blockHeight) = 0;
 
     virtual void addBlockInfo(uint64_t blockHeight, blockchain::Block&&) = 0;
 

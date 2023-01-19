@@ -117,7 +117,7 @@ public:
 
     void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) override;
 
-	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, const std::optional<uint64_t>& blockHeight) override;
+	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, uint64_t blockHeight) override;
 
 	// endregion
 
