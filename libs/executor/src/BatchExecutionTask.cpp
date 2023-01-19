@@ -81,7 +81,7 @@ void BatchExecutionTask::terminate() {
     m_contractEnvironment.finishTask();
 }
 
-void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, bool isManual, vm::CallExecutionResult&& result) {
+void BatchExecutionTask::onSuperContractCallExecuted(vm::CallRequest&& callRequest, vm::CallExecutionResult&& result) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -90,7 +90,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, bool 
     bool success = result.m_success;
 
     auto[query, callback] = createAsyncQuery<storage::SandboxModificationDigest>(
-            [this, callId, isManual, result = std::move(result)](auto&& digest) mutable {
+            [this, callRequest=std::move(callRequest), result = std::move(result)](auto&& digest) mutable {
 
                 if (!digest) {
                     const auto& ec = digest.error();
@@ -99,7 +99,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(const CallId& callId, bool 
                     return;
                 }
 
-                onAppliedSandboxStorageModifications(callId, isManual, std::forward<vm::CallExecutionResult>(result),
+                onAppliedSandboxStorageModifications(std::move(callRequest), std::forward<vm::CallExecutionResult>(result),
                                                      std::move(*digest));
             }, [] {}, m_executorEnvironment, true, true);
 
@@ -184,12 +184,12 @@ void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRe
 
     ASSERT(!m_callExecutionManager, m_executorEnvironment.logger())
 
-    callRequest.m_proofOfExecutionPrefix = m_proofOfExecutionSecretData;
+    callRequest.m_proofOfExecutionPrefix = m_proofOfExecutionSecretData;;
 
-    bool isManual = callRequest.m_callLevel == vm::CallRequest::CallLevel::MANUAL;
+	bool isManual = callRequest.m_callLevel == vm::CallRequest::CallLevel::MANUAL;
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
-            [this, callId = callRequest.m_callId, isManual=isManual](auto&& res) {
+            [this, callRequest](auto&& res) mutable {
 
                 if (!res) {
                     const auto& ec = res.error();
@@ -199,7 +199,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRe
                     return;
                 }
 
-                onSuperContractCallExecuted(callId, isManual, std::move(*res));
+                onSuperContractCallExecuted(std::move(callRequest), std::move(*res));
             }, [] {}, m_executorEnvironment, true, true);
 
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler;
@@ -230,8 +230,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(vm::CallRequest&& callRe
     m_callExecutionManager->run(callRequest, std::move(callback));
 }
 
-void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& callId,
-                                                              bool manual,
+void BatchExecutionTask::onAppliedSandboxStorageModifications(vm::CallRequest&& callRequest,
                                                               vm::CallExecutionResult&& executionResult,
                                                               storage::SandboxModificationDigest&& digest) {
 
@@ -257,9 +256,12 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(const CallId& call
 
     auto blockchainHandler = m_callExecutionManager->blockchainQueryHandler();
 
+    bool isManual = callRequest.m_callLevel == vm::CallRequest::CallLevel::MANUAL;
+
     m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
-            callId,
-            manual,
+            callRequest.m_callId,
+			isManual,
+			callRequest.m_referenceInfo.m_blockHeight,
             status,
             blockchainHandler->releasedTransactionHash(),
             CallExecutorParticipation{
@@ -617,6 +619,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
         SuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
         callInfo.m_manual = call.m_manual;
+		callInfo.m_block = call.m_block;
         callInfo.m_callExecutionStatus = call.m_callExecutionStatus;
         callInfo.m_releasedTransaction = call.m_releasedTransaction;
         multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
@@ -657,6 +660,8 @@ BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExec
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
         UnsuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
+		callInfo.m_manual = call.m_manual;
+		callInfo.m_block = call.m_block;
         multisigTransactionInfo.m_callsExecutionInfo.push_back(callInfo);
     }
 
@@ -778,6 +783,7 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
         UnsuccessfulCallExecutionOpinion unsuccessfulCall;
         unsuccessfulCall.m_callId = successfulCall.m_callId;
         unsuccessfulCall.m_manual = successfulCall.m_manual;
+        unsuccessfulCall.m_block = successfulCall.m_block;
         unsuccessfulCall.m_executorParticipation = successfulCall.m_executorParticipation;
     }
 

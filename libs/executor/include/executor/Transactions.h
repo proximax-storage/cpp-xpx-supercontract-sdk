@@ -27,32 +27,36 @@ struct CallExecutorParticipation {
 struct SuccessfulCallExecutionInfo {
     CallId                                  m_callId;
     bool                                    m_manual;
+	uint64_t                                m_block;
     uint16_t                                m_callExecutionStatus;
     TransactionHash                         m_releasedTransaction;
     std::vector<CallExecutorParticipation>  m_executorsParticipation;
 
-    template<class Archive>
-    void serialize(Archive& arch) {
-        arch(m_callId);
-        arch(m_manual);
-        arch(m_callExecutionStatus);
-        arch(m_releasedTransaction);
-        arch(m_executorsParticipation);
-    }
+//    template<class Archive>
+//    void serialize(Archive& arch) {
+//        arch(m_callId);
+//        arch(m_manual);
+//		arch(m_block);
+//        arch(m_callExecutionStatus);
+//        arch(m_releasedTransaction);
+//        arch(m_executorsParticipation);
+//    }
 };
 
 struct UnsuccessfulCallExecutionInfo {
 
     CallId                                  m_callId;
     bool                                    m_manual;
+	uint64_t                                m_block;
     std::vector<CallExecutorParticipation>  m_executorsParticipation;
 
-    template<class Archive>
-    void serialize(Archive& arch) {
-        arch(m_callId);
-        arch(m_manual);
-        arch(m_executorsParticipation);
-    }
+//    template<class Archive>
+//    void serialize(Archive& arch) {
+//        arch(m_callId);
+//        arch(m_manual);
+//        arch(m_block);
+//        arch(m_executorsParticipation);
+//    }
 };
 
 struct SuccessfulBatchInfo {
@@ -114,7 +118,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     Hash256                     m_driveState;
     crypto::CurvePoint          m_PoExVerificationInfo;
     uint64_t                    m_automaticExecutionsCheckedUpTo;
-    std::optional<uint64_t>     m_automaticExecutionsEnabled;
+    std::optional<uint64_t>     m_automaticExecutionsEnabledSince;
     std::set<ExecutorKey>   	m_cosigners;
 };
 

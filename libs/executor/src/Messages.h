@@ -31,6 +31,7 @@ struct SuccessfulCallExecutionOpinion {
 
     CallId m_callId;
     bool m_manual = false;
+	uint64_t m_block = 0;
     uint16_t m_callExecutionStatus = 0;
     TransactionHash m_releasedTransaction;
     CallExecutorParticipation m_executorParticipation;
@@ -39,6 +40,7 @@ struct SuccessfulCallExecutionOpinion {
     void serialize(Archive& arch) {
         arch(m_callId);
         arch(m_manual);
+		arch(m_block);
         arch(m_callExecutionStatus);
         arch(m_releasedTransaction);
         arch(m_executorParticipation);
@@ -105,6 +107,7 @@ private:
         for (const auto& call: m_callsExecutionInfo) {
             os << utils::serialize(call.m_callId);
             os << utils::serialize(call.m_manual);
+			os << utils::serialize(call.m_block);
             os << utils::serialize(call.m_callExecutionStatus);
             os << utils::serialize(call.m_releasedTransaction);
         }
@@ -123,13 +126,15 @@ private:
 struct UnsuccessfulCallExecutionOpinion {
 
     CallId m_callId;
-    bool m_manual;
+    bool m_manual = false;
+	uint64_t m_block = 0;
     CallExecutorParticipation m_executorParticipation;
 
     template<class Archive>
     void serialize(Archive& arch) {
         arch(m_callId);
         arch(m_manual);
+		arch(m_block);
         arch(m_executorParticipation);
     }
 };
@@ -189,6 +194,7 @@ private:
         for (const auto& call: m_callsExecutionInfo) {
             os << utils::serialize(call.m_callId);
             os << utils::serialize(call.m_manual);
+            os << utils::serialize(call.m_block);
         }
 
         os << utils::serialize(m_proof);

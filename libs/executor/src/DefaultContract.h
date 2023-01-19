@@ -62,7 +62,7 @@ public:
 
     void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
-    void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) override;
+    void setAutomaticExecutionsEnabledSince(uint64_t blockHeight) override;
 
 public:
 

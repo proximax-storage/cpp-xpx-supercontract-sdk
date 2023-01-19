@@ -29,7 +29,7 @@ public:
 
     virtual void addManualCall(const CallRequestParameters& ) = 0;
 
-    virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
+    virtual void setAutomaticExecutionsEnabledSince(uint64_t blockHeight) = 0;
 
     virtual void removeContract(const RemoveRequest&) = 0;
 
