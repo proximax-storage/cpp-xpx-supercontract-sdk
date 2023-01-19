@@ -105,10 +105,7 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
     m_proofOfExecution.addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
 
     m_batchesManager->setUnmodifiableUpTo(info.m_automaticExecutionsCheckedUpTo);
-
-    if (!info.m_automaticExecutionsEnabled) {
-        m_batchesManager->setAutomaticExecutionsEnabledSince({});
-    }
+    m_batchesManager->setAutomaticExecutionsEnabledSince(info.m_automaticExecutionsEnabled);
 
     while (!m_unknownSuccessfulBatchOpinions.empty()
            && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
