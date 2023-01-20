@@ -19,10 +19,6 @@ public:
 
     virtual ~VirtualMachineBlockchainQueryHandler() = default;
 
-//    virtual void getCaller(
-//            const std::string& url,
-//            std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) = 0;
-//
     virtual void blockHeight(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
@@ -48,6 +44,14 @@ public:
     }
 
     virtual void servicePayments(std::shared_ptr<AsyncQueryCallback<std::vector<ServicePayment>>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 

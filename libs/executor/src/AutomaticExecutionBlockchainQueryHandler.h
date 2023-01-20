@@ -15,15 +15,23 @@ class AutomaticExecutionBlockchainQueryHandler : public AutorunBlockchainQueryHa
 protected:
 
     CallerKey m_caller;
+    uint64_t m_executionPayment;
+    uint64_t m_downloadPayment;
 
 public:
 
     AutomaticExecutionBlockchainQueryHandler(ExecutorEnvironment& executorEnvironment,
                                               ContractEnvironment& contractEnvironment,
                                               const CallerKey& callerKey,
-                                              uint64_t blockHeight);
+                                              uint64_t blockHeight,
+                                              uint64_t executionPayment,
+                                              uint64_t downloadPayment);
 
     void callerPublicKey(std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) override;
+
+    void downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
+
+    void executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
 };
 

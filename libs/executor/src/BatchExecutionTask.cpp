@@ -219,6 +219,8 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::shared_ptr<CallRequ
                 m_contractEnvironment,
                 callRequest->callerKey(),
                 callRequest->blockHeight(),
+                callRequest->executionPayment(),
+                callRequest->downloadPayment(),
                 callRequest->callId().array(),
                 callRequest->servicePayments());
     } else {
@@ -226,7 +228,9 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::shared_ptr<CallRequ
                 m_executorEnvironment,
                 m_contractEnvironment,
                 callRequest->callerKey(),
-                callRequest->blockHeight());
+                callRequest->blockHeight(),
+                callRequest->executionPayment(),
+                callRequest->downloadPayment());
     }
 
     m_callExecutionManager = std::make_unique<CallExecutionManager>(

@@ -105,6 +105,8 @@ TEST(Supercontract, Storage) {
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
                                                                                0,
+                                                                               25000000000,
+                                                                               26 * 1024,
                                                                                callRequest.m_callId.array(),
                                                                                std::vector<ServicePayment>());
 
@@ -234,6 +236,8 @@ TEST(Supercontract, Iterator) {
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
                                                                                0,
+                                                                               25000000000,
+                                                                               26 * 1024,
                                                                                callRequest.m_callId.array(),
                                                                                std::vector<ServicePayment>());
 
@@ -363,6 +367,8 @@ TEST(Supercontract, FaultyStorage) {
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
                                                                                0,
+                                                                               25000000000,
+                                                                               26 * 1024,
                                                                                callRequest.m_callId.array(),
                                                                                std::vector<ServicePayment>());
 

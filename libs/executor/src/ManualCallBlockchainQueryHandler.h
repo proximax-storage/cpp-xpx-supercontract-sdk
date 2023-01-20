@@ -23,6 +23,8 @@ public:
                                      ContractEnvironment& contractEnvironment,
                                      const CallerKey& callerKey,
                                      uint64_t blockHeight,
+                                     uint64_t executionPayment,
+                                     uint64_t downloadPayment,
                                      const TransactionHash& transactionHash,
                                      std::vector<ServicePayment> servicePayments);
 

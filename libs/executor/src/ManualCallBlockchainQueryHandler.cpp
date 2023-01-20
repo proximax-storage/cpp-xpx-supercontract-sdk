@@ -11,12 +11,16 @@ namespace sirius::contract {
 ManualCallBlockchainQueryHandler::ManualCallBlockchainQueryHandler(
         ExecutorEnvironment& executorEnvironment,
         ContractEnvironment& contractEnvironment,
-        const CallerKey& callerKey, uint64_t blockHeight,
+        const CallerKey& callerKey,
+        uint64_t blockHeight,
+        uint64_t executionPayment,
+        uint64_t downloadPayment,
         const TransactionHash& transactionHash,
         std::vector<ServicePayment> servicePayments)
-        : AutomaticExecutionBlockchainQueryHandler(executorEnvironment, contractEnvironment, callerKey, blockHeight)
-        , m_transactionHash(transactionHash)
-        , m_servicePayments(std::move(servicePayments)) {}
+        : AutomaticExecutionBlockchainQueryHandler(executorEnvironment, contractEnvironment, callerKey, blockHeight,
+                                                   executionPayment, downloadPayment)
+          , m_transactionHash(transactionHash)
+          , m_servicePayments(std::move(servicePayments)) {}
 
 void ManualCallBlockchainQueryHandler::transactionHash(std::shared_ptr<AsyncQueryCallback<TransactionHash>> callback) {
     callback->postReply(m_transactionHash);
