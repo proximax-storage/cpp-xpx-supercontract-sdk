@@ -95,6 +95,6 @@ namespace sirius { namespace utils {
         if (numerator == static_cast<T>(0)) {
             return static_cast<T>(0);
         }
-        return (numerator - static_cast<T>(1)) / denominator + 1;
+        return (numerator - static_cast<T>(1)) / denominator + static_cast<T>(1);
     }
 }}
