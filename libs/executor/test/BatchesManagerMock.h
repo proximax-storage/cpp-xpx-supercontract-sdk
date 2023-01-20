@@ -12,7 +12,7 @@ namespace sirius::contract::test {
 
 class BatchesManagerMock : public BaseBatchesManager {
 
-    void addManualCall(const CallRequestParameters&) override;
+    void addManualCall(const ManualCallRequest&) override;
 
     void addBlock(uint64_t blockHeight) override;
 

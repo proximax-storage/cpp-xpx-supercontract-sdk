@@ -18,16 +18,16 @@
 #include "ContractBlockchainEventHandler.h"
 #include <virtualMachine/VirtualMachine.h>
 #include <blockchain/Block.h>
+#include <executor/ManualCallRequest.h>
 #include "ExecutorEnvironment.h"
 
 namespace sirius::contract {
 
 class Contract
-          : public ContractMessageEventHandler
-          , public ContractBlockchainEventHandler {
+        : public ContractMessageEventHandler, public ContractBlockchainEventHandler {
 public:
 
-    virtual void addManualCall(const CallRequestParameters& ) = 0;
+    virtual void addManualCall(const ManualCallRequest& request) = 0;
 
     virtual void setAutomaticExecutionsEnabledSince(uint64_t blockHeight) = 0;
 

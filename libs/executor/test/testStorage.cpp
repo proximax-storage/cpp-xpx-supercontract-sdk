@@ -64,7 +64,8 @@ TEST(Supercontract, Storage) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
+                                        utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();
@@ -85,27 +86,27 @@ TEST(Supercontract, Storage) {
         pVirtualMachine = builder.build(storageObserver, environment, address);
         environment.m_virtualMachineMock = pVirtualMachine;
 
-        // TODO fill in the callRequest fields
-        std::vector<uint8_t> params;
-        vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              CallId(),
-                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                              "run",
-                                                              params,
-                                                              25000000000,
-                                                              26 * 1024,
-                                                              CallReferenceInfo{
-                                                                      {},
-                                                                      0}},
-                                                      vm::CallRequest::CallLevel::MANUAL);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
-                                                                               callRequest.m_referenceInfo.m_callerKey,
-                                                                               callRequest.m_referenceInfo.m_blockHeight,
+        std::vector<uint8_t> params;
+        vm::CallRequest callRequest = vm::CallRequest(
+                CallId(),
+                "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                25000000000,
+                26 * 1024,
+                vm::CallRequest::CallLevel::MANUAL, 0);
+
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+                                                                 contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
+                                                               contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
+                                                                               contractEnvironmentMock,
+                                                                               CallerKey(),
+                                                                               0,
                                                                                callRequest.m_callId.array(),
-                                                                               callRequest.m_referenceInfo.m_servicePayments);
+                                                                               std::vector<ServicePayment>());
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
@@ -192,7 +193,8 @@ TEST(Supercontract, Iterator) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
+                                        utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();
@@ -215,25 +217,25 @@ TEST(Supercontract, Iterator) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              CallId(),
-                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                              "run",
-                                                              params,
-                                                              25000000000,
-                                                              26 * 1024,
-                                                              CallReferenceInfo{
-                                                                      {},
-                                                                      0}},
-                                                      vm::CallRequest::CallLevel::MANUAL);
+        vm::CallRequest callRequest = vm::CallRequest(
+                CallId(),
+                "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                25000000000,
+                26 * 1024,
+                vm::CallRequest::CallLevel::MANUAL, 0);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
-                                                                               callRequest.m_referenceInfo.m_callerKey,
-                                                                               callRequest.m_referenceInfo.m_blockHeight,
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+                                                                 contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
+                                                               contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
+                                                                               contractEnvironmentMock,
+                                                                               CallerKey(),
+                                                                               0,
                                                                                callRequest.m_callId.array(),
-                                                                               callRequest.m_referenceInfo.m_servicePayments);
+                                                                               std::vector<ServicePayment>());
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();
@@ -320,7 +322,8 @@ TEST(Supercontract, FaultyStorage) {
                     pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
                 },
                 [] {}, environment, false, true);
-        pStorage->initiateModifications(contractEnvironmentMock.driveKey(), utils::generateRandomByteValue<ModificationId>(), storageCallback);
+        pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
+                                        utils::generateRandomByteValue<ModificationId>(), storageCallback);
     });
 
     barrierInit.get();
@@ -343,25 +346,25 @@ TEST(Supercontract, FaultyStorage) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = vm::CallRequest(CallRequestParameters{
-                                                              CallId(),
-                                                              "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
-                                                              "run",
-                                                              params,
-                                                              25000000000,
-                                                              26 * 1024,
-                                                              CallReferenceInfo{
-                                                                      {},
-                                                                      0}},
-                                                      vm::CallRequest::CallLevel::MANUAL);
+        vm::CallRequest callRequest = vm::CallRequest(
+                CallId(),
+                "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                25000000000,
+                26 * 1024,
+                vm::CallRequest::CallLevel::MANUAL, 0);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment, contractEnvironmentMock);
-        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment, contractEnvironmentMock,
-                                                                               callRequest.m_referenceInfo.m_callerKey,
-                                                                               callRequest.m_referenceInfo.m_blockHeight,
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+                                                                 contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
+                                                               contractEnvironmentMock);
+        blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
+                                                                               contractEnvironmentMock,
+                                                                               CallerKey(),
+                                                                               0,
                                                                                callRequest.m_callId.array(),
-                                                                               callRequest.m_referenceInfo.m_servicePayments);
+                                                                               std::vector<ServicePayment>());
 
         auto[_, callback] = createAsyncQuery<vm::CallExecutionResult>([&](auto&& res) {
             p.set_value();

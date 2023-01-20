@@ -10,7 +10,7 @@
 
 namespace sirius::contract::test {
 
-void BatchesManagerMock::addManualCall(const CallRequestParameters&) {
+void BatchesManagerMock::addManualCall(const ManualCallRequest&) {
 
 }
 

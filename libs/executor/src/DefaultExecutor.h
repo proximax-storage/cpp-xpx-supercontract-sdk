@@ -52,7 +52,7 @@ public:
 
     void addContract(const ContractKey& key, AddContractRequest&& request) override;
 
-    void addManualCall(const ContractKey& key, CallRequestParameters&& request) override;
+    void addManualCall(const ContractKey& key, ManualCallRequest&& request) override;
 
     void addBlockInfo(uint64_t blockHeight, blockchain::Block&& block) override;
 

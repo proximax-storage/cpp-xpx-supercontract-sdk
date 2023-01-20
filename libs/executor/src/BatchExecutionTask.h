@@ -63,7 +63,8 @@ public:
 
 private:
 
-	void onSuperContractCallExecuted(vm::CallRequest&&, vm::CallExecutionResult&& executionResult);
+    void onSuperContractCallExecuted(std::shared_ptr<CallRequest>&& callRequest,
+                                     vm::CallExecutionResult&& executionResult);
 
 public:
 
@@ -79,9 +80,9 @@ private:
 
     void onInitiatedStorageModifications();
 
-    void onInitiatedSandboxModification(vm::CallRequest&& callRequest);
+    void onInitiatedSandboxModification(std::shared_ptr<CallRequest>&& callRequest);
 
-    void onAppliedSandboxStorageModifications(vm::CallRequest&& callRequest,
+    void onAppliedSandboxStorageModifications(std::shared_ptr<CallRequest>&& callRequest,
                                               vm::CallExecutionResult&& executionResult,
                                               storage::SandboxModificationDigest&& digest);
 

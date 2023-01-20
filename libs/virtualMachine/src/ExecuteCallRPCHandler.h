@@ -9,7 +9,6 @@
 #include "RPCResponseHandler.h"
 #include "RPCTag.h"
 #include "supercontract/AsyncQuery.h"
-#include "supercontract/CallRequest.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract_server.grpc.pb.h"
 #include "supercontract_server.pb.h"

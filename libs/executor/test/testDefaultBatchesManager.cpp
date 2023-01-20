@@ -56,25 +56,24 @@ TEST(TEST_NAME, BatchTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {2, 0, 0, 2};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -101,22 +100,22 @@ TEST(TEST_NAME, BatchTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 3);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[2].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[1]->isManual());
+        ASSERT_TRUE(!batch1.m_callRequests[2]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(!batch2.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 2);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch3.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
+        ASSERT_TRUE(batch3.m_callRequests[1]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
 
         barrier.set_value();
@@ -169,25 +168,24 @@ TEST(TEST_NAME, AllFalseTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {8, 4, 2, 0};
 
     for (uint64_t i = 0; i < 4; i++) {
-         for(uint64_t j = 0; j < callsPerBlock[i]; j++) {
+        for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -223,30 +221,30 @@ TEST(TEST_NAME, AllFalseTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 8);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[2].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[3].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[4].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[5].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[6].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[7].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[1]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[2]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[3]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[4]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[5]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[6]->isManual());
+        ASSERT_TRUE(batch1.m_callRequests[7]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 4);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[2].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[3].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
+        ASSERT_TRUE(batch2.m_callRequests[1]->isManual());
+        ASSERT_TRUE(batch2.m_callRequests[2]->isManual());
+        ASSERT_TRUE(batch2.m_callRequests[3]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 2);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch3.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
+        ASSERT_TRUE(batch3.m_callRequests[1]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -301,25 +299,24 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -346,14 +343,14 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 3);
         ASSERT_EQ(batch1.m_callRequests.size(), 2);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch1.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 4);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -409,25 +406,24 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -455,14 +451,14 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 3);
         ASSERT_EQ(batch1.m_callRequests.size(), 2);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch1.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 4);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -518,25 +514,24 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -564,14 +559,14 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 3);
         ASSERT_EQ(batch1.m_callRequests.size(), 2);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch1.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch1.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 4);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -627,25 +622,24 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -673,25 +667,25 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 1);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch4 = batchesManager->nextBatch();
         ASSERT_EQ(batch4.m_batchIndex, 4);
         ASSERT_EQ(batch4.m_callRequests.size(), 1);
-        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch4.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -759,7 +753,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //
 //    //create block and request
 //
-//    std::vector<CallRequestParameters> requests;
+//    std::vector<ManualCallRequest> requests;
 //
 //    for(uint64_t i=1; i<=12; i++){
 //        Block block = {
@@ -771,7 +765,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //
 //    for(auto i=1; i<=6; i++){
 //        std::vector<uint8_t> params;
-//        CallRequestParameters request = {
+//        ManualCallRequest request = {
 //                utils::generateRandomByteValue<ContractKey>(),
 //                utils::generateRandomByteValue<CallId>(),
 //                "",
@@ -827,47 +821,47 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 //        auto batch1 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch1.m_batchIndex, 1);
 //        ASSERT_EQ(batch1.m_callRequests.size(), 1);
-//        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(!batch1.m_callRequests[0]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        auto batch2 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch2.m_batchIndex, 2);
 //        ASSERT_EQ(batch2.m_callRequests.size(), 2);
-//        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-//        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
+//        ASSERT_TRUE(!batch2.m_callRequests[1]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        auto batch3 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch3.m_batchIndex, 3);
 //        ASSERT_EQ(batch3.m_callRequests.size(), 1);
-//        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+//        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        // disabled
 //        auto batch4 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch4.m_batchIndex, 4);
 //        ASSERT_EQ(batch4.m_callRequests.size(), 1);
-//        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(!batch4.m_callRequests[0]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        auto batch5 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch5.m_batchIndex, 5);
 //        ASSERT_EQ(batch5.m_callRequests.size(), 2);
-//        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-//        ASSERT_EQ(batch5.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(batch5.m_callRequests[0]->isManual());
+//        ASSERT_TRUE(!batch5.m_callRequests[1]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        // enabled
 //        auto batch6 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch6.m_batchIndex, 6);
 //        ASSERT_EQ(batch6.m_callRequests.size(), 1);
-//        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(!batch6.m_callRequests[0]->isManual());
 //        ASSERT_FALSE(batchesManager->hasNextBatch());
 //        auto batch7 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch7.m_batchIndex, 7);
 //        ASSERT_EQ(batch7.m_callRequests.size(), 2);
-//        ASSERT_EQ(batch7.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-//        ASSERT_EQ(batch7.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+//        ASSERT_TRUE(batch7.m_callRequests[0]->isManual());
+//        ASSERT_TRUE(!batch7.m_callRequests[1]->isManual());
 //        ASSERT_TRUE(batchesManager->hasNextBatch());
 //        auto batch8 = batchesManager->nextBatch();
 //        ASSERT_EQ(batch8.m_batchIndex, 8);
 //        ASSERT_EQ(batch8.m_callRequests.size(), 1);
-//        ASSERT_EQ(batch8.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+//        ASSERT_TRUE(batch8.m_callRequests[0]->isManual());
 //        ASSERT_FALSE(batchesManager->hasNextBatch());
 //
 //        barrier.set_value();
@@ -935,25 +929,24 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1};
 
     for (uint64_t i = 0; i < 12; i++) {
         for (auto j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -992,38 +985,38 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 1);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch1.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch4 = batchesManager->nextBatch();
         ASSERT_EQ(batch4.m_batchIndex, 4);
         ASSERT_EQ(batch4.m_callRequests.size(), 1);
-        ASSERT_EQ(batch4.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch4.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch5 = batchesManager->nextBatch();
         ASSERT_EQ(batch5.m_batchIndex, 5);
         ASSERT_EQ(batch5.m_callRequests.size(), 1);
-        ASSERT_EQ(batch5.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(!batch5.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch6 = batchesManager->nextBatch();
         ASSERT_EQ(batch6.m_batchIndex, 6);
         ASSERT_EQ(batch6.m_callRequests.size(), 2);
-        ASSERT_EQ(batch6.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch6.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch6.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch6.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch7 = batchesManager->nextBatch();
         ASSERT_EQ(batch7.m_batchIndex, 7);
         ASSERT_EQ(batch7.m_callRequests.size(), 1);
-        ASSERT_EQ(batch7.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch7.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -1076,25 +1069,24 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {0, 1, 0, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (auto j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -1119,18 +1111,18 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 1);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(!batch1.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 2);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch2.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });
@@ -1183,25 +1175,24 @@ TEST(TEST_NAME, DelayBatchesTest) {
 
     //create block and request
 
-    std::vector<CallRequestParameters> requests;
+    std::vector<ManualCallRequest> requests;
 
     const std::vector<int> callsPerBlock = {0, 1, 0, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (auto j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
-            CallRequestParameters request = {
+            ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
                     "",
                     "",
-                    params,
                     52000000,
                     20 * 1024,
-                    CallReferenceInfo{
-                        {},
-                        i + 1
-                    }
-            };
+                    CallerKey(),
+                    i + 1,
+                    params,
+                    {}
+            );
             requests.push_back(request);
         }
     }
@@ -1226,39 +1217,39 @@ TEST(TEST_NAME, DelayBatchesTest) {
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
         ASSERT_EQ(batch1.m_callRequests.size(), 1);
-        ASSERT_EQ(batch1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(!batch1.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         batchesManager->delayBatch(std::move(batch1));
         auto delay1 = batchesManager->nextBatch();
         ASSERT_EQ(delay1.m_batchIndex, 1);
         ASSERT_EQ(delay1.m_callRequests.size(), 1);
-        ASSERT_EQ(delay1.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(!delay1.m_callRequests[0]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch2 = batchesManager->nextBatch();
         ASSERT_EQ(batch2.m_batchIndex, 2);
         ASSERT_EQ(batch2.m_callRequests.size(), 2);
-        ASSERT_EQ(batch2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(batch2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!batch2.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
         batchesManager->delayBatch(std::move(batch2));
         auto delay2 = batchesManager->nextBatch();
         ASSERT_EQ(delay2.m_batchIndex, 2);
         ASSERT_EQ(delay2.m_callRequests.size(), 2);
-        ASSERT_EQ(delay2.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
-        ASSERT_EQ(delay2.m_callRequests[1].m_callLevel, vm::CallRequest::CallLevel::AUTOMATIC);
+        ASSERT_TRUE(delay2.m_callRequests[0]->isManual());
+        ASSERT_TRUE(!delay2.m_callRequests[1]->isManual());
         ASSERT_TRUE(batchesManager->hasNextBatch());
 
         auto batch3 = batchesManager->nextBatch();
         ASSERT_EQ(batch3.m_batchIndex, 3);
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
-        ASSERT_EQ(batch3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         batchesManager->delayBatch(std::move(batch3));
         auto delay3 = batchesManager->nextBatch();
         ASSERT_EQ(delay3.m_batchIndex, 3);
         ASSERT_EQ(delay3.m_callRequests.size(), 1);
-        ASSERT_EQ(delay3.m_callRequests[0].m_callLevel, vm::CallRequest::CallLevel::MANUAL);
+        ASSERT_TRUE(delay3.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
         barrier.set_value();
     });

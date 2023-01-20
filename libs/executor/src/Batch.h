@@ -9,16 +9,18 @@
 #include <deque>
 #include <list>
 #include <vector>
+#include <memory>
 
 #include <executor/Requests.h>
-#include "virtualMachine/CallRequest.h"
+#include <executor/CallRequest.h>
 
 namespace sirius::contract {
+
 
 struct Batch {
     uint64_t m_batchIndex;
     uint64_t m_automaticExecutionsCheckedUpTo;
-    std::deque<vm::CallRequest> m_callRequests;
+    std::deque<std::shared_ptr<CallRequest>> m_callRequests;
 };
 
 }

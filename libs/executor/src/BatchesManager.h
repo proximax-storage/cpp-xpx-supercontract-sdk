@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "Batch.h"
-
+#include <executor/ManualCallRequest.h>
 #include "ContractBlockchainEventHandler.h"
 
 #include <blockchain/Block.h>
@@ -22,7 +22,7 @@ class BaseBatchesManager {
 
 public:
 
-    virtual void addManualCall(const CallRequestParameters&) = 0;
+    virtual void addManualCall(const ManualCallRequest&) = 0;
 
     virtual void addBlock(uint64_t blockHeight) = 0;
 

@@ -7,11 +7,10 @@
 #pragma once
 
 #include <cstdint>
-#include <supercontract/CallRequest.h>
 
 namespace sirius::contract::vm {
 
-struct CallRequest : CallRequestParameters {
+struct CallRequest {
 
     enum class CallLevel {
         AUTORUN,
@@ -19,16 +18,35 @@ struct CallRequest : CallRequestParameters {
         MANUAL
     };
 
+    CallId m_callId;
+    std::string m_file;
+    std::string m_function;
+    std::vector<uint8_t> m_params;
+    uint64_t m_executionGasLimit;
+    uint64_t m_downloadGasLimit;
     CallLevel m_callLevel;
-    uint64_t m_proofOfExecutionPrefix = 0;
+    uint64_t m_proofOfExecutionPrefix;
 
-    CallRequest(const CallRequestParameters& parameters, const CallLevel& callLevel)
-            : CallRequestParameters(parameters)
-            , m_callLevel(callLevel) {}
+    CallRequest(const CallId& callId,
+                const std::string& file,
+                const std::string& function,
+                const std::vector<uint8_t>& params,
+                uint64_t executionGasLimit,
+                uint64_t downloadGasLimit,
+                CallLevel callLevel,
+                uint64_t proofOfExecutionPrefix)
+                : m_callId(callId)
+                , m_file(file)
+                , m_function(function)
+                , m_params(params)
+                , m_executionGasLimit(executionGasLimit)
+                , m_downloadGasLimit(downloadGasLimit)
+                , m_callLevel(callLevel)
+                , m_proofOfExecutionPrefix(proofOfExecutionPrefix) {}
 };
 
 struct CallExecutionResult {
-    bool     m_success;
+    bool m_success;
     uint32_t m_return;
     uint64_t m_scConsumed;
     uint64_t m_smConsumed;

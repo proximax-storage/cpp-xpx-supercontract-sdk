@@ -12,6 +12,7 @@
 #include <messenger/MessageSubscriber.h>
 #include "BlockchainEventHandler.h"
 #include <blockchain/Block.h>
+#include "ManualCallRequest.h"
 
 #include "supercontract/Identifiers.h"
 
@@ -29,7 +30,7 @@ public:
 
     virtual void addContract(const ContractKey&, AddContractRequest&&) = 0;
 
-    virtual void addManualCall(const ContractKey&, CallRequestParameters&&) = 0;
+    virtual void addManualCall(const ContractKey&, ManualCallRequest&&) = 0;
 
     virtual void
     setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, uint64_t blockHeight) = 0;

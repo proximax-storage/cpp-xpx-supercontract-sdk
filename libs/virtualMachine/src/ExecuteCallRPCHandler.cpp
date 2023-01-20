@@ -79,8 +79,8 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
     auto* pRpcRequest = new supercontractserver::ExecuteRequest();
     pRpcRequest->set_file_to_call(std::move(m_request.m_file));
     pRpcRequest->set_function_to_call(std::move(m_request.m_function));
-    pRpcRequest->set_sc_prepayment(m_request.m_scLimit);
-    pRpcRequest->set_sm_prepayment(m_request.m_smLimit);
+    pRpcRequest->set_sc_prepayment(m_request.m_executionGasLimit);
+    pRpcRequest->set_sm_prepayment(m_request.m_downloadGasLimit);
     pRpcRequest->set_call_mode((uint32_t)m_request.m_callLevel);
     pRpcRequest->set_poex_secret_data_prefix(m_request.m_proofOfExecutionPrefix);
 

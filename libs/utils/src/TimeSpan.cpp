@@ -19,7 +19,7 @@
 **/
 
 #include "utils/TimeSpan.h"
-#include "IntegerMath.h"
+#include <utils/IntegerMath.h>
 #include "utils/StreamFormatGuard.h"
 
 namespace sirius { namespace utils {

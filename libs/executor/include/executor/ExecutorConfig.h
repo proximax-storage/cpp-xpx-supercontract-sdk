@@ -44,6 +44,9 @@ private:
 
     uint64_t                m_maxBatchesHistorySize = 10000U;
 
+    uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
+    uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
+
     logging::LoggerConfig   m_loggerConfig;
 
 public:
@@ -190,6 +193,22 @@ public:
 
     void setMaxBatchesHistorySize(uint64_t maxBatchesHistorySize) {
         m_maxBatchesHistorySize = maxBatchesHistorySize;
+    }
+
+    uint64_t executionPaymentToGasMultiplier() const {
+        return m_executionPaymentToGasMultiplier;
+    }
+
+    void setExecutionPaymentToGasMultiplier(uint64_t executionPaymentToGasMultiplier) {
+        m_executionPaymentToGasMultiplier = executionPaymentToGasMultiplier;
+    }
+
+    uint64_t downloadPaymentToGasMultiplier() const {
+        return m_downloadPaymentToGasMultiplier;
+    }
+
+    void setDownloadPaymentToGasMultiplier(uint64_t downloadPaymentToGasMultiplier) {
+        m_downloadPaymentToGasMultiplier = downloadPaymentToGasMultiplier;
     }
 };
 

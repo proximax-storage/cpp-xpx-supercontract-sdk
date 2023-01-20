@@ -55,21 +55,18 @@ TEST(VirtualMachine, SimpleContract) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+        vm::CallRequest callRequest = CallRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
                 params,
                 52000000,
                 20 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::AUTOMATIC);
+                CallRequest::CallLevel::AUTOMATIC,
+                0);
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
@@ -79,7 +76,8 @@ TEST(VirtualMachine, SimpleContract) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -120,7 +118,7 @@ TEST(VirtualMachine, InternetRead) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -129,16 +127,13 @@ TEST(VirtualMachine, InternetRead) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL,
+                0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -152,7 +147,8 @@ TEST(VirtualMachine, InternetRead) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -193,7 +189,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -202,16 +198,13 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL,
+                0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -221,7 +214,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -261,7 +255,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -270,16 +264,13 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 25 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL,
+                0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -289,7 +280,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -329,7 +321,7 @@ TEST(VirtualMachine, WrongContractPath) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "sdk_bg.wasm",
                 "run",
@@ -338,16 +330,12 @@ TEST(VirtualMachine, WrongContractPath) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -357,7 +345,8 @@ TEST(VirtualMachine, WrongContractPath) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -397,7 +386,7 @@ TEST(VirtualMachine, WrongIP) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -406,22 +395,19 @@ TEST(VirtualMachine, WrongIP) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_FALSE(res);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -461,7 +447,7 @@ TEST(VirtualMachine, WrongExecFunction) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "runs",
@@ -470,16 +456,12 @@ TEST(VirtualMachine, WrongExecFunction) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -489,7 +471,8 @@ TEST(VirtualMachine, WrongExecFunction) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -529,7 +512,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -538,16 +521,13 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::AUTOMATIC);
+                CallRequest::CallLevel::AUTOMATIC,
+                0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
@@ -557,7 +537,8 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -597,7 +578,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -606,16 +587,12 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -629,7 +606,8 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -672,7 +650,7 @@ TEST(VirtualMachine, FaultyContract) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -681,16 +659,12 @@ TEST(VirtualMachine, FaultyContract) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             // std::cout << res->m_success << std::endl;
@@ -704,7 +678,8 @@ TEST(VirtualMachine, FaultyContract) {
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();
@@ -748,7 +723,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -757,22 +732,19 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             ASSERT_FALSE(res);
             pAborted.set_value();
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     std::this_thread::sleep_for(std::chrono::milliseconds(2000));
@@ -790,7 +762,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
     threadManager.execute([&] {
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        CallRequest callRequest(CallRequestParameters{
+        CallRequest callRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
@@ -799,23 +771,20 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             pSuccessful.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrierSuccesful.wait();
@@ -855,23 +824,19 @@ TEST(VirtualMachine, SimpleStorage) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+        vm::CallRequest callRequest = CallRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
                 params,
                 25000000000,
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         storageHandler = std::make_shared<MockStorageHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
@@ -922,23 +887,19 @@ TEST(VirtualMachine, IteratorTest) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+        vm::CallRequest callRequest = CallRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
                 params,
                 25000000000,
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         storageHandler = std::make_shared<MockStorageHandler>();
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
@@ -989,18 +950,14 @@ TEST(VirtualMachine, FaultyStorage) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+        vm::CallRequest callRequest = CallRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
                 params,
                 25000000000,
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         storageHandler = std::make_shared<FaultyMockStorageHandler>();
 
@@ -1050,28 +1007,25 @@ TEST(VirtualMachine, NullStorageHandler) {
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
-        vm::CallRequest callRequest = CallRequest(CallRequestParameters{
+        vm::CallRequest callRequest = CallRequest(
                 CallId(),
                 "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
                 "run",
                 params,
                 25000000000,
                 26 * 1024,
-                CallReferenceInfo{
-                        {},
-                        0
-                }
-        }, CallRequest::CallLevel::MANUAL);
+                CallRequest::CallLevel::MANUAL, 0);
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
-            
+
             p.set_value();
             ASSERT_FALSE(res);
             ASSERT_EQ(res.error(), ExecutionError::storage_unavailable);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
-                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(), std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
     barrier.get();

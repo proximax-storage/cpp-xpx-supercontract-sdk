@@ -7,7 +7,6 @@
 #pragma once
 
 #include <supercontract/Identifiers.h>
-#include <supercontract/CallRequest.h>
 #include "ExecutorInfo.h"
 
 namespace sirius::contract {

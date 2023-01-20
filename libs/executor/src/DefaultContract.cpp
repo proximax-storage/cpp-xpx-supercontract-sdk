@@ -48,7 +48,7 @@ void DefaultContract::terminate() {
     }
 }
 
-void DefaultContract::addManualCall(const CallRequestParameters& request) {
+void DefaultContract::addManualCall(const ManualCallRequest& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

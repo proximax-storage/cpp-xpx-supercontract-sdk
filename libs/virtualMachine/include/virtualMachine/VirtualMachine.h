@@ -10,7 +10,6 @@
 #include "VirtualMachineInternetQueryHandler.h"
 #include "VirtualMachineStorageQueryHandler.h"
 #include "supercontract/AsyncQuery.h"
-#include "supercontract/CallRequest.h"
 #include <memory>
 #include <virtualMachine/CallRequest.h>
 

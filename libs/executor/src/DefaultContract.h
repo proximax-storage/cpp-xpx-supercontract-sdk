@@ -56,7 +56,7 @@ public:
 
     void terminate() override;
 
-    void addManualCall(const CallRequestParameters& request) override;
+    void addManualCall(const ManualCallRequest& request) override;
 
     void removeContract(const RemoveRequest& request) override;
 
