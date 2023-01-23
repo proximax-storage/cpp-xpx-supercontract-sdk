@@ -1,7 +1,7 @@
 #include "ContractEnvironmentMock.h"
 #include "ExecutorEnvironmentMock.h"
 #include "TestUtils.h"
-#include "storage/RPCStorage.h"
+#include <storage/RPCStorageBuilder.h>
 #include "storage/StorageErrorCode.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
 #include "virtualMachine/VirtualMachine.h"
@@ -31,7 +31,7 @@ TEST(Supercontract, Storage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    executorConfig.setRpcStorageAddress("127.0.0.1:5551");
+    std::string rpcStorageAddress = "127.0.0.1:5551";
     ThreadManager threadManager;
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
@@ -55,7 +55,7 @@ TEST(Supercontract, Storage) {
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
-        pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
+        pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<void>(
                 [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
@@ -82,8 +82,9 @@ TEST(Supercontract, Storage) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        vm::RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        vm::RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
 
@@ -162,7 +163,7 @@ TEST(Supercontract, Iterator) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    executorConfig.setRpcStorageAddress("127.0.0.1:5551");
+    std::string rpcStorageAddress = "127.0.0.1:5551";
     ThreadManager threadManager;
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
@@ -186,7 +187,7 @@ TEST(Supercontract, Iterator) {
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
-        pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
+        pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<void>(
                 [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
@@ -213,8 +214,9 @@ TEST(Supercontract, Iterator) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        vm::RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        vm::RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
         // TODO fill in the callRequest fields
@@ -293,7 +295,7 @@ TEST(Supercontract, FaultyStorage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    executorConfig.setRpcStorageAddress("127.0.0.1:5551");
+    std::string rpcStorageAddress = "127.0.0.1:5551";
     ThreadManager threadManager;
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
@@ -317,7 +319,7 @@ TEST(Supercontract, FaultyStorage) {
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
-        pStorage = std::make_shared<storage::RPCStorage>(environment, executorConfig.rpcStorageAddress());
+        pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<void>(
                 [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
@@ -344,8 +346,9 @@ TEST(Supercontract, FaultyStorage) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        vm::RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        vm::RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
         // TODO fill in the callRequest fields

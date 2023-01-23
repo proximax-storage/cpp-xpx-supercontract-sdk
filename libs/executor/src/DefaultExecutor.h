@@ -12,6 +12,9 @@
 #include "ExecutorEnvironment.h"
 #include "Contract.h"
 #include <blockchain/CachedBlockchain.h>
+#include <supercontract/ServiceBuilder.h>
+#include <messenger/MessengerBuilder.h>
+#include <virtualMachine/VirtualMachineBuilder.h>
 
 namespace sirius::contract {
 
@@ -46,6 +49,10 @@ public:
     DefaultExecutor(crypto::KeyPair&& keyPair,
                     const ExecutorConfig& config,
                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                    std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
+                    std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
+                    std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
+                    std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
                     const std::string& dbgPeerName = "executor");
 
     ~DefaultExecutor() override;

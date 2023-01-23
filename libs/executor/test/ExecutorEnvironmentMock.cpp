@@ -7,7 +7,6 @@
 #include "ExecutorEnvironmentMock.h"
 
 #include <utility>
-#include "storage/RPCStorage.h"
 
 namespace sirius::contract::test {
 ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,

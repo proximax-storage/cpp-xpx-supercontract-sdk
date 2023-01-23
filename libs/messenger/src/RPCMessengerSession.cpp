@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include <messenger/RPCMessengerSession.h>
+#include "RPCMessengerSession.h"
 
 #include "ReadInputMessageTag.h"
 #include "WriteOutputMessageTag.h"

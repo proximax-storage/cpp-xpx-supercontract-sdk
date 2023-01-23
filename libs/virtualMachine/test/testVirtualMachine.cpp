@@ -50,8 +50,9 @@ TEST(VirtualMachine, SimpleContract) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -113,8 +114,9 @@ TEST(VirtualMachine, InternetRead) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -184,8 +186,9 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -250,8 +253,9 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -316,8 +320,9 @@ TEST(VirtualMachine, WrongContractPath) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -381,8 +386,9 @@ TEST(VirtualMachine, WrongIP) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50052";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -442,8 +448,9 @@ TEST(VirtualMachine, WrongExecFunction) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -507,8 +514,9 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -573,8 +581,9 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -645,8 +654,9 @@ TEST(VirtualMachine, FaultyContract) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -718,8 +728,9 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -819,8 +830,9 @@ TEST(VirtualMachine, SimpleStorage) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -882,8 +894,9 @@ TEST(VirtualMachine, IteratorTest) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -945,8 +958,9 @@ TEST(VirtualMachine, FaultyStorage) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;
@@ -1002,8 +1016,9 @@ TEST(VirtualMachine, NullStorageHandler) {
         exec("wasm-pack build --debug ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/");
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
-        RPCVirtualMachineBuilder builder;
-        pVirtualMachine = builder.build(storageObserver, environment, address);
+        RPCVirtualMachineBuilder builder(address);
+        builder.setContentObserver(storageObserver);
+        pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
         std::vector<uint8_t> params;

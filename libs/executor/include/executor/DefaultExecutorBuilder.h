@@ -9,7 +9,11 @@
 #include <crypto/KeyPair.h>
 #include "Executor.h"
 #include "ExecutorEventHandler.h"
+#include <virtualMachine/VirtualMachineBuilder.h>
+#include <messenger/MessengerBuilder.h>
 #include "supercontract/ThreadManager.h"
+#include <storage/Storage.h>
+#include <blockchain/Blockchain.h>
 
 namespace sirius::contract {
 
@@ -19,9 +23,13 @@ public:
 
     DefaultExecutorBuilder() = default;
 
-    std::unique_ptr<Executor> build(crypto::KeyPair&& keyPair,
+    std::shared_ptr<Executor> build(crypto::KeyPair&& keyPair,
                                     const ExecutorConfig& config,
                                     std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                                    std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
+                                    std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
+                                    std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
+                                    std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
                                     const std::string& dbgPeerName = "executor");
 
 };

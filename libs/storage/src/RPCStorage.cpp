@@ -26,10 +26,10 @@
 #include "RemoveFilesystemEntryTag.h"
 #include "SynchronizeStorageTag.h"
 #include "WriteFileTag.h"
-#include "storage/RPCTag.h"
+#include "RPCTag.h"
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
-#include <storage/RPCStorage.h>
+#include "RPCStorage.h"
 
 namespace sirius::contract::storage {
 

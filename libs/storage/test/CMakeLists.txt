@@ -9,5 +9,6 @@ file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 add_executable(storage-tests ${TEST_FILES} TestUtils.cpp)
 enable_testing()
 add_test(storage-tests "./test")
+target_include_directories(storage-tests PUBLIC ../src)
 target_link_libraries(storage-tests contract-storage Threads::Threads ${GTEST_LIBRARIES} gtest_main)
 

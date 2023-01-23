@@ -29,10 +29,6 @@ private:
     std::string             m_automaticExecutionFile = "default.wasm";
     std::string             m_automaticExecutionFunction = "main";
 
-    std::string             m_rpcVirtualMachineAddress = "localhost:50051";
-    std::string             m_rpcStorageAddress = "localhost:50052";
-    std::string             m_rpcMessengerAddress = "localhost:50052";
-
     int                     m_serviceUnavailableTimeoutMs = 5000;
 
     int                     m_internetBufferSize = 16 * 1024;
@@ -105,30 +101,6 @@ public:
 
     void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
         m_automaticExecutionFunction = automaticExecutionFunction;
-    }
-
-    const std::string& rpcVirtualMachineAddress() const {
-        return m_rpcVirtualMachineAddress;
-    }
-
-    void setRpcVirtualMachineAddress( const std::string& rpcVirtualMachineAddress ) {
-        m_rpcVirtualMachineAddress = rpcVirtualMachineAddress;
-    }
-
-    const std::string& rpcStorageAddress() const {
-        return m_rpcStorageAddress;
-    }
-
-    void setRpcStorageAddress( const std::string& rpcStorageAddress ) {
-        m_rpcStorageAddress = rpcStorageAddress;
-    }
-
-    const std::string& rpcMessengerAddress() const {
-        return m_rpcMessengerAddress;
-    }
-
-    void setRpcMessengerAddress(const std::string& rpcMessengerAddress) {
-        m_rpcMessengerAddress = rpcMessengerAddress;
     }
 
     int internetBufferSize() const {

@@ -9,5 +9,6 @@ file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 add_executable(messenger-tests ${TEST_FILES} TestUtils.cpp)
 enable_testing()
 add_test(messenger-tests "./test")
+target_include_directories(messenger-tests PUBLIC ../src)
 target_link_libraries(messenger-tests contract-messenger Threads::Threads ${GTEST_LIBRARIES} gtest_main)
 

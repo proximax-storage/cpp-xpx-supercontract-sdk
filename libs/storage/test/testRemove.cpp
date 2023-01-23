@@ -11,7 +11,7 @@
 #include <storage/File.h>
 #include <storage/FilesystemTraversal.h>
 #include <storage/Folder.h>
-#include <storage/RPCStorage.h>
+#include <RPCStorage.h>
 #include <utils/Random.h>
 
 namespace fs = std::filesystem;

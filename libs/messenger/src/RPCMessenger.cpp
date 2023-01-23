@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include <messenger/RPCMessenger.h>
+#include "RPCMessenger.h"
 #include <grpcpp/security/credentials.h>
 #include <grpcpp/create_channel.h>
 #include "ReadInputMessageTag.h"

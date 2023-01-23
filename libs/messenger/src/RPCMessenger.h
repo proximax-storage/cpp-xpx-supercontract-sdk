@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "Messenger.h"
-#include "MessageSubscriber.h"
+#include <messenger/Messenger.h>
+#include <messenger/MessageSubscriber.h>
 #include "RPCMessengerSession.h"
 #include <supercontract/GlobalEnvironment.h>
 #include <supercontract/AsyncQuery.h>

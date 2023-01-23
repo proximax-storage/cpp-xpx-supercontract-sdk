@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "storage/RPCTag.h"
+#include "RPCTag.h"
 #include "storage/StorageRequests.h"
 #include "storageServer.grpc.pb.h"
 #include "supercontract/AsyncQuery.h"

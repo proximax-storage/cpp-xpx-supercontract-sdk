@@ -13,8 +13,7 @@
 #include "Messages.h"
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include "DefaultContract.h"
-#include <messenger/RPCMessenger.h>
-#include <storage/RPCStorage.h>
+#include <messenger/MessengerBuilder.h>
 #include <blockchain/Blockchain.h>
 #include "executor/Executor.h"
 #include "crypto/KeyPair.h"
@@ -25,25 +24,40 @@
 
 namespace sirius::contract {
 
+
 DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
                                  const ExecutorConfig& config,
                                  std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                                 std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
+                                 std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
+                                 std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
+                                 std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
                                  const std::string& dbgPeerName)
-								: m_keyPair(std::move(keyPair))
-								, m_logger(config.loggerConfig(), dbgPeerName)
-								, m_sslContext(boost::asio::ssl::context::tlsv12_client)
-								, m_config(config)
-								, m_eventHandler(std::move(eventHandler)) {
-		setThreadId(m_threadManager.threadId());
-		m_threadManager.execute([this] {
-			m_virtualMachine =
-					vm::RPCVirtualMachineBuilder().build(m_storage, *this, m_config.rpcVirtualMachineAddress());
-			m_messenger = std::make_shared<messenger::RPCMessenger>(*this, m_config.rpcMessengerAddress(), *this);
-		  	m_storage = std::make_shared<storage::RPCStorage>(*this, m_config.rpcStorageAddress());
-		  	m_sslContext.set_default_verify_paths();
-		  	m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
-		});
-	}
+        : m_keyPair(std::move(keyPair))
+          , m_logger(config.loggerConfig(), dbgPeerName)
+          , m_sslContext(boost::asio::ssl::context::tlsv12_client)
+          , m_config(config)
+          , m_eventHandler(std::move(eventHandler)) {
+    setThreadId(m_threadManager.threadId());
+    m_threadManager.execute([this,
+                             vmBuilder = std::move(vmBuilder),
+                             storageBuilder = std::move(storageBuilder),
+                             blockchainBuilder = std::move(blockchainBuilder),
+                             messengerBuilder = std::move(messengerBuilder)] {
+        messengerBuilder->setMessageSubscriber(this);
+        m_messenger = messengerBuilder->build(*this);
+
+        m_storage = storageBuilder->build(*this);
+
+        m_blockchain = std::make_shared<blockchain::CachedBlockchain>(*this, blockchainBuilder->build(*this));
+
+        vmBuilder->setContentObserver(m_storage);
+        m_virtualMachine = vmBuilder->build(*this);
+
+        m_sslContext.set_default_verify_paths();
+        m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
+    });
+}
 
 DefaultExecutor::~DefaultExecutor() {
     m_threadManager.execute([this] {
@@ -159,8 +173,7 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
                         break;
                     }
                 }
-            }
-            else {
+            } else {
                 logger().warn("onMessageReceived: unknown tag", inputMessage.m_tag);
             }
         } catch (...) {
@@ -286,19 +299,19 @@ void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleT
 }
 
 void DefaultExecutor::setAutomaticExecutionsEnabledSince(
-		const ContractKey& contractKey,
-		uint64_t blockHeight) {
-	m_threadManager.execute([=, this] {
-	  auto contractIt = m_contracts.find(contractKey);
+        const ContractKey& contractKey,
+        uint64_t blockHeight) {
+    m_threadManager.execute([=, this] {
+        auto contractIt = m_contracts.find(contractKey);
 
-	  if (contractIt == m_contracts.end()) {
+        if (contractIt == m_contracts.end()) {
 
-	  	// TODO maybe error?
-	  	return;
-	  }
+            // TODO maybe error?
+            return;
+        }
 
-	  contractIt->second->setAutomaticExecutionsEnabledSince(blockHeight);
-	});
+        contractIt->second->setAutomaticExecutionsEnabledSince(blockHeight);
+    });
 }
 
 // endregion
