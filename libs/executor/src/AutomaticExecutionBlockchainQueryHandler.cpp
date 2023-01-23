@@ -48,4 +48,13 @@ AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<Asyn
     callback->postReply(m_contractEnvironment.contractKey());
 }
 
+void AutomaticExecutionBlockchainQueryHandler::addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback,
+                                                              vm::EmbeddedTransaction&& embeddedTransaction) {
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_embeddedTransactions.push_back(std::move(embeddedTransaction));
+
+    callback->postReply(expected<void>());
+}
+
 }

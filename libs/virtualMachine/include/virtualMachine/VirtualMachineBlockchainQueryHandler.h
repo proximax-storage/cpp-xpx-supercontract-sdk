@@ -13,6 +13,12 @@
 
 namespace sirius::contract::vm {
 
+struct EmbeddedTransaction {
+    uint16_t m_entityType;
+    uint32_t m_version;
+    std::vector<uint8_t> m_payload;
+};
+
 class VirtualMachineBlockchainQueryHandler {
 
 public:
@@ -56,6 +62,10 @@ public:
     }
 
     virtual void executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
+    virtual void addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback, EmbeddedTransaction&& embeddedTransaction) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
