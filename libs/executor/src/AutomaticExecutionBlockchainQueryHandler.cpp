@@ -41,4 +41,9 @@ AutomaticExecutionBlockchainQueryHandler::executionPayment(std::shared_ptr<Async
     callback->postReply(m_executionPayment);
 }
 
+void
+AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<AsyncQueryCallback<ContractKey>> callback) {
+    callback->postReply(m_contractEnvironment.contractKey());
+}
+
 }

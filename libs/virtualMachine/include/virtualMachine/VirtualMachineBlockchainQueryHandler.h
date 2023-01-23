@@ -39,6 +39,10 @@ public:
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
+    virtual void contractPublicKey(std::shared_ptr<AsyncQueryCallback<ContractKey>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
+    }
+
     virtual void transactionHash(std::shared_ptr<AsyncQueryCallback<TransactionHash>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }

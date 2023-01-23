@@ -21,13 +21,15 @@ protected:
 public:
 
     AutomaticExecutionBlockchainQueryHandler(ExecutorEnvironment& executorEnvironment,
-                                              ContractEnvironment& contractEnvironment,
-                                              const CallerKey& callerKey,
-                                              uint64_t blockHeight,
-                                              uint64_t executionPayment,
-                                              uint64_t downloadPayment);
+                                             ContractEnvironment& contractEnvironment,
+                                             const CallerKey& callerKey,
+                                             uint64_t blockHeight,
+                                             uint64_t executionPayment,
+                                             uint64_t downloadPayment);
 
     void callerPublicKey(std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) override;
+
+    void contractPublicKey(std::shared_ptr<AsyncQueryCallback<ContractKey>> callback) override;
 
     void downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
