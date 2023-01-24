@@ -79,8 +79,8 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
     auto* pRpcRequest = new supercontractserver::ExecuteRequest();
     pRpcRequest->set_file_to_call(std::move(m_request.m_file));
     pRpcRequest->set_function_to_call(std::move(m_request.m_function));
-    pRpcRequest->set_sc_prepayment(m_request.m_executionGasLimit);
-    pRpcRequest->set_sm_prepayment(m_request.m_downloadGasLimit);
+    pRpcRequest->set_execution_gas_limit(m_request.m_executionGasLimit);
+    pRpcRequest->set_download_gas_limit(m_request.m_downloadGasLimit);
     pRpcRequest->set_call_mode((uint32_t)m_request.m_callLevel);
     pRpcRequest->set_poex_secret_data_prefix(m_request.m_proofOfExecutionPrefix);
 
@@ -132,8 +132,8 @@ void ExecuteCallRPCHandler::processExecuteCallResponse(
     CallExecutionResult executionResult = {
         executeCallResponse.success(),
         executeCallResponse.return_val(),
-        executeCallResponse.sc_consumed(),
-        executeCallResponse.sm_consumed(),
+        executeCallResponse.execution_gas_consumed(),
+        executeCallResponse.download_gas_consumed(),
         executeCallResponse.poex_secret_data()
     };
 
@@ -178,21 +178,21 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
     case supercontractserver::Response::kGetCallerPublicKey: {
         break;
     }
-    case supercontractserver::Response::kGetServicePayment: {
+    case supercontractserver::Response::kGetContractPublicKey: {
+        break;
+    }
+    case supercontractserver::Response::kGetServicePayments: {
+        break;
+    }
+    case supercontractserver::Response::kGetExecutionPayment: {
+        break;
+    }
+    case supercontractserver::Response::kGetDownloadPayment: {
         break;
     }
     case supercontractserver::Response::kAddTransaction: {
         // TODO placeholder to correctly link blockchain proto
         supercontractserver::AddTransaction query;
-        break;
-    }
-    case supercontractserver::Response::kGetTransactionBlockHeight: {
-        break;
-    }
-    case supercontractserver::Response::kGetResponseTransactionHash: {
-        break;
-    }
-    case supercontractserver::Response::kGetTransactionContent: {
         break;
     }
     case supercontractserver::Response::kOpenFile: {

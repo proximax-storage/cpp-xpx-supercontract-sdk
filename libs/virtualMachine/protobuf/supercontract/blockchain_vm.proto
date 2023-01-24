@@ -44,42 +44,44 @@ message GetCallerPublicKeyReturn {
   bytes public_key = 1;
 }
 
-message GetServicePayment {
+message GetContractPublicKey {
 }
 
-message GetServicePaymentReturn {
-  uint64 payment_amount = 1;
+message GetContractPublicKeyReturn {
+  bytes public_key = 1;
+}
+
+message GetServicePayments {
+}
+
+message ServicePayment {
+  uint64 mosaic_id = 1;
+  uint64 amount = 2;
+}
+
+message GetServicePaymentsReturn {
+  repeated ServicePayment payments = 1;
+}
+
+message GetExecutionPayment {
+}
+
+message GetExecutionPaymentReturn {
+  uint64 amount = 1;
+}
+
+message GetDownloadPayment {
+}
+
+message GetDownloadPaymentReturn {
+  uint64 amount = 1;
 }
 
 message AddTransaction {
-  string name = 1;
-  string parameters = 2;
+  uint32 entity_type = 1;
+  uint32 version = 2;
+  bytes payload = 3;
 }
 
 message AddTransactionReturn {
-  bytes hash = 1;
-}
-
-message GetTransactionBlockHeight {
-  bytes hash = 1;
-}
-
-message GetTransactionBlockHeightReturn {
-  uint64 height = 1;
-}
-
-message GetResponseTransactionHash {
-  bytes hash = 1;
-}
-
-message GetResponseTransactionHashReturn {
-  bytes hash = 1;
-}
-
-message GetTransactionContent {
-  bytes hash = 1;
-}
-
-message GetTransactionContentReturn {
-  bytes buffer = 1;
 }
