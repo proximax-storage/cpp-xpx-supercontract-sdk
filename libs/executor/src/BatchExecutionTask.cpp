@@ -279,12 +279,23 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
                                                     m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
+    Hash256 releasedTransactionsHash;
+    auto releasedTransactions = blockchainHandler->releasedTransactions();
+    if (status == 0 && !releasedTransactions.empty()) {
+        crypto::Sha3_256_Builder hasher;
+        for (const auto& tx: releasedTransactions) {
+            hasher.update(utils::RawBuffer{tx.data(), tx.size()});
+        }
+        hasher.final(releasedTransactionsHash);
+    }
+    m_releasedTransactions.emplace(releasedTransactionsHash, std::move(releasedTransactions));
+
     m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
             callRequest->callId(),
             isManual,
             callRequest->blockHeight(),
             status,
-            blockchainHandler->releasedTransactionHash(),
+            releasedTransactionsHash,
             CallExecutorParticipation{
                     actualExecutionPayment,
                     actualDownloadPayment
@@ -451,6 +462,10 @@ void BatchExecutionTask::processPublishedEndBatch() {
         m_contractEnvironment.finishTask();
 
     } else {
+
+        for(const auto& [hash, tx]: m_releasedTransactions) {
+            m_executorEnvironment.executorEventHandler().releasedTransactionsAreReady(tx);
+        }
 
         auto storage = m_executorEnvironment.storageModifier().lock();
 

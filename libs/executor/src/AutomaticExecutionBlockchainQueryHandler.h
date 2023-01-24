@@ -17,7 +17,7 @@ protected:
     CallerKey m_caller;
     uint64_t m_executionPayment;
     uint64_t m_downloadPayment;
-    std::vector<vm::EmbeddedTransaction> m_embeddedTransactions;
+    std::vector<std::vector<uint8_t>> m_embeddedTransactions;
 
 public:
 
@@ -37,7 +37,7 @@ public:
     void executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
     void addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback,
-                        vm::EmbeddedTransaction&& embeddedTransaction) override;
+                        blockchain::EmbeddedTransaction&& embeddedTransaction) override;
 };
 
 }

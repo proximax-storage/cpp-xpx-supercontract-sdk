@@ -9,15 +9,10 @@
 #include <supercontract/Identifiers.h>
 #include <supercontract/AsyncQuery.h>
 #include <blockchain/BlockchainErrorCode.h>
+#include <blockchain/EmbeddedTransaction.h>
 #include <supercontract/ServicePayment.h>
 
 namespace sirius::contract::vm {
-
-struct EmbeddedTransaction {
-    uint16_t m_entityType;
-    uint32_t m_version;
-    std::vector<uint8_t> m_payload;
-};
 
 class VirtualMachineBlockchainQueryHandler {
 
@@ -65,12 +60,12 @@ public:
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
-    virtual void addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback, EmbeddedTransaction&& embeddedTransaction) {
+    virtual void addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback, blockchain::EmbeddedTransaction&& embeddedTransaction) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
-    virtual TransactionHash releasedTransactionHash() const {
-        return TransactionHash();
+    virtual std::vector<std::vector<uint8_t>> releasedTransactions() const {
+        return {};
     };
 
 };

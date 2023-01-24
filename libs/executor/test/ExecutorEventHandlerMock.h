@@ -19,5 +19,7 @@ namespace sirius::contract::test {
         void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) override;
 
         void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) override;
+
+        void releasedTransactionsAreReady(const std::vector<std::vector<uint8_t>>& payloads) override;
     };
 } // namespace sirius::contract::test

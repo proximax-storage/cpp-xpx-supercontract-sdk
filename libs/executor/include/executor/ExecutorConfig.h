@@ -43,6 +43,8 @@ private:
     uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
     uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
 
+    uint8_t                 m_networkIdentifier;
+
     logging::LoggerConfig   m_loggerConfig;
 
 public:
@@ -181,6 +183,14 @@ public:
 
     void setDownloadPaymentToGasMultiplier(uint64_t downloadPaymentToGasMultiplier) {
         m_downloadPaymentToGasMultiplier = downloadPaymentToGasMultiplier;
+    }
+
+    uint8_t networkIdentifier() const {
+        return m_networkIdentifier;
+    }
+
+    void setNetworkIdentifier(uint8_t networkIdentifier) {
+        m_networkIdentifier = networkIdentifier;
     }
 };
 

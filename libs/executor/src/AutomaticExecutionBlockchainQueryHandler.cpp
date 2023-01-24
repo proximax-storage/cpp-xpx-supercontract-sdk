@@ -5,6 +5,7 @@
 */
 
 #include "AutomaticExecutionBlockchainQueryHandler.h"
+#include <blockchain/TransactionBuilder.h>
 
 namespace sirius::contract {
 
@@ -16,9 +17,9 @@ AutomaticExecutionBlockchainQueryHandler::AutomaticExecutionBlockchainQueryHandl
         uint64_t executionPayment,
         uint64_t downloadPayment)
         : AutorunBlockchainQueryHandler(executorEnvironment, contractEnvironment, blockHeight)
-        , m_caller(callerKey)
-        , m_executionPayment(executionPayment)
-        , m_downloadPayment(downloadPayment) {}
+          , m_caller(callerKey)
+          , m_executionPayment(executionPayment)
+          , m_downloadPayment(downloadPayment) {}
 
 void AutomaticExecutionBlockchainQueryHandler::callerPublicKey(
         std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) {
@@ -49,10 +50,12 @@ AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<Asyn
 }
 
 void AutomaticExecutionBlockchainQueryHandler::addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback,
-                                                              vm::EmbeddedTransaction&& embeddedTransaction) {
+                                                              blockchain::EmbeddedTransaction&& embeddedTransaction) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_embeddedTransactions.push_back(std::move(embeddedTransaction));
+    auto payload = blockchain::buildEmbeddedTransaction(m_executorEnvironment.executorConfig().networkIdentifier(),
+                                                        m_contractEnvironment.contractKey(), embeddedTransaction);
+    m_embeddedTransactions.push_back(std::move(payload));
 
     callback->postReply(expected<void>());
 }
