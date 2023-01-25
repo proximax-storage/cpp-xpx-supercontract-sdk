@@ -49,8 +49,8 @@ AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<Asyn
     callback->postReply(m_contractEnvironment.contractKey());
 }
 
-void AutomaticExecutionBlockchainQueryHandler::addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback,
-                                                              blockchain::EmbeddedTransaction&& embeddedTransaction) {
+void AutomaticExecutionBlockchainQueryHandler::addTransaction(blockchain::EmbeddedTransaction&& embeddedTransaction,
+                                                              std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     auto payload = blockchain::buildEmbeddedTransaction(m_executorEnvironment.executorConfig().networkIdentifier(),

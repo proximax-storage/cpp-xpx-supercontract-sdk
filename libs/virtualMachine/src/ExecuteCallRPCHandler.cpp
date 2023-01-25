@@ -31,6 +31,14 @@
 #include "GetBlockHashRPCHandler.h"
 #include "GetBlockTimeRPCHandler.h"
 #include "GetBlockGenerationTimeRPCHandler.h"
+#include "GetTransactionHashRPCHandler.h"
+#include "GetCallerPublicKeyRPCHandler.h"
+#include "GetContractPublicKeyRPCHandler.h"
+#include "GetServicePaymentsRPCHandler.h"
+#include "GetExecutionPaymentRPCHandler.h"
+#include "GetDownloadPaymentRPCHandler.h"
+#include "GetServicePaymentsRPCHandler.h"
+#include "AddTransactionRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
 #include <blockchain_vm.pb.h>
@@ -189,26 +197,31 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
             break;
         }
         case supercontractserver::Response::kGetTransactionHash: {
+            processGetTransactionHash(response->get_transaction_hash());
             break;
         }
         case supercontractserver::Response::kGetCallerPublicKey: {
+            processGetCallerPublicKey(response->get_caller_public_key());
             break;
         }
         case supercontractserver::Response::kGetContractPublicKey: {
+            processContractPublicKey(response->get_contract_public_key());
             break;
         }
         case supercontractserver::Response::kGetServicePayments: {
+            processGetServicePayments(response->get_service_payments());
             break;
         }
         case supercontractserver::Response::kGetExecutionPayment: {
+            processGetExecutionPayment(response->get_execution_payment());
             break;
         }
         case supercontractserver::Response::kGetDownloadPayment: {
+            processGetDownloadPayment(response->get_download_payment());
             break;
         }
         case supercontractserver::Response::kAddTransaction: {
-            // TODO placeholder to correctly link blockchain proto
-            supercontractserver::AddTransaction query;
+            processAddTransaction(response->add_transaction());
             break;
         }
         case supercontractserver::Response::kOpenFile: {
@@ -284,6 +297,7 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
             break;
         }
         case supercontractserver::Response::SERVER_MESSAGE_NOT_SET: {
+            ASSERT("Received unknown message from virtual machine", m_environment.logger());
             break;
         }
     }
@@ -1025,6 +1039,230 @@ void ExecuteCallRPCHandler::processGetBlockGenerationTime(const supercontractser
             },
             [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<GetBlockGenerationTimeRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processGetTransactionHash(const supercontractserver::GetTransactionHash& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetTransactionHashReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetTransactionHashReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_transaction_hash_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetTransactionHashRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processGetCallerPublicKey(const supercontractserver::GetCallerPublicKey& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetCallerPublicKeyReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetCallerPublicKeyReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_caller_public_key_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetCallerPublicKeyRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processContractPublicKey(const supercontractserver::GetContractPublicKey& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetContractPublicKeyReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetContractPublicKeyReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_contract_public_key_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetContractPublicKeyRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processGetExecutionPayment(const supercontractserver::GetExecutionPayment& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetExecutionPaymentReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetExecutionPaymentReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_execution_payment_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetExecutionPaymentRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processGetDownloadPayment(const supercontractserver::GetDownloadPayment& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetDownloadPaymentReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetDownloadPaymentReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_download_payment_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetDownloadPaymentRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processGetServicePayments(const supercontractserver::GetServicePayments& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::GetServicePaymentsReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::GetServicePaymentsReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_get_service_payments_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<GetServicePaymentsRPCHandler>(
+            m_environment,
+            request,
+            m_blockchainQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
+void ExecuteCallRPCHandler::processAddTransaction(const supercontractserver::AddTransaction& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::AddTransactionReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::AddTransactionReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_add_transaction_return(status);
+                writeRequest(std::move(requestWrapper));
+            },
+            [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<AddTransactionRPCHandler>(
             m_environment,
             request,
             m_blockchainQueryHandler,

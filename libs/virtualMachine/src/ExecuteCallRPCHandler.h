@@ -116,6 +116,21 @@ private:
     void processGetBlockTime(const supercontractserver::GetBlockTime&);
 
     void processGetBlockGenerationTime(const supercontractserver::GetBlockGenerationTime&);
+
+    void processGetTransactionHash(const supercontractserver::GetTransactionHash&);
+
+    void processGetCallerPublicKey(const supercontractserver::GetCallerPublicKey&);
+
+    void processContractPublicKey(const supercontractserver::GetContractPublicKey&);
+
+    void processGetExecutionPayment(const supercontractserver::GetExecutionPayment&);
+
+    void processGetDownloadPayment(const supercontractserver::GetDownloadPayment&);
+
+    void processGetServicePayments(const supercontractserver::GetServicePayments&);
+
+    void processAddTransaction(const supercontractserver::AddTransaction&);
+
 };
 
 } // namespace sirius::contract::vm

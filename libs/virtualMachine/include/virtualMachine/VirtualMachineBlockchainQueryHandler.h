@@ -60,7 +60,7 @@ public:
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
-    virtual void addTransaction(std::shared_ptr<AsyncQueryCallback<void>> callback, blockchain::EmbeddedTransaction&& embeddedTransaction) {
+    virtual void addTransaction(blockchain::EmbeddedTransaction&& embeddedTransaction, std::shared_ptr<AsyncQueryCallback<void>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(blockchain::make_error_code(blockchain::BlockchainError::incorrect_query)));
     }
 
