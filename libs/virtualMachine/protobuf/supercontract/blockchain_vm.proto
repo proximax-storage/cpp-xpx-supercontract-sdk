@@ -27,7 +27,7 @@ message GetBlockGenerationTime {
 }
 
 message GetBlockGenerationTimeReturn {
-  uint64 timestamp = 1;
+  uint64 delta = 1;
 }
 
 message GetTransactionHash {

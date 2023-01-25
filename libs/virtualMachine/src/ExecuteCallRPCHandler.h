@@ -108,6 +108,14 @@ private:
     void processRemoveFileIterator(const supercontractserver::RemoveDirIterator&);
 
     void processDestroyIterator(const supercontractserver::DestroyDirIterator&);
+
+    void processGetBlockHeight(const supercontractserver::GetBlockHeight&);
+
+    void processGetBlockHash(const supercontractserver::GetBlockHash&);
+
+    void processGetBlockTime(const supercontractserver::GetBlockTime&);
+
+    void processGetBlockGenerationTime(const supercontractserver::GetBlockGenerationTime&);
 };
 
 } // namespace sirius::contract::vm
