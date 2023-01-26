@@ -271,11 +271,11 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
 
     bool isManual = callRequest->isManual();
 
-    auto actualExecutionPayment = utils::DivideCeil(executionResult.m_scConsumed,
+    auto actualExecutionPayment = utils::DivideCeil(executionResult.m_execution_gas_consumed,
                                                     m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier());
     actualExecutionPayment = std::min(actualExecutionPayment, callRequest->executionPayment());
 
-    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_smConsumed,
+    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_limit,
                                                     m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 

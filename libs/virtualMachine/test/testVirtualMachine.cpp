@@ -72,8 +72,8 @@ TEST(VirtualMachine, SimpleContract) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1 + 1);
-            ASSERT_EQ(res->m_scConsumed, 604);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 604);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
@@ -144,8 +144,8 @@ TEST(VirtualMachine, InternetRead) {
             // std::cout << res->m_smConsumed << std::endl;
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 20577365409);
-            ASSERT_EQ(res->m_smConsumed, 10240);
+            ASSERT_EQ(res->m_execution_gas_consumed, 20577365409);
+            ASSERT_EQ(res->m_download_gas_limit, 10240);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -212,8 +212,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 100000);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 100000);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -279,8 +279,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 1483930686);
-            ASSERT_EQ(res->m_smConsumed, 10 * 1024);
+            ASSERT_EQ(res->m_execution_gas_consumed, 1483930686);
+            ASSERT_EQ(res->m_download_gas_limit, 10 * 1024);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -345,8 +345,8 @@ TEST(VirtualMachine, WrongContractPath) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 0);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 0);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -473,8 +473,8 @@ TEST(VirtualMachine, WrongExecFunction) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 0);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 0);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -540,8 +540,8 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 527832);
-            ASSERT_EQ(res->m_smConsumed, 0); // Internet read function shouldn't be called, so no SM is consumed
+            ASSERT_EQ(res->m_execution_gas_consumed, 527832);
+            ASSERT_EQ(res->m_download_gas_limit, 0); // Internet read function shouldn't be called, so no SM is consumed
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -610,8 +610,8 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
             // std::cout << res->m_smConsumed << std::endl;
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 0);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 0);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -683,8 +683,8 @@ TEST(VirtualMachine, FaultyContract) {
             // std::cout << res->m_smConsumed << std::endl;
             ASSERT_EQ(res->m_success, false);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_scConsumed, 20524888494);
-            ASSERT_EQ(res->m_smConsumed, 10240);
+            ASSERT_EQ(res->m_execution_gas_consumed, 20524888494);
+            ASSERT_EQ(res->m_download_gas_limit, 10240);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler,
@@ -758,7 +758,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                                      std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
     });
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     exec("sudo systemctl stop supercontract_server");
     std::cout << "stopped" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -853,8 +853,8 @@ TEST(VirtualMachine, SimpleStorage) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 4402853086);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 4402853086);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
@@ -917,8 +917,8 @@ TEST(VirtualMachine, IteratorTest) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_scConsumed, 10239952103);
-            ASSERT_EQ(res->m_smConsumed, 0);
+            ASSERT_EQ(res->m_execution_gas_consumed, 2928226642);
+            ASSERT_EQ(res->m_download_gas_limit, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),

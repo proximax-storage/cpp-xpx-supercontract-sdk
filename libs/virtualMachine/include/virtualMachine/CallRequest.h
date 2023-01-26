@@ -48,8 +48,8 @@ struct CallRequest {
 struct CallExecutionResult {
     bool m_success;
     uint32_t m_return;
-    uint64_t m_scConsumed;
-    uint64_t m_smConsumed;
+    uint64_t m_execution_gas_consumed;
+    uint64_t m_download_gas_limit;
     uint64_t m_proofOfExecutionSecretData;
 };
 

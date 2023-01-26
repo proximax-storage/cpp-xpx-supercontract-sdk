@@ -88,8 +88,8 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
             CallExecutionResult executionResult;
             executionResult.m_success = false;
             executionResult.m_return = 0;
-            executionResult.m_scConsumed = 0;
-            executionResult.m_smConsumed = 0;
+            executionResult.m_execution_gas_consumed = 0;
+            executionResult.m_download_gas_limit = 0;
             callback->postReply(executionResult);
         } else {
             callback->postReply(tl::unexpected(callAbsolutePath.error()));
