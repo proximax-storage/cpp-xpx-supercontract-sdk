@@ -527,9 +527,13 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
         return false;
     }
 
-    auto otherCallIt = other.m_callsExecutionInfo.begin();
-    auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.begin();
-    for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++) {
+    ASSERT(m_successfulEndBatchOpinion->m_callsExecutionInfo.size() == m_batch.m_callRequests.size(),
+           m_executorEnvironment.logger())
+
+    auto otherCallIt = other.m_callsExecutionInfo.cbegin();
+    auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.cbegin();
+    auto batchCallIt = m_batch.m_callRequests.cbegin();
+    for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++, batchCallIt++) {
         if (otherCallIt->m_callId != callIt->m_callId) {
             return false;
         }
@@ -545,6 +549,14 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
         if (otherCallIt->m_releasedTransaction !=
             callIt->m_releasedTransaction) {
+            return false;
+        }
+
+        if (otherCallIt->m_executorParticipation.m_scConsumed > (*batchCallIt)->executionPayment()) {
+            return false;
+        }
+
+        if (otherCallIt->m_executorParticipation.m_smConsumed > (*batchCallIt)->downloadPayment()) {
             return false;
         }
     }
