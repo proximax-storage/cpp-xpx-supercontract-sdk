@@ -10,13 +10,13 @@
 namespace sirius::contract {
 
 std::shared_ptr<Executor> DefaultExecutorBuilder::build(crypto::KeyPair&& keyPair, const ExecutorConfig& config,
-                                                        std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                                                        const std::shared_ptr<ExecutorEventHandler>& eventHandler,
                                                         std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                                                         std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                                         std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                                                         std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
                                                         const std::string& dbgPeerName) {
-    return std::make_shared<DefaultExecutor>(std::move(keyPair), config, std::move(eventHandler), std::move(vmBuilder),
+    return std::make_shared<DefaultExecutor>(std::move(keyPair), config, eventHandler, std::move(vmBuilder),
                                             std::move(storageBuilder), std::move(blockchainBuilder),
                                             std::move(messengerBuilder), dbgPeerName);
 }

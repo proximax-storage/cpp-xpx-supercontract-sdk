@@ -25,7 +25,7 @@ public:
 
     std::shared_ptr<Executor> build(crypto::KeyPair&& keyPair,
                                     const ExecutorConfig& config,
-                                    std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                                    const std::shared_ptr<ExecutorEventHandler>& eventHandler,
                                     std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                     std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,

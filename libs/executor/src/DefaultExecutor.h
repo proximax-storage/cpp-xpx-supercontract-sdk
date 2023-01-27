@@ -37,7 +37,7 @@ private:
 
     ExecutorConfig m_config;
 
-    std::unique_ptr<ExecutorEventHandler> m_eventHandler;
+    std::shared_ptr<ExecutorEventHandler> m_eventHandler;
     std::shared_ptr<messenger::Messenger> m_messenger;
     std::shared_ptr<storage::Storage> m_storage;
     std::shared_ptr<blockchain::CachedBlockchain> m_blockchain;
@@ -48,7 +48,7 @@ public:
 
     DefaultExecutor(crypto::KeyPair&& keyPair,
                     const ExecutorConfig& config,
-                    std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                    std::shared_ptr<ExecutorEventHandler> eventHandler,
                     std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                     std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,

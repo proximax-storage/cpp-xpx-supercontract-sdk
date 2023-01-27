@@ -27,7 +27,7 @@ namespace sirius::contract {
 
 DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
                                  const ExecutorConfig& config,
-                                 std::unique_ptr<ExecutorEventHandler>&& eventHandler,
+                                 std::shared_ptr<ExecutorEventHandler> eventHandler,
                                  std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                                  std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                  std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
