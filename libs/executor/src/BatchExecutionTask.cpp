@@ -193,8 +193,10 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::shared_ptr<CallRequ
                                   callRequest->file(),
                                   callRequest->function(),
                                   callRequest->arguments(),
-                                  callRequest->executionPayment() * m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier(),
-                                  callRequest->downloadPayment() * m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier(),
+                                  callRequest->executionPayment() *
+                                  m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier(),
+                                  callRequest->downloadPayment() *
+                                  m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier(),
                                   isManual ? vm::CallRequest::CallLevel::MANUAL : vm::CallRequest::CallLevel::AUTOMATIC,
                                   m_proofOfExecutionSecretData);
 
@@ -276,7 +278,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
     actualExecutionPayment = std::min(actualExecutionPayment, callRequest->executionPayment());
 
     auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_limit,
-                                                    m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
+                                                   m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
     Hash256 releasedTransactionsHash;
@@ -463,7 +465,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
     } else {
 
-        for(const auto& [hash, tx]: m_releasedTransactions) {
+        for (const auto&[hash, tx]: m_releasedTransactions) {
             m_executorEnvironment.executorEventHandler().releasedTransactionsAreReady(tx);
         }
 
@@ -569,9 +571,13 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
         return false;
     }
 
-    return m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
-                                                                other.m_batchIndex,
-                                                                other.m_successfulBatchInfo.m_PoExVerificationInfo);
+    if (!m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
+                                                              other.m_batchIndex,
+                                                              other.m_successfulBatchInfo.m_PoExVerificationInfo)) {
+        return false;
+    }
+
+    return true;
 }
 
 bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecutionOpinion& other) {
@@ -588,10 +594,22 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
         return false;
     }
 
-    auto otherCallIt = other.m_callsExecutionInfo.begin();
-    auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.begin();
-    for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++) {
+    ASSERT(m_successfulEndBatchOpinion->m_callsExecutionInfo.size() == m_batch.m_callRequests.size(),
+           m_executorEnvironment.logger())
+
+    auto otherCallIt = other.m_callsExecutionInfo.cbegin();
+    auto callIt = m_successfulEndBatchOpinion->m_callsExecutionInfo.cbegin();
+    auto batchCallIt = m_batch.m_callRequests.cbegin();
+    for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++, batchCallIt++) {
         if (otherCallIt->m_callId != callIt->m_callId) {
+            return false;
+        }
+
+        if (otherCallIt->m_executorParticipation.m_scConsumed > (*batchCallIt)->executionPayment()) {
+            return false;
+        }
+
+        if (otherCallIt->m_executorParticipation.m_smConsumed > (*batchCallIt)->downloadPayment()) {
             return false;
         }
     }
@@ -604,9 +622,13 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
         return false;
     }
 
-    return m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
-                                                                other.m_batchIndex,
-                                                                crypto::CurvePoint());
+    if (!m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
+                                                              other.m_batchIndex,
+                                                              crypto::CurvePoint())) {
+        return false;
+    }
+
+    return true;
 }
 
 void BatchExecutionTask::checkEndBatchTransactionReadiness() {
