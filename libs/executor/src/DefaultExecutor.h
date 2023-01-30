@@ -53,7 +53,7 @@ public:
                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                     std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                     std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                    const std::string& dbgPeerName = "executor");
+                    logging::Logger&& logger);
 
     ~DefaultExecutor() override;
 

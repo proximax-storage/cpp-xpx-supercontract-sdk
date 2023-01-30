@@ -45,8 +45,6 @@ private:
 
     uint8_t                 m_networkIdentifier;
 
-    logging::LoggerConfig   m_loggerConfig;
-
 public:
 
     int unsuccessfulExecutionDelayMs() const {
@@ -143,14 +141,6 @@ public:
 
     void setServiceUnavailableTimeoutMs(int serviceUnavailableTimeoutMs) {
         m_serviceUnavailableTimeoutMs = serviceUnavailableTimeoutMs;
-    }
-
-    const logging::LoggerConfig& loggerConfig() const {
-        return m_loggerConfig;
-    }
-
-    void setLoggerConfig(const logging::LoggerConfig& loggerConfig) {
-        m_loggerConfig = loggerConfig;
     }
 
     int shareOpinionTimeoutMs() const {

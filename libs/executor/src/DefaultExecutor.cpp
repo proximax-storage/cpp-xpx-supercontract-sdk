@@ -32,9 +32,9 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
                                  std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                  std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                                  std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                                 const std::string& dbgPeerName)
+                                 logging::Logger&& logger)
         : m_keyPair(std::move(keyPair))
-          , m_logger(config.loggerConfig(), dbgPeerName)
+          , m_logger(std::move(logger))
           , m_sslContext(boost::asio::ssl::context::tlsv12_client)
           , m_config(config)
           , m_eventHandler(std::move(eventHandler)) {
