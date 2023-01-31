@@ -22,7 +22,7 @@ private:
 public:
     VirtualMachineMock(ThreadManager& threadManager,
                        std::deque<bool> result,
-                       bool m_virtualMachineIsFail);
+                       bool m_virtualMachineIsFail = false);
 
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
