@@ -108,6 +108,8 @@ public:
 
     void addSynchronizationTask() override;
 
+    void notifyHasNextBatch() override;
+
     BaseBatchesManager& batchesManager() override;
 
     ProofOfExecution& proofOfExecution() override;

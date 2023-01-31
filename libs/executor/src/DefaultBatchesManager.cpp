@@ -204,6 +204,13 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
     }
 
     m_autorunCallInfos.erase(callIt);
+
+    if (hasNextBatch()) {
+        // Note that we do not check here that exactly this batch is the next batch
+        // That's why the number of notifications might not be the same as the number of ready batches
+        // due to gaps
+        m_contractEnvironment.notifyHasNextBatch();
+    }
 }
 
 void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std::error_code&& ec) {
