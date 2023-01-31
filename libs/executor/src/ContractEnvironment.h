@@ -42,6 +42,8 @@ public:
 
     virtual void addSynchronizationTask() = 0;
 
+    virtual void notifyHasNextBatch() = 0;
+
     virtual BaseBatchesManager& batchesManager() = 0;
 
     virtual ProofOfExecution& proofOfExecution() = 0;

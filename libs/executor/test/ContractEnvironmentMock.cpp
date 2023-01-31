@@ -43,4 +43,7 @@ BaseBatchesManager& ContractEnvironmentMock::batchesManager() {
     return *m_batchesManager;
 }
 
+void ContractEnvironmentMock::notifyHasNextBatch() {
+}
+
 }

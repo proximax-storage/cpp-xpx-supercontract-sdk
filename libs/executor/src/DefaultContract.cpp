@@ -236,6 +236,15 @@ void DefaultContract::addSynchronizationTask() {
     m_synchronizationRequest = m_lastKnownStorageState;
 }
 
+void DefaultContract::notifyHasNextBatch() {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (!m_task) {
+        runTask();
+    }
+}
+
 // endregion
 
 void DefaultContract::runTask() {
