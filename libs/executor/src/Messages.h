@@ -96,26 +96,31 @@ private:
 
         std::ostringstream os;
 
-        os << utils::serialize(m_contractKey);
-        os << utils::serialize(m_batchIndex);
-        os << utils::serialize(m_automaticExecutionsCheckedUpTo);
-        os << utils::serialize(m_successfulBatchInfo.m_storageHash);
-        os << utils::serialize(m_successfulBatchInfo.m_usedStorageSize);
-        os << utils::serialize(m_successfulBatchInfo.m_metaFilesSize);
-        os << utils::serialize(m_successfulBatchInfo.m_PoExVerificationInfo);
+        os << utils::plainBytes(m_contractKey);
+        os << utils::plainBytes(m_batchIndex);
+        os << utils::plainBytes(m_automaticExecutionsCheckedUpTo);
+        os << utils::plainBytes(m_successfulBatchInfo.m_storageHash);
+        os << utils::plainBytes(m_successfulBatchInfo.m_usedStorageSize);
+        os << utils::plainBytes(m_successfulBatchInfo.m_metaFilesSize);
+        os << utils::plainBytes(m_successfulBatchInfo.m_PoExVerificationInfo.toBytes());
 
         for (const auto& call: m_callsExecutionInfo) {
-            os << utils::serialize(call.m_callId);
-            os << utils::serialize(call.m_manual);
-			os << utils::serialize(call.m_block);
-            os << utils::serialize(call.m_callExecutionStatus);
-            os << utils::serialize(call.m_releasedTransaction);
+            os << utils::plainBytes(call.m_callId);
+            os << utils::plainBytes(call.m_manual);
+            os << utils::plainBytes(call.m_block);
+            os << utils::plainBytes(call.m_callExecutionStatus);
+            os << utils::plainBytes(call.m_releasedTransaction);
         }
 
-        os << utils::serialize(m_proof);
+
+        os << utils::plainBytes(m_proof.m_initialBatch);
+        os << utils::plainBytes(m_proof.m_batchProof.m_T.toBytes());
+        os << utils::plainBytes(m_proof.m_batchProof.m_r);
+        os << utils::plainBytes(m_proof.m_tProof.m_F.toBytes());
+        os << utils::plainBytes(m_proof.m_tProof.m_k);
 
         for (const auto& call: m_callsExecutionInfo) {
-            os << utils::serialize(call.m_executorParticipation);
+            os << utils::plainBytes(call.m_executorParticipation);
         }
 
         auto s = os.str();
@@ -187,20 +192,24 @@ private:
 
         std::ostringstream os;
 
-        os << utils::serialize(m_contractKey);
-        os << utils::serialize(m_batchIndex);
-        os << utils::serialize(m_automaticExecutionsCheckedUpTo);
+        os << utils::plainBytes(m_contractKey);
+        os << utils::plainBytes(m_batchIndex);
+        os << utils::plainBytes(m_automaticExecutionsCheckedUpTo);
 
         for (const auto& call: m_callsExecutionInfo) {
-            os << utils::serialize(call.m_callId);
-            os << utils::serialize(call.m_manual);
-            os << utils::serialize(call.m_block);
+            os << utils::plainBytes(call.m_callId);
+            os << utils::plainBytes(call.m_manual);
+            os << utils::plainBytes(call.m_block);
         }
 
-        os << utils::serialize(m_proof);
+        os << utils::plainBytes(m_proof.m_initialBatch);
+        os << utils::plainBytes(m_proof.m_batchProof.m_T.toBytes());
+        os << utils::plainBytes(m_proof.m_batchProof.m_r);
+        os << utils::plainBytes(m_proof.m_tProof.m_F.toBytes());
+        os << utils::plainBytes(m_proof.m_tProof.m_k);
 
         for (const auto& call: m_callsExecutionInfo) {
-            os << utils::serialize(call.m_executorParticipation);
+            os << utils::plainBytes(call.m_executorParticipation);
         }
 
         auto s = os.str();
