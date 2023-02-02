@@ -15,11 +15,14 @@ namespace sirius::contract::test {
 class ContractEnvironmentMock : public ContractEnvironment {
 private:
     ContractKey m_contractKey;
-    std::map<ExecutorKey, ExecutorInfo> m_executors;
     uint64_t m_automaticExecutionsSCLimit;
     uint64_t m_automaticExecutionsSMLimit;
     ContractConfig m_contractConfig;
     ProofOfExecution m_proofOfExecution;
+
+public:
+
+    std::map<ExecutorKey, ExecutorInfo> m_executors;
 
 public:
 

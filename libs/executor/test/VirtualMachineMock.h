@@ -14,15 +14,14 @@ namespace sirius::contract::test {
 class VirtualMachineMock : public vm::VirtualMachine {
 private:
     ThreadManager& m_threadManager;
-    std::deque<bool> m_result;
+    std::deque<vm::CallExecutionResult> m_result;
     std::map<CallId, Timer> m_timers;
-    bool m_virtualMachineIsFail;
-    int count = 0;
+    uint m_vmFailureNumber;
 
 public:
     VirtualMachineMock(ThreadManager& threadManager,
-                       std::deque<bool> result,
-                       bool m_virtualMachineIsFail = false);
+                       std::deque<vm::CallExecutionResult> result,
+                       uint vmFailureNumber = 0);
 
     void executeCall(const vm::CallRequest& request,
                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,

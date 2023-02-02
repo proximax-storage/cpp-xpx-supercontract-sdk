@@ -14,6 +14,16 @@
 namespace sirius::utils {
 
 template<class T>
+    std::string plainBytes(const T* ptr, size_t size) {
+    return std::string(reinterpret_cast<const char*>(ptr), size);
+}
+
+template<class T>
+std::string plainBytes(const T& value) {
+    return plainBytes(&value, sizeof(value));
+}
+
+template<class T>
 std::string serialize(const T& value) {
     std::ostringstream os(std::ios::binary);
     cereal::PortableBinaryOutputArchive archive(os);

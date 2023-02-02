@@ -46,11 +46,11 @@ struct CallRequest {
 };
 
 struct CallExecutionResult {
-    bool m_success;
-    uint32_t m_return;
-    uint64_t m_execution_gas_consumed;
-    uint64_t m_download_gas_limit;
-    uint64_t m_proofOfExecutionSecretData;
+    bool m_success = false;
+    uint32_t m_return = 0;
+    uint64_t m_execution_gas_consumed = 0;
+    uint64_t m_download_gas_consumed = 0;
+    uint64_t m_proofOfExecutionSecretData = 0;
 };
 
 }

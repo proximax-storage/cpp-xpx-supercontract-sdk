@@ -10,8 +10,21 @@
 #include "ExecutorEnvironment.h"
 #include "virtualMachine/VirtualMachine.h"
 #include <storage/Storage.h>
+#include <algorithm>
+#include <vector>
 
 namespace sirius::contract::test {
+
+template<typename T>
+std::vector<size_t> argSort(const std::vector<T>& v) {
+    std::vector<size_t> indices(v.size());
+    for (size_t i = 0; i < v.size(); i++) {
+        indices[i] = i;
+    }
+    std::sort(indices.begin(), indices.end(),
+              [&v](size_t i, size_t j) { return v[i] < v[j]; });
+    return indices;
+}
 
 class GlobalEnvironmentMock : public GlobalEnvironment {
 

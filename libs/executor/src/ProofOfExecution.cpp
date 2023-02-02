@@ -8,16 +8,12 @@ extern "C" {
 
 namespace sirius::contract {
 
-ProofOfExecution::ProofOfExecution(GlobalEnvironment& environment,
-                                   const crypto::KeyPair& key,
+ProofOfExecution::ProofOfExecution(const crypto::KeyPair& key,
                                    uint64_t maxBatchesHistorySize)
         : m_keyPair(key)
-        , m_environment(environment)
-        , m_maxBatchesHistorySize(maxBatchesHistorySize) {}
+          , m_maxBatchesHistorySize(maxBatchesHistorySize) {}
 
 sirius::crypto::Scalar ProofOfExecution::generateUniqueRandom(const utils::RawBuffer& dataBuffer) {
-
-    ASSERT(isSingleThread(), m_environment.logger())
 
     Hash512 privHash;
     sirius::crypto::Sha3_512({m_keyPair.privateKey().data(), m_keyPair.privateKey().size()}, privHash);
@@ -32,17 +28,9 @@ sirius::crypto::Scalar ProofOfExecution::generateUniqueRandom(const utils::RawBu
 }
 
 sirius::crypto::CurvePoint ProofOfExecution::addToProof(uint64_t digest) {
-    ASSERT(isSingleThread(), m_environment.logger())
+    auto [alpha, Y] = verificationInfo(digest);
 
-    auto Beta = sirius::crypto::CurvePoint::BasePoint();
-    Hash512 digest_hash;
-    sirius::crypto::Sha3_512_Builder hasher_h;
-
-    hasher_h.update(utils::RawBuffer{reinterpret_cast<const uint8_t*>(&digest), sizeof(digest)});
-    hasher_h.final(digest_hash);
-
-    sirius::crypto::Scalar alpha(digest_hash.array());
-    auto Y = alpha * Beta;
+    auto Beta = crypto::CurvePoint::BasePoint();
 
     sirius::crypto::Sha3_512_Builder hasher_h2;
     Hash512 c;
@@ -57,14 +45,10 @@ sirius::crypto::CurvePoint ProofOfExecution::addToProof(uint64_t digest) {
 }
 
 void ProofOfExecution::popFromProof() {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     m_x = m_xPrevious;
 }
 
 Proofs ProofOfExecution::buildActualProof() {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     return buildProof(m_x);
 }
 
@@ -73,8 +57,6 @@ Proofs ProofOfExecution::buildPreviousProof() {
 }
 
 Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     auto v = generateUniqueRandom(x);
     auto Beta = sirius::crypto::CurvePoint::BasePoint();
     auto T = v * Beta;
@@ -97,8 +79,6 @@ Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
 }
 
 void ProofOfExecution::reset(uint64_t nextBatch) {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     m_x = sirius::crypto::Scalar();
     m_xPrevious = sirius::crypto::Scalar();
     m_initialBatch = nextBatch;
@@ -106,14 +86,9 @@ void ProofOfExecution::reset(uint64_t nextBatch) {
 
 void ProofOfExecution::addBatchVerificationInformation(uint64_t batchId,
                                                        const crypto::CurvePoint& batchVerificationInformation) {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     if (m_batchesVerificationInformation.contains(batchId)) {
         return;
     }
-
-    ASSERT(m_batchesVerificationInformation.empty() || (--m_batchesVerificationInformation.end())->first + 1 == batchId,
-           m_environment.logger())
 
     m_batchesVerificationInformation[batchId] = batchVerificationInformation;
 
@@ -127,8 +102,6 @@ bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
                                    const Proofs& proof,
                                    uint64_t batchId,
                                    const crypto::CurvePoint& verificationInformation) {
-    ASSERT(isSingleThread(), m_environment.logger())
-
     Hash512 dHash;
     crypto::Sha3_512_Builder dHasher;
     dHasher.update({proof.m_tProof.m_F.toBytes(), proof.m_batchProof.m_T.toBytes(), executorKey});
@@ -192,6 +165,18 @@ bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
 
     return true;
 
+}
+
+std::pair<crypto::Scalar, crypto::CurvePoint> ProofOfExecution::verificationInfo(uint64_t digest) {
+    auto Beta = sirius::crypto::CurvePoint::BasePoint();
+    Hash512 digest_hash;
+    sirius::crypto::Sha3_512_Builder hasher_h;
+
+    hasher_h.update(utils::RawBuffer{reinterpret_cast<const uint8_t*>(&digest), sizeof(digest)});
+    hasher_h.final(digest_hash);
+
+    crypto::Scalar alpha = digest_hash.array();
+    return {alpha, alpha * sirius::crypto::CurvePoint::BasePoint()};
 }
 
 } // namespace sirius::contract

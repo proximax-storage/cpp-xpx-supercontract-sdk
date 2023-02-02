@@ -12,12 +12,21 @@ namespace sirius::utils {
 
     template <class T>
     T generateRandomByteValue() {
-        std::array<uint8_t, sizeof(T)> data{};
         std::random_device rd;
         std::seed_seq sd{ rd(), rd(), rd(), rd() };
         std::mt19937 mt(sd);
-        std::generate_n(data.data(), sizeof(data), mt);
-        T value(data);
+        T value;
+        std::generate_n(reinterpret_cast<uint8_t *>(&value), sizeof(value), mt);
+        return value;
+    }
+
+    template<class T, class Seed>
+    T generateRandomByteValue(const Seed& seed) {
+        std::random_device rd;
+        std::seed_seq sd(seed.begin(), seed.end());
+        std::mt19937 mt(sd);
+        T value;
+        std::generate_n(reinterpret_cast<uint8_t*>(&value), sizeof(value), mt);
         return value;
     }
 

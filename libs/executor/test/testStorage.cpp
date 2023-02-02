@@ -117,7 +117,7 @@ TEST(Supercontract, Storage) {
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_execution_gas_consumed, 4402853086);
-            ASSERT_EQ(res->m_download_gas_limit, 0);
+            ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
@@ -249,7 +249,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_execution_gas_consumed, 11693600352);
-            ASSERT_EQ(res->m_download_gas_limit, 0);
+            ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
@@ -381,7 +381,7 @@ TEST(Supercontract, FaultyStorage) {
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_execution_gas_consumed, 1437180);
-            ASSERT_EQ(res->m_download_gas_limit, 0);
+            ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);

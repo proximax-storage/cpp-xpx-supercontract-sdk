@@ -5,10 +5,19 @@
 */
 
 #include "StorageMock.h"
+#include "gtest/gtest.h"
 
 namespace sirius::contract::test {
 
-StorageMock::StorageMock():m_storageHash(utils::generateRandomByteValue<StorageHash>()){}
+storage::StorageState nextState(const storage::StorageState& oldState) {
+    return utils::generateRandomByteValue<storage::StorageState>(oldState.m_storageHash);
+}
+
+storage::StorageState randomState() {
+    return utils::generateRandomByteValue<storage::StorageState>();
+}
+
+StorageMock::StorageMock() : m_state(randomState()) {}
 
 void StorageMock::synchronizeStorage(const DriveKey& driveKey,
                                      const ModificationId& modificationId,
@@ -20,11 +29,16 @@ void
 StorageMock::initiateModifications(const DriveKey& driveKey,
                                    const ModificationId& modificationId,
                                    std::shared_ptr<AsyncQueryCallback<void>> callback) {
-        callback->postReply(expected<void>());
+    ASSERT_FALSE(m_actualBatch);
+    m_actualBatch = std::make_optional<BatchModificationStatistics>();
+    m_actualBatch->m_lowerSandboxState = m_state;
+    callback->postReply(expected<void>());
 }
 
 void StorageMock::initiateSandboxModifications(const DriveKey& driveKey,
                                                std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT_TRUE(m_actualBatch);
+    m_actualBatch->m_calls.emplace_back();
     callback->postReply(expected<void>());
 }
 
@@ -44,24 +58,30 @@ void StorageMock::flush(const DriveKey&, uint64_t fileId, std::shared_ptr<AsyncQ
 void StorageMock::applySandboxStorageModifications(const DriveKey& driveKey,
                                                    bool success,
                                                    std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) {
-    storage::SandboxModificationDigest digest{
-            true,
-            0,
-            0
-    };
-    callback->postReply(std::move(digest));
+    ASSERT_TRUE(m_actualBatch);
+    if (success) {
+        m_actualBatch->m_lowerSandboxState = nextState(m_actualBatch->m_lowerSandboxState);
+    }
+    m_actualBatch->m_calls.back() = success;
+    callback->postReply(storage::SandboxModificationDigest{success, 0, 0});
 }
 
 void
 StorageMock::evaluateStorageHash(const DriveKey& driveKey,
                                  std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) {
-    storage::StorageState state;
-    state.m_storageHash = m_storageHash;
-    callback->postReply(std::move(state));
+    ASSERT_TRUE(m_actualBatch);
+    callback->postReply(storage::StorageState(m_actualBatch->m_lowerSandboxState));
 }
 
 void StorageMock::applyStorageModifications(const DriveKey& driveKey, bool success,
                                             std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    ASSERT_TRUE(m_actualBatch);
+    if (success) {
+        m_state = m_actualBatch->m_lowerSandboxState;
+    }
+    m_actualBatch->m_success = success;
+    m_historicBatches.emplace_back(std::move(*m_actualBatch));
+    m_actualBatch.reset();
     callback->postReply(expected<void>());
 }
 
@@ -101,3 +121,5 @@ void
 StorageMock::filesystem(const DriveKey& key,
                         std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) {}
 }
+
+

@@ -66,6 +66,22 @@ struct SuccessfulBatchInfo {
 
     crypto::CurvePoint m_PoExVerificationInfo;
 
+    bool operator ==(const SuccessfulBatchInfo& info) const {
+        if (m_storageHash != info.m_storageHash) {
+            return false;
+        }
+        if (m_usedStorageSize != info.m_usedStorageSize) {
+            return false;
+        }
+        if (m_metaFilesSize != info.m_metaFilesSize) {
+            return false;
+        }
+        if (m_PoExVerificationInfo != info.m_PoExVerificationInfo) {
+            return false;
+        }
+        return true;
+    }
+
     template<class Archive>
     void serialize( Archive& arch ) {
         arch( m_storageHash );

@@ -10,19 +10,19 @@
 namespace sirius::contract::test {
 
 VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager,
-                                       std::deque<bool> result,
-                                       bool virtualMachineIsFail)
-        : m_threadManager(threadManager),
-        m_result(std::move(result)),
-        m_virtualMachineIsFail(virtualMachineIsFail) {}
+                                       std::deque<vm::CallExecutionResult> result,
+                                       uint vmFailureNumber)
+        : m_threadManager(threadManager)
+        , m_result(std::move(result))
+        , m_vmFailureNumber(vmFailureNumber) {}
 
 void VirtualMachineMock::executeCall(const vm::CallRequest &request,
                                      std::weak_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                      std::weak_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                                      std::weak_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
                                      std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> callback) {
-    if (m_virtualMachineIsFail == true && count < 4) {
-        count++;
+    if (m_vmFailureNumber > 0) {
+        m_vmFailureNumber--;
         m_timers[request.m_callId] = m_threadManager.startTimer(500, [=]() mutable {
             callback->postReply(tl::unexpected<std::error_code>
                     (vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
@@ -34,13 +34,7 @@ void VirtualMachineMock::executeCall(const vm::CallRequest &request,
     auto random = rand()%3000;
     m_result.pop_front();
     m_timers[request.m_callId] = m_threadManager.startTimer(random, [=]() mutable {
-        vm::CallExecutionResult result{
-                executionResult,
-                0,
-                0,
-                0,
-        };
-        callback->postReply(result);
+        callback->postReply(executionResult);
     });
 }
 }

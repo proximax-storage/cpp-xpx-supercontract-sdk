@@ -6,8 +6,6 @@
 
 #pragma once
 
-#include "supercontract/GlobalEnvironment.h"
-#include "supercontract/SingleThread.h"
 #include "utils/types.h"
 #include <crypto/Hashes.h>
 #include <executor/Proofs.h>
@@ -16,10 +14,9 @@
 
 namespace sirius::contract {
 
-class ProofOfExecution : private SingleThread {
+class ProofOfExecution {
 
 private:
-    GlobalEnvironment& m_environment;
 
     sirius::crypto::Scalar m_x;
     sirius::crypto::Scalar m_xPrevious;
@@ -33,7 +30,7 @@ private:
     uint64_t m_maxBatchesHistorySize;
 
 public:
-    ProofOfExecution(GlobalEnvironment& environment, const crypto::KeyPair& key, uint64_t maxBatchesHistorySize=UINT64_MAX);
+    ProofOfExecution(const crypto::KeyPair& key, uint64_t maxBatchesHistorySize=UINT64_MAX);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
     Proofs buildActualProof();
@@ -45,6 +42,8 @@ public:
                      uint64_t batchId,
                      const crypto::CurvePoint& verificationInformation);
     void addBatchVerificationInformation(uint64_t batchId, const crypto::CurvePoint& batchVerificationInformation);
+
+    static std::pair<crypto::Scalar, crypto::CurvePoint> verificationInfo(uint64_t digest);
 
 private:
 

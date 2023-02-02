@@ -17,7 +17,7 @@ class ExecutorEnvironmentMock : public ExecutorEnvironment {
 private:
     crypto::KeyPair m_keyPair;
     ExecutorConfig m_executorConfig;
-    ExecutorEventHandlerMock m_executorEventHandlerMock;
+    std::shared_ptr<ExecutorEventHandler> m_executorEventHandlerMock;
     boost::asio::ssl::context m_sslContext{boost::asio::ssl::context::tlsv12_client};
     ThreadManager& m_threadManager;
     logging::Logger m_logger;
@@ -26,6 +26,7 @@ private:
 public:
     std::weak_ptr<storage::Storage> m_storage;
     std::weak_ptr<vm::VirtualMachine> m_virtualMachineMock;
+
     ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                             std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                             const ExecutorConfig& executorConfig,
@@ -36,7 +37,8 @@ public:
                             const ExecutorConfig& executorConfig,
                             ThreadManager& threadManager,
                             std::weak_ptr<storage::Storage> storageMock,
-                            std::weak_ptr<messenger::Messenger> messengerMock);
+                            std::weak_ptr<messenger::Messenger> messengerMock,
+                            std::shared_ptr<ExecutorEventHandler> handler = std::shared_ptr<ExecutorEventHandlerMock>());
 
     const crypto::KeyPair& keyPair() const override;
 

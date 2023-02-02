@@ -19,6 +19,14 @@
 
 namespace sirius::contract {
 
+namespace {
+
+bool enoughOpinions(uint64_t opinionsReceived, uint64_t totalExecutors) {
+    return 3 * opinionsReceived > 2 * totalExecutors;
+}
+
+}
+
 BatchExecutionTask::BatchExecutionTask(Batch&& batch,
                                        ContractEnvironment& contractEnvironment,
                                        ExecutorEnvironment& executorEnvironment,
@@ -277,7 +285,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
                                                     m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier());
     actualExecutionPayment = std::min(actualExecutionPayment, callRequest->executionPayment());
 
-    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_limit,
+    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_consumed,
                                                    m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
@@ -289,8 +297,8 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
             hasher.update(utils::RawBuffer{tx.data(), tx.size()});
         }
         hasher.final(releasedTransactionsHash);
+        m_releasedTransactions.emplace(releasedTransactionsHash, std::move(releasedTransactions));
     }
-    m_releasedTransactions.emplace(releasedTransactionsHash, std::move(releasedTransactions));
 
     m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
             callRequest->callId(),
@@ -464,7 +472,6 @@ void BatchExecutionTask::processPublishedEndBatch() {
         m_contractEnvironment.finishTask();
 
     } else {
-
         for (const auto&[hash, tx]: m_releasedTransactions) {
             m_executorEnvironment.executorEventHandler().releasedTransactionsAreReady(tx);
         }
@@ -635,9 +642,9 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_successfulEndBatchOpinion &&
-        2 * m_otherSuccessfulExecutorEndBatchOpinions.size() >=
-        3 * (m_contractEnvironment.executors().size() + 1)) {
+    if (m_successfulEndBatchOpinion&&
+        enoughOpinions(m_otherSuccessfulExecutorEndBatchOpinions.size() + 1,
+                   m_contractEnvironment.executors().size() + 1)) {
         // Enough signatures for successful batch
 
         if (!m_successfulEndBatchSent) {
@@ -653,9 +660,10 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                     });
 
         }
-    } else if (m_unsuccessfulEndBatchOpinion &&
-               2 * m_otherUnsuccessfulExecutorEndBatchOpinions.size() >=
-               3 * (m_contractEnvironment.executors().size() + 1)) {
+    }
+    else if (m_unsuccessfulEndBatchOpinion &&
+             enoughOpinions(m_otherSuccessfulExecutorEndBatchOpinions.size() + 1,
+                              m_contractEnvironment.executors().size() + 1)) {
 
         if (!m_unsuccessfulEndBatchSent) {
 

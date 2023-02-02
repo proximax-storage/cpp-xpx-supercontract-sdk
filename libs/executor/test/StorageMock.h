@@ -11,9 +11,26 @@
 
 namespace sirius::contract::test {
 
+storage::StorageState nextState(const storage::StorageState& oldState);
+
+storage::StorageState randomState();
+
+struct BatchModificationStatistics {
+    std::optional<bool>   m_success;
+    storage::StorageState m_lowerSandboxState;
+    std::vector<std::optional<bool>> m_calls;
+};
+
 class StorageMock: public storage::Storage {
+
 public:
-    StorageHash m_storageHash;
+
+    storage::StorageState m_state;
+
+    std::optional<BatchModificationStatistics> m_actualBatch;
+    std::vector<BatchModificationStatistics> m_historicBatches;
+
+public:
 
     StorageMock();
 
@@ -89,6 +106,11 @@ public:
 
     void
     filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) override;
+
+private:
+
+    void updateState();
+
 };
 }
 

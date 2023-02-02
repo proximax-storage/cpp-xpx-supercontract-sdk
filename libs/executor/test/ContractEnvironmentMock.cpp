@@ -17,7 +17,7 @@ ContractEnvironmentMock::ContractEnvironmentMock(ExecutorEnvironment& executorEn
         : m_contractKey(contractKey)
           , m_automaticExecutionsSCLimit(automaticExecutionsSCLimit)
           , m_automaticExecutionsSMLimit(automaticExecutionsSMLimit)
-          , m_proofOfExecution(executorEnvironment, executorEnvironment.keyPair())
+          , m_proofOfExecution(executorEnvironment.keyPair())
           , m_contractConfig(contractConfig)
           , m_batchesManager(std::move(batchesManager)) {}
 
