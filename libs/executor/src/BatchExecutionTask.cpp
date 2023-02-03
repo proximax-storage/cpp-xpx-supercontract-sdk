@@ -954,6 +954,7 @@ bool BatchExecutionTask::onBlockPublished(uint64_t height) {
     auto& batchesManager = m_contractEnvironment.batchesManager();
 
     if (!batchesManager.isBatchValid(m_batch)) {
+        ASSERT(!m_publishedEndBatchInfo, m_executorEnvironment.logger());
         m_contractEnvironment.batchesManager().delayBatch(Batch(m_batch));
 
         m_finished = true;

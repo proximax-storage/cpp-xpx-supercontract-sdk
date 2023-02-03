@@ -22,7 +22,11 @@ StorageMock::StorageMock() : m_state(randomState()) {}
 void StorageMock::synchronizeStorage(const DriveKey& driveKey,
                                      const ModificationId& modificationId,
                                      const StorageHash& storageHash,
-                                     std::shared_ptr<AsyncQueryCallback<bool>> callback) {}
+                                     std::shared_ptr<AsyncQueryCallback<void>> callback) {
+    m_actualBatch.reset();
+    m_state.m_storageHash = storageHash;
+    callback->postReply(expected<void>());
+}
 
 // Storage Modifier virtual functions
 void

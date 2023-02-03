@@ -38,7 +38,7 @@ public:
     void synchronizeStorage(const DriveKey& driveKey,
                             const ModificationId& modificationId,
                             const StorageHash& storageHash,
-                            std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+                            std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
     void
     initiateModifications(const DriveKey& driveKey,

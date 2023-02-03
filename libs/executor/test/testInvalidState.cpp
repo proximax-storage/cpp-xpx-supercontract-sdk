@@ -25,17 +25,14 @@ class ExecutorEventHandlerTestMock : public ExecutorEventHandlerMock {
 
 public:
 
-    UnsuccessfulEndBatchExecutionTransactionInfo m_expectedInfo;
-    std::promise<UnsuccessfulEndBatchExecutionTransactionInfo> m_unsuccessfulEndBatchIsReadyPromise;
+    SuccessfulEndBatchExecutionTransactionInfo m_expectedInfo;
+    std::promise<SuccessfulEndBatchExecutionTransactionInfo> m_successfulEndBatchIsReadyPromise;
 
     void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo& info) override {
-        FAIL();
-    }
-
-    void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
         ASSERT_EQ(info.m_contractKey, m_expectedInfo.m_contractKey);
         ASSERT_EQ(info.m_batchIndex, m_expectedInfo.m_batchIndex);
         ASSERT_EQ(info.m_automaticExecutionsCheckedUpTo, m_expectedInfo.m_automaticExecutionsCheckedUpTo);
+        ASSERT_EQ(info.m_successfulBatchInfo, m_expectedInfo.m_successfulBatchInfo);
         auto expectedKeysArgSort = argSort(m_expectedInfo.m_executorKeys);
         ASSERT_EQ(info.m_executorKeys.size(), m_expectedInfo.m_executorKeys.size());
         for (int i = 0; i < info.m_executorKeys.size(); i++) {
@@ -48,6 +45,8 @@ public:
             ASSERT_EQ(actualCallInfo.m_callId, expectedCallInfo.m_callId);
             ASSERT_EQ(actualCallInfo.m_manual, expectedCallInfo.m_manual);
             ASSERT_EQ(actualCallInfo.m_block, expectedCallInfo.m_block);
+            ASSERT_EQ(actualCallInfo.m_callExecutionStatus, expectedCallInfo.m_callExecutionStatus);
+            ASSERT_EQ(actualCallInfo.m_releasedTransaction, expectedCallInfo.m_releasedTransaction);
             const auto& actualExecutorParticipation = actualCallInfo.m_executorsParticipation;
             const auto& expectedExecutorParticipation = expectedCallInfo.m_executorsParticipation;
             ASSERT_EQ(actualExecutorParticipation.size(), expectedExecutorParticipation.size());
@@ -61,7 +60,11 @@ public:
                           expectedExecutorParticipation[expectedKeysArgSort[j]].m_smConsumed);
             }
         }
-        m_unsuccessfulEndBatchIsReadyPromise.set_value(info);
+        m_successfulEndBatchIsReadyPromise.set_value(info);
+    }
+
+    void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
+        FAIL();
     }
 
     void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo& info) override {
@@ -80,7 +83,7 @@ public:
 
 }
 
-TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
+TEST(BatchExecutionTask, InvalidState) {
 
     const uint otherExecutorsNumber = 3;
     const uint otherOpinionsNumber = 2;
@@ -94,7 +97,6 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
 
     ExecutorConfig executorConfig;
     executorConfig.setSuccessfulExecutionDelayMs(1000);
-    executorConfig.setUnsuccessfulExecutionDelayMs(1000);
 
     std::deque<std::shared_ptr<CallRequest>> callRequests;
     for (auto i = 0; i < callsNumber; i++) {
@@ -144,11 +146,8 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
                                                     threadManager, storageMock, pMessengerMock,
                                                     executorEventHandler);
     ContractKey contractKey = utils::generateRandomByteValue<ContractKey>();
-
-    ContractConfig contractConfig;
-    contractConfig.setUnsuccessfulApprovalDelayMs(1000);
-    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
-            executorEnvironmentMock, contractKey, 0, 0, contractConfig);
+    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock =  std::make_unique<ContractEnvironmentMock>(
+            executorEnvironmentMock, contractKey, 0, 0);
 
     std::vector<sirius::crypto::KeyPair> executorKeys;
     for (int i = 0; i < otherExecutorsNumber; i++) {
@@ -163,9 +162,9 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
                 executorKeys[i].publicKey().array(), ExecutorInfo{});
     }
 
-    std::vector<UnsuccessfulEndBatchExecutionOpinion> opinionList;
+    std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
 
-    UnsuccessfulEndBatchExecutionTransactionInfo expectedInfo;
+    SuccessfulEndBatchExecutionTransactionInfo expectedInfo;
     expectedInfo.m_contractKey = contractKey;
     expectedInfo.m_batchIndex = batch.m_batchIndex;
     expectedInfo.m_automaticExecutionsCheckedUpTo = batch.m_automaticExecutionsCheckedUpTo;
@@ -173,35 +172,47 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
     expectedInfo.m_signatures.emplace_back();
     expectedInfo.m_proofs.emplace_back();
 
+    storage::StorageState initialState = storageMock->m_state;
     storage::StorageState expectedState = storageMock->m_state;
+    for (uint i = 0; i < callsNumber; i++) {
+        expectedState = nextState(expectedState);
+    }
+    expectedInfo.m_successfulBatchInfo.m_storageHash = expectedState.m_storageHash;
+    expectedInfo.m_successfulBatchInfo.m_usedStorageSize = expectedState.m_usedDriveSize;
+    expectedInfo.m_successfulBatchInfo.m_metaFilesSize = expectedState.m_metaFilesSize;
+    expectedInfo.m_successfulBatchInfo.m_PoExVerificationInfo =
+            ProofOfExecution::verificationInfo(results.back().m_proofOfExecutionSecretData).second;
 
     for (uint i = 0; i < callRequests.size(); i++) {
         const auto& call = callRequests[i];
-        UnsuccessfulCallExecutionInfo callExecutionInfo;
+        SuccessfulCallExecutionInfo callExecutionInfo;
         callExecutionInfo.m_block = call->blockHeight();
         callExecutionInfo.m_callId = call->callId();
         callExecutionInfo.m_manual = call->isManual();
+        callExecutionInfo.m_callExecutionStatus = 0;
         callExecutionInfo.m_executorsParticipation.push_back({
-                     utils::DivideCeil(
-                             results[i].m_execution_gas_consumed,
-                             executorConfig.executionPaymentToGasMultiplier()),
-                     utils::DivideCeil(
-                             results[i].m_download_gas_consumed,
-                             executorConfig.downloadPaymentToGasMultiplier())});
+                                                                     utils::DivideCeil(
+                                                                             results[i].m_execution_gas_consumed,
+                                                                             executorConfig.executionPaymentToGasMultiplier()),
+                                                                     utils::DivideCeil(
+                                                                             results[i].m_download_gas_consumed,
+                                                                             executorConfig.downloadPaymentToGasMultiplier())});
         expectedInfo.m_callsExecutionInfo.push_back(callExecutionInfo);
     }
 
     for (int i = 0; i < otherOpinionsNumber; i++) {
-        UnsuccessfulEndBatchExecutionOpinion opinion;
+        SuccessfulEndBatchExecutionOpinion opinion;
         opinion.m_batchIndex = 0;
         opinion.m_contractKey = contractKey;
         opinion.m_executorKey = executorKeys[i].publicKey().array();
-        std::vector<UnsuccessfulCallExecutionOpinion> callsExecutionOpinions;
+        std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
         for (const auto& call: callRequests) {
-            callsExecutionOpinions.push_back(UnsuccessfulCallExecutionOpinion{
+            callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
                     call->callId(),
                     call->isManual(),
                     call->blockHeight(),
+                    0,
+                    TransactionHash(),
                     CallExecutorParticipation{
                             utils::generateRandomByteValue<uint64_t>() % call->executionPayment(),
                             utils::generateRandomByteValue<uint64_t>() % call->downloadPayment()
@@ -210,7 +221,15 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
         }
         opinion.m_callsExecutionInfo = callsExecutionOpinions;
         ProofOfExecution proofOfExecutionBuilder(executorKeys[i]);
-        opinion.m_proof = proofOfExecutionBuilder.buildPreviousProof();
+        auto verificationInfo = proofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
+        SuccessfulBatchInfo successfulBatchInfo{
+                expectedState.m_storageHash,
+                expectedState.m_usedDriveSize,
+                expectedState.m_metaFilesSize,
+                verificationInfo
+        };
+        opinion.m_successfulBatchInfo = successfulBatchInfo;
+        opinion.m_proof = proofOfExecutionBuilder.buildActualProof();
         opinionList.push_back(opinion);
         expectedInfo.m_executorKeys.push_back(opinion.m_executorKey);
         expectedInfo.m_signatures.emplace_back();
@@ -237,47 +256,37 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
         }
     });
 
-    auto barrier = executorEventHandler->m_unsuccessfulEndBatchIsReadyPromise.get_future();
-    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
+    auto barrier = executorEventHandler->m_successfulEndBatchIsReadyPromise.get_future();
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(5)));
 
     auto transactionInfo = barrier.get();
 
     PublishedEndBatchExecutionTransactionInfo publishedInfo;
     publishedInfo.m_contractKey = transactionInfo.m_contractKey;
     publishedInfo.m_batchIndex = transactionInfo.m_batchIndex;
-    publishedInfo.m_batchSuccess = false;
+    publishedInfo.m_batchSuccess = true;
+    publishedInfo.m_PoExVerificationInfo = transactionInfo.m_successfulBatchInfo.m_PoExVerificationInfo;
+    // The published state differs from the one obtained by the executor, so we force it to synchronize
+    publishedInfo.m_driveState = randomState().m_storageHash;
     publishedInfo.m_automaticExecutionsCheckedUpTo = transactionInfo.m_automaticExecutionsCheckedUpTo;
     publishedInfo.m_automaticExecutionsEnabledSince = 0;
-    publishedInfo.m_driveState = expectedState.m_storageHash;
     publishedInfo.m_cosigners = {transactionInfo.m_executorKeys.begin(), transactionInfo.m_executorKeys.end()};
 
     threadManager.execute([&] {
         pBatchExecutionTask->onEndBatchExecutionPublished(publishedInfo);
     });
 
-    sleep(2);
+    auto synchronizeBarrier = pContractEnvironmentMock->m_synchronizationPromise.get_future();
+    ASSERT_EQ(std::future_status::ready, synchronizeBarrier.wait_for(std::chrono::seconds(5)));
 
     {
-        std::promise<void> postStatePromise;
+        std::promise<void> storageStatePromise;
         threadManager.execute([&] {
-            ASSERT_EQ(storageMock->m_state.m_storageHash, expectedState.m_storageHash);
-            ASSERT_EQ(storageMock->m_historicBatches.size(), 1);
-            const auto& historicBatch = storageMock->m_historicBatches.front();
-            ASSERT_FALSE(*historicBatch.m_success);
-            ASSERT_EQ(historicBatch.m_calls.size(), results.size());
-            for (uint i = 0; i < historicBatch.m_calls.size(); i++) {
-                ASSERT_EQ(*historicBatch.m_calls[i], results[i].m_success);
-            }
-            auto expectedProof = ProofOfExecution(executorEnvironmentMock.keyPair()).buildActualProof();
-            auto actualProof = pContractEnvironmentMock->proofOfExecution().buildActualProof();
-            ASSERT_EQ(actualProof.m_initialBatch, expectedProof.m_initialBatch);
-            ASSERT_EQ(actualProof.m_batchProof.m_T, expectedProof.m_batchProof.m_T);
-            ASSERT_EQ(actualProof.m_batchProof.m_r, expectedProof.m_batchProof.m_r);
-            ASSERT_EQ(actualProof.m_tProof.m_F, expectedProof.m_tProof.m_F);
-            ASSERT_EQ(actualProof.m_tProof.m_k, expectedProof.m_tProof.m_k);
-            postStatePromise.set_value();
+            ASSERT_EQ(storageMock->m_state.m_storageHash, initialState.m_storageHash);
+            ASSERT_EQ(storageMock->m_historicBatches.size(), 0);
+            storageStatePromise.set_value();
         });
-        ASSERT_EQ(std::future_status::ready, postStatePromise.get_future().wait_for(std::chrono::seconds(5)));
+        ASSERT_EQ(std::future_status::ready, storageStatePromise.get_future().wait_for(std::chrono::seconds(5)));
     }
 
     threadManager.execute([&] {

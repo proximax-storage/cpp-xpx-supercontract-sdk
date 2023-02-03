@@ -14,7 +14,7 @@ SynchronizeStorageTag::SynchronizeStorageTag(
         storageServer::SynchronizeStorageRequest&& request,
         storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<bool>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<void>>&& callback)
         : m_environment(environment)
         , m_request(std::move(request))
         , m_responseReader(stub.PrepareAsyncSynchronizeStorage(&m_context, m_request, &completionQueue))
@@ -31,11 +31,15 @@ void SynchronizeStorageTag::process(bool ok) {
 
     ASSERT(ok, m_environment.logger())
 
-    if (m_status.ok()) {
-        m_callback->postReply(m_response.status());
-    } else {
+    if (!m_status.ok()) {
         m_environment.logger().warn("Failed To Synchronize Storage: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
+    }
+    else if (!m_response.status()) {
+        m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::synchronization_error)));
+    }
+    else {
+        m_callback->postReply(expected<void>());
     }
 }
 

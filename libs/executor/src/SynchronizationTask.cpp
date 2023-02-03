@@ -51,7 +51,7 @@ void SynchronizationTask::run() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) {
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) {
         if (!res) {
             onStorageUnavailable();
             return;

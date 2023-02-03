@@ -26,6 +26,7 @@ public:
 
 public:
 
+    std::promise<void> m_synchronizationPromise;
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
 
 public:
