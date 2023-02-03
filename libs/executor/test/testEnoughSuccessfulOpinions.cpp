@@ -83,7 +83,7 @@ public:
 
 }
 
-TEST(BatchExecutionTask, SuccessfulOpinion) {
+TEST(BatchExecutionTask, EnoughSuccessfulOpinions) {
 
     const uint otherExecutorsNumber = 3;
     const uint otherOpinionsNumber = 2;
@@ -146,7 +146,8 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                                                     threadManager, storageMock, pMessengerMock,
                                                     executorEventHandler);
     ContractKey contractKey = utils::generateRandomByteValue<ContractKey>();
-    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock;
+    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock =  std::make_unique<ContractEnvironmentMock>(
+            executorEnvironmentMock, contractKey, 0, 0);
 
     std::vector<sirius::crypto::KeyPair> executorKeys;
     for (int i = 0; i < otherExecutorsNumber; i++) {
@@ -154,6 +155,11 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                 sirius::crypto::KeyPair::FromPrivate(sirius::crypto::PrivateKey::Generate([] {
                     return utils::generateRandomByteValue<uint8_t>();
                 })));
+    }
+
+    for (int i = 0; i < executorKeys.size(); i++) {
+        pContractEnvironmentMock->m_executors.try_emplace(
+                executorKeys[i].publicKey().array(), ExecutorInfo{});
     }
 
     std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
@@ -237,14 +243,6 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
     threadManager.execute([&] {
-        pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
-                executorEnvironmentMock, contractKey, 0, 0);
-
-        for (int i = 0; i < executorKeys.size(); i++) {
-            pContractEnvironmentMock->m_executors.try_emplace(
-                    executorKeys[i].publicKey().array(), ExecutorInfo{});
-        }
-
         pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
                                                                    *pContractEnvironmentMock,
                                                                    executorEnvironmentMock,
@@ -252,8 +250,9 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                                                                    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>(),
                                                                    std::nullopt);
         pBatchExecutionTask->run();
-        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
-        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
+        for (const auto& opinion: opinionList) {
+            ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinion));
+        }
     });
 
     auto barrier = executorEventHandler->m_successfulEndBatchIsReadyPromise.get_future();
