@@ -104,8 +104,7 @@ TEST(TEST_NAME, BatchTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -128,12 +127,8 @@ TEST(TEST_NAME, BatchTest) {
         ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_TRUE(batch3.m_callRequests[1]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
-
+    
     threadManager.execute([&] {
         batchesManager.reset();
     });
@@ -230,8 +225,7 @@ TEST(TEST_NAME, AllFalseTest) {
         batchesManager->addBlock(3);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -262,10 +256,7 @@ TEST(TEST_NAME, AllFalseTest) {
         ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_TRUE(batch3.m_callRequests[1]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -357,8 +348,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -373,10 +363,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
         ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -470,8 +457,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -486,10 +472,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
         ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -582,8 +565,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         batchesManager->cancelBatchesTill(2);
         ASSERT_TRUE(batchesManager->hasNextBatch());
@@ -599,10 +581,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         ASSERT_EQ(batch2.m_callRequests.size(), 1);
         ASSERT_TRUE(batch2.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -698,8 +677,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         batchesManager->addManualCall(requests[3]);
         batchesManager->addBlock(4);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -725,10 +703,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         ASSERT_EQ(batch4.m_callRequests.size(), 1);
         ASSERT_TRUE(batch4.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -848,9 +823,8 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
         batchesManager->addBlock(12);
     });
 
-    sleep(3);
-
-    std::promise<void> barrier;
+    sleep(4);
+    
     threadManager.execute([&] {
         // enabled
         ASSERT_TRUE(batchesManager->hasNextBatch());
@@ -906,12 +880,8 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
         ASSERT_EQ(batch8.m_callRequests.size(), 1);
         ASSERT_TRUE(batch8.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-
-        barrier.set_value();
     });
-
-    ASSERT_EQ(std::future_status::ready, barrier.get_future().wait_for(std::chrono::seconds(3)));
-
+    
     threadManager.execute([&] {
         batchesManager.reset();
     });
@@ -1026,8 +996,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         batchesManager->addManualCall(requests[5]);
         batchesManager->addBlock(12);
     });
-    sleep(3);
-    std::promise<void> barrier;
+    sleep(4);
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -1066,10 +1035,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         ASSERT_EQ(batch7.m_callRequests.size(), 1);
         ASSERT_TRUE(batch7.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -1158,7 +1124,6 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         batchesManager->addBlock(4);
     });
     sleep(10);
-    std::promise<void> barrier;
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -1177,10 +1142,7 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         ASSERT_EQ(batch3.m_callRequests.size(), 1);
         ASSERT_TRUE(batch3.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
@@ -1269,7 +1231,6 @@ TEST(TEST_NAME, DelayBatchesTest) {
         batchesManager->addBlock(4);
     });
     sleep(10);
-    std::promise<void> barrier;
     threadManager.execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -1309,10 +1270,7 @@ TEST(TEST_NAME, DelayBatchesTest) {
         ASSERT_EQ(delay3.m_callRequests.size(), 1);
         ASSERT_TRUE(delay3.m_callRequests[0]->isManual());
         ASSERT_FALSE(batchesManager->hasNextBatch());
-        barrier.set_value();
     });
-
-    barrier.get_future().wait();
 
     threadManager.execute([&] {
         batchesManager.reset();
