@@ -134,7 +134,7 @@ TEST(BatchExecutionTask, InvalidState) {
             callRequests
     };
 
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results, 3000U);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     auto storageMock = std::make_shared<StorageMock>();
     auto messengerMock = std::make_shared<MessengerMock>();

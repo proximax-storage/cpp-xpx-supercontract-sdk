@@ -17,6 +17,10 @@ namespace sirius::contract::test {
 
 using namespace blockchain;
 
+namespace {
+    constexpr uint MAX_VM_DELAY = 3000;
+}
+    
 TEST(TEST_NAME, BatchTest) {
     // Test procedure:
     // addCall
@@ -47,7 +51,7 @@ TEST(TEST_NAME, BatchTest) {
         callExecutionResult.m_success = result;
         executionResults.push_back(callExecutionResult);
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -163,7 +167,7 @@ TEST(TEST_NAME, AllFalseTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -298,7 +302,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -408,7 +412,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -520,7 +524,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -632,7 +636,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -943,7 +947,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1087,7 +1091,7 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 4);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 4);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1197,7 +1201,7 @@ TEST(TEST_NAME, DelayBatchesTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, 4);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 4);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,

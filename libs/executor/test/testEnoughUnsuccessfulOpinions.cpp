@@ -132,7 +132,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
             callRequests
     };
 
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results, 3000U);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     auto storageMock = std::make_shared<StorageMock>();
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -158,9 +158,9 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
                 })));
     }
 
-    for (int i = 0; i < executorKeys.size(); i++) {
+    for (auto & executorKey : executorKeys) {
         pContractEnvironmentMock->m_executors.try_emplace(
-                executorKeys[i].publicKey().array(), ExecutorInfo{});
+                executorKey.publicKey().array(), ExecutorInfo{});
     }
 
     std::vector<UnsuccessfulEndBatchExecutionOpinion> opinionList;

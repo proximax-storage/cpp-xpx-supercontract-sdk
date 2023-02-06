@@ -11,6 +11,13 @@
 namespace sirius::contract::test {
 
 class MessengerMock : public messenger::Messenger {
+
+public:
+
+    std::map<ExecutorKey, std::map<std::string, std::vector<std::string>>> m_sentMessages;
+
     void sendMessage(const messenger::OutputMessage& message) override;
 };
+
+
 } // namespace sirius::contract::test
