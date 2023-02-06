@@ -82,7 +82,7 @@ Batch DefaultBatchesManager::nextBatch() {
 
     ASSERT(!batch.m_requests.empty(), m_executorEnvironment.logger())
 
-    return Batch{m_nextBatchIndex++, blockHeight, std::move(batch.m_requests)};
+    return Batch{m_nextBatchIndex++, blockHeight + 1, std::move(batch.m_requests)};
 }
 
 void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
