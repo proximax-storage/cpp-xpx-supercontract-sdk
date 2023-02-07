@@ -31,15 +31,14 @@ public:
     virtual Batch nextBatch() = 0;
 
     virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
-
-	// Exclusive
-	virtual void setUnmodifiableUpTo(uint64_t blockHeight) = 0;
+    
+	virtual void fixUnmodifiable(uint64_t nextBlockHeight) = 0;
 
     virtual void delayBatch(Batch&& batch) = 0;
 
     virtual bool isBatchValid(const Batch& batch) = 0;
 
-    virtual void cancelBatchesTill(uint64_t batchIndex) = 0;
+    virtual void skipBatches(uint64_t nextBatchIndex) = 0;
 };
 
 }
