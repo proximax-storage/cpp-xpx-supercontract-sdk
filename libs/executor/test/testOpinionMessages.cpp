@@ -206,12 +206,13 @@ TEST(BatchExecutionTask, OpinionMessages) {
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
     threadManager.execute([&] {
+
+        auto[_, callback] = createAsyncQuery<void>([](auto&&) {}, [] {}, executorEnvironmentMock, false, false);
+
         pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
+                                                                   std::move(callback),
                                                                    *pContractEnvironmentMock,
-                                                                   executorEnvironmentMock,
-                                                                   std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>(),
-                                                                   std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>(),
-                                                                   std::nullopt);
+                                                                   executorEnvironmentMock);
         pBatchExecutionTask->run();
         for (const auto& opinion: opinionList) {
             ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinion));

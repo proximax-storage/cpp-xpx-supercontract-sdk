@@ -50,14 +50,14 @@ private:
 
     bool     m_finished = false;
 
+    std::shared_ptr<AsyncQueryCallback<void>> m_onTaskFinishedCallback;
+
 public:
 
     BatchExecutionTask(Batch&& batch,
+                       std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
                        ContractEnvironment& contractEnvironment,
-                       ExecutorEnvironment& executorEnvironment,
-                       std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
-                       std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
-                       std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo);
+                       ExecutorEnvironment& executorEnvironment);
 
     void terminate() override;
 

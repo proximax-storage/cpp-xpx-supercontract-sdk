@@ -9,10 +9,12 @@
 namespace sirius::contract {
 
 SynchronizationTask::SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+                                         std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
                                          ContractEnvironment& contractEnvironment,
                                          ExecutorEnvironment& executorEnvironment)
         : BaseContractTask(executorEnvironment, contractEnvironment)
-        , m_request(std::move(synchronizationRequest)) {}
+        , m_request(std::move(synchronizationRequest))
+        , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
 // region blockchain event handler
 
@@ -71,7 +73,7 @@ void SynchronizationTask::terminate() {
     m_storageQuery.reset();
     m_storageTimer.cancel();
 
-    m_contractEnvironment.finishTask();
+    m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 void SynchronizationTask::onStorageUnavailable() {
@@ -98,7 +100,7 @@ void SynchronizationTask::onStorageStateSynchronized() {
 
     m_contractEnvironment.proofOfExecution().reset(m_request.m_batchIndex + 1);
 
-    m_contractEnvironment.finishTask();
+    m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 }

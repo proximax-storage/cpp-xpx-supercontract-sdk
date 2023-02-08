@@ -10,10 +10,12 @@ namespace sirius::contract {
 
 InitContractTask::InitContractTask(
         AddContractRequest&& request,
+        std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
         ContractEnvironment& contractEnvironment,
         ExecutorEnvironment& executorEnvironment)
         : BaseContractTask(executorEnvironment, contractEnvironment)
-        , m_request(std::move(request)) {}
+        , m_request(std::move(request))
+        , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
 void InitContractTask::run() {
 
@@ -23,7 +25,7 @@ void InitContractTask::run() {
         m_contractEnvironment.proofOfExecution().addBatchVerificationInformation(batchId, verificationInformation);
     }
 
-    m_contractEnvironment.finishTask();
+    m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 

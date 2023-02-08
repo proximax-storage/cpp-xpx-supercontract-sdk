@@ -14,11 +14,14 @@ class RemoveContractTask
 private:
 
     const RemoveRequest m_request;
-
+    
+    std::shared_ptr<AsyncQueryCallback<void>> m_onTaskFinishedCallback;
+    
 public:
 
     RemoveContractTask(
             RemoveRequest&& request,
+            std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
             ContractEnvironment& contractEnvironment,
             ExecutorEnvironment& executorEnvironment);
 

@@ -38,8 +38,6 @@ public:
 
     virtual const ContractConfig& contractConfig() const = 0;
 
-    virtual void finishTask() = 0;
-
     virtual void addSynchronizationTask() = 0;
 
     virtual void notifyHasNextBatch() = 0;

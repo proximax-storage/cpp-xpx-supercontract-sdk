@@ -28,19 +28,13 @@ bool enoughOpinions(uint64_t opinionsReceived, uint64_t totalExecutors) {
 }
 
 BatchExecutionTask::BatchExecutionTask(Batch&& batch,
+                                       std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
                                        ContractEnvironment& contractEnvironment,
-                                       ExecutorEnvironment& executorEnvironment,
-                                       std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>&& otherSuccessfulExecutorEndBatchOpinions,
-                                       std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>&& otherUnsuccessfulExecutorEndBatchOpinions,
-                                       std::optional<PublishedEndBatchExecutionTransactionInfo>&& publishedEndBatchInfo)
+                                       ExecutorEnvironment& executorEnvironment)
         : BaseContractTask(executorEnvironment, contractEnvironment)
           , m_batch(std::move(batch))
           , m_callIterator(m_batch.m_callRequests.begin())
-          , m_publishedEndBatchInfo(std::move(publishedEndBatchInfo))
-          , m_otherSuccessfulExecutorEndBatchOpinions(
-                std::move(otherSuccessfulExecutorEndBatchOpinions))
-          , m_otherUnsuccessfulExecutorEndBatchOpinions(
-                std::move(otherUnsuccessfulExecutorEndBatchOpinions)) {}
+          , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
 void BatchExecutionTask::run() {
 
@@ -87,7 +81,7 @@ void BatchExecutionTask::terminate() {
 
     m_finished = true;
 
-    m_contractEnvironment.finishTask();
+    m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest>&& callRequest,
@@ -469,7 +463,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
         m_finished = true;
 
-        m_contractEnvironment.finishTask();
+        m_onTaskFinishedCallback->postReply(expected<void>());
 
     } else {
         for (const auto&[hash, tx]: m_releasedTransactions) {
@@ -889,7 +883,7 @@ void BatchExecutionTask::onUnableToExecuteBatch() {
 
     m_unableToExecuteBatchTimer = Timer(m_executorEnvironment.threadManager().context(),
                                         m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(), [this] {
-                m_contractEnvironment.finishTask();
+                m_onTaskFinishedCallback->postReply(expected<void>());
             });
 }
 
@@ -912,7 +906,7 @@ void BatchExecutionTask::onAppliedStorageModifications() {
 
     m_finished = true;
 
-    m_contractEnvironment.finishTask();
+    m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 void BatchExecutionTask::shareOpinions() {
@@ -959,7 +953,7 @@ bool BatchExecutionTask::onBlockPublished(uint64_t height) {
 
         m_finished = true;
 
-        m_contractEnvironment.finishTask();
+        m_onTaskFinishedCallback->postReply(expected<void>());
     }
 
     return true;

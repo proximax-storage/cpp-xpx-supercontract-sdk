@@ -50,8 +50,6 @@ public:
 
     const ContractConfig& contractConfig() const override;
 
-    void finishTask() override {}
-
     void addSynchronizationTask() override;
 
     void notifyHasNextBatch() override;

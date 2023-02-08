@@ -21,9 +21,12 @@ private:
 
     Timer m_storageTimer;
 
+    std::shared_ptr<AsyncQueryCallback<void>> m_onTaskFinishedCallback;
+
 public:
 
     SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+                        std::shared_ptr<AsyncQueryCallback<void>>&& m_onTaskFinishedCallback,
                         ContractEnvironment& contractEnvironment,
                         ExecutorEnvironment& executorEnvironment);
 

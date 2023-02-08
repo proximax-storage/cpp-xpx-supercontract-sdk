@@ -58,9 +58,11 @@ void DefaultContract::addManualCall(const ManualCallRequest& request) {
     }
 }
 
-void DefaultContract::removeContract(const RemoveRequest& request) {
+void DefaultContract::removeContract(const RemoveRequest& request, std::shared_ptr<AsyncQueryCallback<void>>&& callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_contractRemoveRequest = {request, std::move(callback)};
 
     if (m_task) {
         m_task->terminate();
@@ -222,13 +224,6 @@ const ContractConfig& DefaultContract::contractConfig() const {
     return m_contractConfig;
 }
 
-void DefaultContract::finishTask() {
-
-    ASSERT(isSingleThread(), m_executorEnvironment.logger())
-
-    runTask();
-}
-
 void DefaultContract::addSynchronizationTask() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -266,7 +261,11 @@ void DefaultContract::runInitializeContractTask(AddContractRequest&& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_task = std::make_unique<InitContractTask>(std::move(request), *this, m_executorEnvironment);
+    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+        runTask();
+        }, [] {}, m_executorEnvironment, false, false);
+
+    m_task = std::make_unique<InitContractTask>(std::move(request), std::move(callback), *this, m_executorEnvironment);
 
     m_contractRemoveRequest.reset();
 
@@ -279,7 +278,7 @@ void DefaultContract::runRemoveContractTask() {
 
     ASSERT(m_contractRemoveRequest, m_executorEnvironment.logger())
 
-    m_task = std::make_unique<RemoveContractTask>(std::move(*m_contractRemoveRequest), *this, m_executorEnvironment);
+    m_task = std::make_unique<RemoveContractTask>(std::move(m_contractRemoveRequest->m_request), std::move(m_contractRemoveRequest->m_callback), *this, m_executorEnvironment);
 
     m_contractRemoveRequest.reset();
 
@@ -292,7 +291,11 @@ void DefaultContract::runSynchronizationTask() {
 
     ASSERT(m_synchronizationRequest, m_executorEnvironment.logger())
 
-    m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest), *this, m_executorEnvironment);
+    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+        runTask();
+    }, [] {}, m_executorEnvironment, false, false);
+
+    m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest), std::move(callback), *this, m_executorEnvironment);
 
     m_synchronizationRequest.reset();
 
@@ -318,32 +321,44 @@ void DefaultContract::runBatchExecutionTask() {
 
     auto batch = m_batchesManager->nextBatch();
 
-    std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> successfulEndBatchOpinions;
-    auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batch.m_batchIndex);
-    if (successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
-        successfulEndBatchOpinions = std::move(successfulExecutorsEndBatchOpinionsIt->second);
-        m_unknownSuccessfulBatchOpinions.erase(successfulExecutorsEndBatchOpinionsIt);
-    }
+    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+        runTask();
+    }, [] {}, m_executorEnvironment, false, false);
 
-    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
-    auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batch.m_batchIndex);
-    if (unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
-        unsuccessfulEndBatchOpinions = std::move(unsuccessfulExecutorsEndBatchOpinionsIt->second);
-        m_unknownUnsuccessfulBatchOpinions.erase(unsuccessfulExecutorsEndBatchOpinionsIt);
-    }
-
-    std::optional<PublishedEndBatchExecutionTransactionInfo> publishedInfo;
-    auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batch.m_batchIndex);
-    if (publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
-        publishedInfo = std::move(publishedTransactionInfoIt->second);
-        m_unknownPublishedEndBatchTransactions.erase(publishedTransactionInfoIt);
-    }
-
-    m_task = std::make_unique<BatchExecutionTask>(std::move(batch), *this, m_executorEnvironment,
-                                                  std::move(successfulEndBatchOpinions),
-                                                  std::move(unsuccessfulEndBatchOpinions),
-                                                  std::move(publishedInfo));
+    m_task = std::make_unique<BatchExecutionTask>(std::move(batch),
+                                                  std::move(callback),
+                                                  *this,
+                                                  m_executorEnvironment);
     m_task->run();
+
+    {
+        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batch.m_batchIndex);
+        if (successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
+            for (const auto& [key, opinion]: successfulExecutorsEndBatchOpinionsIt->second) {
+                m_task->onEndBatchExecutionOpinionReceived(opinion);
+            }
+            m_unknownSuccessfulBatchOpinions.erase(successfulExecutorsEndBatchOpinionsIt);
+        }
+    }
+
+    {
+        std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
+        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batch.m_batchIndex);
+        if (unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
+            for (const auto& [key, opinion]: unsuccessfulExecutorsEndBatchOpinionsIt->second) {
+                m_task->onEndBatchExecutionOpinionReceived(opinion);
+            }
+            m_unknownUnsuccessfulBatchOpinions.erase(unsuccessfulExecutorsEndBatchOpinionsIt);
+        }
+    }
+
+    {
+        auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batch.m_batchIndex);
+        if (publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
+            m_task->onEndBatchExecutionPublished(publishedTransactionInfoIt->second);
+            m_unknownPublishedEndBatchTransactions.erase(publishedTransactionInfoIt);
+        }
+    }
 }
 
 }

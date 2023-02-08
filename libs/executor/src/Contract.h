@@ -31,7 +31,7 @@ public:
 
     virtual void setAutomaticExecutionsEnabledSince(uint64_t blockHeight) = 0;
 
-    virtual void removeContract(const RemoveRequest&) = 0;
+    virtual void removeContract(const RemoveRequest&, std::shared_ptr<AsyncQueryCallback<void>>&& callback) = 0;
 
     virtual void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) = 0;
 

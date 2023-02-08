@@ -17,10 +17,13 @@ private:
 
     const AddContractRequest m_request;
 
+    std::shared_ptr<AsyncQueryCallback<void>> m_onTaskFinishedCallback;
+
 public:
 
     InitContractTask(
             AddContractRequest&& request,
+            std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
             ContractEnvironment& contractEnvironment,
             ExecutorEnvironment& executorEnvironment);
 

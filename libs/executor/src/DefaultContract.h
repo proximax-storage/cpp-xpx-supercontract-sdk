@@ -22,6 +22,11 @@ class DefaultContract
 
 private:
 
+    struct ExtendedRemoveRequest {
+        RemoveRequest m_request;
+        std::shared_ptr<AsyncQueryCallback<void>> m_callback;
+    };
+
     ContractKey m_contractKey;
 
     DriveKey m_driveKey;
@@ -40,7 +45,7 @@ private:
     // Requests
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
     std::optional<SynchronizationRequest> m_synchronizationRequest;
-    std::optional<RemoveRequest> m_contractRemoveRequest;
+    std::optional<ExtendedRemoveRequest> m_contractRemoveRequest;
 
     std::unique_ptr<BaseContractTask> m_task;
 
@@ -58,7 +63,7 @@ public:
 
     void addManualCall(const ManualCallRequest& request) override;
 
-    void removeContract(const RemoveRequest& request) override;
+    void removeContract(const RemoveRequest& request, std::shared_ptr<AsyncQueryCallback<void>>&& callback) override;
 
     void setExecutors(std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
@@ -103,8 +108,6 @@ public:
     uint64_t automaticExecutionsSMLimit() const override;
 
     const ContractConfig& contractConfig() const override;
-
-    void finishTask() override;
 
     void addSynchronizationTask() override;
 

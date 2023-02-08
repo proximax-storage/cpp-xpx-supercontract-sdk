@@ -128,11 +128,14 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
         auto contractIt = m_contracts.find(key);
 
         if (contractIt == m_contracts.end()) {
-            m_logger.critical("Remove non-existing contract {}", key);
             return;
         }
 
-        contractIt->second->removeContract(request);
+        auto[query, callback] = createAsyncQuery<void>([this, key] (auto&&) {
+            m_contracts.erase(key);
+        }, [] {}, *this, false, false);
+
+        contractIt->second->removeContract(request, std::move(callback));
     });
 }
 
@@ -140,6 +143,10 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey,
     m_threadManager.execute([=, this, executors = std::move(executors)]() mutable {
 
         auto contractIt = m_contracts.find(key);
+
+        if (contractIt == m_contracts.end()) {
+            return;
+        }
 
         auto executorIt = executors.find(m_keyPair.publicKey());
 
@@ -252,8 +259,6 @@ void DefaultExecutor::onEndBatchExecutionPublished(PublishedEndBatchExecutionTra
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
-
-            // TODO maybe error?
             return;
         }
 
@@ -267,8 +272,6 @@ void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
-
-            // TODO maybe error?
             return;
         }
 
@@ -280,6 +283,10 @@ void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransacti
     m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
+        if (contractIt == m_contracts.end()) {
+            return;
+        }
+
         contractIt->second->onEndBatchExecutionFailed(info);
     });
 }
@@ -289,8 +296,6 @@ void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleT
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
-
-            // TODO maybe error?
             return;
         }
 
@@ -305,8 +310,6 @@ void DefaultExecutor::setAutomaticExecutionsEnabledSince(
         auto contractIt = m_contracts.find(contractKey);
 
         if (contractIt == m_contracts.end()) {
-
-            // TODO maybe error?
             return;
         }
 
@@ -324,6 +327,7 @@ void DefaultExecutor::terminate() {
     }
 
     m_virtualMachine.reset();
+    m_blockchain.reset();
     m_storage.reset();
     m_messenger.reset();
 }
@@ -334,9 +338,12 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatc
     }
 
     auto contractIt = m_contracts.find(opinion.m_contractKey);
+
     if (contractIt == m_contracts.end()) {
-        contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
+        return;
     }
+
+    contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
 }
 
 void DefaultExecutor::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) {
@@ -345,9 +352,12 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBa
     }
 
     auto contractIt = m_contracts.find(opinion.m_contractKey);
+
     if (contractIt == m_contracts.end()) {
-        contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
+        return;
     }
+
+    contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
 }
 
 }
