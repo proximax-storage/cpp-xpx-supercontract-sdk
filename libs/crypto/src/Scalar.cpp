@@ -12,7 +12,7 @@ Scalar::Scalar(const std::array<uint8_t, Scalar_Size * 2>& arr) {
 }
 
 Scalar::Scalar(const std::array<uint8_t, Scalar_Size>& arr) {
-    std::array<uint8_t, Scalar_Size * 2> temp;
+    std::array<uint8_t, Scalar_Size * 2> temp{};
     std::copy(arr.begin(), arr.end(), temp.begin());
     sc_reduce(temp.data());
     std::copy(temp.begin(), temp.begin() + Scalar_Size, m_array.begin());
