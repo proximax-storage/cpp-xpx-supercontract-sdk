@@ -70,7 +70,7 @@ void RPCStorage::waitForRPCResponse() {
 void RPCStorage::synchronizeStorage(const DriveKey& driveKey,
                                     const ModificationId& modificationId,
                                     const StorageHash& storageHash,
-                                    std::shared_ptr<AsyncQueryCallback<bool>> callback) {
+                                    std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     storageServer::SynchronizeStorageRequest request;

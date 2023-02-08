@@ -24,7 +24,7 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
     storageServer::SynchronizeStorageRequest  m_request;
     storageServer::SynchronizeStorageResponse m_response;
@@ -42,7 +42,7 @@ public:
                         storageServer::SynchronizeStorageRequest&& request,
                         storageServer::StorageServer::Stub& stub,
                         grpc::CompletionQueue& completionQueue,
-                        std::shared_ptr<AsyncQueryCallback<bool>>&& callback);
+                        std::shared_ptr<AsyncQueryCallback<void>>&& callback);
 
     void start();
 

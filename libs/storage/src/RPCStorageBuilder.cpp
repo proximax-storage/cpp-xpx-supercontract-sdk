@@ -4,8 +4,6 @@
 *** license that can be found in the LICENSE file.
 */
 
-#pragma once
-
 #include <storage/RPCStorageBuilder.h>
 #include "RPCStorage.h"
 

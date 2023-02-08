@@ -11,9 +11,11 @@ namespace sirius::contract::test {
 
 VirtualMachineMock::VirtualMachineMock(ThreadManager &threadManager,
                                        std::deque<vm::CallExecutionResult> result,
+                                       uint maxDelay,
                                        uint vmFailureNumber)
         : m_threadManager(threadManager)
         , m_result(std::move(result))
+        , m_maxDelay(maxDelay)
         , m_vmFailureNumber(vmFailureNumber) {}
 
 void VirtualMachineMock::executeCall(const vm::CallRequest &request,
@@ -31,9 +33,10 @@ void VirtualMachineMock::executeCall(const vm::CallRequest &request,
     }
 
     auto executionResult = m_result.front();
-    auto random = rand()%3000;
     m_result.pop_front();
-    m_timers[request.m_callId] = m_threadManager.startTimer(random, [=]() mutable {
+
+    auto delay = m_maxDelay > 0 ? rand() % m_maxDelay : 0;
+    m_timers[request.m_callId] = m_threadManager.startTimer(delay, [=]() mutable {
         callback->postReply(executionResult);
     });
 }

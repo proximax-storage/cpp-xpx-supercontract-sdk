@@ -662,7 +662,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
         }
     }
     else if (m_unsuccessfulEndBatchOpinion &&
-             enoughOpinions(m_otherSuccessfulExecutorEndBatchOpinions.size() + 1,
+             enoughOpinions(m_otherUnsuccessfulExecutorEndBatchOpinions.size() + 1,
                               m_contractEnvironment.executors().size() + 1)) {
 
         if (!m_unsuccessfulEndBatchSent) {
@@ -691,6 +691,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
     // Fill common information
     multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
     multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
+    multisigTransactionInfo.m_automaticExecutionsCheckedUpTo = transactionOpinion.m_automaticExecutionsCheckedUpTo;
     multisigTransactionInfo.m_successfulBatchInfo = transactionOpinion.m_successfulBatchInfo;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
@@ -734,6 +735,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExec
     // Fill common information
     multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
     multisigTransactionInfo.m_batchIndex = transactionOpinion.m_batchIndex;
+    multisigTransactionInfo.m_automaticExecutionsCheckedUpTo = transactionOpinion.m_automaticExecutionsCheckedUpTo;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
         UnsuccessfulCallExecutionInfo callInfo;
@@ -864,9 +866,12 @@ void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
         unsuccessfulCall.m_manual = successfulCall.m_manual;
         unsuccessfulCall.m_block = successfulCall.m_block;
         unsuccessfulCall.m_executorParticipation = successfulCall.m_executorParticipation;
+        m_unsuccessfulEndBatchOpinion->m_callsExecutionInfo.push_back(unsuccessfulCall);
     }
 
     m_unsuccessfulEndBatchOpinion->sign(m_executorEnvironment.keyPair());
+
+    checkEndBatchTransactionReadiness();
 
     // The opinion will be shared when the share opinion timer ticks
 }
@@ -891,6 +896,10 @@ void BatchExecutionTask::onUnableToExecuteBatch() {
 void BatchExecutionTask::onAppliedStorageModifications() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(m_storageQuery, m_executorEnvironment.logger())
+
+    m_storageQuery.reset();
 
     const auto& cosigners = m_publishedEndBatchInfo->m_cosigners;
     if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
@@ -945,6 +954,7 @@ bool BatchExecutionTask::onBlockPublished(uint64_t height) {
     auto& batchesManager = m_contractEnvironment.batchesManager();
 
     if (!batchesManager.isBatchValid(m_batch)) {
+        ASSERT(!m_publishedEndBatchInfo, m_executorEnvironment.logger());
         m_contractEnvironment.batchesManager().delayBatch(Batch(m_batch));
 
         m_finished = true;

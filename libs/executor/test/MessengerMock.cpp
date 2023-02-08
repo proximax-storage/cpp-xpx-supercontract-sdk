@@ -7,5 +7,9 @@
 #include "MessengerMock.h"
 
 namespace sirius::contract::test {
-void MessengerMock::sendMessage(const sirius::contract::messenger::OutputMessage &message) {}
+
+void MessengerMock::sendMessage(const sirius::contract::messenger::OutputMessage& message) {
+    m_sentMessages[message.m_receiver][message.m_tag].push_back(message.m_content);
+}
+
 }

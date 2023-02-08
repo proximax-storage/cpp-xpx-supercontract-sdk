@@ -83,7 +83,7 @@ public:
 
 }
 
-TEST(BatchExecutionTask, SuccessfulOpinion) {
+TEST(BatchExecutionTask, InvalidState) {
 
     const uint otherExecutorsNumber = 3;
     const uint otherOpinionsNumber = 2;
@@ -134,7 +134,7 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
             callRequests
     };
 
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results, 3000U);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     auto storageMock = std::make_shared<StorageMock>();
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -146,7 +146,8 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                                                     threadManager, storageMock, pMessengerMock,
                                                     executorEventHandler);
     ContractKey contractKey = utils::generateRandomByteValue<ContractKey>();
-    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock;
+    std::shared_ptr<ContractEnvironmentMock> pContractEnvironmentMock =  std::make_unique<ContractEnvironmentMock>(
+            executorEnvironmentMock, contractKey, 0, 0);
 
     std::vector<sirius::crypto::KeyPair> executorKeys;
     for (int i = 0; i < otherExecutorsNumber; i++) {
@@ -154,6 +155,11 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                 sirius::crypto::KeyPair::FromPrivate(sirius::crypto::PrivateKey::Generate([] {
                     return utils::generateRandomByteValue<uint8_t>();
                 })));
+    }
+
+    for (int i = 0; i < executorKeys.size(); i++) {
+        pContractEnvironmentMock->m_executors.try_emplace(
+                executorKeys[i].publicKey().array(), ExecutorInfo{});
     }
 
     std::vector<SuccessfulEndBatchExecutionOpinion> opinionList;
@@ -166,6 +172,7 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
     expectedInfo.m_signatures.emplace_back();
     expectedInfo.m_proofs.emplace_back();
 
+    storage::StorageState initialState = storageMock->m_state;
     storage::StorageState expectedState = storageMock->m_state;
     for (uint i = 0; i < callsNumber; i++) {
         expectedState = nextState(expectedState);
@@ -237,14 +244,6 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
     threadManager.execute([&] {
-        pContractEnvironmentMock = std::make_unique<ContractEnvironmentMock>(
-                executorEnvironmentMock, contractKey, 0, 0);
-
-        for (int i = 0; i < executorKeys.size(); i++) {
-            pContractEnvironmentMock->m_executors.try_emplace(
-                    executorKeys[i].publicKey().array(), ExecutorInfo{});
-        }
-
         pBatchExecutionTask = std::make_unique<BatchExecutionTask>(std::move(batch),
                                                                    *pContractEnvironmentMock,
                                                                    executorEnvironmentMock,
@@ -252,8 +251,9 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
                                                                    std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>(),
                                                                    std::nullopt);
         pBatchExecutionTask->run();
-        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[0]));
-        ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinionList[1]));
+        for (const auto& opinion: opinionList) {
+            ASSERT_TRUE(pBatchExecutionTask->onEndBatchExecutionOpinionReceived(opinion));
+        }
     });
 
     auto barrier = executorEventHandler->m_successfulEndBatchIsReadyPromise.get_future();
@@ -266,7 +266,8 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
     publishedInfo.m_batchIndex = transactionInfo.m_batchIndex;
     publishedInfo.m_batchSuccess = true;
     publishedInfo.m_PoExVerificationInfo = transactionInfo.m_successfulBatchInfo.m_PoExVerificationInfo;
-    publishedInfo.m_driveState = transactionInfo.m_successfulBatchInfo.m_storageHash;
+    // The published state differs from the one obtained by the executor, so we force it to synchronize
+    publishedInfo.m_driveState = randomState().m_storageHash;
     publishedInfo.m_automaticExecutionsCheckedUpTo = transactionInfo.m_automaticExecutionsCheckedUpTo;
     publishedInfo.m_automaticExecutionsEnabledSince = 0;
     publishedInfo.m_cosigners = {transactionInfo.m_executorKeys.begin(), transactionInfo.m_executorKeys.end()};
@@ -275,19 +276,14 @@ TEST(BatchExecutionTask, SuccessfulOpinion) {
         pBatchExecutionTask->onEndBatchExecutionPublished(publishedInfo);
     });
 
-    sleep(2);
+    auto synchronizeBarrier = pContractEnvironmentMock->m_synchronizationPromise.get_future();
+    ASSERT_EQ(std::future_status::ready, synchronizeBarrier.wait_for(std::chrono::seconds(5)));
 
     {
         std::promise<void> storageStatePromise;
         threadManager.execute([&] {
-            ASSERT_EQ(storageMock->m_state.m_storageHash, expectedState.m_storageHash);
-            ASSERT_EQ(storageMock->m_historicBatches.size(), 1);
-            const auto& historicBatch = storageMock->m_historicBatches.front();
-            ASSERT_TRUE(*historicBatch.m_success);
-            ASSERT_EQ(historicBatch.m_calls.size(), results.size());
-            for (uint i = 0; i < historicBatch.m_calls.size(); i++) {
-                ASSERT_EQ(*historicBatch.m_calls[i], results[i].m_success);
-            }
+            ASSERT_EQ(storageMock->m_state.m_storageHash, initialState.m_storageHash);
+            ASSERT_EQ(storageMock->m_historicBatches.size(), 0);
             storageStatePromise.set_value();
         });
         ASSERT_EQ(std::future_status::ready, storageStatePromise.get_future().wait_for(std::chrono::seconds(5)));

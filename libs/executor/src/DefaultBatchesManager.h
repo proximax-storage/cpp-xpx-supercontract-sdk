@@ -42,10 +42,10 @@ private:
 
     uint64_t m_nextBatchIndex;
 
-    uint64_t m_storageSynchronizedBatchIndex = 0;
+    uint64_t m_skippedNextBatchIndex = 0;
 
     std::optional<uint64_t> m_automaticExecutionsEnabledSince;
-	uint64_t m_unmodifiableUpTo = 0;
+	uint64_t m_nextModifiableBlock = 0;
 
     std::map<uint64_t, AutorunCallInfo> m_autorunCallInfos;
 
@@ -72,7 +72,7 @@ public:
 
     void delayBatch(Batch&& batch) override;
 
-	void setUnmodifiableUpTo(uint64_t blockHeight) override;
+	void fixUnmodifiable(uint64_t nextBlockHeight) override;
 
     bool isBatchValid(const Batch& batch) override;
 
@@ -84,7 +84,7 @@ private:
 
     std::unique_ptr<CallExecutionManager> runAutorunCall(const CallId& callId, uint64_t blockHeight);
 
-    void cancelBatchesTill(uint64_t batchIndex) override;
+    void skipBatches(uint64_t nextBatchIndex) override;
 
     void clearOutdatedBatches();
 

@@ -82,7 +82,7 @@ Batch DefaultBatchesManager::nextBatch() {
 
     ASSERT(!batch.m_requests.empty(), m_executorEnvironment.logger())
 
-    return Batch{m_nextBatchIndex++, blockHeight, std::move(batch.m_requests)};
+    return Batch{m_nextBatchIndex++, blockHeight + 1, std::move(batch.m_requests)};
 }
 
 void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
@@ -238,25 +238,25 @@ void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std:
                                          });
 }
 
-void DefaultBatchesManager::cancelBatchesTill(uint64_t batchIndex) {
+void DefaultBatchesManager::skipBatches(uint64_t nextBatchIndex) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_storageSynchronizedBatchIndex = batchIndex;
+    m_skippedNextBatchIndex = nextBatchIndex;
 }
 
 void DefaultBatchesManager::clearOutdatedBatches() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (m_delayedBatch && m_delayedBatch->m_batchIndex <= m_storageSynchronizedBatchIndex) {
+    if (m_delayedBatch && m_delayedBatch->m_batchIndex < m_skippedNextBatchIndex) {
         // Note that we do NOT increment next batch index
         m_delayedBatch.reset();
     }
 
     while (!m_batches.empty() &&
            m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
-           m_nextBatchIndex <= m_storageSynchronizedBatchIndex) {
+           m_nextBatchIndex < m_skippedNextBatchIndex) {
         m_batches.erase(m_batches.begin());
         m_nextBatchIndex++;
     }
@@ -267,7 +267,7 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
 
     ASSERT(!m_delayedBatch, m_executorEnvironment.logger())
 
-    ASSERT(batch.m_batchIndex < m_nextBatchIndex, m_executorEnvironment.logger())
+    ASSERT(batch.m_batchIndex + 1 == m_nextBatchIndex, m_executorEnvironment.logger())
 
     m_delayedBatch = std::move(batch);
 
@@ -280,7 +280,7 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight)
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
     {
-        auto itStart = m_batches.lower_bound(m_unmodifiableUpTo);
+        auto itStart = m_batches.lower_bound(m_nextModifiableBlock);
 
         for (auto it = itStart, nextIt = it;
              it != m_batches.end() && it->first < blockHeight; it = nextIt) {
@@ -302,7 +302,7 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight)
         }
     }
     {
-        auto itStart = m_autorunCallInfos.lower_bound(m_unmodifiableUpTo);
+        auto itStart = m_autorunCallInfos.lower_bound(m_nextModifiableBlock);
 
         for (auto it = itStart; it != m_autorunCallInfos.end() && it->first < blockHeight;) {
             it = m_autorunCallInfos.erase(it);
@@ -310,13 +310,13 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight)
     }
 }
 
-void DefaultBatchesManager::setUnmodifiableUpTo(uint64_t blockHeight) {
+void DefaultBatchesManager::fixUnmodifiable(uint64_t nextBlockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(blockHeight > m_unmodifiableUpTo, m_executorEnvironment.logger())
+    ASSERT(nextBlockHeight > m_nextModifiableBlock, m_executorEnvironment.logger())
 
-    m_unmodifiableUpTo = blockHeight;
+    m_nextModifiableBlock = nextBlockHeight;
 }
 
 bool DefaultBatchesManager::isBatchValid(const Batch& batch) {
@@ -333,7 +333,7 @@ bool DefaultBatchesManager::isBatchValid(const Batch& batch) {
 
     auto callBlockHeight = lastCall->blockHeight();
 
-    if (callBlockHeight < m_unmodifiableUpTo) {
+    if (callBlockHeight < m_nextModifiableBlock) {
         return true;
     }
 

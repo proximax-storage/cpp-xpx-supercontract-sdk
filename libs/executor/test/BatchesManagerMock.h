@@ -23,13 +23,13 @@ class BatchesManagerMock : public BaseBatchesManager {
     void setAutomaticExecutionsEnabledSince(const std::optional <uint64_t>& blockHeight) override;
 
     // Exclusive
-    void setUnmodifiableUpTo(uint64_t blockHeight) override;
+    void fixUnmodifiable(uint64_t blockHeight) override;
 
     void delayBatch(Batch&& batch) override;
 
     bool isBatchValid(const Batch& batch) override;
 
-    void cancelBatchesTill(uint64_t batchIndex) override;
+    void skipBatches(uint64_t batchIndex) override;
 
 
 };

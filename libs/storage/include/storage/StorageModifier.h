@@ -25,7 +25,7 @@ public:
     virtual void synchronizeStorage(const DriveKey& driveKey,
                                     const ModificationId& modificationId,
                                     const StorageHash& storageHash,
-                                    std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
+                                    std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
     virtual void
     initiateModifications(const DriveKey& driveKey,

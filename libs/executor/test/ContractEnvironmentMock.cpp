@@ -33,7 +33,9 @@ uint64_t ContractEnvironmentMock::automaticExecutionsSMLimit() const { return m_
 
 const ContractConfig& ContractEnvironmentMock::contractConfig() const { return m_contractConfig; }
 
-void ContractEnvironmentMock::addSynchronizationTask() {}
+void ContractEnvironmentMock::addSynchronizationTask() {
+    m_synchronizationPromise.set_value();
+}
 
 ProofOfExecution& ContractEnvironmentMock::proofOfExecution() {
     return m_proofOfExecution;

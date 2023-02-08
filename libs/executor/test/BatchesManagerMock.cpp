@@ -30,7 +30,7 @@ void BatchesManagerMock::setAutomaticExecutionsEnabledSince(const std::optional<
 
 }
 
-void BatchesManagerMock::setUnmodifiableUpTo(uint64_t blockHeight) {
+void BatchesManagerMock::fixUnmodifiable(uint64_t blockHeight) {
 
 }
 
@@ -42,7 +42,7 @@ bool BatchesManagerMock::isBatchValid(const Batch& batch) {
     return false;
 }
 
-void BatchesManagerMock::cancelBatchesTill(uint64_t batchIndex) {
+void BatchesManagerMock::skipBatches(uint64_t batchIndex) {
 
 }
 

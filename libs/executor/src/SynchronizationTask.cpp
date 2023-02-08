@@ -51,7 +51,7 @@ void SynchronizationTask::run() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) {
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) {
         if (!res) {
             onStorageUnavailable();
             return;
@@ -94,7 +94,7 @@ void SynchronizationTask::onStorageStateSynchronized() {
     m_executorEnvironment.executorEventHandler().synchronizationSingleTransactionIsReady(
             SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), m_request.m_batchIndex});
 
-    m_contractEnvironment.batchesManager().cancelBatchesTill(m_request.m_batchIndex);
+    m_contractEnvironment.batchesManager().skipBatches(m_request.m_batchIndex + 1);
 
     m_contractEnvironment.proofOfExecution().reset(m_request.m_batchIndex + 1);
 

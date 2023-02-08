@@ -16,11 +16,13 @@ private:
     ThreadManager& m_threadManager;
     std::deque<vm::CallExecutionResult> m_result;
     std::map<CallId, Timer> m_timers;
+    uint m_maxDelay;
     uint m_vmFailureNumber;
 
 public:
     VirtualMachineMock(ThreadManager& threadManager,
                        std::deque<vm::CallExecutionResult> result,
+                       uint maxDelay,
                        uint vmFailureNumber = 0);
 
     void executeCall(const vm::CallRequest& request,
