@@ -1537,4 +1537,100 @@ TEST(TEST_NAME, DelayedBatchCancel) {
     threadManager.stop();
 }
 
+TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
+
+    // Test procedure:
+    // Enable automatic executions
+    // Add @totalBlocks blocks
+    // Fix unmodifiable 1 block
+    // Delay batch
+    // Enabled automatic executions since @enabledSince
+    // Obtain delayed batch
+    // Obtain all batch from @enabledSince to @totalBlocks
+
+    // Test parameters
+    const uint totalBlocks = 5;
+    const uint enabledSince = 2;
+    //
+
+    srand(time(nullptr));
+    ContractKey contractKey;
+    uint64_t automaticExecutionsSCLimit = 0;
+    uint64_t automaticExecutionsSMLimit = 0;
+    DriveKey driveKey;
+    std::set<ExecutorKey> executors;
+
+    // create executor environment
+    crypto::PrivateKey privateKey;
+    crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
+    ExecutorConfig executorConfig;
+    ThreadManager threadManager;
+
+    std::deque<bool> results;
+
+    for (uint i = 0; i < totalBlocks; i++) {
+        results.push_back(true);
+    }
+
+    std::deque<vm::CallExecutionResult> executionResults;
+    for (const auto& result: results) {
+        executionResults.push_back(vm::CallExecutionResult{result});
+    }
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
+
+    ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
+                                                    threadManager);
+
+    ContractEnvironmentMock contractEnvironmentMock(executorEnvironmentMock, contractKey, automaticExecutionsSCLimit,
+                                                    automaticExecutionsSMLimit);
+
+    // create default batches manager
+    std::unique_ptr<BaseBatchesManager> batchesManager;
+
+    threadManager.execute([&] {
+        batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
+                                                                 executorEnvironmentMock);
+    });
+
+    threadManager.execute([&] {
+        batchesManager->setAutomaticExecutionsEnabledSince(0);
+        for (uint i = 0; i < totalBlocks; i++) {
+            batchesManager->addBlock(i);
+        }
+    });
+
+    sleep(4);
+
+    threadManager.execute([&] {
+        {
+            ASSERT_TRUE(batchesManager->hasNextBatch());
+            auto batch = batchesManager->nextBatch();
+            batchesManager->fixUnmodifiable(1);
+            batchesManager->setAutomaticExecutionsEnabledSince(enabledSince);
+            batchesManager->delayBatch(std::move(batch));
+        }
+        {
+            ASSERT_TRUE(batchesManager->hasNextBatch());
+            auto batch = batchesManager->nextBatch();
+            ASSERT_EQ(batch.m_batchIndex, 0);
+            ASSERT_EQ(batch.m_automaticExecutionsCheckedUpTo, 1);
+        }
+        uint64_t batchesObtained = 1;
+        for (uint i = enabledSince; i < totalBlocks; i++) {
+            ASSERT_TRUE(batchesManager->hasNextBatch());
+            auto batch = batchesManager->nextBatch();
+            ASSERT_EQ(batch.m_batchIndex, batchesObtained++);
+            ASSERT_EQ(batch.m_automaticExecutionsCheckedUpTo, i+1);
+        }
+        ASSERT_FALSE(batchesManager->hasNextBatch());
+    });
+
+    threadManager.execute([&] {
+        batchesManager.reset();
+    });
+
+    threadManager.stop();
+}
+
 }
