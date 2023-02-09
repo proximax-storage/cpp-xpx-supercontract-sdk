@@ -303,4 +303,122 @@ TEST(TEST_NAME, PoExNonReset) {
 
     batchProofVerificationFalse(n, m, empty);
 }
+
+TEST(TEST_NAME, VerifyCorrectProof) {
+    auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+    sirius::contract::ProofOfExecution poex(key);
+
+    ExecutorInfo info;
+
+    auto totalBatches = 1000;
+    auto alreadyVerifiedBatches = totalBatches / 2;
+
+    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    {
+        auto proof = poex.buildActualProof();
+        info.m_initialBatch = proof.m_initialBatch;
+        info.m_batchProof = proof.m_batchProof;
+        info.m_nextBatchToApprove = alreadyVerifiedBatches;
+    }
+
+    for (int i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    auto verificationInfo = poex.addToProof(totalBatches - 1 + 123);
+
+    ASSERT_TRUE(poex.verifyProof(key.publicKey().array(),
+                                 info,
+                                 poex.buildActualProof(),
+                                 totalBatches - 1,
+                                 verificationInfo));
+}
+
+TEST(TEST_NAME, VerifyIncorrectProof) {
+    auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+    sirius::contract::ProofOfExecution poex(key);
+
+    ExecutorInfo info;
+
+    auto totalBatches = 1000;
+    auto alreadyVerifiedBatches = totalBatches / 2;
+
+    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    {
+        auto proof = poex.buildActualProof();
+        info.m_initialBatch = proof.m_initialBatch;
+        info.m_batchProof = proof.m_batchProof;
+        info.m_nextBatchToApprove = alreadyVerifiedBatches;
+    }
+
+    for (int i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    auto verificationInfo = poex.addToProof(totalBatches - 1 + 123);
+
+    auto finalProof = poex.buildActualProof();
+    finalProof.m_batchProof.m_T +=
+            crypto::Scalar(std::array<uint8_t, 32>{17}) * crypto::CurvePoint::BasePoint();
+
+    ASSERT_FALSE(poex.verifyProof(key.publicKey().array(),
+                                 info,
+                                 finalProof,
+                                 totalBatches - 1,
+                                 verificationInfo));
+}
+
+TEST(TEST_NAME, VerifyCorrectProofAfterReset) {
+    auto key = crypto::KeyPair::FromString("93f068088c13ef63b5aa55822acf75d823965dd997df9e980b273f15891ceddc");
+    sirius::contract::ProofOfExecution poex(key);
+
+    ExecutorInfo info;
+
+    auto totalBatches = 1000;
+    auto alreadyVerifiedBatches = totalBatches / 2;
+    auto startProofFrom = 3 * totalBatches / 4;
+
+    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    {
+        auto proof = poex.buildActualProof();
+        info.m_initialBatch = proof.m_initialBatch;
+        info.m_batchProof = proof.m_batchProof;
+        info.m_nextBatchToApprove = alreadyVerifiedBatches;
+    }
+
+    for (int i = alreadyVerifiedBatches; i < startProofFrom; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    poex.reset(startProofFrom);
+
+    for (int i = startProofFrom; i < totalBatches - 1; i++) {
+        auto verificationInfo = poex.addToProof(i + 123);
+        poex.addBatchVerificationInformation(i, verificationInfo);
+    }
+
+    auto verificationInfo = poex.addToProof(totalBatches - 1 + 123);
+
+    ASSERT_TRUE(poex.verifyProof(key.publicKey().array(),
+                                 info,
+                                 poex.buildActualProof(),
+                                 totalBatches - 1,
+                                 verificationInfo));
+}
+
 } // namespace sirius::contract::test

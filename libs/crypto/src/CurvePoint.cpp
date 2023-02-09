@@ -8,14 +8,19 @@ CurvePoint::CurvePoint() {
     m_ge_p3 = a;
 }
 
-CurvePoint CurvePoint::BasePoint() {
-    CurvePoint temp;
+CurvePoint CurvePoint::ConstructBasePoint() {
+    CurvePoint point;
     ge_p3 a;
     Scalar one;
     one[0] = 1;
     ge_scalarmult_base(&a, one.data());
-    temp.m_ge_p3 = a;
-    return temp;
+    point.m_ge_p3 = a;
+    return point;
+}
+
+CurvePoint CurvePoint::BasePoint() {
+    static CurvePoint basePoint(ConstructBasePoint());
+    return basePoint;
 }
 
 CurvePoint CurvePoint::operator+(const CurvePoint& a) const {

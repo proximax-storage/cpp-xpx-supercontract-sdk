@@ -133,11 +133,14 @@ bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
     crypto::CurvePoint left = proof.m_batchProof.m_T - previousT;
     crypto::CurvePoint right = (proof.m_batchProof.m_r - previousR) * crypto::CurvePoint::BasePoint();
 
-    for (uint i = verifyStartBatchId; i < batchId; i++) {
-
-        auto verificationInfoIt = m_batchesVerificationInformation.find(batchId);
+    auto verificationInfoIt = m_batchesVerificationInformation.find(verifyStartBatchId);
+    for (uint i = verifyStartBatchId; i < batchId; i++, verificationInfoIt++) {
 
         if (verificationInfoIt == m_batchesVerificationInformation.end()) {
+            return false;
+        }
+
+        if (verificationInfoIt->first != i) {
             return false;
         }
 
@@ -168,7 +171,6 @@ bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
 }
 
 std::pair<crypto::Scalar, crypto::CurvePoint> ProofOfExecution::verificationInfo(uint64_t digest) {
-    auto Beta = sirius::crypto::CurvePoint::BasePoint();
     Hash512 digest_hash;
     sirius::crypto::Sha3_512_Builder hasher_h;
 

@@ -18,7 +18,13 @@ namespace sirius::crypto {
 
 class CurvePoint {
 
+private:
+
     ge_p3 m_ge_p3;
+
+private:
+
+    static CurvePoint ConstructBasePoint();
 
 public:
     CurvePoint();
