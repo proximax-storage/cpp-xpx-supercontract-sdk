@@ -4,47 +4,14 @@ find_package(OpenSSL REQUIRED)
 
 supercontract_sdk_shared_library_target(contract-virtualMachine)
 
-foreach(_service blockchain_vm internet_vm storage_vm supercontract_server)
-
-    # Proto file
-    get_filename_component(${_service}_proto "../protobuf/supercontract/${_service}.proto" ABSOLUTE)
-    get_filename_component(${_service}_proto_path "${${_service}_proto}" PATH)
-
-    # Generated sources
-    set(${_service}_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.pb.cc")
-    set(${_service}_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.pb.h")
-    set(${_service}_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.grpc.pb.cc")
-    set(${_service}_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/${_service}.grpc.pb.h")
-    add_custom_command(
-            OUTPUT "${${_service}_proto_srcs}" "${${_service}_proto_hdrs}" "${${_service}_grpc_srcs}" "${${_service}_grpc_hdrs}"
-            COMMAND ${_PROTOBUF_PROTOC}
-            ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
-            --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
-            -I "${${_service}_proto_path}"
-            --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
-            "${${_service}_proto}"
-            DEPENDS "${${_service}_proto}")
-
-    # Include generated *.pb.h files
-    target_include_directories(contract-virtualMachine PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
-
-    # vm_client_grpc_proto
-    add_library(${_service}_contract_grpc_proto
-            ${${_service}_grpc_srcs}
-            ${${_service}_grpc_hdrs}
-            ${${_service}_proto_srcs}
-            ${${_service}_proto_hdrs})
-    target_link_libraries(${_service}_contract_grpc_proto
-            ${_REFLECTION}
-            ${_GRPC_GRPCPP}
-            ${_PROTOBUF_LIBPROTOBUF})
-
-    target_link_libraries(contract-virtualMachine
-            ${_service}_contract_grpc_proto
-            ${_REFLECTION}
-            ${_GRPC_GRPCPP}
-            ${_PROTOBUF_LIBPROTOBUF})
+foreach(service blockchain_vm internet_vm storage_vm)
+    supercontract_sdk_proto(${service} "")
+    target_link_libraries(contract-virtualMachine ${service}_contract_grpc_proto)
+    list(APPEND SIRIUS_SUPERCONTRACT_DEPENDENCIES ${service}_contract_grpc_proto)
 endforeach()
+
+supercontract_sdk_proto(supercontract_server ${SIRIUS_SUPERCONTRACT_DEPENDENCIES})
+target_link_libraries(contract-virtualMachine supercontract_server_contract_grpc_proto)
 
 target_include_directories(contract-virtualMachine PUBLIC ../include ../../../include)
 target_include_directories(contract-virtualMachine PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
