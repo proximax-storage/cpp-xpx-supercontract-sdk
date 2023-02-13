@@ -52,6 +52,8 @@ private:
     std::optional<Batch> m_delayedBatch;
     std::map<uint64_t, DraftBatch> m_batches;
 
+    bool m_run = false;
+
 public:
 
     DefaultBatchesManager(uint64_t nextBatchIndex,
@@ -59,6 +61,8 @@ public:
                           ExecutorEnvironment& executorEnvironment);
 
 public:
+
+    void run() override;
 
     void addManualCall(const ManualCallRequest& request) override;
 

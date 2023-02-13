@@ -91,6 +91,7 @@ TEST(TEST_NAME, BatchTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -203,6 +204,7 @@ TEST(TEST_NAME, AllFalseTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
@@ -335,6 +337,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
     threadManager.execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
@@ -443,6 +446,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -552,6 +556,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -663,6 +668,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -794,6 +800,7 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -971,6 +978,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -1112,6 +1120,7 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -1219,6 +1228,7 @@ TEST(TEST_NAME, DelayBatchesTest) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -1336,6 +1346,7 @@ TEST(TEST_NAME, MovingEnabledSince) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {
@@ -1487,6 +1498,7 @@ TEST(TEST_NAME, DelayedBatchCancel) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addBlock(0);
     });
@@ -1591,6 +1603,7 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
     threadManager.execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
+        batchesManager->run();
     });
 
     threadManager.execute([&] {

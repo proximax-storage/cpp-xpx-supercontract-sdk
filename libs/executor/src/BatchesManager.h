@@ -22,6 +22,8 @@ class BaseBatchesManager {
 
 public:
 
+    virtual void run() = 0;
+
     virtual void addManualCall(const ManualCallRequest&) = 0;
 
     virtual void addBlock(uint64_t blockHeight) = 0;

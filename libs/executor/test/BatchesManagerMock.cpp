@@ -46,4 +46,8 @@ void BatchesManagerMock::skipBatches(uint64_t batchIndex) {
 
 }
 
+void BatchesManagerMock::run() {
+
+}
+
 }

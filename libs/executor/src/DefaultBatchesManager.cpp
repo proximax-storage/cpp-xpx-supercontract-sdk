@@ -18,6 +18,18 @@ DefaultBatchesManager::DefaultBatchesManager(uint64_t nextBatchIndex, ContractEn
           , m_executorEnvironment(executorEnvironment)
           , m_nextBatchIndex(nextBatchIndex) {}
 
+void DefaultBatchesManager::run() {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (!m_run) {
+        m_run = true;
+        for(const auto& callInfo: m_autorunCallInfos) {
+            callInfo.second.m_callExecutionManager->run();
+        }
+    }
+}
+
 void DefaultBatchesManager::addManualCall(const ManualCallRequest& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -151,9 +163,13 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
             std::make_shared<vm::VirtualMachineInternetQueryHandler>(),
             std::make_shared<AutorunBlockchainQueryHandler>(m_executorEnvironment, m_contractEnvironment, height),
             std::make_shared<vm::VirtualMachineStorageQueryHandler>(),
-            std::move(query));
+            std::move(query),
+            request,
+            std::move(callback));
 
-    callManager->run(request, std::move(callback));
+    if (m_run) {
+        callManager->run();
+    }
 
     return callManager;
 }

@@ -24,16 +24,20 @@ private:
 
     std::shared_ptr<AsyncQuery> m_virtualMachineQuery;
 
+    vm::CallRequest m_callRequest;
+    std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>> m_callback;
+
 public:
 
     CallExecutionManager(ExecutorEnvironment& environment,
                          std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                          std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                          std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
-                         std::shared_ptr<AsyncQuery>&& virtualMachineQuery);
+                         std::shared_ptr<AsyncQuery>&& virtualMachineQuery,
+                         const vm::CallRequest& callRequest,
+                         std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback);
 
-    void run(const vm::CallRequest& callRequest,
-             std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback);
+    void run();
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler() const;
 

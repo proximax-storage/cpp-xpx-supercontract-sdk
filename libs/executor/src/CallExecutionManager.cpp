@@ -13,28 +13,33 @@ CallExecutionManager::CallExecutionManager(ExecutorEnvironment& environment,
                                            std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetQueryHandler,
                                            std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler,
                                            std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageQueryHandler,
-                                           std::shared_ptr<AsyncQuery>&& virtualMachineQuery)
+                                           std::shared_ptr<AsyncQuery>&& virtualMachineQuery,
+                                           const vm::CallRequest& callRequest,
+                                           std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback)
         : m_environment(environment)
         , m_internetQueryHandler(std::move(internetQueryHandler))
         , m_blockchainQueryHandler(std::move(blockchainQueryHandler))
         , m_storageQueryHandler(std::move(storageQueryHandler))
-        , m_virtualMachineQuery(std::move(virtualMachineQuery)) {}
+        , m_virtualMachineQuery(std::move(virtualMachineQuery))
+        , m_callRequest(callRequest)
+        , m_callback(std::move(callback)) {}
 
-void CallExecutionManager::run(const vm::CallRequest& callRequest,
-                               std::shared_ptr<AsyncQueryCallback<vm::CallExecutionResult>>&& callback) {
+void CallExecutionManager::run() {
 
     ASSERT(isSingleThread(), m_environment.logger());
+
+    ASSERT(m_callback, m_environment.logger());
 
     auto virtualMachine = m_environment.virtualMachine().lock();
 
     if (!virtualMachine) {
-        callback->postReply(
+        m_callback->postReply(
                 tl::unexpected<std::error_code>(vm::make_error_code(vm::VirtualMachineError::vm_unavailable)));
         return;
     }
 
-    virtualMachine->executeCall(callRequest, m_internetQueryHandler, m_blockchainQueryHandler, m_storageQueryHandler,
-                                std::move(callback));
+    virtualMachine->executeCall(m_callRequest, m_internetQueryHandler, m_blockchainQueryHandler, m_storageQueryHandler,
+                                std::move(m_callback));
 }
 
 std::shared_ptr<vm::VirtualMachineInternetQueryHandler> CallExecutionManager::internetQueryHandler() const {
