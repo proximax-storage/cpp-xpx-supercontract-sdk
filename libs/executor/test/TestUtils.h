@@ -43,12 +43,4 @@ private:
     logging::LoggerConfig getLoggerConfig();
 };
 
-class StorageObserverMock : public storage::StorageObserver {
-public:
-    void absolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                      std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
-
-    void
-    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) override;
-};
 } // namespace sirius::contract::test

@@ -1,6 +1,6 @@
 #include "ContractEnvironmentMock.h"
 #include "ExecutorEnvironmentMock.h"
-#include "TestUtils.h"
+#include "StorageMock.h"
 #include <storage/RPCStorageBuilder.h>
 #include "storage/StorageErrorCode.h"
 #include "virtualMachine/RPCVirtualMachineBuilder.h"
@@ -44,7 +44,7 @@ TEST(Supercontract, Storage) {
                                                     automaticExecutionsSMLimit);
     contractEnvironmentMock.m_driveKey = DriveKey({1});
 
-    auto storageObserver = std::make_shared<StorageObserverMock>();
+    auto storageObserver = std::make_shared<StorageMock>();
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
     std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;
@@ -176,7 +176,7 @@ TEST(Supercontract, Iterator) {
                                                     automaticExecutionsSMLimit);
     contractEnvironmentMock.m_driveKey = DriveKey({2});
 
-    auto storageObserver = std::make_shared<StorageObserverMock>();
+    auto storageObserver = std::make_shared<StorageMock>();
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
     std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;
@@ -308,7 +308,7 @@ TEST(Supercontract, FaultyStorage) {
                                                     automaticExecutionsSMLimit);
     contractEnvironmentMock.m_driveKey = DriveKey({3});
 
-    auto storageObserver = std::make_shared<StorageObserverMock>();
+    auto storageObserver = std::make_shared<StorageMock>();
 
     std::shared_ptr<vm::VirtualMachineInternetQueryHandler> internetHandler;
     std::shared_ptr<vm::VirtualMachineStorageQueryHandler> storageHandler;

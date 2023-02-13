@@ -20,6 +20,9 @@ public:
     virtual void absolutePath(const DriveKey& key, const std::string& relativePath,
                               std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
 
+    virtual void actualModificationId(const DriveKey& key,
+                                      std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) = 0;
+
     virtual void
     filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) = 0;
 

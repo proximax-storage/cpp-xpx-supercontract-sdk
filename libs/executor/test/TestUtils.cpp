@@ -26,12 +26,4 @@ logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
     return config;
 }
 
-void StorageObserverMock::absolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                                       std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
-    callback->postReply(std::filesystem::absolute(relativePath));
-}
-
-void StorageObserverMock::filesystem(const DriveKey& key,
-                                     std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) {
-}
 } // namespace sirius::contract::test

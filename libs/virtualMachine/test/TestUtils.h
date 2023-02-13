@@ -38,6 +38,9 @@ public:
                          std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
 
     void
+    actualModificationId(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) override;
+
+    void
     filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) override;
 };
 

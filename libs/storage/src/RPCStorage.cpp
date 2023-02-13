@@ -252,6 +252,11 @@ void RPCStorage::absolutePath(const DriveKey& driveKey,
     tag->start();
 }
 
+void
+RPCStorage::actualModificationId(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) {
+
+}
+
 void RPCStorage::filesystem(const DriveKey& driveKey,
                             std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())

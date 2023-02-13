@@ -17,6 +17,7 @@ struct AddContractRequest {
     DriveKey                                m_driveKey;
     std::map<ExecutorKey, ExecutorInfo>     m_executors;
     std::map<uint64_t, crypto::CurvePoint>  m_recentBatchesInformation;
+    ModificationId                          m_contractDeploymentBaseModificationId;
     uint64_t                                m_automaticExecutionsSCLimit;
     uint64_t                                m_automaticExecutionsSMLimit;
 

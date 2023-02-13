@@ -119,11 +119,18 @@ void StorageMock::isFile(const DriveKey& driveKey, const std::string& path,
 
 // Storage observer virtual functions
 void StorageMock::absolutePath(const DriveKey& key, const std::string& relativePath,
-                               std::shared_ptr<AsyncQueryCallback<std::string>> callback) {}
+                               std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+    callback->postReply(std::filesystem::absolute(relativePath));
+}
 
 void
 StorageMock::filesystem(const DriveKey& key,
                         std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::Folder>>> callback) {}
+
+void
+StorageMock::actualModificationId(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) {
+
+}
 }
 
 
