@@ -17,6 +17,9 @@ private:
 
     const AddContractRequest m_request;
 
+    std::shared_ptr<AsyncQuery> m_storageActualModificationIdQuery;
+    Timer                       m_storageActualModificationIdTimer;
+
     std::shared_ptr<AsyncQueryCallback<void>> m_onTaskFinishedCallback;
 
 public:
@@ -41,6 +44,12 @@ public:
     bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
 
     // endregion
+
+private:
+
+    void requestActualModificationId();
+
+    void onActualModificationIdReceived(const expected<ModificationId>& res);
 
 };
 

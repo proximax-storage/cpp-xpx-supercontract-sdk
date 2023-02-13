@@ -44,7 +44,7 @@ public:
 
     std::weak_ptr<messenger::Messenger> messenger() override;
 
-    std::weak_ptr<storage::StorageModifier> storageModifier() override;
+    std::weak_ptr<storage::Storage> storage() override;
 
     std::weak_ptr<blockchain::Blockchain> blockchain() override;
 

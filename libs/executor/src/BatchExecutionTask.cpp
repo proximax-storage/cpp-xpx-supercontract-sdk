@@ -53,7 +53,7 @@ void BatchExecutionTask::run() {
 
     m_storageQuery = std::move(query);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
 
     if (!storage) {
         onUnableToExecuteBatch();
@@ -110,7 +110,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest
 
     m_storageQuery = std::move(query);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
 
     if (!storage) {
         onUnableToExecuteBatch();
@@ -472,7 +472,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
             m_executorEnvironment.executorEventHandler().releasedTransactionsAreReady(tx);
         }
 
-        auto storage = m_executorEnvironment.storageModifier().lock();
+        auto storage = m_executorEnvironment.storage().lock();
 
         if (!storage) {
             onUnableToExecuteBatch();
@@ -786,7 +786,7 @@ void BatchExecutionTask::executeNextCall() {
         auto callRequest = *m_callIterator;
         m_callIterator++;
 
-        auto storage = m_executorEnvironment.storageModifier().lock();
+        auto storage = m_executorEnvironment.storage().lock();
 
         if (!storage) {
             onUnableToExecuteBatch();
@@ -811,7 +811,7 @@ void BatchExecutionTask::executeNextCall() {
                                               callback);
     } else {
 
-        auto storage = m_executorEnvironment.storageModifier().lock();
+        auto storage = m_executorEnvironment.storage().lock();
 
         if (!storage) {
             onUnableToExecuteBatch();

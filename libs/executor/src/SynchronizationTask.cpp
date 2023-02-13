@@ -46,7 +46,7 @@ void SynchronizationTask::run() {
 
     m_storageTimer.cancel();
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
 
     if (!storage) {
         onStorageUnavailable();
@@ -96,6 +96,7 @@ void SynchronizationTask::onStorageStateSynchronized() {
     m_executorEnvironment.executorEventHandler().synchronizationSingleTransactionIsReady(
             SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), m_request.m_batchIndex});
 
+    m_contractEnvironment.batchesManager().run();
     m_contractEnvironment.batchesManager().skipBatches(m_request.m_batchIndex + 1);
 
     m_contractEnvironment.proofOfExecution().reset(m_request.m_batchIndex + 1);

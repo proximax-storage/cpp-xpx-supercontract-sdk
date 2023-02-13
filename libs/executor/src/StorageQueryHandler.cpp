@@ -24,7 +24,7 @@ void StorageQueryHandler::openFile(const std::string& path, const std::string& m
     m_executorEnvironment.logger().info("Contract call {} requested to open a file: {}",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -57,7 +57,7 @@ void StorageQueryHandler::writeFile(uint64_t fileId, const std::vector<uint8_t>&
     m_executorEnvironment.logger().info("Contract call {} requested to write to file {}",
                                         m_callId, fileId);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -86,7 +86,7 @@ void StorageQueryHandler::readFile(uint64_t fileId,
     m_executorEnvironment.logger().info("Contract call {} requested to read file {}",
                                         m_callId, fileId);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -111,7 +111,7 @@ void StorageQueryHandler::flush(uint64_t fileId, std::shared_ptr<AsyncQueryCallb
     m_executorEnvironment.logger().info("Contract call {} requested to flush a write buffer to file {}",
                                         m_callId, fileId);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -135,7 +135,7 @@ void StorageQueryHandler::closeFile(uint64_t fileId, std::shared_ptr<AsyncQueryC
     m_executorEnvironment.logger().info("Contract call {} requested to close file {}",
                                         m_callId, fileId);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -161,7 +161,7 @@ void StorageQueryHandler::createFSIterator(const std::string& path, bool recursi
     m_executorEnvironment.logger().info("Contract call {} requested to create an iterator at {}",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -189,7 +189,7 @@ StorageQueryHandler::hasNextIterator(uint64_t iteratorID, std::shared_ptr<AsyncQ
             "Contract call {} requested to query whether there is any more entries in iterator {}",
             m_callId, iteratorID);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -216,7 +216,7 @@ void StorageQueryHandler::nextIterator(uint64_t iteratorID,
     m_executorEnvironment.logger().info("Contract call {} requested to the next entry in iterator {}",
                                         m_callId, iteratorID);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -248,7 +248,7 @@ StorageQueryHandler::removeFileIterator(uint64_t iteratorID, std::shared_ptr<Asy
     m_executorEnvironment.logger().info("Contract call {} requested to remove the file pointed by iterator {}",
                                         m_callId, iteratorID);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -273,7 +273,7 @@ StorageQueryHandler::destroyFSIterator(uint64_t iteratorID, std::shared_ptr<Asyn
     m_executorEnvironment.logger().info("Contract call {} requested to destroy iterator {}",
                                         m_callId, iteratorID);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -299,7 +299,7 @@ void StorageQueryHandler::pathExist(const std::string& path, std::shared_ptr<Asy
     m_executorEnvironment.logger().info("Contract call {} requested to query whether path {} exists",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -324,7 +324,7 @@ void StorageQueryHandler::isFile(const std::string& path, std::shared_ptr<AsyncQ
     m_executorEnvironment.logger().info("Contract call {} requested to query whether entry {} is a file",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -349,7 +349,7 @@ void StorageQueryHandler::createDir(const std::string& path, std::shared_ptr<Asy
     m_executorEnvironment.logger().info("Contract call {} requested to create a directory {}",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -376,7 +376,7 @@ void StorageQueryHandler::moveFile(const std::string& oldPath, const std::string
     m_executorEnvironment.logger().info("Contract call {} requested to move file {} to {}",
                                         m_callId, oldPath, newPath);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -402,7 +402,7 @@ StorageQueryHandler::removeFsEntry(const std::string& path, std::shared_ptr<Asyn
     m_executorEnvironment.logger().info("Contract call {} requested to remove file {}",
                                         m_callId, path);
 
-    auto storage = m_executorEnvironment.storageModifier().lock();
+    auto storage = m_executorEnvironment.storage().lock();
     if (!storage) {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;

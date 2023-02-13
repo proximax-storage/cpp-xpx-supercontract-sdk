@@ -46,7 +46,7 @@ std::weak_ptr<messenger::Messenger> ExecutorEnvironmentMock::messenger() {
     return m_messenger;
 }
 
-std::weak_ptr<storage::StorageModifier> ExecutorEnvironmentMock::storageModifier() {
+std::weak_ptr<storage::Storage> ExecutorEnvironmentMock::storage() {
     return m_storage;
 }
 
