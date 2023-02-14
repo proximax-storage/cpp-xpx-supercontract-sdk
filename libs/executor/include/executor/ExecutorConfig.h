@@ -26,9 +26,6 @@ private:
     std::string             m_autorunFile = "autorun.wasm";
     std::string             m_autorunFunction = "main";
 
-    std::string             m_automaticExecutionFile = "default.wasm";
-    std::string             m_automaticExecutionFunction = "main";
-
     std::string             m_storagePathPrefix = "SC_DATA";
 
     int                     m_serviceUnavailableTimeoutMs = 5000;
@@ -87,22 +84,6 @@ public:
 
     void setAutorunFunction( const std::string& autorunFunction ) {
         m_autorunFunction = autorunFunction;
-    }
-
-    const std::string& automaticExecutionFile() const {
-        return m_automaticExecutionFile;
-    }
-
-    void setAutomaticExecutionFile( const std::string& automaticExecutionFile ) {
-        m_automaticExecutionFile = automaticExecutionFile;
-    }
-
-    const std::string& automaticExecutionFunction() const {
-        return m_automaticExecutionFunction;
-    }
-
-    void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
-        m_automaticExecutionFunction = automaticExecutionFunction;
     }
 
     int internetBufferSize() const {

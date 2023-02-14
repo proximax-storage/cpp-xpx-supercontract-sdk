@@ -20,6 +20,9 @@ private:
 
     int m_unsuccessfulApprovalDelayMs = 2 * 60 * 60 * 1000; // 2 hours
 
+    std::string                         m_automaticExecutionFile = "default.wasm";
+    std::string                         m_automaticExecutionFunction = "main";
+
 public:
 
     ContractConfig() {}
@@ -30,6 +33,22 @@ public:
 
     void setUnsuccessfulApprovalDelayMs( int unsuccessfulApprovalDelayMs ) {
         m_unsuccessfulApprovalDelayMs = unsuccessfulApprovalDelayMs;
+    }
+
+    const std::string& automaticExecutionFile() const {
+        return m_automaticExecutionFile;
+    }
+
+    void setAutomaticExecutionFile( const std::string& automaticExecutionFile ) {
+        m_automaticExecutionFile = automaticExecutionFile;
+    }
+
+    const std::string& automaticExecutionFunction() const {
+        return m_automaticExecutionFunction;
+    }
+
+    void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
+        m_automaticExecutionFunction = automaticExecutionFunction;
     }
 
 };
