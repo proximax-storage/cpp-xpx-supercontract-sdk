@@ -24,12 +24,15 @@ private:
 
    const CallId m_callId;
 
-    std::shared_ptr<AsyncQuery> m_asyncQuery;
+   const std::string m_pathPrefix;
+
+   std::shared_ptr<AsyncQuery> m_asyncQuery;
 
 public:
     StorageQueryHandler(const CallId& callId,
                         ExecutorEnvironment& executorEnvironment,
-                        ContractEnvironment& contractEnvironment);
+                        ContractEnvironment& contractEnvironment,
+                        const std::string& pathPrefix = "");
 
     void openFile(const std::string& path, const std::string& mode,
                   std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
@@ -65,6 +68,11 @@ public:
                   std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
     void removeFsEntry(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+
+private:
+
+    std::string getPrefixedPath(const std::string& path);
+
 };
 
 } // namespace sirius::contract

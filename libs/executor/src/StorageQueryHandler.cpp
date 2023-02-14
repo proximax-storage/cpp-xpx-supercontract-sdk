@@ -10,10 +10,12 @@ namespace sirius::contract {
 
 StorageQueryHandler::StorageQueryHandler(const CallId& callId,
                                          ExecutorEnvironment& executorEnvironment,
-                                         ContractEnvironment& contractEnvironment)
+                                         ContractEnvironment& contractEnvironment,
+                                         const std::string& pathPrefix)
                                          : m_callId(callId)
                                          , m_executorEnvironment(executorEnvironment)
-                                         , m_contractEnvironment(contractEnvironment) {}
+                                         , m_contractEnvironment(contractEnvironment)
+                                         , m_pathPrefix(pathPrefix) {}
 
 void StorageQueryHandler::openFile(const std::string& path, const std::string& mode,
                                         std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
@@ -45,7 +47,7 @@ void StorageQueryHandler::openFile(const std::string& path, const std::string& m
     } else {
         fileMode = storage::OpenFileMode::READ;
     }
-    storage->openFile(m_contractEnvironment.driveKey(), path, fileMode, storageCallback);
+    storage->openFile(m_contractEnvironment.driveKey(), getPrefixedPath(path), fileMode, storageCallback);
 }
 
 void StorageQueryHandler::writeFile(uint64_t fileId, const std::vector<uint8_t>& buffer,
@@ -176,7 +178,7 @@ void StorageQueryHandler::createFSIterator(const std::string& path, bool recursi
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->directoryIteratorCreate(m_contractEnvironment.driveKey(), path, recursive, storageCallback);
+    storage->directoryIteratorCreate(m_contractEnvironment.driveKey(), getPrefixedPath(path), recursive, storageCallback);
 }
 
 void
@@ -313,7 +315,7 @@ void StorageQueryHandler::pathExist(const std::string& path, std::shared_ptr<Asy
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->pathExist(m_contractEnvironment.driveKey(), path, storageCallback);
+    storage->pathExist(m_contractEnvironment.driveKey(), getPrefixedPath(path), storageCallback);
 }
 
 void StorageQueryHandler::isFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) {
@@ -338,7 +340,7 @@ void StorageQueryHandler::isFile(const std::string& path, std::shared_ptr<AsyncQ
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->isFile(m_contractEnvironment.driveKey(), path, storageCallback);
+    storage->isFile(m_contractEnvironment.driveKey(), getPrefixedPath(path), storageCallback);
 }
 
 void StorageQueryHandler::createDir(const std::string& path, std::shared_ptr<AsyncQueryCallback<void>> callback) {
@@ -364,7 +366,7 @@ void StorageQueryHandler::createDir(const std::string& path, std::shared_ptr<Asy
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->createDirectories(m_contractEnvironment.driveKey(), path, storageCallback);
+    storage->createDirectories(m_contractEnvironment.driveKey(), getPrefixedPath(path), storageCallback);
 }
 
 void StorageQueryHandler::moveFile(const std::string& oldPath, const std::string& newPath,
@@ -390,7 +392,7 @@ void StorageQueryHandler::moveFile(const std::string& oldPath, const std::string
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->moveFilesystemEntry(m_contractEnvironment.driveKey(), oldPath, newPath, storageCallback);
+    storage->moveFilesystemEntry(m_contractEnvironment.driveKey(), getPrefixedPath(oldPath), getPrefixedPath(newPath), storageCallback);
 }
 
 void
@@ -416,7 +418,15 @@ StorageQueryHandler::removeFsEntry(const std::string& path, std::shared_ptr<Asyn
     }, m_executorEnvironment, true, true);
 
     m_asyncQuery = std::move(asyncQuery);
-    storage->removeFilesystemEntry(m_contractEnvironment.driveKey(), path, storageCallback);
+    storage->removeFilesystemEntry(m_contractEnvironment.driveKey(), getPrefixedPath(path), storageCallback);
+}
+
+std::string StorageQueryHandler::getPrefixedPath(const std::string& path) {
+    if (m_pathPrefix.empty()) {
+        return path;
+    }
+
+    return m_pathPrefix + "/" + path;
 }
 
 } // namespace sirius::contract

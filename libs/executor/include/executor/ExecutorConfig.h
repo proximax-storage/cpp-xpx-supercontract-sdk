@@ -29,6 +29,8 @@ private:
     std::string             m_automaticExecutionFile = "default.wasm";
     std::string             m_automaticExecutionFunction = "main";
 
+    std::string             m_storagePathPrefix = "SC_DATA";
+
     int                     m_serviceUnavailableTimeoutMs = 5000;
 
     int                     m_internetBufferSize = 16 * 1024;
@@ -181,6 +183,14 @@ public:
 
     void setNetworkIdentifier(uint8_t networkIdentifier) {
         m_networkIdentifier = networkIdentifier;
+    }
+
+    const std::string& storagePathPrefix() const {
+        return m_storagePathPrefix;
+    }
+
+    void setStoragePathPrefix(const std::string& storagePathPrefix) {
+        m_storagePathPrefix = storagePathPrefix;
     }
 };
 

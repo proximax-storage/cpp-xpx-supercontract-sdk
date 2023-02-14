@@ -241,7 +241,10 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::shared_ptr<CallRequ
             m_executorEnvironment,
             std::make_shared<InternetQueryHandler>(callRequest->callId(), m_executorEnvironment, m_contractEnvironment),
             blockchainQueryHandler,
-            std::make_shared<StorageQueryHandler>(callRequest->callId(), m_executorEnvironment, m_contractEnvironment),
+            std::make_shared<StorageQueryHandler>(callRequest->callId(),
+                                                  m_executorEnvironment,
+                                                  m_contractEnvironment,
+                                                  m_executorEnvironment.executorConfig().storagePathPrefix()),
             std::move(query),
             vmCallRequest,
             std::move(callback));
