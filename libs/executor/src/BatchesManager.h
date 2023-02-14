@@ -32,6 +32,8 @@ public:
 
     virtual Batch nextBatch() = 0;
 
+    virtual uint64_t minBatchIndex() = 0;
+
     virtual void setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) = 0;
     
 	virtual void fixUnmodifiable(uint64_t nextBlockHeight) = 0;

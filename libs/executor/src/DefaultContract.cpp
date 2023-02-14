@@ -109,19 +109,13 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
     m_batchesManager->fixUnmodifiable(info.m_automaticExecutionsCheckedUpTo);
     m_batchesManager->setAutomaticExecutionsEnabledSince(info.m_automaticExecutionsEnabledSince);
 
-    while (!m_unknownSuccessfulBatchOpinions.empty()
-           && m_unknownSuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
-        m_unknownSuccessfulBatchOpinions.erase(m_unknownSuccessfulBatchOpinions.begin());
-    }
-
-    while (!m_unknownUnsuccessfulBatchOpinions.empty()
-           && m_unknownUnsuccessfulBatchOpinions.begin()->first <= info.m_batchIndex) {
-        m_unknownUnsuccessfulBatchOpinions.erase(m_unknownUnsuccessfulBatchOpinions.begin());
-    }
+    auto minBatch = m_batchesManager->minBatchIndex();
 
     if (!m_task || !m_task->onEndBatchExecutionPublished(info)) {
         m_unknownPublishedEndBatchTransactions[info.m_batchIndex] = info;
     }
+
+    clearOutdatedCache(m_unknownPublishedEndBatchTransactions, m_batchesManager->minBatchIndex());
 
     ASSERT(info.m_batchIndex > m_lastKnownStorageState.m_batchIndex, m_executorEnvironment.logger())
 
@@ -164,6 +158,8 @@ bool DefaultContract::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatc
         m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
     }
 
+    clearOutdatedCache(m_unknownSuccessfulBatchOpinions, batchesManager().minBatchIndex());
+
     return true;
 }
 
@@ -174,6 +170,8 @@ bool DefaultContract::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBa
     if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
         m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
     }
+
+    clearOutdatedCache(m_unknownUnsuccessfulBatchOpinions, batchesManager().minBatchIndex());
 
     return true;
 }
@@ -337,7 +335,6 @@ void DefaultContract::runBatchExecutionTask() {
             for (const auto& [key, opinion]: successfulExecutorsEndBatchOpinionsIt->second) {
                 m_task->onEndBatchExecutionOpinionReceived(opinion);
             }
-            m_unknownSuccessfulBatchOpinions.erase(successfulExecutorsEndBatchOpinionsIt);
         }
     }
 
@@ -348,7 +345,6 @@ void DefaultContract::runBatchExecutionTask() {
             for (const auto& [key, opinion]: unsuccessfulExecutorsEndBatchOpinionsIt->second) {
                 m_task->onEndBatchExecutionOpinionReceived(opinion);
             }
-            m_unknownUnsuccessfulBatchOpinions.erase(unsuccessfulExecutorsEndBatchOpinionsIt);
         }
     }
 
@@ -356,7 +352,6 @@ void DefaultContract::runBatchExecutionTask() {
         auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batch.m_batchIndex);
         if (publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
             m_task->onEndBatchExecutionPublished(publishedTransactionInfoIt->second);
-            m_unknownPublishedEndBatchTransactions.erase(publishedTransactionInfoIt);
         }
     }
 }

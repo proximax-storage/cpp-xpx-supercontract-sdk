@@ -131,6 +131,15 @@ private:
 
     void runBatchExecutionTask();
 
+private:
+
+    template<class TCacheEntry>
+    void clearOutdatedCache(std::map<uint64_t, TCacheEntry>& cache, uint64_t to) {
+        while (!cache.empty() && cache.begin()->first < to) {
+            cache.erase(cache.begin());
+        }
+    }
+
 };
 
 }

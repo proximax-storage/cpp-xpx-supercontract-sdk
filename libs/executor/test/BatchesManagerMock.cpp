@@ -50,4 +50,8 @@ void BatchesManagerMock::run() {
 
 }
 
+uint64_t BatchesManagerMock::minBatchIndex() {
+    return 0;
+}
+
 }

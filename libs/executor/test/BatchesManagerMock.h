@@ -35,6 +35,7 @@ public:
 
     void skipBatches(uint64_t batchIndex) override;
 
+    uint64_t minBatchIndex() override;
 
 };
 

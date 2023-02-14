@@ -378,4 +378,15 @@ void DefaultBatchesManager::delayedBatchExtractAutomaticCall() {
     }
 }
 
+uint64_t DefaultBatchesManager::minBatchIndex() {
+
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    if (m_nextBatchIndex == 0) {
+        return 0;
+    }
+
+    return std::max(m_nextBatchIndex - 1, m_skippedNextBatchIndex);
+}
+
 }

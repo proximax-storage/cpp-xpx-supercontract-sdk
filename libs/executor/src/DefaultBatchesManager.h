@@ -80,6 +80,8 @@ public:
 
     bool isBatchValid(const Batch& batch) override;
 
+    uint64_t minBatchIndex() override;
+
 private:
 
     void onSuperContractCallExecuted(uint64_t blockHeight, vm::CallExecutionResult&& executionResult);
@@ -92,8 +94,7 @@ private:
 
     void clearOutdatedBatches();
 
-    // Exclusive
-    void disableAutomaticExecutionsTill(uint64_t batchIndex);
+    void disableAutomaticExecutionsTill(uint64_t nextBatchIndex);
 
     void delayedBatchExtractAutomaticCall();
 };
