@@ -426,7 +426,12 @@ std::string StorageQueryHandler::getPrefixedPath(const std::string& path) {
         return path;
     }
 
-    return m_pathPrefix + "/" + path;
+    auto prefixedPath = m_pathPrefix + "/" + path;
+    if (prefixedPath.ends_with('/')) {
+        prefixedPath.pop_back();
+    }
+
+    return prefixedPath;
 }
 
 } // namespace sirius::contract
