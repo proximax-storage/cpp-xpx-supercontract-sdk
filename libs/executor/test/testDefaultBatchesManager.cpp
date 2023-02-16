@@ -1646,29 +1646,4 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
     threadManager.stop();
 }
 
-struct B {
-    ~B() {
-        std::cout << "finish b" << std::endl;
-    }
-};
-
-void f() {
-    static B b;
-}
-
-TEST(A, A) {
-    logging::LoggerConfig config;
-//    config.setLogToConsole(false);
-//    config.setLogPath("/home/kyrylo/CLionProjects/cpp-xpx-supercontract-sdk/a.txt");
-    logging::Logger logger(config, "executor");
-    auto t = std::thread([&] {
-        for (int i = 0; i < 1000000; i++) {
-            logger.warn("s");
-        }
-    });
-    sleep(3);
-    ASSERT(false, logger);
-    t.join();
-}
-
 }
