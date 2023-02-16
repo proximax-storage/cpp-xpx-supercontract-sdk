@@ -4,9 +4,9 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include <string>
-
 #pragma once
+
+#include <string>
 
 namespace sirius::logging {
 
@@ -28,6 +28,7 @@ public:
 
     virtual void critical( const std::string& ) = 0;
 
+    virtual void stop() = 0;
 };
 
 }

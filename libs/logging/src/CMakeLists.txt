@@ -7,4 +7,4 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 target_compile_definitions(spdlog PUBLIC -DSPDLOG_COMPILED_LIB -DSPDLOG_SHARED_LIB)
 target_include_directories(contract-logging PUBLIC ../include)
-target_link_libraries(contract-logging PUBLIC spdlog)
+target_link_libraries(contract-logging PUBLIC contract-utils spdlog)

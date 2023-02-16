@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include <string>
+#include "LocalLogGuard.h"
 
+#include <utils/NonCopyable.h>
+
+#include <string>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
 #include <spdlog/logger.h>
@@ -22,11 +25,13 @@
 
 #include "logging/ExternalLogger.h"
 #include "logging/LoggerConfig.h"
+#include <iostream>
 
 #define ASSERT(expr, logger) \
 if (!(expr)) {                 \
 (logger).critical("ASSERT failed: {} at {}:{}", #expr, __FILE__, __LINE__ ); \
-exit(1); \
+(logger).stop(); \
+std::raise(SIGABRT); \
 }
 
 namespace sirius::logging {
@@ -36,42 +41,26 @@ using format_string_t = fmt::format_string<Args...>;
 using string_view_t = fmt::basic_string_view<char>;
 using memory_buf_t = fmt::basic_memory_buffer<char, 250>;
 
-class Logger {
+class Logger: public utils::MoveOnly {
 
 private:
 
     std::string m_prefix;
     std::unique_ptr<ExternalLogger> m_externalLogger;
+
+    // We use shared pointer instead of unique to be able to use atomic operations
+    std::shared_ptr<LocalLogGuard> m_guard;
     std::shared_ptr<spdlog::async_logger> m_logger;
 
 public:
 
     Logger(std::unique_ptr<ExternalLogger>&& externalLogger,
-           std::string prefix)
-            : m_prefix(std::move(prefix))
-              , m_externalLogger(std::move(externalLogger)) {}
+           std::string prefix);
 
     Logger(const LoggerConfig& loggerConfig,
-           std::string prefix): m_prefix(std::move(prefix)) {
-        static bool initThreadPool = [] {
-            spdlog::init_thread_pool(8192, 1);
-            return true;
-        }();
-        std::vector<spdlog::sink_ptr> sinks;
-        if (loggerConfig.logToConsole()) {
-            sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
-        }
-        if (loggerConfig.logPath()) {
-            sinks.push_back(
-                    std::make_shared<spdlog::sinks::rotating_file_sink_mt>(*loggerConfig.logPath(),
-                                                                           loggerConfig.maxLogSize(),
-                                                                           loggerConfig.maxLogFiles()));
-        }
-        m_logger = std::make_shared<spdlog::async_logger>(m_prefix, sinks.begin(), sinks.end(),
-                                                          spdlog::thread_pool(),
-                                                          spdlog::async_overflow_policy::block);
-        m_logger->flush_on(spdlog::level::err);
-    }
+           std::string prefix);
+
+    void stop();
 
     template<typename... Args>
     void trace(format_string_t<Args...> fmt, Args&& ... args) {

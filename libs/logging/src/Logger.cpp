@@ -5,12 +5,38 @@
 */
 
 #include "logging/Logger.h"
+#include <mutex>
 
 namespace sirius::logging {
 
-//std::mutex Logger::s_creationMutex = std::mutex();
-//std::shared_ptr<spdlog::details::thread_pool> Logger::s_pThreadPool = nullptr;
-//spdlog::sink_ptr Logger::s_pConsoleSink = nullptr;
+Logger::Logger(std::unique_ptr<ExternalLogger>&& externalLogger, std::string prefix)
+        : m_prefix(std::move(prefix))
+          , m_externalLogger(std::move(externalLogger)) {}
 
+Logger::Logger(const LoggerConfig& loggerConfig, std::string prefix)
+        : m_prefix(std::move(prefix))
+          , m_guard(std::make_shared<LocalLogGuard>(8192, 1)) {
+    std::vector<spdlog::sink_ptr> sinks;
+    if (loggerConfig.logToConsole()) {
+        sinks.emplace_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
+    }
+    if (loggerConfig.logPath()) {
+        sinks.push_back(
+                std::make_shared<spdlog::sinks::rotating_file_sink_mt>(*loggerConfig.logPath(),
+                                                                       loggerConfig.maxLogSize(),
+                                                                       loggerConfig.maxLogFiles()));
+    }
+    m_logger = std::make_shared<spdlog::async_logger>(m_prefix, sinks.begin(), sinks.end(),
+                                                      m_guard->pool(),
+                                                      spdlog::async_overflow_policy::block);
+    m_logger->flush_on(spdlog::level::err);
+}
+
+void Logger::stop() {
+    std::atomic_store(&m_guard, {});
+    if (m_externalLogger) {
+        m_externalLogger->stop();
+    }
+}
 
 }
