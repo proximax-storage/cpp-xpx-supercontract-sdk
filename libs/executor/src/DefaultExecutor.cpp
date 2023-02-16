@@ -40,10 +40,10 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
           , m_eventHandler(std::move(eventHandler)) {
     setThreadId(m_threadManager.threadId());
     m_threadManager.execute([this,
-                             vmBuilder = std::move(vmBuilder),
-                             storageBuilder = std::move(storageBuilder),
-                             blockchainBuilder = std::move(blockchainBuilder),
-                             messengerBuilder = std::move(messengerBuilder)] {
+                                    vmBuilder = std::move(vmBuilder),
+                                    storageBuilder = std::move(storageBuilder),
+                                    blockchainBuilder = std::move(blockchainBuilder),
+                                    messengerBuilder = std::move(messengerBuilder)] {
         messengerBuilder->setMessageSubscriber(this);
         m_messenger = messengerBuilder->build(*this);
 
@@ -82,6 +82,7 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
 
         request.m_executors.erase(it);
 
+        m_logger.info("New contract is added: Key: {}", key);
         m_contracts[key] = std::make_unique<DefaultContract>(key, std::move(request), *this);
     });
 }
@@ -103,8 +104,9 @@ void DefaultExecutor::addManualCall(const ContractKey& key, ManualCallRequest&& 
 void DefaultExecutor::addBlockInfo(uint64_t blockHeight, blockchain::Block&& block) {
     m_threadManager.execute([=, this, block = std::move(block)] {
 
-        m_blockchain->addBlock(blockHeight, block);
+        m_logger.debug("New block is added. Height: {}", blockHeight);
 
+        m_blockchain->addBlock(blockHeight, block);
     });
 }
 
@@ -131,10 +133,11 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
             return;
         }
 
-        auto[query, callback] = createAsyncQuery<void>([this, key] (auto&&) {
+        auto[query, callback] = createAsyncQuery<void>([this, key](auto&&) {
             m_contracts.erase(key);
         }, [] {}, *this, false, false);
 
+        m_logger.info("Contract is removed: Key: {}", key);
         contractIt->second->removeContract(request, std::move(callback));
     });
 }
@@ -181,10 +184,10 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
                     }
                 }
             } else {
-                logger().warn("onMessageReceived: unknown tag", inputMessage.m_tag);
+                m_logger.warn("Received unknown tag message: {}", inputMessage.m_tag);
             }
         } catch (...) {
-            logger().warn("onMessageReceived: invalid message format: query={}", inputMessage.m_content);
+            logger().warn("Received malformed message. Tag: {}", inputMessage.m_tag);
         }
     });
 }

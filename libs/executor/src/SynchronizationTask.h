@@ -36,8 +36,6 @@ public:
 
     bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
 
-    bool onStorageSynchronizedPublished(uint64_t) override;
-
     // endregion
 
 public:

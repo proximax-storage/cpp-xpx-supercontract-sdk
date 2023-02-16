@@ -29,13 +29,6 @@ bool SynchronizationTask::onEndBatchExecutionPublished(const PublishedEndBatchEx
     return true;
 }
 
-bool SynchronizationTask::onStorageSynchronizedPublished(uint64_t) {
-
-    ASSERT(isSingleThread(), m_executorEnvironment.logger())
-
-    return false;
-}
-
 // endregion
 
 void SynchronizationTask::run() {

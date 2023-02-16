@@ -33,7 +33,7 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
           , m_proofOfExecution(m_executorEnvironment.keyPair())
           , m_batchesManager(std::make_unique<DefaultBatchesManager>(
                 addContractRequest.m_recentBatchesInformation.empty()
-                    ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,
+                ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,
                 *this,
                 m_executorEnvironment)) {
     m_contractConfig.setAutomaticExecutionFile(addContractRequest.m_automaticExecutionsFileName);
@@ -54,13 +54,14 @@ void DefaultContract::addManualCall(const ManualCallRequest& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("New manual call is added. Contract key: {}, call id: {}", m_contractKey,
+                                        request.callId());
+
     m_batchesManager->addManualCall(request);
-    if (!m_task) {
-        runTask();
-    }
 }
 
-void DefaultContract::removeContract(const RemoveRequest& request, std::shared_ptr<AsyncQueryCallback<void>>&& callback) {
+void
+DefaultContract::removeContract(const RemoveRequest& request, std::shared_ptr<AsyncQueryCallback<void>>&& callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -84,6 +85,10 @@ bool DefaultContract::onBlockPublished(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("New block is added. Contract key: {}, block height: {}",
+                                        m_contractKey,
+                                        blockHeight);
+
     m_batchesManager->addBlock(blockHeight);
 
     if (m_task) {
@@ -106,12 +111,14 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("End batch execution is published. Contract  key: {}, batch index: {}",
+                                        m_contractKey,
+                                        info.m_batchIndex);
+
     m_proofOfExecution.addBatchVerificationInformation(info.m_batchIndex, info.m_PoExVerificationInfo);
 
     m_batchesManager->fixUnmodifiable(info.m_automaticExecutionsCheckedUpTo);
     m_batchesManager->setAutomaticExecutionsEnabledSince(info.m_automaticExecutionsEnabledSince);
-
-    auto minBatch = m_batchesManager->minBatchIndex();
 
     if (!m_task || !m_task->onEndBatchExecutionPublished(info)) {
         m_unknownPublishedEndBatchTransactions[info.m_batchIndex] = info;
@@ -123,6 +130,10 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
 
     m_lastKnownStorageState = {info.m_batchIndex, info.m_driveState};
 
+    m_executorEnvironment.logger().debug("Updated last known storage state. Contract key: {}, storage state: {}",
+                                         m_contractKey,
+                                         info.m_driveState);
+
     return true;
 }
 
@@ -133,6 +144,8 @@ bool DefaultContract::onEndBatchExecutionFailed(const FailedEndBatchExecutionTra
     if (!m_task) {
         return false;
     }
+
+    m_executorEnvironment.logger().warn("End batch execution transaction failed. Contract key: {}", m_contractKey);
 
     return m_task->onEndBatchExecutionFailed(info);
 }
@@ -156,8 +169,10 @@ bool DefaultContract::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatc
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
-        m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+    m_unknownSuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+
+    if (m_task) {
+        m_task->onEndBatchExecutionOpinionReceived(info);
     }
 
     clearOutdatedCache(m_unknownSuccessfulBatchOpinions, batchesManager().minBatchIndex());
@@ -169,8 +184,10 @@ bool DefaultContract::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBa
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (!m_task || !m_task->onEndBatchExecutionOpinionReceived(info)) {
-        m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+    m_unknownUnsuccessfulBatchOpinions[info.m_batchIndex][info.m_executorKey] = info;
+
+    if (m_task) {
+        m_task->onEndBatchExecutionOpinionReceived(info);
     }
 
     clearOutdatedCache(m_unknownUnsuccessfulBatchOpinions, batchesManager().minBatchIndex());
@@ -235,6 +252,8 @@ void DefaultContract::notifyHasNextBatch() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().debug("Has next batch. Contract key: {}", m_contractKey);
+
     if (!m_task) {
         runTask();
     }
@@ -261,9 +280,9 @@ void DefaultContract::runInitializeContractTask(AddContractRequest&& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+    auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-        }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, false);
 
     m_task = std::make_unique<InitContractTask>(std::move(request), std::move(callback), *this, m_executorEnvironment);
 
@@ -278,7 +297,10 @@ void DefaultContract::runRemoveContractTask() {
 
     ASSERT(m_contractRemoveRequest, m_executorEnvironment.logger())
 
-    m_task = std::make_unique<RemoveContractTask>(std::move(m_contractRemoveRequest->m_request), std::move(m_contractRemoveRequest->m_callback), *this, m_executorEnvironment);
+    m_task = std::make_unique<RemoveContractTask>(std::move(m_contractRemoveRequest->m_request),
+                                                  std::move(m_contractRemoveRequest->m_callback),
+                                                  *this,
+                                                  m_executorEnvironment);
 
     m_contractRemoveRequest.reset();
 
@@ -291,11 +313,14 @@ void DefaultContract::runSynchronizationTask() {
 
     ASSERT(m_synchronizationRequest, m_executorEnvironment.logger())
 
-    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+    auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
     }, [] {}, m_executorEnvironment, false, false);
 
-    m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest), std::move(callback), *this, m_executorEnvironment);
+    m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest),
+                                                   std::move(callback),
+                                                   *this,
+                                                   m_executorEnvironment);
 
     m_synchronizationRequest.reset();
 
@@ -321,9 +346,11 @@ void DefaultContract::runBatchExecutionTask() {
 
     auto batch = m_batchesManager->nextBatch();
 
-    auto[_, callback] = createAsyncQuery<void>([this] (auto&&) {
+    auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
     }, [] {}, m_executorEnvironment, false, false);
+
+    auto batchIndex = batch.m_batchIndex;
 
     m_task = std::make_unique<BatchExecutionTask>(std::move(batch),
                                                   std::move(callback),
@@ -332,9 +359,9 @@ void DefaultContract::runBatchExecutionTask() {
     m_task->run();
 
     {
-        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batch.m_batchIndex);
+        auto successfulExecutorsEndBatchOpinionsIt = m_unknownSuccessfulBatchOpinions.find(batchIndex);
         if (successfulExecutorsEndBatchOpinionsIt != m_unknownSuccessfulBatchOpinions.end()) {
-            for (const auto& [key, opinion]: successfulExecutorsEndBatchOpinionsIt->second) {
+            for (const auto&[key, opinion]: successfulExecutorsEndBatchOpinionsIt->second) {
                 m_task->onEndBatchExecutionOpinionReceived(opinion);
             }
         }
@@ -342,16 +369,16 @@ void DefaultContract::runBatchExecutionTask() {
 
     {
         std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> unsuccessfulEndBatchOpinions;
-        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batch.m_batchIndex);
+        auto unsuccessfulExecutorsEndBatchOpinionsIt = m_unknownUnsuccessfulBatchOpinions.find(batchIndex);
         if (unsuccessfulExecutorsEndBatchOpinionsIt != m_unknownUnsuccessfulBatchOpinions.end()) {
-            for (const auto& [key, opinion]: unsuccessfulExecutorsEndBatchOpinionsIt->second) {
+            for (const auto&[key, opinion]: unsuccessfulExecutorsEndBatchOpinionsIt->second) {
                 m_task->onEndBatchExecutionOpinionReceived(opinion);
             }
         }
     }
 
     {
-        auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batch.m_batchIndex);
+        auto publishedTransactionInfoIt = m_unknownPublishedEndBatchTransactions.find(batchIndex);
         if (publishedTransactionInfoIt != m_unknownPublishedEndBatchTransactions.end()) {
             m_task->onEndBatchExecutionPublished(publishedTransactionInfoIt->second);
         }

@@ -39,4 +39,8 @@ void Logger::stop() {
     }
 }
 
+Logger::~Logger() {
+    stop();
+}
+
 }

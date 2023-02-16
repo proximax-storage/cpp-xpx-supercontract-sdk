@@ -8,8 +8,6 @@
 
 #include "LocalLogGuard.h"
 
-#include <utils/NonCopyable.h>
-
 #include <string>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -41,7 +39,7 @@ using format_string_t = fmt::format_string<Args...>;
 using string_view_t = fmt::basic_string_view<char>;
 using memory_buf_t = fmt::basic_memory_buffer<char, 250>;
 
-class Logger: public utils::MoveOnly {
+class Logger {
 
 private:
 
@@ -59,6 +57,14 @@ public:
 
     Logger(const LoggerConfig& loggerConfig,
            std::string prefix);
+
+    Logger(const Logger&) = delete;
+    Logger& operator =(const Logger&) = delete;
+
+    Logger(Logger&&) = default;
+    Logger& operator =(Logger&&) = default;
+
+    ~Logger();
 
     void stop();
 
