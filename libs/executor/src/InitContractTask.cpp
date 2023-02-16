@@ -14,14 +14,18 @@ InitContractTask::InitContractTask(
         ContractEnvironment& contractEnvironment,
         ExecutorEnvironment& executorEnvironment)
         : BaseContractTask(executorEnvironment, contractEnvironment)
-        , m_request(std::move(request))
-        , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
+          , m_request(std::move(request))
+          , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
 void InitContractTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    for (const auto& [batchId, verificationInformation]: m_request.m_recentBatchesInformation) {
+    m_executorEnvironment.logger().info("Initialization task is run. "
+                                        "Contract key: {}, ",
+                                        m_contractEnvironment.contractKey());
+
+    for (const auto&[batchId, verificationInformation]: m_request.m_recentBatchesInformation) {
         m_contractEnvironment.proofOfExecution().addBatchVerificationInformation(batchId, verificationInformation);
     }
 
@@ -38,6 +42,10 @@ void InitContractTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("Initialization task is terminated. "
+                                        "Contract key: {}",
+                                        m_contractEnvironment.contractKey());
+
     m_storageActualModificationIdQuery.reset();
     m_storageActualModificationIdTimer.cancel();
 
@@ -47,6 +55,10 @@ void InitContractTask::terminate() {
 void InitContractTask::requestActualModificationId() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().info("Actual modification id is requested. "
+                                        "Contract key: {}",
+                                        m_contractEnvironment.contractKey());
 
     auto storage = m_executorEnvironment.storage().lock();
 
@@ -71,12 +83,32 @@ void InitContractTask::onActualModificationIdReceived(const expected<Modificatio
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    if (!res || *res != m_request.m_contractDeploymentBaseModificationId) {
+    bool correctActualModificationId = true;
+
+    if (!res) {
+        m_executorEnvironment.logger().error("Unable to obtain actual modification id. "
+                                             "Contract key: {}. "
+                                             "Reason: {}",
+                                             m_contractEnvironment.contractKey(),
+                                             res.error().message());
+
+        correctActualModificationId = false;
+    } else if (*res != m_request.m_contractDeploymentBaseModificationId) {
+        m_executorEnvironment.logger().warn("Storage actual modification id is incorrect. "
+                                            "Contract key: {}. "
+                                            "Expected: {}, Actual: {}",
+                                            m_contractEnvironment.contractKey(),
+                                            m_request.m_contractDeploymentBaseModificationId,
+                                            *res);
+        correctActualModificationId = false;
+    }
+
+    if (!correctActualModificationId) {
         m_storageActualModificationIdTimer = Timer(m_executorEnvironment.threadManager().context(),
                                                    m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(),
                                                    [this] {
-            requestActualModificationId();
-        });
+                                                       requestActualModificationId();
+                                                   });
         return;
     }
 

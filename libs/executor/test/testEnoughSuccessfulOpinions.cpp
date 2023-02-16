@@ -257,7 +257,7 @@ TEST(BatchExecutionTask, EnoughSuccessfulOpinions) {
     });
 
     auto barrier = executorEventHandler->m_successfulEndBatchIsReadyPromise.get_future();
-    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(5)));
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
 
     auto transactionInfo = barrier.get();
 

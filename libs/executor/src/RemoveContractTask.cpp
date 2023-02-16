@@ -21,12 +21,19 @@ void RemoveContractTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("Remove contract task is run. "
+                                        "Contract key: {} ",
+                                        m_contractEnvironment.contractKey());
+
     m_onTaskFinishedCallback->postReply(expected<void>());
 }
 
 void RemoveContractTask::terminate() {
-
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().warn("Remove execution task is terminated. "
+                                        "Contract key: {}",
+                                        m_contractEnvironment.contractKey());
 }
 
-};
+}

@@ -37,6 +37,14 @@ void SynchronizationTask::run() {
 
     ASSERT(!m_storageQuery, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("Synchronization task is run. "
+                                        "Contract key: {}, "
+                                        "batch index: {}, "
+                                        "storage hash: {}",
+                                        m_contractEnvironment.contractKey(),
+                                        m_request.m_batchIndex,
+                                        m_request.m_storageHash);
+
     m_storageTimer.cancel();
 
     auto storage = m_executorEnvironment.storage().lock();
@@ -63,6 +71,11 @@ void SynchronizationTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().info("Synchronization task is terminated. "
+                                         "Contract key: {}, batch index: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         m_request.m_batchIndex);
+
     m_storageQuery.reset();
     m_storageTimer.cancel();
 
@@ -77,6 +90,14 @@ void SynchronizationTask::onStorageUnavailable() {
 
     ASSERT(!m_storageTimer, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("Failed to synchronize. "
+                                         "Contract key: {}, "
+                                         "batch index: {}, "
+                                         "storage hash: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         m_request.m_batchIndex,
+                                         m_request.m_storageHash);
+
     m_storageTimer = Timer(m_executorEnvironment.threadManager().context(), 5000, [this] {
         run();
     });
@@ -85,6 +106,14 @@ void SynchronizationTask::onStorageUnavailable() {
 void SynchronizationTask::onStorageStateSynchronized() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().info("Synchronization is done. "
+                                        "Contract key: {}, "
+                                        "batch index: {}, "
+                                        "storage hash: {}",
+                                        m_contractEnvironment.contractKey(),
+                                        m_request.m_batchIndex,
+                                        m_request.m_storageHash);
 
     m_executorEnvironment.executorEventHandler().synchronizationSingleTransactionIsReady(
             SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), m_request.m_batchIndex});

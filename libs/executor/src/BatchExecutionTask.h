@@ -133,7 +133,7 @@ private:
 
     void computeProofOfExecution();
 
-    void onUnableToExecuteBatch();
+    void onUnableToExecuteBatch(const std::error_code& ec);
 
     void onAppliedStorageModifications();
 

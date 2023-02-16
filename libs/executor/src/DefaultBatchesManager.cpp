@@ -235,6 +235,8 @@ void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std:
 
     ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("Failed to execute autorun call. Reason: {}", ec.message());
+
     auto callIt = m_autorunCallInfos.find(blockHeight);
 
     ASSERT(callIt != m_autorunCallInfos.end(), m_executorEnvironment.logger())
@@ -257,6 +259,10 @@ void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std:
 void DefaultBatchesManager::skipBatches(uint64_t nextBatchIndex) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().debug("Skipped batches. Contract key: {}, next batch: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         nextBatchIndex);
 
     m_skippedNextBatchIndex = nextBatchIndex;
 }
@@ -285,6 +291,10 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
 
     ASSERT(batch.m_batchIndex + 1 == m_nextBatchIndex, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().debug("Batch is delayed. Contract key: {}, batch index: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         batch.m_batchIndex);
+
     m_delayedBatch = std::move(batch);
 
     if (!isBatchValid(*m_delayedBatch)) {
@@ -292,14 +302,19 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
     }
 }
 
-void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight) {
+void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t nextBlockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().debug("Automatic executions are disabled. Contract key: {}, next block height: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         nextBlockHeight);
+
     {
         auto itStart = m_batches.lower_bound(m_nextModifiableBlock);
 
         for (auto it = itStart, nextIt = it;
-             it != m_batches.end() && it->first < blockHeight; it = nextIt) {
+             it != m_batches.end() && it->first < nextBlockHeight; it = nextIt) {
             nextIt++;
 
             auto& batch = it->second;
@@ -320,7 +335,7 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t blockHeight)
     {
         auto itStart = m_autorunCallInfos.lower_bound(m_nextModifiableBlock);
 
-        for (auto it = itStart; it != m_autorunCallInfos.end() && it->first < blockHeight;) {
+        for (auto it = itStart; it != m_autorunCallInfos.end() && it->first < nextBlockHeight;) {
             it = m_autorunCallInfos.erase(it);
         }
     }
@@ -331,6 +346,10 @@ void DefaultBatchesManager::fixUnmodifiable(uint64_t nextBlockHeight) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(nextBlockHeight > m_nextModifiableBlock, m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().debug("Automatic executions are fixed unmodifiable. Contract key: {}, next block height: {}",
+                                         m_contractEnvironment.contractKey(),
+                                         nextBlockHeight);
 
     m_nextModifiableBlock = nextBlockHeight;
 }
