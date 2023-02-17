@@ -56,15 +56,22 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
 
         m_sslContext.set_default_verify_paths();
         m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
+
+        m_logger.info("Executor is started. Key: {}", m_keyPair.publicKey());
     });
 }
 
 DefaultExecutor::~DefaultExecutor() {
+
+    m_logger.info("Started executor destruction");
+
     m_threadManager.execute([this] {
         terminate();
     });
 
     m_threadManager.stop();
+
+    m_logger.info("Executor is destructed");
 }
 
 void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& request) {
