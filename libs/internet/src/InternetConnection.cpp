@@ -5,6 +5,8 @@
 */
 
 #include "internet/InternetConnection.h"
+#include "HttpInternetResource.h"
+#include "HttpsInternetResource.h"
 
 namespace sirius::contract::internet {
 
@@ -33,12 +35,12 @@ InternetConnection& InternetConnection::operator=(InternetConnection&& other) no
     m_environment = other.m_environment;
     m_resource = std::move(other.m_resource);
     return *this;
-};
+}
 
 void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    ASSERT(m_resource, m_environment.logger());
+    ASSERT(m_resource, m_environment.logger())
 
     m_resource->read(callback);
 }

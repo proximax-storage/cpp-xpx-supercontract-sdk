@@ -38,6 +38,8 @@ void CachedBlockchain::block(uint64_t height, std::shared_ptr<AsyncQueryCallback
         return;
     }
 
+    m_environment.logger().warn("Block not found in blockchain cache. Height: {}", height);
+
     auto queryIt = m_queries.find(height);
 
     if (queryIt != m_queries.end()) {

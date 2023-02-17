@@ -7,6 +7,7 @@
 #include "RPCVirtualMachine.h"
 #include "ExecuteCallRPCRequest.h"
 #include "RPCTag.h"
+#include <virtualMachine/VirtualMachineErrorCode.h>
 #include "supercontract_server.grpc.pb.h"
 #include <grpcpp/create_channel.h>
 
@@ -15,11 +16,11 @@ namespace sirius::contract::vm {
 RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageObserver> storageContentManager,
                                      GlobalEnvironment& environment,
                                      const std::string& serverAddress)
-    : m_storageContentManager(std::move(storageContentManager)), m_environment(environment), m_stub(supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
-                                                                                                 serverAddress, grpc::InsecureChannelCredentials()))),
-      m_completionQueueThread([this] {
-          waitForRPCResponse();
-      }) {}
+        : m_storageContentManager(std::move(storageContentManager)), m_environment(environment), m_stub(
+        supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
+                serverAddress, grpc::InsecureChannelCredentials()))), m_completionQueueThread([this] {
+    waitForRPCResponse();
+}) {}
 
 RPCVirtualMachine::~RPCVirtualMachine() {
 
@@ -43,27 +44,36 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    m_environment.logger().info("Call execution is started by RPC VM. "
+                                "CallId: {}, call level: {}",
+                                request.m_callId,
+                                static_cast<uint8_t>(request.m_callLevel));
+
     auto storageContentManager = m_storageContentManager.lock();
 
     if (!storageContentManager) {
-        callback->postReply({});
+        callback->postReply(
+                tl::unexpected<std::error_code>(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
     }
 
-    auto [pathQuery, pathCallback] = createAsyncQuery<std::string>(
-        [=, this, request = request, internetQueryHandler = std::move(internetQueryHandler), blockchainQueryHandler = std::move(blockchainQueryHandler), storageQueryHandler = std::move(storageQueryHandler)](
-            auto&& callAbsolutePath) mutable -> void {
-            onReceivedCallAbsolutePath(std::move(request),
-                                       std::forward<decltype(callAbsolutePath)>(callAbsolutePath),
-                                       std::move(internetQueryHandler),
-                                       std::move(blockchainQueryHandler),
-                                       std::move(storageQueryHandler),
-                                       std::move(callback));
-        },
-        [=] {
-            callback->postReply({});
-        },
-        m_environment, true, true);
+    auto[pathQuery, pathCallback] = createAsyncQuery<std::string>(
+            [=, this, request = request, internetQueryHandler = std::move(
+                    internetQueryHandler), blockchainQueryHandler = std::move(
+                    blockchainQueryHandler), storageQueryHandler = std::move(storageQueryHandler)](
+                    auto&& callAbsolutePath) mutable -> void {
+                onReceivedCallAbsolutePath(std::move(request),
+                                           std::forward<decltype(callAbsolutePath)>(callAbsolutePath),
+                                           std::move(internetQueryHandler),
+                                           std::move(blockchainQueryHandler),
+                                           std::move(storageQueryHandler),
+                                           std::move(callback));
+            },
+            [=] {
+                callback->postReply(
+                        tl::unexpected<std::error_code>(make_error_code(VirtualMachineError::vm_unavailable)));
+            },
+            m_environment, true, true);
     m_pathQueries[request.m_callId] = std::move(pathQuery);
     storageContentManager->absolutePath(DriveKey(), request.m_file, pathCallback);
 }
@@ -79,7 +89,7 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     auto callId = request.m_callId;
 
-    ASSERT(!m_callContexts.contains(callId), m_environment.logger());
+    ASSERT(!m_callContexts.contains(callId), m_environment.logger())
 
     m_pathQueries.erase(request.m_callId);
 
@@ -90,6 +100,7 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
             executionResult.m_return = 0;
             executionResult.m_execution_gas_consumed = 0;
             executionResult.m_download_gas_consumed = 0;
+            executionResult.m_proofOfExecutionSecretData = request.m_proofOfExecutionPrefix;
             callback->postReply(executionResult);
         } else {
             callback->postReply(tl::unexpected(callAbsolutePath.error()));
@@ -99,12 +110,15 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     request.m_file = *callAbsolutePath;
 
-    auto [vmQuery, vmCallback] = createAsyncQuery<CallExecutionResult>(
-        [=, this](expected<CallExecutionResult>&& result) {
-            callback->postReply(std::move(result));
-            onCallExecuted(callId);
-        },
-        [=] { callback->postReply({}); }, m_environment, true, false);
+    auto[vmQuery, vmCallback] = createAsyncQuery<CallExecutionResult>(
+            [=, this](expected<CallExecutionResult>&& result) {
+                callback->postReply(std::move(result));
+                onCallExecuted(callId);
+            },
+            [=] {
+                callback->postReply(
+                        tl::unexpected<std::error_code>(make_error_code(VirtualMachineError::vm_unavailable)));
+            }, m_environment, true, false);
 
     auto call = ExecuteCallRPCRequest(m_environment,
                                       std::move(request),
@@ -143,6 +157,6 @@ void RPCVirtualMachine::onCallExecuted(const CallId& callId) {
 }
 
 RPCVirtualMachine::CallContext::CallContext(ExecuteCallRPCRequest&& request, std::shared_ptr<AsyncQuery> query)
-    : m_request(std::move(request)), m_query(std::move(query)) {}
+        : m_request(std::move(request)), m_query(std::move(query)) {}
 
 } // namespace sirius::contract::vm

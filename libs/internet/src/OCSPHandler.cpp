@@ -77,7 +77,7 @@ void OCSPHandler::sendRequest() {
     ASSERT( m_path, m_globalEnvironment.logger() )
 
     if ( m_ssl != 0 ) {
-        m_globalEnvironment.logger().warn("SSL In OCSP Query");
+        m_globalEnvironment.logger().debug("SSL in OCSP query");
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -85,7 +85,7 @@ void OCSPHandler::sendRequest() {
     m_socketBio = BIO_new_connect( m_host );
 
     if ( !m_socketBio ) {
-        m_globalEnvironment.logger().warn( "Could Not Create Socket BIO" );
+        m_globalEnvironment.logger().debug( "Socket BIO creation failed" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -96,19 +96,19 @@ void OCSPHandler::sendRequest() {
     m_ctx = OCSP_sendreq_new( m_socketBio, m_path, nullptr, -1 );
 
     if ( !m_ctx ) {
-        m_globalEnvironment.logger().warn( "Could Not Create OCSP Context" );
+        m_globalEnvironment.logger().debug( "OCSP context creation failed" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
 
     if ( !OCSP_REQ_CTX_add1_header( m_ctx, "Host", m_host ) ) {
-        m_globalEnvironment.logger().warn( "Could Not Add OCSP Header" );
+        m_globalEnvironment.logger().debug( "OCSP header add failed" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
 
     if ( !OCSP_REQ_CTX_set1_req( m_ctx, m_request ) ) {
-        m_globalEnvironment.logger().warn( "Could Not Add Request To OCSP Context" );
+        m_globalEnvironment.logger().debug( "OCSP context add request failed" );
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -135,7 +135,7 @@ void OCSPHandler::connect() {
     }
     else {
         // Real error has occurred
-        m_globalEnvironment.logger().warn( "Error During The OCSP Connection to {}:{}", m_host, m_port);
+        m_globalEnvironment.logger().debug( "OCSP connection to {}:{} failed", m_host, m_port);
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
     }
 }
@@ -157,7 +157,7 @@ void OCSPHandler::read() {
         });
     }
     else {
-        m_globalEnvironment.logger().warn("Error During Reading OCSP Response from {}:{}", m_host, m_port);
+        m_globalEnvironment.logger().debug("OCSP read response from {}:{} failed", m_host, m_port);
         m_callback( CertificateRevocationCheckStatus::UNDEFINED );
         return;
     }
@@ -213,7 +213,7 @@ void OCSPHandler::onResponseReceived() {
         }
     }
     catch ( const OCSPResponseException& ex ) {
-        m_globalEnvironment.logger().warn("Error During Parsing OCSP Response: {}", ex.what());
+        m_globalEnvironment.logger().debug("OCSP parse response failed: {}", ex.what());
         revocationStatus = CertificateRevocationCheckStatus::UNDEFINED;
     }
     OCSP_BASICRESP_free( basicResponse );

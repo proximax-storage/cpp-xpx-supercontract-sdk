@@ -38,7 +38,7 @@ void OCSPVerifier::prepareRequest(X509* cert, X509* issuer) {
     ASSERT(isSingleThread(), m_globalEnvironment.logger())
 
     if (!issuer) {
-        m_globalEnvironment.logger().warn("Certificate Issuer Is Null");
+        m_globalEnvironment.logger().debug("Certificate issuer is null");
         postReply(CertificateRevocationCheckStatus::UNDEFINED);
         return;
     }
@@ -46,7 +46,7 @@ void OCSPVerifier::prepareRequest(X509* cert, X509* issuer) {
     m_request = OCSP_REQUEST_new();
 
     if (!m_request) {
-        m_globalEnvironment.logger().warn("OCSP Request Is Null");
+        m_globalEnvironment.logger().debug("OCSP request is null");
         postReply(CertificateRevocationCheckStatus::UNDEFINED);
         return;
     }
@@ -55,13 +55,13 @@ void OCSPVerifier::prepareRequest(X509* cert, X509* issuer) {
     m_requestId = OCSP_cert_to_id(certIdMd, cert, issuer);
 
     if (!m_requestId) {
-        m_globalEnvironment.logger().warn("Request Id Is Null");
+        m_globalEnvironment.logger().debug("OCSP request id is null");
         postReply(CertificateRevocationCheckStatus::UNDEFINED);
         return;
     }
 
     if (!OCSP_request_add0_id(m_request, m_requestId)) {
-        m_globalEnvironment.logger().warn("Could Not Add Id To Request");
+        m_globalEnvironment.logger().debug("OCSP request id add failed");
         postReply(CertificateRevocationCheckStatus::UNDEFINED);
         return;
     }
@@ -83,7 +83,7 @@ void OCSPVerifier::sendRequest() {
     ASSERT(isSingleThread(), m_globalEnvironment.logger())
 
     if (m_urls.empty()) {
-        m_globalEnvironment.logger().warn("No More URLs To Process");
+        m_globalEnvironment.logger().debug("OCSP request no more urls to process");
         postReply(CertificateRevocationCheckStatus::UNDEFINED);
         return;
     }

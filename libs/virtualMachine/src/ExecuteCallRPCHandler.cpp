@@ -37,7 +37,6 @@
 #include "GetServicePaymentsRPCHandler.h"
 #include "GetExecutionPaymentRPCHandler.h"
 #include "GetDownloadPaymentRPCHandler.h"
-#include "GetServicePaymentsRPCHandler.h"
 #include "AddTransactionRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
@@ -70,8 +69,6 @@ void ExecuteCallRPCHandler::start() {
     ASSERT(!m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
 
-    m_environment.logger().info("Call {} start", m_request.m_callId);
-
     auto[query, callback] = createAsyncQuery<void>([this](auto&& res) { onStarted(std::forward<decltype(res)>(res)); },
                                                    [] {}, m_environment, true, true);
     m_tagQuery = std::move(query);
@@ -85,8 +82,6 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
 
     ASSERT(m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
-
-    m_environment.logger().info("Call {} started. Status: {}", m_request.m_callId, (bool) res);
 
     m_tagQuery.reset();
 
@@ -115,8 +110,6 @@ void ExecuteCallRPCHandler::onWritten(expected<void>&& res) {
     ASSERT(m_tagQuery, m_environment.logger())
     ASSERT(!m_responseHandler, m_environment.logger())
 
-    m_environment.logger().info("Call {} wrote message to vm server. Status: {}", m_request.m_callId, (bool) res);
-
     m_tagQuery.reset();
 
     if (!res) {
@@ -135,8 +128,6 @@ void ExecuteCallRPCHandler::onWritten(expected<void>&& res) {
 void ExecuteCallRPCHandler::writeRequest(supercontractserver::Request&& requestWrapper) {
 
     ASSERT(isSingleThread(), m_environment.logger())
-
-    m_environment.logger().info("Call {} write message to vm server", m_request.m_callId);
 
     auto[query, callback] = createAsyncQuery<void>([this](auto&& res) { onWritten(std::forward<decltype(res)>(res)); },
                                                    [] {},
@@ -339,7 +330,6 @@ void ExecuteCallRPCHandler::onFinished(grpc::Status&& status) {
     if (status.error_code()) {
         m_environment.logger().warn("Finished GRPC Call With Error: {}", status.error_message());
     } else {
-        m_environment.logger().info("Finished GRPC Call Without Error: {}");
     }
 }
 

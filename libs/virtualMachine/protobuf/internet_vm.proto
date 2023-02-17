@@ -4,6 +4,7 @@ package supercontractserver;
 
 message OpenConnection {
   string url = 1;
+  bool soft_revocation_mode = 2;
 }
 
 message OpenConnectionReturn {

@@ -19,11 +19,7 @@
 #include "internet/InternetUtils.h"
 #include "TestUtils.h"
 
-namespace beast = boost::beast;   // from <boost/beast.hpp>
-namespace http = beast::http;     // from <boost/beast/http.hpp>
-namespace net = boost::asio;      // from <boost/asio.hpp>
 namespace ssl = boost::asio::ssl; // from <boost/asio/ssl.hpp>
-using tcp = boost::asio::ip::tcp; // from <boost/asio/ip/tcp.hpp>
 
 namespace sirius::contract::internet::test {
 
@@ -50,7 +46,7 @@ void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag,
         std::string actual(actual_vec.begin(), actual_vec.end());
         std::string expected = "</html>";
         std::size_t found = actual.find(expected);
-        if (found==std::string::npos) {throw found;}
+        ASSERT_NE(found, std::string::npos);
         return;
     }
 
@@ -372,7 +368,7 @@ TEST(TEST_NAME, ReadBigWebsite) {
     bool read_flag = false;
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("http://news.baidu.com/");
+        auto urlDescription = parseURL("http://www.britannica.com/");
 
         ASSERT_TRUE(urlDescription);
         ASSERT_FALSE(urlDescription->ssl);
@@ -442,7 +438,7 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
     std::string interface(default_interface.begin(), default_interface.end() - 1);
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("http://news.baidu.com/");
+        auto urlDescription = parseURL("http://www.britannica.com/");
 
         ASSERT_TRUE(urlDescription);
         ASSERT_FALSE(urlDescription->ssl);
@@ -540,7 +536,7 @@ TEST(TEST_NAME, ReadWhenBlockingConnection) {
     bool read_flag = false;
 
     threadManager.execute([&] {
-        auto urlDescription = parseURL("http://news.baidu.com/");
+        auto urlDescription = parseURL("http://www.britannica.com/");
 
         ASSERT_TRUE(urlDescription);
         ASSERT_FALSE(urlDescription->ssl);

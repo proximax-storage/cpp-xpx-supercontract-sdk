@@ -15,16 +15,15 @@ namespace sirius::contract::vm::test
 
         void openConnection(
             const std::string &url,
-            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback);
+            bool softRevocationMode,
+            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
         void read(
             uint64_t connectionId,
-            std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback);
+            std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
 
         void closeConnection(
             uint64_t connectionId,
-            std::shared_ptr<AsyncQueryCallback<void>> callback);
-
-        ~MockVirtualMachineInternetQueryHandler() = default;
+            std::shared_ptr<AsyncQueryCallback<void>> callback) override;
     };
 }

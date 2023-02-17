@@ -12,7 +12,7 @@ pub mod internet;
 
 #[no_mangle]
 pub unsafe extern "C" fn run() -> u32 {
-    let internet = internet::Internet::new("example.com").unwrap();
+    let internet = internet::Internet::new("example.com", true).unwrap();
     let mut reader = BufReader::with_capacity(16 * 1024, internet);
     // let identifier = 123456789i64;
     let mut buf = Vec::new();

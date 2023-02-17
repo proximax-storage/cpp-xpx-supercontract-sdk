@@ -37,6 +37,7 @@ public:
 
     void
     openConnection(const std::string& url,
+                   bool softRevocationMode,
                    std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
     void read(uint64_t connectionId,

@@ -10,13 +10,11 @@
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/impl/context.ipp>
 
-#include "InternetConnection.h"
-#include "../../src/HttpInternetResource.h"
-#include "../../src/HttpsInternetResource.h"
-
+#include "InternetResource.h"
 #include "supercontract/AsyncQuery.h"
 #include "supercontract/SingleThread.h"
 #include "supercontract/GlobalEnvironment.h"
+#include "HttpsRevokationMode.h"
 
 
 namespace sirius::contract::internet {

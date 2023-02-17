@@ -23,7 +23,6 @@ std::string exec(const char* cmd) {
     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
         result += buffer.data();
     }
-    std::cout << "exec result " << result;
     return result;
 }
 

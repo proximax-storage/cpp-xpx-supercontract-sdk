@@ -8,6 +8,7 @@ namespace sirius::contract::vm::test
     }
 
     void MockVirtualMachineInternetQueryHandler::openConnection(const std::string &url,
+                                                                bool softRevocationMode,
                                                                 std::shared_ptr<AsyncQueryCallback<uint64_t>> callback)
     {
         int ret = 6;

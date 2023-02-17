@@ -16,7 +16,8 @@
 
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/SingleThread.h"
-#include "internet/InternetResource.h"
+#include <internet/InternetResource.h>
+#include <internet/HttpsRevokationMode.h>
 #include "OCSPVerifier.h"
 
 namespace sirius::contract::internet {
@@ -26,10 +27,6 @@ namespace http = beast::http;
 namespace net = boost::asio;
 using tcp = boost::asio::ip::tcp;
 namespace ssl = boost::asio::ssl;
-
-enum class RevocationVerificationMode {
-    SOFT, HARD
-};
 
 class HttpsInternetResource
         :

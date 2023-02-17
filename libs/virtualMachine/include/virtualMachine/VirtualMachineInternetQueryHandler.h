@@ -20,6 +20,7 @@ public:
 
     virtual void openConnection(
             const std::string& url,
+            bool openConnection,
             std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(internet::make_error_code(internet::InternetError::incorrect_query)));
     }

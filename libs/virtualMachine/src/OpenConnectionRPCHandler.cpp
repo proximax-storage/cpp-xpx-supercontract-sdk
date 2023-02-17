@@ -37,7 +37,7 @@ void OpenConnectionRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->openConnection(m_request.url(), callback);
+    handler->openConnection(m_request.url(), m_request.soft_revocation_mode(), callback);
 }
 
 void OpenConnectionRPCHandler::onResult(const expected<uint64_t>& res) {

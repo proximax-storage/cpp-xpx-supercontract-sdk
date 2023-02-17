@@ -18,7 +18,6 @@
 #include "utils/Random.h"
 #include "supercontract/Identifiers.h"
 #include "supercontract/AsyncQuery.h"
-#include <openssl/sslerr.h>
 #include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::internet {
@@ -58,14 +57,13 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
     ASSERT(m_state == ConnectionState::UNINITIALIZED, m_environment.logger())
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("Open Https Connection Empty Callback");
         closeDuringInitialization();
         return;
     }
 
-    ASSERT (SSL_set_tlsext_host_name(m_stream.native_handle(), m_host.c_str()), m_environment.logger());
+    ASSERT(SSL_set_tlsext_host_name(m_stream.native_handle(), m_host.c_str()), m_environment.logger())
 
-    ASSERT(SSL_set1_host(m_stream.native_handle(), m_host.c_str()), m_environment.logger());
+    ASSERT(SSL_set1_host(m_stream.native_handle(), m_host.c_str()), m_environment.logger())
 
     m_req.version(10);
     m_req.method(http::verb::get);
@@ -100,18 +98,16 @@ void HttpsInternetResource::read(
     ASSERT(m_state >= ConnectionState::INITIALIZED, m_environment.logger())
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("Read Https Connection Empty Callback");
         return;
     }
 
     if (m_state == ConnectionState::SHUTDOWN || m_state == ConnectionState::CLOSED) {
-        m_environment.logger().warn("Read Https Connection Closed");
+        m_environment.logger().debug("Https failed. Reason: connection closed, resource: {}", m_host);
         callback->postReply(tl::unexpected(make_error_code(InternetError::connection_closed_error)));
         return;
     }
 
     if (m_res.is_done()) {
-        m_environment.logger().info("Read Https Connection Finished");
         callback->postReply(std::vector<uint8_t>());
         return;
     }
@@ -172,13 +168,12 @@ void HttpsInternetResource::onHostResolved(beast::error_code ec,
     }
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnHostResolved Https Connection Empty Callback");
         closeDuringInitialization();
         return;
     }
 
     if (ec) {
-        m_environment.logger().warn("OnHostResolved Https Connection Error: {}", ec.message());
+        m_environment.logger().debug("Https host resolve failed. Reason: {}, resource: {}", ec.message(), m_host);
         closeDuringInitialization();
         callback->postReply(tl::unexpected(make_error_code(InternetError::resolve_error)));
         return;
@@ -206,13 +201,12 @@ void HttpsInternetResource::onConnected(beast::error_code ec, const boost::asio:
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnConnected Https Connection Empty Callback");
         closeDuringInitialization();
         return;
     }
 
     if (ec) {
-        m_environment.logger().warn("OnConnected Https Connection Error: {}", ec.message());
+        m_environment.logger().debug("Https connection failed. Reason: {}, resource: {}", ec.message(), m_host);
         closeDuringInitialization();
         callback->postReply(tl::unexpected(make_error_code(InternetError::connection_error)));
         return;
@@ -252,13 +246,12 @@ void HttpsInternetResource::onHandshake(beast::error_code ec,
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnHandshake Https Connection Empty Callback");
         closeDuringInitialization();
         return;
     }
 
     if (ec) {
-        m_environment.logger().warn("OnHandshake Https Connection Error {}",  ec.message());
+        m_environment.logger().debug("Https handshake failed. Reason: {}, resource: {}", ec.message(), m_host);
         closeDuringInitialization();
         callback->postReply(tl::unexpected(make_error_code(InternetError::handshake_error)));
         return;
@@ -279,20 +272,18 @@ void HttpsInternetResource::onWritten(beast::error_code ec, std::size_t bytes_tr
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnWritten Https Connection Empty Callback");
         close();
         return;
     }
 
     if (ec) {
-        m_environment.logger().warn("OnWritten Https Connection Error: {}", ec.message());
+        m_environment.logger().debug("Https write failed. Reason: {}, resource: {}", ec.message(), m_host);
         close();
         callback->postReply(tl::unexpected(make_error_code(InternetError::write_error)));
         return;
     }
 
     m_state = ConnectionState::INITIALIZED;
-    m_environment.logger().info("Established Connection With {}:{}", m_host, m_port);
     callback->postReply(shared_from_this());
 }
 
@@ -304,7 +295,6 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
     m_timeoutTimer.cancel();
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnRead Https Connection Empty Callback");
         return;
     }
 
@@ -313,7 +303,7 @@ void HttpsInternetResource::onRead(beast::error_code ec, std::size_t bytes_trans
     }
 
     if (ec) {
-        m_environment.logger().warn("OnRead Https Connection Error {}", ec.message());
+        m_environment.logger().debug("Https read failed. Reason: {}, resource: {}", ec.message(), m_host);
         callback->postReply(tl::unexpected(make_error_code(InternetError::read_error)));
         return;
     }
@@ -385,7 +375,6 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
     ASSERT(isSingleThread(), m_environment.logger())
 
     if (callback->isTerminated()) {
-        m_environment.logger().warn("OnOCSPVerified Https Connection Empty Callback");
         return;
     }
 
@@ -409,9 +398,8 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
 
 
     if (!ocspValid) {
-        m_environment.logger().warn("OnOCSPVerified Https Connection OCSP Invalid");
+        m_environment.logger().debug("Https ocsp verification failed. Resource: {}", m_host);
         closeDuringInitialization();
-        auto ec = beast::error_code(SSL_R_CERTIFICATE_VERIFY_FAILED, boost::asio::error::get_ssl_category());
         callback->postReply(tl::unexpected(make_error_code(InternetError::invalid_ocsp_error)));
         return;
     }
@@ -451,7 +439,7 @@ void HttpsInternetResource::onShutdown(beast::error_code ec) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    ASSERT(m_state == ConnectionState::SHUTDOWN, m_environment.logger());
+    ASSERT(m_state == ConnectionState::SHUTDOWN, m_environment.logger())
 
     if (ec == net::error::eof) {
 
@@ -459,7 +447,7 @@ void HttpsInternetResource::onShutdown(beast::error_code ec) {
 
     if (ec) {
         // Error Is Normal Here
-        m_environment.logger().warn("Error During Shutdown: {}", ec.message());
+        m_environment.logger().debug("Https shutdown failed. Reason: {}, resource: {}", ec.message(), m_host);
     }
 
     m_state = ConnectionState::CLOSED;
