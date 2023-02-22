@@ -35,9 +35,6 @@ public:
     void downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 
     void executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
-
-    void addTransaction(blockchain::EmbeddedTransaction&& embeddedTransaction,
-                        std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 };
 
 }

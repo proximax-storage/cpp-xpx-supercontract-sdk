@@ -37,10 +37,9 @@
 #include "GetServicePaymentsRPCHandler.h"
 #include "GetExecutionPaymentRPCHandler.h"
 #include "GetDownloadPaymentRPCHandler.h"
-#include "AddTransactionRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
-#include <blockchain_vm.pb.h>
+#include <blockchain/EmbeddedTransaction.h>
 
 namespace sirius::contract::vm {
 
@@ -140,12 +139,28 @@ void ExecuteCallRPCHandler::writeRequest(supercontractserver::Request&& requestW
 void ExecuteCallRPCHandler::processExecuteCallResponse(
         const supercontractserver::ExecuteReturns& executeCallResponse) {
 
+    std::optional<blockchain::AggregatedTransaction> aggregatedTransaction;
+
+    if (executeCallResponse.has_transaction()) {
+        aggregatedTransaction = blockchain::AggregatedTransaction{};
+        const auto& resultTransaction = executeCallResponse.transaction();
+        aggregatedTransaction->m_maxFee = resultTransaction.max_fee();
+        for (const auto& transaction: resultTransaction.transactions()) {
+            blockchain::EmbeddedTransaction embeddedTransaction;
+            embeddedTransaction.m_entityType = transaction.entity_type();
+            embeddedTransaction.m_version = transaction.version();
+            embeddedTransaction.m_payload = {transaction.payload().begin(), transaction.payload().end()};
+            aggregatedTransaction->m_transactions.push_back(std::move(embeddedTransaction));
+        }
+    }
+
     CallExecutionResult executionResult = {
             executeCallResponse.success(),
             executeCallResponse.return_val(),
             executeCallResponse.execution_gas_consumed(),
             executeCallResponse.download_gas_consumed(),
-            executeCallResponse.poex_secret_data()
+            executeCallResponse.poex_secret_data(),
+            aggregatedTransaction
     };
 
     m_receivedExecutionResult = true;
@@ -209,10 +224,6 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
         }
         case supercontractserver::Response::kGetDownloadPayment: {
             processGetDownloadPayment(response->get_download_payment());
-            break;
-        }
-        case supercontractserver::Response::kAddTransaction: {
-            processAddTransaction(response->add_transaction());
             break;
         }
         case supercontractserver::Response::kOpenFile: {
@@ -1221,38 +1232,6 @@ void ExecuteCallRPCHandler::processGetServicePayments(const supercontractserver:
             },
             [] {}, m_environment, false, false);
     m_responseHandler = std::make_unique<GetServicePaymentsRPCHandler>(
-            m_environment,
-            request,
-            m_blockchainQueryHandler,
-            callback);
-
-    m_responseHandler->process();
-}
-
-void ExecuteCallRPCHandler::processAddTransaction(const supercontractserver::AddTransaction& request) {
-    auto[_, callback] = createAsyncQuery<supercontractserver::AddTransactionReturn>(
-            [this](auto&& res) {
-                ASSERT(isSingleThread(), m_environment.logger())
-
-                ASSERT(!m_tagQuery, m_environment.logger())
-                ASSERT(m_responseHandler, m_environment.logger())
-
-                m_responseHandler.reset();
-
-                if (!res && res.error() == ExecutionError::blockchain_unavailable) {
-                    postResponse(tl::unexpected<std::error_code>(res.error()));
-                    return;
-                }
-
-                ASSERT(res, m_environment.logger())
-
-                auto* status = new supercontractserver::AddTransactionReturn(std::move(*res));
-                supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_add_transaction_return(status);
-                writeRequest(std::move(requestWrapper));
-            },
-            [] {}, m_environment, false, false);
-    m_responseHandler = std::make_unique<AddTransactionRPCHandler>(
             m_environment,
             request,
             m_blockchainQueryHandler,

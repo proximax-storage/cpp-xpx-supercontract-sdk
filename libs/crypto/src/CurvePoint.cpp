@@ -118,7 +118,11 @@ std::array<uint8_t, 32> CurvePoint::toBytes() const {
 
 void CurvePoint::fromBytes(const std::array<uint8_t, 32>& buffer) {
     ge_p3 tmp;
-    ge_frombytes_negate_vartime(&tmp, buffer.data());
+    int valid_point = ge_frombytes_negate_vartime(&tmp, buffer.data());
+    if (valid_point == -1) {
+        *this = CurvePoint();
+        return;
+    }
     CurvePoint tmpPoint;
     tmpPoint.m_ge_p3 = tmp;
     *this = -tmpPoint;

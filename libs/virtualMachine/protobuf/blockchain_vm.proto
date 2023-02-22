@@ -76,12 +76,3 @@ message GetDownloadPayment {
 message GetDownloadPaymentReturn {
   uint64 amount = 1;
 }
-
-message AddTransaction {
-  uint32 entity_type = 1;
-  uint32 version = 2;
-  bytes payload = 3;
-}
-
-message AddTransactionReturn {
-}

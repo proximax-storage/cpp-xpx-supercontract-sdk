@@ -18,4 +18,8 @@ std::vector<uint8_t> buildEmbeddedTransaction(NetworkIdentifier networkIdentifie
                                               const ContractKey& contractKey,
                                               const EmbeddedTransaction& transaction);
 
+std::pair<Hash256, SerializedAggregatedTransaction> buildAggregatedTransaction(NetworkIdentifier networkIdentifier,
+                                                                               const ContractKey& contractKey,
+                                                                               const AggregatedTransaction& transaction);
+
 }

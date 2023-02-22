@@ -47,12 +47,26 @@ message ExecuteRequest {
   uint32 call_mode = 7;
 }
 
+message CallTransaction {
+  uint32 entity_type = 1;
+  uint32 version = 2;
+  bytes payload = 3;
+}
+
+message CallAggregatedTransaction {
+  uint64 max_fee = 1;
+  repeated CallTransaction transactions = 2;
+}
+
 message ExecuteReturns {
   bool success = 1;
   uint64 execution_gas_consumed = 2;
   uint64 download_gas_consumed = 3;
   uint64 poex_secret_data = 4;
   uint32 return_val = 5;
+  oneof transaction_holder {
+    CallAggregatedTransaction transaction = 6;
+  }
 }
 
 message Request {
@@ -68,7 +82,6 @@ message Request {
     GetServicePaymentsReturn get_service_payments_return = 9;
     GetExecutionPaymentReturn get_execution_payment_return = 10;
     GetDownloadPaymentReturn get_download_payment_return = 11;
-    AddTransactionReturn add_transaction_return = 12;
     OpenFileReturn open_file_return = 13;
     WriteFileStreamReturn write_file_stream_return = 14;
     FlushReturn flush_return = 15;
@@ -103,7 +116,6 @@ message Response {
     GetServicePayments get_service_payments = 9;
     GetExecutionPayment get_execution_payment = 10;
     GetDownloadPayment get_download_payment = 11;
-    AddTransaction add_transaction = 12;
     OpenFile open_file = 13;
     WriteFileStream write_file_stream = 14;
     Flush flush = 15;

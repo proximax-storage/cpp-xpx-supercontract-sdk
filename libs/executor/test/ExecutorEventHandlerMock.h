@@ -20,6 +20,6 @@ namespace sirius::contract::test {
 
         void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) override;
 
-        void releasedTransactionsAreReady(const std::vector<std::vector<uint8_t>>& payloads) override;
+        void releasedTransactionsAreReady(const blockchain::SerializedAggregatedTransaction& payloads) override;
     };
 } // namespace sirius::contract::test

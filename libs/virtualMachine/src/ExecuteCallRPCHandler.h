@@ -129,8 +129,6 @@ private:
 
     void processGetServicePayments(const supercontractserver::GetServicePayments&);
 
-    void processAddTransaction(const supercontractserver::AddTransaction&);
-
 };
 
 } // namespace sirius::contract::vm

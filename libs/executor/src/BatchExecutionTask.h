@@ -32,7 +32,7 @@ private:
     std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
     std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
 
-    std::multimap<Hash256, std::vector<std::vector<uint8_t>>> m_releasedTransactions;
+    std::multimap<Hash256, blockchain::SerializedAggregatedTransaction> m_releasedTransactions;
 
     Timer m_unsuccessfulExecutionTimer;
 

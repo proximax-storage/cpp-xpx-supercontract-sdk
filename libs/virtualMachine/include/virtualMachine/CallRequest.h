@@ -7,6 +7,7 @@
 #pragma once
 
 #include <cstdint>
+#include <blockchain/EmbeddedTransaction.h>
 
 namespace sirius::contract::vm {
 
@@ -51,6 +52,7 @@ struct CallExecutionResult {
     uint64_t m_execution_gas_consumed = 0;
     uint64_t m_download_gas_consumed = 0;
     uint64_t m_proofOfExecutionSecretData = 0;
+    std::optional<blockchain::AggregatedTransaction> m_transaction;
 };
 
 }

@@ -25,7 +25,7 @@ void ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const Syn
 
 }
 
-void ExecutorEventHandlerMock::releasedTransactionsAreReady(const std::vector<std::vector<uint8_t>>& payloads) {
+void ExecutorEventHandlerMock::releasedTransactionsAreReady(const blockchain::SerializedAggregatedTransaction& payloads) {
 
 }
 

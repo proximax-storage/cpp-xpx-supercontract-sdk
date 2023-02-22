@@ -17,4 +17,14 @@ struct EmbeddedTransaction {
     std::vector<uint8_t> m_payload;
 };
 
+struct AggregatedTransaction {
+    uint64_t m_maxFee;
+    std::vector<EmbeddedTransaction> m_transactions;
+};
+
+struct SerializedAggregatedTransaction {
+    uint64_t m_maxFee;
+    std::vector<std::vector<uint8_t>> m_transactions;
+};
+
 }

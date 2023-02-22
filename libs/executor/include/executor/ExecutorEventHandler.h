@@ -7,6 +7,7 @@
 #pragma once
 
 #include "Transactions.h"
+#include <blockchain/EmbeddedTransaction.h>
 
 namespace sirius::contract {
 
@@ -23,7 +24,7 @@ public:
 
     virtual void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo&) = 0;
 
-    virtual void releasedTransactionsAreReady(const std::vector<std::vector<uint8_t>>& payloads) = 0;
+    virtual void releasedTransactionsAreReady(const blockchain::SerializedAggregatedTransaction&) = 0;
 };
 
 }

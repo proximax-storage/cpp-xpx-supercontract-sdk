@@ -5,7 +5,6 @@
 */
 
 #include "AutomaticExecutionBlockchainQueryHandler.h"
-#include <blockchain/TransactionBuilder.h>
 
 namespace sirius::contract {
 
@@ -47,17 +46,6 @@ AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<Asyn
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     callback->postReply(m_contractEnvironment.contractKey());
-}
-
-void AutomaticExecutionBlockchainQueryHandler::addTransaction(blockchain::EmbeddedTransaction&& embeddedTransaction,
-                                                              std::shared_ptr<AsyncQueryCallback<void>> callback) {
-    ASSERT(isSingleThread(), m_executorEnvironment.logger())
-
-    auto payload = blockchain::buildEmbeddedTransaction(m_executorEnvironment.executorConfig().networkIdentifier(),
-                                                        m_contractEnvironment.contractKey(), embeddedTransaction);
-    m_embeddedTransactions.push_back(std::move(payload));
-
-    callback->postReply(expected<void>());
 }
 
 }

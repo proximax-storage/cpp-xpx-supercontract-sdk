@@ -75,7 +75,7 @@ public:
         FAIL();
     }
 
-    void releasedTransactionsAreReady(const std::vector<std::vector<uint8_t>>& payloads) override {
+    void releasedTransactionsAreReady(const blockchain::SerializedAggregatedTransaction& payloads) override {
         FAIL();
     }
 

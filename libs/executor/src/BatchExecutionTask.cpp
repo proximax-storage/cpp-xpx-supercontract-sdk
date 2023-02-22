@@ -17,6 +17,7 @@
 #include <virtualMachine/ExecutionErrorConidition.h>
 #include <storage/StorageErrorCode.h>
 #include <utils/IntegerMath.h>
+#include <blockchain/TransactionBuilder.h>
 
 namespace sirius::contract {
 
@@ -303,14 +304,12 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
     Hash256 releasedTransactionsHash;
-    auto releasedTransactions = blockchainHandler->releasedTransactions();
-    if (status == 0 && !releasedTransactions.empty()) {
-        crypto::Sha3_256_Builder hasher;
-        for (const auto& tx: releasedTransactions) {
-            hasher.update(utils::RawBuffer{tx.data(), tx.size()});
-        }
-        hasher.final(releasedTransactionsHash);
-        m_releasedTransactions.emplace(releasedTransactionsHash, std::move(releasedTransactions));
+    if (status == 0 && !executionResult.m_transaction) {
+        auto[hash, transaction] = blockchain::buildAggregatedTransaction(
+                m_executorEnvironment.executorConfig().networkIdentifier(), m_contractEnvironment.contractKey(),
+                *executionResult.m_transaction);
+        releasedTransactionsHash = hash;
+        m_releasedTransactions.emplace(hash, std::move(transaction));
     }
 
     m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
