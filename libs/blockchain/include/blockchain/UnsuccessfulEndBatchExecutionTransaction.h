@@ -12,7 +12,7 @@
 #include <vector>
 #include <supercontract/Identifiers.h>
 #include <crypto/CurvePoint.h>
-#include <executor/Proofs.h>
+#include <blockchain/Proofs.h>
 
 namespace sirius::contract::blockchain {
 

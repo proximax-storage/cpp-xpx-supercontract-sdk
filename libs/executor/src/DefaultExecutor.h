@@ -115,14 +115,14 @@ public:
 
     // region blockchain event handler
 
-    void onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&& info) override;
+    void onEndBatchExecutionPublished(blockchain::PublishedEndBatchExecutionTransactionInfo&& info) override;
 
     void onEndBatchExecutionSingleTransactionPublished(
-            PublishedEndBatchExecutionSingleTransactionInfo&& info) override;
+            blockchain::PublishedEndBatchExecutionSingleTransactionInfo&& info) override;
 
-    void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) override;
+    void onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) override;
 
-    void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) override;
+    void onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) override;
 
 	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, uint64_t blockHeight) override;
 

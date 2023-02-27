@@ -18,7 +18,6 @@
 #include <cereal/types/optional.hpp>
 
 #include "utils/Serializer.h"
-#include <executor/Transactions.h>
 
 #include <blockchain/SuccessfulEndBatchExecutionTransaction.h>
 #include <blockchain/UnsuccessfulEndBatchExecutionTransaction.h>
@@ -58,7 +57,7 @@ struct SuccessfulEndBatchExecutionOpinion {
     blockchain::SuccessfulBatchInfo m_successfulBatchInfo;
     std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
-    Proofs m_proof;
+    blockchain::Proofs m_proof;
 
     ExecutorKey m_executorKey;
     Signature m_signature;
@@ -154,7 +153,7 @@ struct UnsuccessfulEndBatchExecutionOpinion {
 
     std::vector<UnsuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
-    Proofs m_proof;
+    blockchain::Proofs m_proof;
 
     ExecutorKey m_executorKey;
     Signature m_signature;

@@ -8,7 +8,7 @@
 
 #include "utils/types.h"
 #include <crypto/Hashes.h>
-#include <executor/Proofs.h>
+#include <blockchain/Proofs.h>
 #include <executor/ExecutorInfo.h>
 #include <supercontract/Identifiers.h>
 
@@ -33,12 +33,12 @@ public:
     ProofOfExecution(const crypto::KeyPair& key, uint64_t maxBatchesHistorySize=UINT64_MAX);
     sirius::crypto::CurvePoint addToProof(uint64_t digest);
     void popFromProof();
-    Proofs buildActualProof();
-    Proofs buildPreviousProof();
+    blockchain::Proofs buildActualProof();
+    blockchain::Proofs buildPreviousProof();
     void reset(uint64_t nextBatch);
     bool verifyProof(const ExecutorKey& executorKey,
                      const ExecutorInfo& executorInfo,
-                     const Proofs& proof,
+                     const blockchain::Proofs& proof,
                      uint64_t batchId,
                      const crypto::CurvePoint& verificationInformation);
     void addBatchVerificationInformation(uint64_t batchId, const crypto::CurvePoint& batchVerificationInformation);
@@ -47,7 +47,7 @@ public:
 
 private:
 
-    Proofs buildProof(const crypto::Scalar& x);
+    blockchain::Proofs buildProof(const crypto::Scalar& x);
 
 private:
 

@@ -18,7 +18,7 @@ SynchronizationTask::SynchronizationTask(SynchronizationRequest&& synchronizatio
 
 // region blockchain event handler
 
-bool SynchronizationTask::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
+bool SynchronizationTask::onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

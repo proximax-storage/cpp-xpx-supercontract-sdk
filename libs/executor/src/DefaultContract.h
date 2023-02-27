@@ -51,7 +51,7 @@ private:
 
     std::map<uint64_t, std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion>> m_unknownSuccessfulBatchOpinions;
     std::map<uint64_t, std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion>> m_unknownUnsuccessfulBatchOpinions;
-    std::map<uint64_t, PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
+    std::map<uint64_t, blockchain::PublishedEndBatchExecutionTransactionInfo> m_unknownPublishedEndBatchTransactions;
 
 public:
 
@@ -73,9 +73,9 @@ public:
 
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
+    bool onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) override;
 
-    bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override;
+    bool onEndBatchExecutionFailed(const blockchain::FailedEndBatchExecutionTransactionInfo& info) override;
 
     bool onStorageSynchronizedPublished(uint64_t batchIndex) override;
 

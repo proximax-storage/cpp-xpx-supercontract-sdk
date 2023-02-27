@@ -27,7 +27,7 @@ private:
     std::optional<SuccessfulEndBatchExecutionOpinion> m_successfulEndBatchOpinion;
     std::optional<UnsuccessfulEndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
 
-    std::optional<PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
+    std::optional<blockchain::PublishedEndBatchExecutionTransactionInfo> m_publishedEndBatchInfo;
 
     std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> m_otherSuccessfulExecutorEndBatchOpinions;
     std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> m_otherUnsuccessfulExecutorEndBatchOpinions;
@@ -94,9 +94,9 @@ public:
 
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
+    bool onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) override;
 
-    bool onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) override;
+    bool onEndBatchExecutionFailed(const blockchain::FailedEndBatchExecutionTransactionInfo& info) override;
 
     bool onBlockPublished(uint64_t height) override;
 

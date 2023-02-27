@@ -9,9 +9,10 @@
 #include "supercontract/Identifiers.h"
 
 #include <memory>
-#include "Proofs.h"
+#include <set>
+#include <optional>
 
-namespace sirius::contract {
+namespace sirius::contract::blockchain {
 
 struct PublishedEndBatchExecutionTransactionInfo {
     ContractKey                 m_contractKey;
@@ -22,22 +23,6 @@ struct PublishedEndBatchExecutionTransactionInfo {
     uint64_t                    m_automaticExecutionsCheckedUpTo;
     std::optional<uint64_t>     m_automaticExecutionsEnabledSince;
     std::set<ExecutorKey>   	m_cosigners;
-};
-
-struct PublishedEndBatchExecutionSingleTransactionInfo {
-    ContractKey m_contractKey;
-    uint64_t    m_batchIndex;
-};
-
-struct PublishedSynchronizeSingleTransactionInfo {
-	ContractKey m_contractKey;
-	uint64_t    m_batchIndex;
-};
-
-struct FailedEndBatchExecutionTransactionInfo {
-    ContractKey m_contractKey;
-    uint64_t    m_batchIndex;
-    bool        m_batchSuccess;
 };
 
 }

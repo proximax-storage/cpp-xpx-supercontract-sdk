@@ -6,16 +6,14 @@
 
 #pragma once
 
-#include <cstdint>
-#include <supercontract/Identifiers.h>
-#include <blockchain/Proofs.h>
+#include "supercontract/Identifiers.h"
 
 namespace sirius::contract::blockchain {
 
-struct EndBatchExecutionSingleTransactionInfo {
+struct FailedEndBatchExecutionTransactionInfo {
     ContractKey m_contractKey;
-    uint64_t    m_batchIndex = 0;
-    Proofs      m_proofOfExecution;
+    uint64_t    m_batchIndex;
+    bool        m_batchSuccess;
 };
 
 }

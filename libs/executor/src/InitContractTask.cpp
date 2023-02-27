@@ -118,7 +118,7 @@ void InitContractTask::onActualModificationIdReceived(const expected<Modificatio
 
 // region blockchain event handler
 
-bool InitContractTask::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
+bool InitContractTask::onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

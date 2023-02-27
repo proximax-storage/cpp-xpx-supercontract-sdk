@@ -107,7 +107,7 @@ void DefaultContract::setAutomaticExecutionsEnabledSince(uint64_t blockHeight) {
 
 // region blockchain event handler
 
-bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
+bool DefaultContract::onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -137,7 +137,7 @@ bool DefaultContract::onEndBatchExecutionPublished(const PublishedEndBatchExecut
     return true;
 }
 
-bool DefaultContract::onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) {
+bool DefaultContract::onEndBatchExecutionFailed(const blockchain::FailedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

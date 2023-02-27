@@ -264,7 +264,7 @@ boost::asio::ssl::context& DefaultExecutor::sslContext() {
 
 // region blockchain event handler
 
-void DefaultExecutor::onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&& info) {
+void DefaultExecutor::onEndBatchExecutionPublished(blockchain::PublishedEndBatchExecutionTransactionInfo&& info) {
     m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
@@ -277,7 +277,7 @@ void DefaultExecutor::onEndBatchExecutionPublished(PublishedEndBatchExecutionTra
 }
 
 void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
-        PublishedEndBatchExecutionSingleTransactionInfo&& info) {
+        blockchain::PublishedEndBatchExecutionSingleTransactionInfo&& info) {
     m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
@@ -289,7 +289,7 @@ void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
     });
 }
 
-void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&& info) {
+void DefaultExecutor::onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) {
     m_threadManager.execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
@@ -301,7 +301,7 @@ void DefaultExecutor::onEndBatchExecutionFailed(FailedEndBatchExecutionTransacti
     });
 }
 
-void DefaultExecutor::onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&& info) {
+void DefaultExecutor::onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) {
     m_threadManager.execute([=, this] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 

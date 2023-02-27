@@ -12,7 +12,7 @@
 #include <vector>
 #include <supercontract/Identifiers.h>
 #include <crypto/CurvePoint.h>
-#include <executor/Proofs.h>
+#include <blockchain/Proofs.h>
 
 namespace sirius::contract::blockchain {
 
@@ -65,7 +65,7 @@ struct SuccessfulEndBatchExecutionTransactionInfo {
     SuccessfulBatchInfo m_successfulBatchInfo;
     std::vector<SuccessfulCallExecutionInfo> m_callsExecutionInfo;
 
-    std::vector<Proofs> m_proofs;
+    std::vector<blockchain::Proofs> m_proofs;
     std::vector<ExecutorKey> m_executorKeys;
     std::vector<Signature> m_signatures;
 };

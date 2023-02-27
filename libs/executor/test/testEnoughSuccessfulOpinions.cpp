@@ -261,7 +261,7 @@ TEST(BatchExecutionTask, EnoughSuccessfulOpinions) {
 
     auto transactionInfo = barrier.get();
 
-    PublishedEndBatchExecutionTransactionInfo publishedInfo;
+    blockchain::PublishedEndBatchExecutionTransactionInfo publishedInfo;
     publishedInfo.m_contractKey = transactionInfo.m_contractKey;
     publishedInfo.m_batchIndex = transactionInfo.m_batchIndex;
     publishedInfo.m_batchSuccess = true;

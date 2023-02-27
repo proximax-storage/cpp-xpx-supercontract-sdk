@@ -6,7 +6,10 @@
 
 #pragma once
 
-#include "executor/Transactions.h"
+#include <blockchain/PublishedEndBatchExecutionSingleTransactionInfo.h>
+#include <blockchain/PublishedEndBatchExecutionTransactionInfo.h>
+#include <blockchain/PublishedSynchronizeTransactionInfo.h>
+#include <blockchain/FailedEndBatchExecutionTransactionInfo.h>
 
 namespace sirius::contract {
 
@@ -16,13 +19,13 @@ public:
 
     virtual ~BlockchainEventHandler() = default;
 
-    virtual void onEndBatchExecutionPublished(PublishedEndBatchExecutionTransactionInfo&&) = 0;
+    virtual void onEndBatchExecutionPublished(blockchain::PublishedEndBatchExecutionTransactionInfo&&) = 0;
 
-    virtual void onEndBatchExecutionSingleTransactionPublished(PublishedEndBatchExecutionSingleTransactionInfo&&) = 0;
+    virtual void onEndBatchExecutionSingleTransactionPublished(blockchain::PublishedEndBatchExecutionSingleTransactionInfo&&) = 0;
 
-    virtual void onEndBatchExecutionFailed(FailedEndBatchExecutionTransactionInfo&&) = 0;
+    virtual void onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&&) = 0;
 
-    virtual void onStorageSynchronizedPublished(PublishedSynchronizeSingleTransactionInfo&&) = 0;
+    virtual void onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&&) = 0;
 };
 
 }

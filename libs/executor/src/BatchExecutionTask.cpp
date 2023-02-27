@@ -345,7 +345,7 @@ void BatchExecutionTask::onStorageHashEvaluated(storage::StorageState&& storageS
 
 // region blockchain event handler
 
-bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) {
+bool BatchExecutionTask::onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -368,7 +368,7 @@ bool BatchExecutionTask::onEndBatchExecutionPublished(const PublishedEndBatchExe
     return true;
 }
 
-bool BatchExecutionTask::onEndBatchExecutionFailed(const FailedEndBatchExecutionTransactionInfo& info) {
+bool BatchExecutionTask::onEndBatchExecutionFailed(const blockchain::FailedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 

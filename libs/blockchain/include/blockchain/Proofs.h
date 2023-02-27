@@ -1,5 +1,3 @@
-#pragma once
-
 /*
 *** Copyright 2021 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
@@ -10,7 +8,7 @@
 
 #include <crypto/CurvePoint.h>
 
-namespace sirius::contract {
+namespace sirius::contract::blockchain {
 
 struct TProof {
     sirius::crypto::CurvePoint m_F;

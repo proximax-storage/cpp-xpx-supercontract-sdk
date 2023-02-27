@@ -48,20 +48,20 @@ void ProofOfExecution::popFromProof() {
     m_x = m_xPrevious;
 }
 
-Proofs ProofOfExecution::buildActualProof() {
+blockchain::Proofs ProofOfExecution::buildActualProof() {
     return buildProof(m_x);
 }
 
-Proofs ProofOfExecution::buildPreviousProof() {
+blockchain::Proofs ProofOfExecution::buildPreviousProof() {
     return buildProof(m_xPrevious);
 }
 
-Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
+blockchain::Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
     auto v = generateUniqueRandom(x);
     auto Beta = sirius::crypto::CurvePoint::BasePoint();
     auto T = v * Beta;
     auto r = v - x;
-    BatchProof b{T, r};
+    blockchain::BatchProof b{T, r};
 
     auto w = generateUniqueRandom(v);
     auto F = w * Beta;
@@ -74,8 +74,8 @@ Proofs ProofOfExecution::buildProof(const crypto::Scalar& x) {
     sirius::crypto::Scalar d(d_hash.array());
     auto k = w - d * v;
 
-    TProof q{F, k};
-    return Proofs{m_initialBatch, q, b};
+    blockchain::TProof q{F, k};
+    return blockchain::Proofs{m_initialBatch, q, b};
 }
 
 void ProofOfExecution::reset(uint64_t nextBatch) {
@@ -99,7 +99,7 @@ void ProofOfExecution::addBatchVerificationInformation(uint64_t batchId,
 
 bool ProofOfExecution::verifyProof(const ExecutorKey& executorKey,
                                    const ExecutorInfo& executorInfo,
-                                   const Proofs& proof,
+                                   const blockchain::Proofs& proof,
                                    uint64_t batchId,
                                    const crypto::CurvePoint& verificationInformation) {
     Hash512 dHash;

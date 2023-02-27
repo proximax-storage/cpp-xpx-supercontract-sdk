@@ -41,7 +41,7 @@ public:
 
     // region blockchain event handler
 
-    bool onEndBatchExecutionPublished(const PublishedEndBatchExecutionTransactionInfo& info) override;
+    bool onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) override;
 
     // endregion
 

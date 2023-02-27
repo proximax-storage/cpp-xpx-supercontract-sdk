@@ -12,7 +12,7 @@ namespace sirius::contract::test {
 
 #define TEST_NAME Supercontract
 
-void tProofVerification(Proofs p, crypto::KeyPair& key) {
+void tProofVerification(blockchain::Proofs p, crypto::KeyPair& key) {
     auto T = p.m_batchProof.m_T;
     auto r = p.m_batchProof.m_r;
     auto F = p.m_tProof.m_F;
@@ -29,7 +29,7 @@ void tProofVerification(Proofs p, crypto::KeyPair& key) {
     ASSERT_EQ(F, expected);
 }
 
-void tProofVerificationFalse(Proofs p, crypto::KeyPair& key) {
+void tProofVerificationFalse(blockchain::Proofs p, crypto::KeyPair& key) {
     auto T = p.m_batchProof.m_T;
     auto r = p.m_batchProof.m_r;
     auto F = p.m_tProof.m_F;
@@ -46,7 +46,7 @@ void tProofVerificationFalse(Proofs p, crypto::KeyPair& key) {
     ASSERT_NE(F, expected);
 }
 
-void batchProofVerification(Proofs n, Proofs m, sirius::crypto::CurvePoint cY) {
+void batchProofVerification(blockchain::Proofs n, blockchain::Proofs m, sirius::crypto::CurvePoint cY) {
     auto beta = sirius::crypto::CurvePoint::BasePoint();
 
     auto T_m = m.m_batchProof.m_T;
@@ -63,7 +63,7 @@ void batchProofVerification(Proofs n, Proofs m, sirius::crypto::CurvePoint cY) {
     ASSERT_EQ(T_diff, rhs);
 };
 
-void batchProofVerificationFalse(Proofs n, Proofs m, sirius::crypto::CurvePoint cY) {
+void batchProofVerificationFalse(blockchain::Proofs n, blockchain::Proofs m, sirius::crypto::CurvePoint cY) {
     auto beta = sirius::crypto::CurvePoint::BasePoint();
 
     auto T_m = m.m_batchProof.m_T;
