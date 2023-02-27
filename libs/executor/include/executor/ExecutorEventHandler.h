@@ -7,7 +7,7 @@
 #pragma once
 
 #include "Transactions.h"
-#include <blockchain/EmbeddedTransaction.h>
+#include <blockchain/AggregatedTransaction.h>
 
 namespace sirius::contract {
 

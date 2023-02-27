@@ -9,7 +9,7 @@
 #include <supercontract/Identifiers.h>
 #include <supercontract/AsyncQuery.h>
 #include <blockchain/BlockchainErrorCode.h>
-#include <blockchain/EmbeddedTransaction.h>
+#include <blockchain/AggregatedTransaction.h>
 #include <supercontract/ServicePayment.h>
 
 namespace sirius::contract::vm {

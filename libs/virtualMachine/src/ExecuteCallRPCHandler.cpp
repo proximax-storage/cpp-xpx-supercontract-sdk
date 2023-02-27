@@ -39,7 +39,7 @@
 #include "GetDownloadPaymentRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <virtualMachine/CallRequest.h>
-#include <blockchain/EmbeddedTransaction.h>
+#include <blockchain/AggregatedTransaction.h>
 
 namespace sirius::contract::vm {
 

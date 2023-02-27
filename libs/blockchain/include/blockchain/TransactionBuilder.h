@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "EmbeddedTransaction.h"
+#include "AggregatedTransaction.h"
 #include <supercontract/Identifiers.h>
 
 namespace sirius::contract::blockchain {

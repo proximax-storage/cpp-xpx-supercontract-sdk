@@ -7,7 +7,7 @@
 #pragma once
 
 #include <cstdint>
-#include <blockchain/EmbeddedTransaction.h>
+#include <blockchain/AggregatedTransaction.h>
 
 namespace sirius::contract::vm {
 
