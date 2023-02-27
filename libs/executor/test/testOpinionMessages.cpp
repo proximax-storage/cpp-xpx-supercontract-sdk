@@ -25,18 +25,18 @@ class ExecutorEventHandlerTestMock : public ExecutorEventHandlerMock {
 
 public:
 
-    void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo& info) override {
+    void endBatchTransactionIsReady(const blockchain::SuccessfulEndBatchExecutionTransactionInfo& info) override {
     }
 
-    void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
+    void endBatchTransactionIsReady(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
         FAIL();
     }
 
-    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo& info) override {
+    void endBatchSingleTransactionIsReady(const blockchain::EndBatchExecutionSingleTransactionInfo& info) override {
         FAIL();
     }
 
-    void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) override {
+    void synchronizationSingleTransactionIsReady(const blockchain::SynchronizationSingleTransactionInfo& info) override {
         FAIL();
     }
 
@@ -184,7 +184,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
                     call->blockHeight(),
                     0,
                     TransactionHash(),
-                    CallExecutorParticipation{
+                    blockchain::CallExecutorParticipation{
                             utils::generateRandomByteValue<uint64_t>() % call->executionPayment(),
                             utils::generateRandomByteValue<uint64_t>() % call->downloadPayment()
                     }
@@ -193,7 +193,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
         opinion.m_callsExecutionInfo = callsExecutionOpinions;
         ProofOfExecution opinionProofOfExecutionBuilder(executorKeys[i]);
         auto verificationInfo = opinionProofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
-        SuccessfulBatchInfo successfulBatchInfo{
+        blockchain::SuccessfulBatchInfo successfulBatchInfo{
                 expectedState.m_storageHash,
                 expectedState.m_usedDriveSize,
                 expectedState.m_metaFilesSize,

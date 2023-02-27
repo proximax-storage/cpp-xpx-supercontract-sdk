@@ -115,17 +115,17 @@ private:
 
     void checkEndBatchTransactionReadiness();
 
-    SuccessfulEndBatchExecutionTransactionInfo
+    blockchain::SuccessfulEndBatchExecutionTransactionInfo
     createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
                                   std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherTransactionOpinions);
 
-    UnsuccessfulEndBatchExecutionTransactionInfo
+    blockchain::UnsuccessfulEndBatchExecutionTransactionInfo
     createMultisigTransactionInfo(const UnsuccessfulEndBatchExecutionOpinion& transactionOpinion,
                                   std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherTransactionOpinions);
 
-    void sendEndBatchTransaction(const SuccessfulEndBatchExecutionTransactionInfo& transactionInfo);
+    void sendEndBatchTransaction(const blockchain::SuccessfulEndBatchExecutionTransactionInfo& transactionInfo);
 
-    void sendEndBatchTransaction(const UnsuccessfulEndBatchExecutionTransactionInfo& transactionInfo);
+    void sendEndBatchTransaction(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& transactionInfo);
 
     void executeNextCall();
 

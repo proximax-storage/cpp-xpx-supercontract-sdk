@@ -25,14 +25,14 @@ class ExecutorEventHandlerTestMock : public ExecutorEventHandlerMock {
 
 public:
 
-    UnsuccessfulEndBatchExecutionTransactionInfo m_expectedInfo;
-    std::promise<UnsuccessfulEndBatchExecutionTransactionInfo> m_unsuccessfulEndBatchIsReadyPromise;
+    blockchain::UnsuccessfulEndBatchExecutionTransactionInfo m_expectedInfo;
+    std::promise<blockchain::UnsuccessfulEndBatchExecutionTransactionInfo> m_unsuccessfulEndBatchIsReadyPromise;
 
-    void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo& info) override {
+    void endBatchTransactionIsReady(const blockchain::SuccessfulEndBatchExecutionTransactionInfo& info) override {
         FAIL();
     }
 
-    void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
+    void endBatchTransactionIsReady(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& info) override {
         ASSERT_EQ(info.m_contractKey, m_expectedInfo.m_contractKey);
         ASSERT_EQ(info.m_batchIndex, m_expectedInfo.m_batchIndex);
         ASSERT_EQ(info.m_automaticExecutionsCheckedUpTo, m_expectedInfo.m_automaticExecutionsCheckedUpTo);
@@ -64,11 +64,11 @@ public:
         m_unsuccessfulEndBatchIsReadyPromise.set_value(info);
     }
 
-    void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo& info) override {
+    void endBatchSingleTransactionIsReady(const blockchain::EndBatchExecutionSingleTransactionInfo& info) override {
         FAIL();
     }
 
-    void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) override {
+    void synchronizationSingleTransactionIsReady(const blockchain::SynchronizationSingleTransactionInfo& info) override {
         FAIL();
     }
 
@@ -165,7 +165,7 @@ TEST(BatchExecutionTask, LateUnsuccessfulOpinions) {
 
     std::vector<UnsuccessfulEndBatchExecutionOpinion> opinionList;
 
-    UnsuccessfulEndBatchExecutionTransactionInfo expectedInfo;
+    blockchain::UnsuccessfulEndBatchExecutionTransactionInfo expectedInfo;
     expectedInfo.m_contractKey = contractKey;
     expectedInfo.m_batchIndex = batch.m_batchIndex;
     expectedInfo.m_automaticExecutionsCheckedUpTo = batch.m_automaticExecutionsCheckedUpTo;
@@ -177,7 +177,7 @@ TEST(BatchExecutionTask, LateUnsuccessfulOpinions) {
 
     for (uint i = 0; i < callRequests.size(); i++) {
         const auto& call = callRequests[i];
-        UnsuccessfulCallExecutionInfo callExecutionInfo;
+        blockchain::UnsuccessfulCallExecutionInfo callExecutionInfo;
         callExecutionInfo.m_block = call->blockHeight();
         callExecutionInfo.m_callId = call->callId();
         callExecutionInfo.m_manual = call->isManual();
@@ -202,7 +202,7 @@ TEST(BatchExecutionTask, LateUnsuccessfulOpinions) {
                     call->callId(),
                     call->isManual(),
                     call->blockHeight(),
-                    CallExecutorParticipation{
+                    blockchain::CallExecutorParticipation{
                             utils::generateRandomByteValue<uint64_t>() % call->executionPayment(),
                             utils::generateRandomByteValue<uint64_t>() % call->downloadPayment()
                     }

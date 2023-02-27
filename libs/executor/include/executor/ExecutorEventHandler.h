@@ -6,8 +6,11 @@
 
 #pragma once
 
-#include "Transactions.h"
 #include <blockchain/AggregatedTransaction.h>
+#include <blockchain/SuccessfulEndBatchExecutionTransaction.h>
+#include <blockchain/UnsuccessfulEndBatchExecutionTransaction.h>
+#include <blockchain/EndBatchExecutionSingleTransaction.h>
+#include <blockchain/SynchronizationSingleTransaction.h>
 
 namespace sirius::contract {
 
@@ -16,13 +19,13 @@ public:
 
     virtual ~ExecutorEventHandler() = default;
 
-    virtual void endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo&) = 0;
+    virtual void endBatchTransactionIsReady(const blockchain::SuccessfulEndBatchExecutionTransactionInfo&) = 0;
 
-    virtual void endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo&) = 0;
+    virtual void endBatchTransactionIsReady(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo&) = 0;
 
-    virtual void endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) = 0;
+    virtual void endBatchSingleTransactionIsReady(const blockchain::EndBatchExecutionSingleTransactionInfo&) = 0;
 
-    virtual void synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo&) = 0;
+    virtual void synchronizationSingleTransactionIsReady(const blockchain::SynchronizationSingleTransactionInfo&) = 0;
 
     virtual void releasedTransactionsAreReady(const blockchain::SerializedAggregatedTransaction&) = 0;
 };

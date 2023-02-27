@@ -20,6 +20,9 @@
 #include "utils/Serializer.h"
 #include <executor/Transactions.h>
 
+#include <blockchain/SuccessfulEndBatchExecutionTransaction.h>
+#include <blockchain/UnsuccessfulEndBatchExecutionTransaction.h>
+
 namespace sirius::contract {
 
 enum class MessageTag {
@@ -34,7 +37,7 @@ struct SuccessfulCallExecutionOpinion {
 	uint64_t m_block = 0;
     uint16_t m_callExecutionStatus = 0;
     TransactionHash m_releasedTransaction;
-    CallExecutorParticipation m_executorParticipation;
+    blockchain::CallExecutorParticipation m_executorParticipation;
 
     template<class Archive>
     void serialize(Archive& arch) {
@@ -52,7 +55,7 @@ struct SuccessfulEndBatchExecutionOpinion {
     uint64_t m_batchIndex;
     uint64_t m_automaticExecutionsCheckedUpTo;
 
-    SuccessfulBatchInfo m_successfulBatchInfo;
+    blockchain::SuccessfulBatchInfo m_successfulBatchInfo;
     std::vector<SuccessfulCallExecutionOpinion> m_callsExecutionInfo;
 
     Proofs m_proof;
@@ -133,7 +136,7 @@ struct UnsuccessfulCallExecutionOpinion {
     CallId m_callId;
     bool m_manual = false;
 	uint64_t m_block = 0;
-    CallExecutorParticipation m_executorParticipation;
+    blockchain::CallExecutorParticipation m_executorParticipation;
 
     template<class Archive>
     void serialize(Archive& arch) {

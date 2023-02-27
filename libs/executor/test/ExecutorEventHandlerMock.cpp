@@ -9,19 +9,19 @@
 
 namespace sirius::contract::test {
 
-void ExecutorEventHandlerMock::endBatchTransactionIsReady(const SuccessfulEndBatchExecutionTransactionInfo&) {
+void ExecutorEventHandlerMock::endBatchTransactionIsReady(const blockchain::SuccessfulEndBatchExecutionTransactionInfo&) {
 
 }
 
-void ExecutorEventHandlerMock::endBatchTransactionIsReady(const UnsuccessfulEndBatchExecutionTransactionInfo&) {
+void ExecutorEventHandlerMock::endBatchTransactionIsReady(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo&) {
 
 }
 
-void ExecutorEventHandlerMock::endBatchSingleTransactionIsReady(const EndBatchExecutionSingleTransactionInfo&) {
+void ExecutorEventHandlerMock::endBatchSingleTransactionIsReady(const blockchain::EndBatchExecutionSingleTransactionInfo&) {
 
 }
 
-void ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const SynchronizationSingleTransactionInfo& info) {
+void ExecutorEventHandlerMock::synchronizationSingleTransactionIsReady(const blockchain::SynchronizationSingleTransactionInfo& info) {
 
 }
 

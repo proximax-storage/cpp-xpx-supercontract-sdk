@@ -318,7 +318,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
             callRequest->blockHeight(),
             status,
             releasedTransactionsHash,
-            CallExecutorParticipation{
+            blockchain::CallExecutorParticipation{
                     actualExecutionPayment,
                     actualDownloadPayment
             }
@@ -423,7 +423,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
 
     m_successfulEndBatchOpinion->m_proof = m_contractEnvironment.proofOfExecution().buildActualProof();
 
-    m_successfulEndBatchOpinion->m_successfulBatchInfo = SuccessfulBatchInfo{storageHash, usedDriveSize,
+    m_successfulEndBatchOpinion->m_successfulBatchInfo = blockchain::SuccessfulBatchInfo{storageHash, usedDriveSize,
                                                                              metaFilesSize,
                                                                              verificationInformation};
 
@@ -812,13 +812,13 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
     }
 }
 
-SuccessfulEndBatchExecutionTransactionInfo
+blockchain::SuccessfulEndBatchExecutionTransactionInfo
 BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecutionOpinion& transactionOpinion,
                                                   std::map<ExecutorKey, SuccessfulEndBatchExecutionOpinion> otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    SuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
+    blockchain::SuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
 
     // Fill common information
     multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
@@ -827,7 +827,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
     multisigTransactionInfo.m_successfulBatchInfo = transactionOpinion.m_successfulBatchInfo;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
-        SuccessfulCallExecutionInfo callInfo;
+        blockchain::SuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
         callInfo.m_manual = call.m_manual;
         callInfo.m_block = call.m_block;
@@ -856,13 +856,13 @@ BatchExecutionTask::createMultisigTransactionInfo(const SuccessfulEndBatchExecut
     return multisigTransactionInfo;
 }
 
-UnsuccessfulEndBatchExecutionTransactionInfo
+blockchain::UnsuccessfulEndBatchExecutionTransactionInfo
 BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExecutionOpinion& transactionOpinion,
                                                   std::map<ExecutorKey, UnsuccessfulEndBatchExecutionOpinion> otherTransactionOpinions) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    UnsuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
+    blockchain::UnsuccessfulEndBatchExecutionTransactionInfo multisigTransactionInfo;
 
     // Fill common information
     multisigTransactionInfo.m_contractKey = transactionOpinion.m_contractKey;
@@ -870,7 +870,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExec
     multisigTransactionInfo.m_automaticExecutionsCheckedUpTo = transactionOpinion.m_automaticExecutionsCheckedUpTo;
 
     for (const auto& call: transactionOpinion.m_callsExecutionInfo) {
-        UnsuccessfulCallExecutionInfo callInfo;
+        blockchain::UnsuccessfulCallExecutionInfo callInfo;
         callInfo.m_callId = call.m_callId;
         callInfo.m_manual = call.m_manual;
         callInfo.m_block = call.m_block;
@@ -896,7 +896,7 @@ BatchExecutionTask::createMultisigTransactionInfo(const UnsuccessfulEndBatchExec
     return multisigTransactionInfo;
 }
 
-void BatchExecutionTask::sendEndBatchTransaction(const SuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
+void BatchExecutionTask::sendEndBatchTransaction(const blockchain::SuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -908,7 +908,7 @@ void BatchExecutionTask::sendEndBatchTransaction(const SuccessfulEndBatchExecuti
     m_executorEnvironment.executorEventHandler().endBatchTransactionIsReady(transactionInfo);
 }
 
-void BatchExecutionTask::sendEndBatchTransaction(const UnsuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
+void BatchExecutionTask::sendEndBatchTransaction(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& transactionInfo) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
@@ -1054,7 +1054,7 @@ void BatchExecutionTask::onAppliedStorageModifications() {
     const auto& cosigners = m_publishedEndBatchInfo->m_cosigners;
     if (std::find(cosigners.begin(), cosigners.end(), m_executorEnvironment.keyPair().publicKey()) ==
         cosigners.end()) {
-        EndBatchExecutionSingleTransactionInfo singleTx = {m_contractEnvironment.contractKey(),
+        blockchain::EndBatchExecutionSingleTransactionInfo singleTx = {m_contractEnvironment.contractKey(),
                                                            m_batch.m_batchIndex,
                                                            m_contractEnvironment.proofOfExecution().buildActualProof()};
         m_executorEnvironment.executorEventHandler().endBatchSingleTransactionIsReady(singleTx);
