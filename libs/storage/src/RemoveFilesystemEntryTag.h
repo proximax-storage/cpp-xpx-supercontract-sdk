@@ -23,8 +23,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
-
     storageServer::RemoveFilesystemEntryRequest m_request;
     storageServer::RemoveFilesystemEntryResponse m_response;
 
@@ -34,6 +32,8 @@ private:
                     storageServer::RemoveFilesystemEntryResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
 public:
 

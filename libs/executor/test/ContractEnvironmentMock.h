@@ -17,8 +17,8 @@ private:
     ContractKey m_contractKey;
     uint64_t m_automaticExecutionsSCLimit;
     uint64_t m_automaticExecutionsSMLimit;
-    ContractConfig m_contractConfig;
     ProofOfExecution m_proofOfExecution;
+    ContractConfig m_contractConfig;
 
 public:
 

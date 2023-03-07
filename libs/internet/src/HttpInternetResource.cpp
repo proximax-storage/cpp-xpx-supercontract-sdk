@@ -16,8 +16,8 @@ HttpInternetResource::HttpInternetResource(GlobalEnvironment& globalEnvironment,
                                            int bufferSize,
                                            int timeout)
         : m_environment(globalEnvironment)
-        , m_port(port)
         , m_host(host)
+        , m_port(port)
         , m_target(target)
         , m_resolver(globalEnvironment.threadManager().context())
         , m_stream(globalEnvironment.threadManager().context())

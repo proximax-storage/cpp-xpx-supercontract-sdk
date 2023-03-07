@@ -20,9 +20,10 @@ class ExecuteCallRPCStarter
                 public RPCTag {
 
 private:
-    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
     GlobalEnvironment& m_environment;
+
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
 public:
 

@@ -34,10 +34,10 @@ OCSPHandler::OCSPHandler(
         , m_chain( chain )
         , m_store( store )
         , m_globalEnvironment( globalEnvironment )
-        , m_callback( std::move( callback ))
         , m_timerDelayMs( timerDelayMs )
         , m_maxEfforts( maxEfforts )
-        , m_effortsLeft( maxEfforts ) {
+        , m_effortsLeft( maxEfforts )
+        , m_callback( std::move( callback )){
     OCSP_parse_url( url.c_str(), &m_host, &m_port, &m_path, &m_ssl );
 }
 

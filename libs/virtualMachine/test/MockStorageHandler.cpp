@@ -2,6 +2,15 @@
 #include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm::test {
+
+namespace {
+
+std::string evaluateAbsolutePath(const std::string& relativePath) {
+    return std::filesystem::temp_directory_path() / relativePath;
+}
+
+}
+
 MockStorageHandler::MockStorageHandler() {
 }
 
@@ -9,10 +18,11 @@ void MockStorageHandler::openFile(
     const std::string& path,
     const std::string& mode,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    auto absolutePath = evaluateAbsolutePath(path);
     if (mode == "w") {
-        m_writer.open(path);
+        m_writer.open(absolutePath);
     } else {
-        m_reader.open(path);
+        m_reader.open(absolutePath);
     }
     callback->postReply(std::move(102112022));
 }
@@ -78,7 +88,8 @@ void MockStorageHandler::createFSIterator(
     const std::string& path,
     bool recursive,
     std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
-    m_iterator = std::filesystem::directory_iterator{path};
+    auto absolutePath = evaluateAbsolutePath(path);
+    m_iterator = std::filesystem::directory_iterator{absolutePath};
     m_recursive = recursive;
     callback->postReply(231546131);
 }
@@ -117,7 +128,7 @@ void MockStorageHandler::removeFileIterator(
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::remove_file_error)));
     } else {
         auto path = m_iterator->path();
-        auto ret = std::filesystem::remove(path);
+        std::filesystem::remove(path);
         expected<void> res;
         callback->postReply(std::move(res));
     }
@@ -138,22 +149,23 @@ void MockStorageHandler::destroyFSIterator(
 void MockStorageHandler::pathExist(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    auto ret = std::filesystem::exists(path);
+    auto ret = std::filesystem::exists(evaluateAbsolutePath(path));
     callback->postReply(std::move(ret));
 }
 
 void MockStorageHandler::isFile(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<bool>> callback) {
-    auto ret = std::filesystem::is_regular_file(path);
+    auto ret = std::filesystem::is_regular_file(evaluateAbsolutePath(path));
     callback->postReply(std::move(ret));
 }
 
 void MockStorageHandler::createDir(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
-    if (!std::filesystem::is_directory(path) || !std::filesystem::exists(path)) {
-        auto ret = std::filesystem::create_directory(path);
+    auto absolutePath = evaluateAbsolutePath(path);
+    if (!std::filesystem::is_directory(absolutePath) || !std::filesystem::exists(absolutePath)) {
+        std::filesystem::create_directory(absolutePath);
         expected<void> res;
         callback->postReply(std::move(res));
     }
@@ -164,8 +176,10 @@ void MockStorageHandler::moveFile(
     const std::string& oldPath,
     const std::string& newPath,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
-    if (!std::filesystem::is_regular_file(newPath) || !std::filesystem::exists(newPath)) {
-        std::filesystem::rename(oldPath, newPath);
+    auto absoluteOldPath = evaluateAbsolutePath(oldPath);
+    auto absoluteNewPath = evaluateAbsolutePath(newPath);
+    if (!std::filesystem::is_regular_file(absoluteNewPath) || !std::filesystem::exists(absoluteNewPath)) {
+        std::filesystem::rename(absoluteOldPath, absoluteNewPath);
         expected<void> res;
         callback->postReply(std::move(res));
     }
@@ -175,7 +189,7 @@ void MockStorageHandler::moveFile(
 void MockStorageHandler::removeFsEntry(
     const std::string& path,
     std::shared_ptr<AsyncQueryCallback<void>> callback) {
-    auto ret = std::filesystem::remove_all(path);
+    std::filesystem::remove_all(evaluateAbsolutePath(path));
     expected<void> res;
     callback->postReply(std::move(res));
 }

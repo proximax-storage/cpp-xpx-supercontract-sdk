@@ -24,17 +24,18 @@ private:
 
     GlobalEnvironment&                                       m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<void>>                m_callback;
 
-    storageServer::InitModificationsRequest                            m_request;
-    storageServer::InitModificationsResponse                           m_response;
+    storageServer::InitModificationsRequest                  m_request;
+    storageServer::InitModificationsResponse                 m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    storageServer::InitModificationsResponse>>         m_responseReader;
+                    storageServer::InitModificationsResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<void>>                m_callback;
 
 public:
 

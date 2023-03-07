@@ -109,32 +109,6 @@ void onClosedFile(const DriveKey& driveKey,
     pStorage->applySandboxStorageModifications(driveKey, true, callback);
 }
 
-void onReadFile(const DriveKey& driveKey,
-                GlobalEnvironment& environment,
-                std::shared_ptr<Storage> pStorage,
-                std::promise<void>& barrier,
-                uint64_t fileId) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        onClosedFile(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
-
-    pStorage->closeFile(driveKey, fileId, callback);
-}
-
-void onOpenedFile(const DriveKey& driveKey,
-                  GlobalEnvironment& environment,
-                  std::shared_ptr<Storage> pStorage,
-                  std::promise<void>& barrier,
-                  uint64_t fileId) {
-    auto [_, callback] = createAsyncQuery<std::vector<uint8_t>>([=, &environment, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        std::string actual(res->begin(), res->end());
-        ASSERT_EQ(actual, "data");
-        onReadFile(driveKey, environment, pStorage, barrier, fileId); }, [] {}, environment, false, true);
-
-    pStorage->readFile(driveKey, fileId, 16 * 1024, callback);
-}
-
 void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      GlobalEnvironment& environment,
                                      std::shared_ptr<Storage> pStorage,

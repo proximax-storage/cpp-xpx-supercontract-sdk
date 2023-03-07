@@ -304,7 +304,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
     Hash256 releasedTransactionsHash;
-    if (status == 0 && !executionResult.m_transaction) {
+    if (status == 0 && executionResult.m_transaction) {
         auto[hash, transaction] = blockchain::buildAggregatedTransaction(
                 m_executorEnvironment.executorConfig().networkIdentifier(), m_contractEnvironment.contractKey(),
                 *executionResult.m_transaction);

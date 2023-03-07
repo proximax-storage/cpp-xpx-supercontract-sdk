@@ -23,8 +23,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
-
     storageServer::AbsolutePathRequest m_request;
     storageServer::AbsolutePathResponse m_response;
 
@@ -34,6 +32,8 @@ private:
                     storageServer::AbsolutePathResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
 
 public:
 

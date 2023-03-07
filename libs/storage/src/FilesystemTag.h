@@ -26,8 +26,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> m_callback;
-
     storageServer::FilesystemRequest m_request;
     storageServer::FilesystemResponse m_response;
 
@@ -37,6 +35,8 @@ private:
                     storageServer::FilesystemResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> m_callback;
 
 public:
 

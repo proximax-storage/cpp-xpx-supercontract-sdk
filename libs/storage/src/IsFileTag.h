@@ -22,8 +22,6 @@ class IsFileTag
 private:
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
-
     storageServer::IsFileRequest m_request;
     storageServer::IsFileResponse m_response;
 
@@ -34,6 +32,8 @@ private:
         m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<bool>> m_callback;
 
 public:
     IsFileTag(GlobalEnvironment& environment,

@@ -19,10 +19,11 @@ class StorageQueryHandler
         public vm::VirtualMachineStorageQueryHandler {
 
 private:
+
+    const CallId m_callId;
+
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
-
-   const CallId m_callId;
 
    const std::string m_pathPrefix;
 

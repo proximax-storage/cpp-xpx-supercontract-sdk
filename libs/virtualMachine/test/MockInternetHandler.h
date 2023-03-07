@@ -7,8 +7,8 @@ namespace sirius::contract::vm::test
         const int BUFFER_SIZE = 16 * 1024;
 
     private:
+        uint m_read_pointer;
         std::string m_read_buffer;
-        int m_read_pointer;
 
     public:
         MockVirtualMachineInternetQueryHandler();

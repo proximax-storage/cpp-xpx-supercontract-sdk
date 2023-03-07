@@ -23,8 +23,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<ModificationId>> m_callback;
-
     storageServer::ActualModificationIdRequest m_request;
     storageServer::ActualModificationIdResponse m_response;
 
@@ -34,6 +32,8 @@ private:
                     storageServer::ActualModificationIdResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<ModificationId>> m_callback;
 
 public:
 

@@ -24,8 +24,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<StorageState>> m_callback;
-
     storageServer::EvaluateStorageHashRequest m_request;
     storageServer::EvaluateStorageHashResponse m_response;
 
@@ -35,6 +33,8 @@ private:
                     storageServer::EvaluateStorageHashResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<StorageState>> m_callback;
 
 public:
 

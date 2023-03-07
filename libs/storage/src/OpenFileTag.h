@@ -24,8 +24,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<uint64_t>> m_callback;
-
     storageServer::OpenFileRequest   m_request;
     storageServer::OpenFileResponse  m_response;
 
@@ -35,6 +33,8 @@ private:
                     storageServer::OpenFileResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<uint64_t>> m_callback;
 
 public:
 

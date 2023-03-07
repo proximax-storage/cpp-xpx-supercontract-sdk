@@ -22,6 +22,8 @@ class BaseBatchesManager {
 
 public:
 
+    virtual ~BaseBatchesManager() = default;
+
     virtual void run() = 0;
 
     virtual void addManualCall(const ManualCallRequest&) = 0;

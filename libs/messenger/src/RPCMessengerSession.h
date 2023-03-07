@@ -24,12 +24,12 @@ private:
     messengerServer::MessengerServer::Stub& m_stub;
 
     grpc::CompletionQueue m_completionQueue;
-    std::thread m_completionQueueThread;
 
     grpc::ClientContext m_context;
 
     std::unique_ptr<grpc::ClientAsyncReaderWriter<messengerServer::ClientMessage, messengerServer::ServerMessage>> m_stream;
 
+    std::thread m_completionQueueThread;
 
 public:
 

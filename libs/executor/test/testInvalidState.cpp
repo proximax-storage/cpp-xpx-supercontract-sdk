@@ -35,11 +35,11 @@ public:
         ASSERT_EQ(info.m_successfulBatchInfo, m_expectedInfo.m_successfulBatchInfo);
         auto expectedKeysArgSort = argSort(m_expectedInfo.m_executorKeys);
         ASSERT_EQ(info.m_executorKeys.size(), m_expectedInfo.m_executorKeys.size());
-        for (int i = 0; i < info.m_executorKeys.size(); i++) {
+        for (uint i = 0; i < info.m_executorKeys.size(); i++) {
             ASSERT_EQ(info.m_executorKeys[i], m_expectedInfo.m_executorKeys[expectedKeysArgSort[i]]);
         }
         ASSERT_EQ(info.m_callsExecutionInfo.size(), m_expectedInfo.m_callsExecutionInfo.size());
-        for (int i = 0; i < info.m_callsExecutionInfo.size(); i++) {
+        for (uint i = 0; i < info.m_callsExecutionInfo.size(); i++) {
             const auto& actualCallInfo = info.m_callsExecutionInfo[i];
             const auto& expectedCallInfo = m_expectedInfo.m_callsExecutionInfo[i];
             ASSERT_EQ(actualCallInfo.m_callId, expectedCallInfo.m_callId);
@@ -99,7 +99,7 @@ TEST(BatchExecutionTask, InvalidState) {
     executorConfig.setSuccessfulExecutionDelayMs(1000);
 
     std::deque<std::shared_ptr<CallRequest>> callRequests;
-    for (auto i = 0; i < callsNumber; i++) {
+    for (uint i = 0; i < callsNumber; i++) {
         auto request = std::make_shared<ManualCallRequest>(
                 utils::generateRandomByteValue<CallId>(),
                 "",
@@ -150,14 +150,14 @@ TEST(BatchExecutionTask, InvalidState) {
             executorEnvironmentMock, contractKey, 0, 0);
 
     std::vector<sirius::crypto::KeyPair> executorKeys;
-    for (int i = 0; i < otherExecutorsNumber; i++) {
+    for (uint i = 0; i < otherExecutorsNumber; i++) {
         executorKeys.push_back(
                 sirius::crypto::KeyPair::FromPrivate(sirius::crypto::PrivateKey::Generate([] {
                     return utils::generateRandomByteValue<uint8_t>();
                 })));
     }
 
-    for (int i = 0; i < executorKeys.size(); i++) {
+    for (uint i = 0; i < executorKeys.size(); i++) {
         pContractEnvironmentMock->m_executors.try_emplace(
                 executorKeys[i].publicKey().array(), ExecutorInfo{});
     }
@@ -200,7 +200,7 @@ TEST(BatchExecutionTask, InvalidState) {
         expectedInfo.m_callsExecutionInfo.push_back(callExecutionInfo);
     }
 
-    for (int i = 0; i < otherOpinionsNumber; i++) {
+    for (uint i = 0; i < otherOpinionsNumber; i++) {
         SuccessfulEndBatchExecutionOpinion opinion;
         opinion.m_batchIndex = 0;
         opinion.m_contractKey = contractKey;
@@ -234,7 +234,7 @@ TEST(BatchExecutionTask, InvalidState) {
         expectedInfo.m_executorKeys.push_back(opinion.m_executorKey);
         expectedInfo.m_signatures.emplace_back();
         expectedInfo.m_proofs.emplace_back();
-        for (int j = 0; j < callRequests.size(); j++) {
+        for (uint j = 0; j < callRequests.size(); j++) {
             expectedInfo.m_callsExecutionInfo[j].m_executorsParticipation.push_back(
                     {callsExecutionOpinions[j].m_executorParticipation});
         }

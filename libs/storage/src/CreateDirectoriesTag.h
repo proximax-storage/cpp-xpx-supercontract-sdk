@@ -23,8 +23,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
-
     storageServer::CreateDirectoriesRequest m_request;
     storageServer::CreateDirectoriesResponse m_response;
 
@@ -34,6 +32,8 @@ private:
                     storageServer::CreateDirectoriesResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
 public:
 

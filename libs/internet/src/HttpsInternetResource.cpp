@@ -388,11 +388,11 @@ void HttpsInternetResource::onOCSPVerified(const RequestId& requestId, Certifica
 
     bool ocspValid = true;
 
-    if (m_revocationVerificationMode == RevocationVerificationMode::SOFT &&
-        status == CertificateRevocationCheckStatus::REVOKED
+    if ((m_revocationVerificationMode == RevocationVerificationMode::SOFT &&
+        status == CertificateRevocationCheckStatus::REVOKED)
         or
-        m_revocationVerificationMode == RevocationVerificationMode::HARD &&
-        status != CertificateRevocationCheckStatus::VALID) {
+        (m_revocationVerificationMode == RevocationVerificationMode::HARD &&
+        status != CertificateRevocationCheckStatus::VALID)) {
         ocspValid = false;
     }
 

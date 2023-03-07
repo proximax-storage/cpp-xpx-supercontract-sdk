@@ -61,7 +61,7 @@ std::unique_ptr<Folder> FilesystemTag::buildFolder(const storageServer::Folder& 
         folderEntry->addChild(std::move(entry));
     }
 
-    return std::move(folderEntry);
+    return folderEntry;
 }
 
 std::unique_ptr<File> FilesystemTag::buildFile(const storageServer::File& file) {

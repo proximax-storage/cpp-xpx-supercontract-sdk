@@ -68,7 +68,7 @@ TEST(TEST_NAME, BatchTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {2, 0, 0, 2};
+    const std::vector<uint> callsPerBlock = {2, 0, 0, 2};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -181,7 +181,7 @@ TEST(TEST_NAME, AllFalseTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {8, 4, 2, 0};
+    const std::vector<uint> callsPerBlock = {8, 4, 2, 0};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -314,7 +314,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {1, 1, 1, 1};
+    const std::vector<uint> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -423,7 +423,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {1, 1, 1, 1};
+    const std::vector<uint> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -533,7 +533,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {1, 1, 1, 1};
+    const std::vector<uint> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -645,7 +645,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {1, 1, 1, 1};
+    const std::vector<uint> callsPerBlock = {1, 1, 1, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -777,7 +777,7 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1};
+    const std::vector<uint> callsPerBlock = {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1};
 
     for (uint64_t i = 0; i < 12; i++) {
         for (uint64_t j = 0; j < callsPerBlock[i]; j++) {
@@ -955,10 +955,10 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1};
+    const std::vector<uint> callsPerBlock = {0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1};
 
     for (uint64_t i = 0; i < 12; i++) {
-        for (auto j = 0; j < callsPerBlock[i]; j++) {
+        for (uint j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
             ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
@@ -1097,10 +1097,10 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {0, 1, 0, 1};
+    const std::vector<uint> callsPerBlock = {0, 1, 0, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
-        for (auto j = 0; j < callsPerBlock[i]; j++) {
+        for (uint j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
             ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),
@@ -1205,10 +1205,10 @@ TEST(TEST_NAME, DelayBatchesTest) {
 
     std::vector<ManualCallRequest> requests;
 
-    const std::vector<int> callsPerBlock = {0, 1, 0, 1};
+    const std::vector<uint> callsPerBlock = {0, 1, 0, 1};
 
     for (uint64_t i = 0; i < 4; i++) {
-        for (auto j = 0; j < callsPerBlock[i]; j++) {
+        for (uint j = 0; j < callsPerBlock[i]; j++) {
             std::vector<uint8_t> params;
             ManualCallRequest request(
                     utils::generateRandomByteValue<CallId>(),

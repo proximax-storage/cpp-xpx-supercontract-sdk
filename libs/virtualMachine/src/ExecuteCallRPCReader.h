@@ -20,9 +20,9 @@ class ExecuteCallRPCReader
 
 private:
 
-    std::shared_ptr<AsyncQueryCallback<supercontractserver::Response>> m_callback;
-
     GlobalEnvironment& m_environment;
+
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::Response>> m_callback;
 
 public:
 

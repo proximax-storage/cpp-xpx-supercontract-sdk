@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 
 find_package(OpenSSL REQUIRED)
 
-supercontract_sdk_shared_library_target(contract-storage)
+supercontract_sdk_library_target(contract-storage)
 
 supercontract_sdk_proto(storageServer "")
 target_link_libraries(contract-storage storageServer_contract_grpc_proto)

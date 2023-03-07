@@ -24,8 +24,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
-
     storageServer::WriteFileRequest   m_request;
     storageServer::WriteFileResponse  m_response;
 
@@ -35,6 +33,8 @@ private:
                     storageServer::WriteFileResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<void>> m_callback;
 
 public:
 

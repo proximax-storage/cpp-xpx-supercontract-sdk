@@ -310,10 +310,10 @@ TEST(TEST_NAME, VerifyCorrectProof) {
 
     ExecutorInfo info;
 
-    auto totalBatches = 1000;
-    auto alreadyVerifiedBatches = totalBatches / 2;
+    uint totalBatches = 1000;
+    uint alreadyVerifiedBatches = totalBatches / 2;
 
-    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+    for (uint i = 0; i < alreadyVerifiedBatches; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
@@ -325,7 +325,7 @@ TEST(TEST_NAME, VerifyCorrectProof) {
         info.m_nextBatchToApprove = alreadyVerifiedBatches;
     }
 
-    for (int i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
+    for (uint i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
@@ -345,10 +345,10 @@ TEST(TEST_NAME, VerifyIncorrectProof) {
 
     ExecutorInfo info;
 
-    auto totalBatches = 1000;
-    auto alreadyVerifiedBatches = totalBatches / 2;
+    uint totalBatches = 1000;
+    uint alreadyVerifiedBatches = totalBatches / 2;
 
-    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+    for (uint i = 0; i < alreadyVerifiedBatches; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
@@ -360,7 +360,7 @@ TEST(TEST_NAME, VerifyIncorrectProof) {
         info.m_nextBatchToApprove = alreadyVerifiedBatches;
     }
 
-    for (int i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
+    for (uint i = alreadyVerifiedBatches; i < totalBatches - 1; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
@@ -384,11 +384,11 @@ TEST(TEST_NAME, VerifyCorrectProofAfterReset) {
 
     ExecutorInfo info;
 
-    auto totalBatches = 1000;
-    auto alreadyVerifiedBatches = totalBatches / 2;
-    auto startProofFrom = 3 * totalBatches / 4;
+    uint totalBatches = 1000;
+    uint alreadyVerifiedBatches = totalBatches / 2;
+    uint startProofFrom = 3 * totalBatches / 4;
 
-    for (int i = 0; i < alreadyVerifiedBatches; i++) {
+    for (uint i = 0; i < alreadyVerifiedBatches; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
@@ -400,14 +400,14 @@ TEST(TEST_NAME, VerifyCorrectProofAfterReset) {
         info.m_nextBatchToApprove = alreadyVerifiedBatches;
     }
 
-    for (int i = alreadyVerifiedBatches; i < startProofFrom; i++) {
+    for (uint i = alreadyVerifiedBatches; i < startProofFrom; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }
 
     poex.reset(startProofFrom);
 
-    for (int i = startProofFrom; i < totalBatches - 1; i++) {
+    for (uint i = startProofFrom; i < totalBatches - 1; i++) {
         auto verificationInfo = poex.addToProof(i + 123);
         poex.addBatchVerificationInformation(i, verificationInfo);
     }

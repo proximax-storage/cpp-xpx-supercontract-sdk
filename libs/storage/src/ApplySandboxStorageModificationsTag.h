@@ -25,8 +25,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> m_callback;
-
     storageServer::ApplySandboxModificationsRequest   m_request;
     storageServer::ApplySandboxModificationsResponse  m_response;
 
@@ -36,6 +34,8 @@ private:
                     storageServer::ApplySandboxModificationsResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> m_callback;
 
 public:
 

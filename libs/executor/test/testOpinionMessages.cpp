@@ -67,7 +67,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
     executorConfig.setShareOpinionTimeoutMs(messagesPeriodicity);
 
     std::deque<std::shared_ptr<CallRequest>> callRequests;
-    for (auto i = 0; i < callsNumber; i++) {
+    for (uint i = 0; i < callsNumber; i++) {
         auto request = std::make_shared<ManualCallRequest>(
                 utils::generateRandomByteValue<CallId>(),
                 "",
@@ -120,14 +120,14 @@ TEST(BatchExecutionTask, OpinionMessages) {
             executorEnvironmentMock, contractKey, 0, 0, contractConfig);
 
     std::vector<sirius::crypto::KeyPair> executorKeys;
-    for (int i = 0; i < otherExecutorsNumber; i++) {
+    for (uint i = 0; i < otherExecutorsNumber; i++) {
         executorKeys.push_back(
                 sirius::crypto::KeyPair::FromPrivate(sirius::crypto::PrivateKey::Generate([] {
                     return utils::generateRandomByteValue<uint8_t>();
                 })));
     }
 
-    for (int i = 0; i < executorKeys.size(); i++) {
+    for (uint i = 0; i < executorKeys.size(); i++) {
         pContractEnvironmentMock->m_executors.try_emplace(
                 executorKeys[i].publicKey().array(), ExecutorInfo{});
     }
@@ -141,7 +141,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
     expectedOpinion.m_executorKey = executorEnvironmentMock.keyPair().publicKey().array();
 
     ProofOfExecution proofOfExecutionBuilder(executorEnvironmentMock.keyPair());
-    auto expectedVerificationInfo = proofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
+    proofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
     expectedOpinion.m_proof = proofOfExecutionBuilder.buildActualProof();
 
     storage::StorageState expectedState = storageMock->m_state;
@@ -169,39 +169,6 @@ TEST(BatchExecutionTask, OpinionMessages) {
                         results[i].m_download_gas_consumed,
                         executorConfig.downloadPaymentToGasMultiplier())};
         expectedOpinion.m_callsExecutionInfo.push_back(callExecutionOpinion);
-    }
-
-    for (int i = 0; i < 0; i++) {
-        SuccessfulEndBatchExecutionOpinion opinion;
-        opinion.m_batchIndex = 0;
-        opinion.m_contractKey = contractKey;
-        opinion.m_executorKey = executorKeys[i].publicKey().array();
-        std::vector<SuccessfulCallExecutionOpinion> callsExecutionOpinions;
-        for (const auto& call: callRequests) {
-            callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
-                    call->callId(),
-                    call->isManual(),
-                    call->blockHeight(),
-                    0,
-                    TransactionHash(),
-                    blockchain::CallExecutorParticipation{
-                            utils::generateRandomByteValue<uint64_t>() % call->executionPayment(),
-                            utils::generateRandomByteValue<uint64_t>() % call->downloadPayment()
-                    }
-            });
-        }
-        opinion.m_callsExecutionInfo = callsExecutionOpinions;
-        ProofOfExecution opinionProofOfExecutionBuilder(executorKeys[i]);
-        auto verificationInfo = opinionProofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
-        blockchain::SuccessfulBatchInfo successfulBatchInfo{
-                expectedState.m_storageHash,
-                expectedState.m_usedDriveSize,
-                expectedState.m_metaFilesSize,
-                verificationInfo
-        };
-        opinion.m_successfulBatchInfo = successfulBatchInfo;
-        opinion.m_proof = opinionProofOfExecutionBuilder.buildActualProof();
-        opinionList.push_back(opinion);
     }
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
@@ -247,7 +214,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
                     ASSERT_EQ(opinion.m_successfulBatchInfo, expectedOpinion.m_successfulBatchInfo);
 
                     ASSERT_EQ(opinion.m_callsExecutionInfo.size(), expectedOpinion.m_callsExecutionInfo.size());
-                    for (int i = 0; i < opinion.m_callsExecutionInfo.size(); i++) {
+                    for (uint i = 0; i < opinion.m_callsExecutionInfo.size(); i++) {
                         const auto& actualCallInfo = opinion.m_callsExecutionInfo[i];
                         const auto& expectedCallInfo = expectedOpinion.m_callsExecutionInfo[i];
                         ASSERT_EQ(actualCallInfo.m_callId, expectedCallInfo.m_callId);
@@ -284,7 +251,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
                               expectedOpinion.m_automaticExecutionsCheckedUpTo);
 
                     ASSERT_EQ(opinion.m_callsExecutionInfo.size(), expectedOpinion.m_callsExecutionInfo.size());
-                    for (int i = 0; i < opinion.m_callsExecutionInfo.size(); i++) {
+                    for (uint i = 0; i < opinion.m_callsExecutionInfo.size(); i++) {
                         const auto& actualCallInfo = opinion.m_callsExecutionInfo[i];
                         const auto& expectedCallInfo = expectedOpinion.m_callsExecutionInfo[i];
                         ASSERT_EQ(actualCallInfo.m_callId, expectedCallInfo.m_callId);

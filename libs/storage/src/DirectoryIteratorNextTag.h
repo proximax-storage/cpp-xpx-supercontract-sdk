@@ -23,8 +23,6 @@ private:
 
     GlobalEnvironment& m_environment;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
-
     storageServer::DirectoryIteratorNextRequest m_request;
     storageServer::DirectoryIteratorNextResponse m_response;
 
@@ -34,6 +32,8 @@ private:
                     storageServer::DirectoryIteratorNextResponse>> m_responseReader;
 
     grpc::Status m_status;
+
+    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
 
 public:
 

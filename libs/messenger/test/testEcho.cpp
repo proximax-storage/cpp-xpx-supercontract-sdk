@@ -21,7 +21,7 @@ public:
 
 private:
 
-    int m_next = 0;
+    uint64_t m_next = 0;
 
     void onMessageReceived(const InputMessage& message) override {
         ASSERT_TRUE(m_next < m_expected.size());

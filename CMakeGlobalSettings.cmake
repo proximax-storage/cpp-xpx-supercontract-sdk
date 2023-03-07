@@ -11,6 +11,7 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 
 ### set compiler settings
 if(MSVC)
+        # TODO This set of settings has not be checked for correctness
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /W4 /EHsc /DBOOST_LOG_DYN_LINK")
         # in debug disable "potentially uninitialized local variable" (FP)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /MDd /D_SCL_SECURE_NO_WARNINGS /wd4701")
@@ -29,59 +30,11 @@ if(MSVC)
         add_definitions(-DNOMINMAX)
         add_definitions(-DWIN32_LEAN_AND_MEAN)
         add_definitions(-D _WIN32_WINNT=0x0601)
-
-        # mongo cxx view inherits std::iterator
-        add_definitions(-D_SILENCE_CXX17_ITERATOR_BASE_CLASS_DEPRECATION_WARNING)
-        # boost asio associated_allocator
-        add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING)
-elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
-        #        # -Wstrict-aliasing=1 perform most paranoid strict aliasing checks
-        #        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -Werror -Wno-error=attributes -Wno-error=cpp -Wstrict-aliasing=1 -Wnon-virtual-dtor -Wno-error=uninitialized -Wno-error=unknown-pragmas -Wno-unused-parameter -Wno-error=redundant-move -DBOOST_LOG_DYN_LINK")
-        #
-        #        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-        #        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-        #
-        #        # - Wno-maybe-uninitialized: false positives where gcc isn't sure if an uninitialized variable is used or not
-        #        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -Wno-maybe-uninitialized -g1 -fno-omit-frame-pointer")
-        #        set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -Wno-maybe-uninitialized")
-
-        # add memset_s
+elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+        # -Wstrict-aliasing=1 perform most paranoid strict aliasing checks
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-error -Wno-error=unused-but-set-variable -Wno-error=attributes -Wno-error=unused-variable -Wno-error=cpp -Wstrict-aliasing=1 -Wnon-virtual-dtor -Wno-error=uninitialized -Wno-error=unknown-pragmas -Wno-unused-parameter -Wno-error=redundant-move -DBOOST_LOG_DYN_LINK")
         add_definitions(-D_STDC_WANT_LIB_EXT1_=1)
         add_definitions(-D__STDC_WANT_LIB_EXT1__=1)
-elseif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
-        # - Wno-c++98-compat*: catapult is not compatible with C++98
-        # - Wno-disabled-macro-expansion: expansion of recursive macro is required for boost logging macros
-        # - Wno-padded: allow compiler to automatically pad data types for alignment
-        # - Wno-switch-enum: do not require enum switch statements to list every value (this setting is also incompatible with GCC warnings)
-        # - Wno-weak-vtables: vtables are emitted in all translsation units for virtual classes with no out-of-line virtual method definitions
-        #	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-        #		-Werror \
-        #		-fbracket-depth=1024 \
-        #		-Wno-c++98-compat \
-        #		-Wno-c++98-compat-pedantic \
-        #		-Wno-disabled-macro-expansion \
-        #		-Wno-padded \
-        #		-Wno-switch-enum \
-        #                -Wno-weak-vtables")
-
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
-                -Wall\
-                -Wextra\
-                -Werror\
-                -Wstrict-aliasing=1\
-                -Wnon-virtual-dtor\
-                -Wno-unused-const-variable\
-                -Wno-unused-private-field\
-                -Wno-unused-parameter\
-                -Wno-poison-system-directories\
-                ")
-        #            -Wno-error=uninitialized\
-        #            -Werror-deprecated\
-
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fvisibility=hidden")
-        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
-
-        set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -g1")
 endif()
 
 # set runpath for built binaries on linux
@@ -90,8 +43,6 @@ if (NOT WIN32)
                 file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/boost")
                 set(CMAKE_SKIP_BUILD_RPATH FALSE)
 
-                # $origin - to load plugins when running the server
-                # $origin/boost - same, use our boost libs
                 set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH}:$ORIGIN:$ORIGIN/../lib")
                 set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
                 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -278,4 +229,12 @@ function(supercontract_sdk_proto SERVICE DEPENDENCIES)
                 ${_REFLECTION}
                 ${_GRPC_GRPCPP}
                 ${_PROTOBUF_LIBPROTOBUF})
+endfunction()
+
+function(supercontract_sdk_third_party_lib config)
+        if("${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU" OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+                set(CMAKE_CXX_FLAGS "")
+                set(CMAKE_C_FLAGS "")
+        endif()
+        include("${config}.cmake")
 endfunction()

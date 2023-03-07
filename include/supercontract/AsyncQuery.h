@@ -78,9 +78,9 @@ class ManualTerminateAsyncQuery
 
 private:
 
-    GlobalEnvironment& m_globalEnvironment;
-    std::shared_ptr<QueryStore<TCallback>> m_statusManager;
     TTerminateCallback m_terminateCallback;
+    std::shared_ptr<QueryStore<TCallback>> m_statusManager;
+    GlobalEnvironment& m_globalEnvironment;
 
 public:
 
@@ -112,9 +112,9 @@ class AutoTerminateAsyncQuery
 
 private:
 
-    GlobalEnvironment& m_globalEnvironment;
-    std::shared_ptr<QueryStore<TCallback>> m_statusManager;
     TTerminateCallback m_terminateCallback;
+    std::shared_ptr<QueryStore<TCallback>> m_statusManager;
+    GlobalEnvironment& m_globalEnvironment;
 
 public:
 
@@ -147,6 +147,8 @@ class AsyncQueryCallback {
 
 public:
 
+    virtual ~AsyncQueryCallback() = default;
+
     virtual void postReply(tl::expected<TReply, std::error_code>&&) = 0;
 
     virtual bool isTerminated() const = 0;
@@ -162,8 +164,8 @@ class AsyncCallbackAsyncQuery
 
 private:
 
-    GlobalEnvironment& m_globalEnvironment;
     std::shared_ptr<QueryStore<TCallback>> m_statusManager;
+    GlobalEnvironment& m_globalEnvironment;
 
 public:
 
@@ -210,8 +212,8 @@ class SyncCallbackAsyncQuery
 
 private:
 
-    GlobalEnvironment& m_globalEnvironment;
     std::shared_ptr<QueryStore<TCallback>> m_statusManager;
+    GlobalEnvironment& m_globalEnvironment;
 
 public:
 

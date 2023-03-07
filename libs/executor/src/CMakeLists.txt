@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
 set(CMAKE_CXX_STANDARD 20)
 
-supercontract_sdk_shared_library_target(executor)
+supercontract_sdk_library_target(executor)
 
 target_include_directories(executor PUBLIC ../include ../../../include)
 target_include_directories(executor PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
