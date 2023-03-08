@@ -51,7 +51,6 @@ public:
 TEST(BatchExecutionTask, OpinionMessages) {
 
     const uint otherExecutorsNumber = 3;
-    const uint otherOpinionsNumber = 2;
     const uint callsNumber = 2;
     const uint messagesNumber = 3;
     const uint unsuccessfulOpinionDelay = 1000;
