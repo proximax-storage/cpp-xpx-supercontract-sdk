@@ -6,13 +6,37 @@
 
 #pragma once
 
-#include "StorageModifier.h"
-#include "StorageObserver.h"
+#include "StorageModification.h"
+#include "Folder.h"
+#include <supercontract/Identifiers.h>
+#include "StorageModification.h"
 
 namespace sirius::contract::storage {
 
-class Storage: public StorageModifier, public StorageObserver {
+class Storage {
 
+public:
+
+    virtual ~Storage() = default;
+
+    virtual void synchronizeStorage(const DriveKey& driveKey,
+                                    const ModificationId& modificationId,
+                                    const StorageHash& storageHash,
+                                    std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
+
+    virtual void
+    initiateModifications(const DriveKey& driveKey,
+                          const ModificationId& modificationId,
+                          std::shared_ptr<AsyncQueryCallback<std::unique_ptr<StorageModification>>> callback) = 0;
+
+    virtual void absolutePath(const DriveKey& key, const std::string& relativePath,
+                              std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
+
+    virtual void actualModificationId(const DriveKey& key,
+                                      std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) = 0;
+
+    virtual void
+    filesystem(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<std::unique_ptr<Folder>>> callback) = 0;
 };
 
 }
