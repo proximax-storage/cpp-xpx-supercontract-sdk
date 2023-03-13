@@ -25,7 +25,7 @@ void StorageModificationMock::evaluateStorageHash(std::shared_ptr<AsyncQueryCall
     callback->postReply(storage::StorageState(m_info->m_actualBatch->m_lowerSandboxState));
 }
 
-void StorageModificationMock::applyStorageModifications(bool success,
+void StorageModificationMock::applyStorageModification(bool success,
                                                         std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT_TRUE(m_info->m_actualBatch);
     if (success) {

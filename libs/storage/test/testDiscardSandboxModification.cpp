@@ -103,7 +103,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
-    contextHolder.m_storageModification->applyStorageModifications(true, callback);
+    contextHolder.m_storageModification->applyStorageModification(true, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
@@ -128,7 +128,7 @@ void onClosedFile(const DriveKey& driveKey,
         ASSERT_FALSE(r.m_success);
         onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, r); }, [] {}, environment, false, true);
 
-    contextHolder.m_sandboxModification->applySandboxModifications(false, callback);
+    contextHolder.m_sandboxModification->applySandboxModification(false, callback);
 }
 
 void onFlushed(const DriveKey& driveKey,

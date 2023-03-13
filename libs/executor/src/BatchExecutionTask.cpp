@@ -125,7 +125,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest
 
     m_storageQuery = std::move(query);
 
-    m_sandboxModification->applySandboxModifications(success, callback);
+    m_sandboxModification->applySandboxModification(success, callback);
 }
 
 // region message event handler
@@ -514,7 +514,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
         m_storageQuery = std::move(query);
 
-        m_storageModification->applyStorageModifications(batchIsSuccessful, callback);
+        m_storageModification->applyStorageModification(batchIsSuccessful, callback);
     }
 }
 

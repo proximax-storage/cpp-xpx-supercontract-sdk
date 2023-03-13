@@ -343,7 +343,7 @@ void RPCSandboxModification::directoryIteratorDestroy(uint64_t id,
     tag->start();
 }
 
-void RPCSandboxModification::applySandboxModifications(bool success,
+void RPCSandboxModification::applySandboxModification(bool success,
                                                        std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 

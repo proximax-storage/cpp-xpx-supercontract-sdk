@@ -12,7 +12,7 @@ namespace sirius::contract::test {
 SandboxModificationMock::SandboxModificationMock(std::shared_ptr<StorageInfo> info)
 : m_info(std::move(info)) {}
 
-void SandboxModificationMock::applySandboxModifications(bool success,
+void SandboxModificationMock::applySandboxModification(bool success,
                                                         std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) {
     ASSERT_TRUE(m_info->m_actualBatch);
     if (success) {

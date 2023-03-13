@@ -30,7 +30,7 @@ public:
 
     void evaluateStorageHash(std::shared_ptr<AsyncQueryCallback<StorageState>> callback) override;
 
-    void applyStorageModifications(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
+    void applyStorageModification(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 
 };
 

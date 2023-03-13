@@ -110,7 +110,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
         ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, contextHolder, barrier);
     }, [] {}, environment, false, true);
-    contextHolder.m_storageModification->applyStorageModifications(true, callback);
+    contextHolder.m_storageModification->applyStorageModification(true, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
@@ -135,7 +135,7 @@ void onFileMoved(const DriveKey& driveKey,
                 ASSERT_TRUE(res);
                 onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res);
             }, [] {}, environment, false, true);
-    contextHolder.m_sandboxModification->applySandboxModifications(true, callback);
+    contextHolder.m_sandboxModification->applySandboxModification(true, callback);
 }
 
 void onCreatedDirectory(const DriveKey& driveKey,

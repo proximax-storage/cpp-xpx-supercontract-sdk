@@ -26,7 +26,7 @@ public:
     virtual void
     evaluateStorageHash(std::shared_ptr<AsyncQueryCallback<StorageState>> callback) = 0;
 
-    virtual void applyStorageModifications(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
+    virtual void applyStorageModification(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;
 
 };
 

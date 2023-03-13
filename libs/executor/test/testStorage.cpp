@@ -154,7 +154,7 @@ TEST(Supercontract, Storage) {
                             [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                modificationHolder.m_storageModification->applyStorageModification(true,
                                                                                                     applyStorageCallback);
                             },
                             [] {}, environment, false, true);
@@ -162,7 +162,7 @@ TEST(Supercontract, Storage) {
                 },
                 [] {}, environment, false, true);
 
-        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModification(true, applySandboxCallback);
     });
 
     barrierApply.get();
@@ -299,7 +299,7 @@ TEST(Supercontract, Iterator) {
                             [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                modificationHolder.m_storageModification->applyStorageModification(true,
                                                                                                     applyStorageCallback);
                             },
                             [] {}, environment, false, true);
@@ -307,7 +307,7 @@ TEST(Supercontract, Iterator) {
                 },
                 [] {}, environment, false, true);
 
-        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModification(true, applySandboxCallback);
     });
 
     barrierApply.get();
@@ -444,7 +444,7 @@ TEST(Supercontract, FaultyStorage) {
                             [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                modificationHolder.m_storageModification->applyStorageModification(true,
                                                                                                     applyStorageCallback);
                             },
                             [] {}, environment, false, true);
@@ -452,7 +452,7 @@ TEST(Supercontract, FaultyStorage) {
                 },
                 [] {}, environment, false, true);
 
-        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModification(true, applySandboxCallback);
     });
 
     barrierApply.get();

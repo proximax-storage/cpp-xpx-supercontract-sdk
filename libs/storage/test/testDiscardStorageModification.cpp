@@ -107,7 +107,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
         ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, contextHolder, barrier);
     }, [] {}, environment, false, true);
-    contextHolder.m_storageModification->applyStorageModifications(false, callback);
+    contextHolder.m_storageModification->applyStorageModification(false, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
@@ -134,7 +134,7 @@ void onClosedFile(const DriveKey& driveKey,
                 onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, r);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_sandboxModification->applySandboxModifications(true, callback);
+    contextHolder.m_sandboxModification->applySandboxModification(true, callback);
 }
 
 void onFlushed(const DriveKey& driveKey,

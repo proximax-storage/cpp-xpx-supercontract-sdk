@@ -22,7 +22,7 @@ public:
 
     SandboxModificationMock(std::shared_ptr<StorageInfo> statistics);
 
-    void applySandboxModifications(bool success,
+    void applySandboxModification(bool success,
                                    std::shared_ptr<AsyncQueryCallback<storage::SandboxModificationDigest>> callback) override;
 
     void openFile(const std::string& path, storage::OpenFileMode mode,

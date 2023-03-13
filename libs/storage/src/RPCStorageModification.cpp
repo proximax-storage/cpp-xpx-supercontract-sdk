@@ -73,7 +73,7 @@ void RPCStorageModification::evaluateStorageHash(std::shared_ptr<AsyncQueryCallb
 }
 
 void
-RPCStorageModification::applyStorageModifications(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) {
+RPCStorageModification::applyStorageModification(bool success, std::shared_ptr<AsyncQueryCallback<void>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     auto rpcClient = m_pRPCClient.lock();

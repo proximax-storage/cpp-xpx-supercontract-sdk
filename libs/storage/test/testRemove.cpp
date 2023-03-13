@@ -105,7 +105,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
-    contextHolder.m_storageModification->applyStorageModifications(true, callback);
+    contextHolder.m_storageModification->applyStorageModification(true, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
@@ -128,7 +128,7 @@ void onClosedFile(const DriveKey& driveKey,
         ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
 
-    contextHolder.m_sandboxModification->applySandboxModifications(true, callback);
+    contextHolder.m_sandboxModification->applySandboxModification(true, callback);
 }
 
 void onWrittenFile(const DriveKey& driveKey,
@@ -211,7 +211,7 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
     auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
         onAppliedStorageModifications(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
-    contextHolder.m_storageModification->applyStorageModifications(true, callback);
+    contextHolder.m_storageModification->applyStorageModification(true, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
@@ -234,7 +234,7 @@ void onFileRemoved(const DriveKey& driveKey,
         ASSERT_TRUE(res);
         onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
 
-    contextHolder.m_sandboxModification->applySandboxModifications(true, callback);
+    contextHolder.m_sandboxModification->applySandboxModification(true, callback);
 }
 
 void onSandboxModificationsInitiated(const DriveKey& driveKey,

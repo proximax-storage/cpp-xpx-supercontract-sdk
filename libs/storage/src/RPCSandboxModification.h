@@ -66,7 +66,7 @@ public:
     void isFile(const std::string& path,
                 std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
-    void applySandboxModifications(bool success,
+    void applySandboxModification(bool success,
                                    std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) override;
 };
 

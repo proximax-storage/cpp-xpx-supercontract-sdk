@@ -23,7 +23,7 @@ public:
 
     virtual ~SandboxModification() = default;
 
-    virtual void applySandboxModifications(bool success,
+    virtual void applySandboxModification(bool success,
                                            std::shared_ptr<AsyncQueryCallback<SandboxModificationDigest>> callback) = 0;
 
     virtual void openFile(const std::string& path, OpenFileMode mode,
