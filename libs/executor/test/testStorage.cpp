@@ -12,6 +12,14 @@
 #include <ManualCallBlockchainQueryHandler.h>
 
 namespace sirius::contract::test {
+
+namespace {
+
+struct StorageModificationHolder {
+    std::unique_ptr<storage::StorageModification> m_storageModification;
+    std::shared_ptr<storage::SandboxModification> m_sandboxModification;
+};
+
 // https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
 std::string exec(const char* cmd) {
     std::array<char, 128> buffer{};
@@ -24,6 +32,7 @@ std::string exec(const char* cmd) {
         result += buffer.data();
     }
     return result;
+}
 }
 
 TEST(Supercontract, Storage) {
@@ -50,17 +59,26 @@ TEST(Supercontract, Storage) {
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
+    StorageModificationHolder modificationHolder;
+
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
         pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
-        auto[_, storageCallback] = createAsyncQuery<void>(
-                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
-                                                                      [] {}, environment, false, true);
-                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+        auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pInit](auto&& res) {
+                    ASSERT_TRUE(res);
+                    modificationHolder.m_storageModification = std::move(*res);
+                    auto[_, sandboxCallback] = createAsyncQuery<std::unique_ptr<storage::SandboxModification>>(
+                            [&pInit, &modificationHolder](auto&& res) mutable {
+                                ASSERT_TRUE(res);
+                                modificationHolder.m_sandboxModification = std::move(*res);
+                                pInit.set_value();
+                            },
+                            [] {}, environment, false, true);
+                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
@@ -82,7 +100,7 @@ TEST(Supercontract, Storage) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         vm::RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
@@ -99,8 +117,10 @@ TEST(Supercontract, Storage) {
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
                                                                  contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
-                                                               contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
+                                                               environment,
+                                                               contractEnvironmentMock,
+                                                               modificationHolder.m_sandboxModification);
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
@@ -129,26 +149,28 @@ TEST(Supercontract, Storage) {
 
     threadManager.execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                            [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                                    applyStorageCallback);
+                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                                                                                    applyStorageCallback);
                             },
                             [] {}, environment, false, true);
-                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                    modificationHolder.m_storageModification->evaluateStorageHash(evaluateStateCallback);
                 },
                 [] {}, environment, false, true);
 
-        pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
     });
 
     barrierApply.get();
 
     threadManager.execute([&] {
         pStorage.reset();
+        modificationHolder.m_storageModification.reset();
+        modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 
@@ -182,17 +204,26 @@ TEST(Supercontract, Iterator) {
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
+    StorageModificationHolder modificationHolder;
+
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
         pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
-        auto[_, storageCallback] = createAsyncQuery<void>(
-                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
-                                                                      [] {}, environment, false, true);
-                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+        auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pInit](auto&& res) {
+                    ASSERT_TRUE(res);
+                    modificationHolder.m_storageModification = std::move(*res);
+                    auto[_, sandboxCallback] = createAsyncQuery<std::unique_ptr<storage::SandboxModification>>(
+                            [&pInit, &modificationHolder](auto&& res) {
+                                ASSERT_TRUE(res);
+                                modificationHolder.m_sandboxModification = std::move(*res);
+                                pInit.set_value();
+                            },
+                            [] {}, environment, false, true);
+                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
@@ -214,7 +245,7 @@ TEST(Supercontract, Iterator) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         vm::RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
@@ -231,8 +262,10 @@ TEST(Supercontract, Iterator) {
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
                                                                  contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
-                                                               contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
+                                                               environment,
+                                                               contractEnvironmentMock,
+                                                               modificationHolder.m_sandboxModification);
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
@@ -261,26 +294,28 @@ TEST(Supercontract, Iterator) {
 
     threadManager.execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                            [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                                    applyStorageCallback);
+                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                                                                                    applyStorageCallback);
                             },
                             [] {}, environment, false, true);
-                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                    modificationHolder.m_storageModification->evaluateStorageHash(evaluateStateCallback);
                 },
                 [] {}, environment, false, true);
 
-        pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
     });
 
     barrierApply.get();
 
     threadManager.execute([&] {
         pStorage.reset();
+        modificationHolder.m_storageModification.reset();
+        modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 
@@ -314,17 +349,26 @@ TEST(Supercontract, FaultyStorage) {
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainHandler;
     std::shared_ptr<storage::Storage> pStorage;
 
+    StorageModificationHolder modificationHolder;
+
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
     threadManager.execute([&] {
         pStorage = storage::RPCStorageBuilder(rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
-        auto[_, storageCallback] = createAsyncQuery<void>(
-                [=, &environment, &contractEnvironmentMock, &pInit](auto&& res) {
-                    auto[_, sandboxCallback] = createAsyncQuery<void>([&pInit](auto&& res) { pInit.set_value(); },
-                                                                      [] {}, environment, false, true);
-                    pStorage->initiateSandboxModifications(contractEnvironmentMock.driveKey(), sandboxCallback);
+        auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pInit](auto&& res) {
+                    ASSERT_TRUE(res);
+                    modificationHolder.m_storageModification = std::move(*res);
+                    auto[_, sandboxCallback] = createAsyncQuery<std::unique_ptr<storage::SandboxModification>>(
+                            [&pInit, &modificationHolder](auto&& res) {
+                                ASSERT_TRUE(res);
+                                modificationHolder.m_sandboxModification = std::move(*res);
+                                pInit.set_value();
+                            },
+                            [] {}, environment, false, true);
+                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
@@ -346,7 +390,7 @@ TEST(Supercontract, FaultyStorage) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         vm::RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
         environment.m_virtualMachineMock = pVirtualMachine;
 
@@ -363,8 +407,10 @@ TEST(Supercontract, FaultyStorage) {
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
                                                                  contractEnvironmentMock);
-        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId, environment,
-                                                               contractEnvironmentMock);
+        storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
+                                                               environment,
+                                                               contractEnvironmentMock,
+                                                               modificationHolder.m_sandboxModification);
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
@@ -393,26 +439,28 @@ TEST(Supercontract, FaultyStorage) {
 
     threadManager.execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
-                [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
-                            [=, &environment, &contractEnvironmentMock, &pApply](auto&& res) {
+                            [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                                 auto[q3, applyStorageCallback] = createAsyncQuery<void>(
                                         [&pApply](auto&& res) { pApply.set_value(); }, [] {}, environment, false, true);
-                                pStorage->applyStorageModifications(contractEnvironmentMock.driveKey(), true,
-                                                                    applyStorageCallback);
+                                modificationHolder.m_storageModification->applyStorageModifications(true,
+                                                                                                    applyStorageCallback);
                             },
                             [] {}, environment, false, true);
-                    pStorage->evaluateStorageHash(contractEnvironmentMock.driveKey(), evaluateStateCallback);
+                    modificationHolder.m_storageModification->evaluateStorageHash(evaluateStateCallback);
                 },
                 [] {}, environment, false, true);
 
-        pStorage->applySandboxStorageModifications(contractEnvironmentMock.driveKey(), true, applySandboxCallback);
+        modificationHolder.m_sandboxModification->applySandboxModifications(true, applySandboxCallback);
     });
 
     barrierApply.get();
 
     threadManager.execute([&] {
         pStorage.reset();
+        modificationHolder.m_storageModification.reset();
+        modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 

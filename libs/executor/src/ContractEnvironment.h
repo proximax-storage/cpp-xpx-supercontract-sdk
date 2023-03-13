@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include <storage/StorageModifier.h>
 #include <messenger/Messenger.h>
 #include "executor/ExecutorEventHandler.h"
 #include "crypto/KeyPair.h"

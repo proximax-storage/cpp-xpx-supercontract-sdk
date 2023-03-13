@@ -8,7 +8,7 @@ find_package(GTest REQUIRED)
 
 file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
-add_executable(executor-tests ${TEST_FILES} TestUtils.cpp ContractEnvironmentMock.cpp ExecutorEnvironmentMock.cpp VirtualMachineMock.cpp StorageMock.cpp ExecutorEventHandlerMock.cpp MessengerMock.cpp BatchesManagerMock.cpp)
+add_executable(executor-tests ${TEST_FILES} TestUtils.cpp ContractEnvironmentMock.cpp ExecutorEnvironmentMock.cpp VirtualMachineMock.cpp StorageMock.cpp StorageUtils.cpp SandboxModificationMock.cpp StorageModificationMock.cpp ExecutorEventHandlerMock.cpp MessengerMock.cpp BatchesManagerMock.cpp)
 enable_testing()
 add_test(executor-tests "./test")
 target_include_directories(executor-tests PRIVATE ../src)

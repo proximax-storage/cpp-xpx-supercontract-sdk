@@ -57,7 +57,7 @@ void RPCStorage::initiateModifications(const DriveKey& driveKey,
                     return;
                 }
                 callback->postReply(std::move(storageModification));
-            }, [] {}, m_environment, false, false);
+            }, [] {}, m_environment, false, true);
     auto* tag = new InitiateModificationsTag(m_environment,
                                              std::move(request),
                                              m_pRPCClient->stub(),

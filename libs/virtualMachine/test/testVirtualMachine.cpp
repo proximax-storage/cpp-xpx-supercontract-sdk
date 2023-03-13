@@ -50,7 +50,7 @@ TEST(VirtualMachine, SimpleContract) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -114,7 +114,7 @@ TEST(VirtualMachine, InternetRead) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -186,7 +186,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -253,7 +253,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -320,7 +320,7 @@ TEST(VirtualMachine, WrongContractPath) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -386,7 +386,7 @@ TEST(VirtualMachine, WrongIP) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50052";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -448,7 +448,7 @@ TEST(VirtualMachine, WrongExecFunction) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -514,7 +514,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -581,7 +581,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -646,7 +646,7 @@ TEST(VirtualMachine, FaultyContract) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -720,7 +720,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -822,7 +822,7 @@ TEST(VirtualMachine, SimpleStorage) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -886,7 +886,7 @@ TEST(VirtualMachine, IteratorTest) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -950,7 +950,7 @@ TEST(VirtualMachine, FaultyStorage) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields
@@ -1008,7 +1008,7 @@ TEST(VirtualMachine, NullStorageHandler) {
         // TODO Fill in the address
         std::string address = "127.0.0.1:50051";
         RPCVirtualMachineBuilder builder(address);
-        builder.setContentObserver(storageObserver);
+        builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
 
         // TODO fill in the callRequest fields

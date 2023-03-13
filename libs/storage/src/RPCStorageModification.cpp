@@ -39,7 +39,7 @@ void RPCStorageModification::initiateSandboxModification(
             return;
         }
         callback->postReply(std::move(sandboxModification));
-    }, [] {}, m_environment, false, false);
+    }, [] {}, m_environment, false, true);
 
     storageServer::InitSandboxRequest request;
     request.set_drive_key(m_driveKey.toString());

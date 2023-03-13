@@ -173,7 +173,7 @@ TEST(BatchExecutionTask, LateUnsuccessfulOpinions) {
     expectedInfo.m_signatures.emplace_back();
     expectedInfo.m_proofs.emplace_back();
 
-    storage::StorageState expectedState = storageMock->m_state;
+    storage::StorageState expectedState = storageMock->m_info->m_state;
 
     for (uint i = 0; i < callRequests.size(); i++) {
         const auto& call = callRequests[i];
@@ -264,9 +264,9 @@ TEST(BatchExecutionTask, LateUnsuccessfulOpinions) {
     {
         std::promise<void> storageStatePromise;
         threadManager.execute([&] {
-            ASSERT_EQ(storageMock->m_state.m_storageHash, expectedState.m_storageHash);
-            ASSERT_EQ(storageMock->m_historicBatches.size(), 1);
-            const auto& historicBatch = storageMock->m_historicBatches.front();
+            ASSERT_EQ(storageMock->m_info->m_state.m_storageHash, expectedState.m_storageHash);
+            ASSERT_EQ(storageMock->m_info->m_historicBatches.size(), 1);
+            const auto& historicBatch = storageMock->m_info->m_historicBatches.front();
             ASSERT_FALSE(*historicBatch.m_success);
             ASSERT_EQ(historicBatch.m_calls.size(), results.size());
             for (uint i = 0; i < historicBatch.m_calls.size(); i++) {

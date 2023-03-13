@@ -8,8 +8,8 @@
 
 namespace sirius::contract::vm {
 
-void VirtualMachineBuilder::setContentObserver(std::weak_ptr<storage::StorageObserver> storageObserver) {
-    m_storageContentObserver = std::move(storageObserver);
+void VirtualMachineBuilder::setStorage(std::weak_ptr<storage::Storage> storage) {
+    m_storageContentObserver = std::move(storage);
 }
 
 }

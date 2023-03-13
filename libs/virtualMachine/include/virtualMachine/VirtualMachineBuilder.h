@@ -7,7 +7,7 @@
 #pragma once
 
 #include <virtualMachine/VirtualMachine.h>
-#include "storage/StorageObserver.h"
+#include "storage/Storage.h"
 #include <supercontract/ServiceBuilder.h>
 
 namespace sirius::contract::vm {
@@ -16,11 +16,11 @@ class VirtualMachineBuilder : public ServiceBuilder<VirtualMachine> {
 
 protected:
 
-    std::weak_ptr<storage::StorageObserver> m_storageContentObserver;
+    std::weak_ptr<storage::Storage> m_storageContentObserver;
 
 public:
 
-    void setContentObserver(std::weak_ptr<storage::StorageObserver>);
+    void setStorage(std::weak_ptr<storage::Storage>);
 
 };
 

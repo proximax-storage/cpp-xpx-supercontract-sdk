@@ -9,7 +9,7 @@
 #include "ExecuteCallRPCRequest.h"
 #include "supercontract/AsyncQuery.h"
 #include "supercontract/SingleThread.h"
-#include <storage/StorageObserver.h>
+#include <storage/Storage.h>
 #include <virtualMachine/VirtualMachine.h>
 #include <virtualMachine/VirtualMachineBlockchainQueryHandler.h>
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
@@ -33,7 +33,7 @@ private:
         CallContext& operator=(CallContext&& other) noexcept = default;
     };
 
-    std::weak_ptr<storage::StorageObserver> m_storageContentManager;
+    std::weak_ptr<storage::Storage> m_storage;
 
     GlobalEnvironment& m_environment;
 
@@ -48,7 +48,7 @@ private:
 
 public:
     RPCVirtualMachine(
-        std::weak_ptr<storage::StorageObserver> storageContentManager,
+        std::weak_ptr<storage::Storage> storage,
         GlobalEnvironment& environment,
         const std::string& serverAddress);
 

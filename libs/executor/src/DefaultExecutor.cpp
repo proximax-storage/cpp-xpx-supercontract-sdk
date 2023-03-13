@@ -51,7 +51,7 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
 
         m_blockchain = std::make_shared<blockchain::CachedBlockchain>(*this, blockchainBuilder->build(*this));
 
-        vmBuilder->setContentObserver(m_storage);
+        vmBuilder->setStorage(m_storage);
         m_virtualMachine = vmBuilder->build(*this);
 
         m_sslContext.set_default_verify_paths();

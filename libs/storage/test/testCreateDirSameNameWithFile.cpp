@@ -64,14 +64,14 @@ public:
 
 void onFilesystemReceived(const DriveKey& driveKey,
                           GlobalEnvironment& environment,
-                          std::shared_ptr<Storage> pStorage,
+                          ContextHolder& contextHolder,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
     // move::createDirAndMove::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
     //     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
     //         ASSERT_TRUE(res);
-    //         onPathReceived(driveKey, environment, pStorage, promise, *res); }, [] {}, environment, false, true);
-    //     pStorage->absolutePath(driveKey, "tests/test.txt", callback);
+    //         onPathReceived(driveKey, environment, contextHolder, promise, *res); }, [] {}, environment, false, true);
+    //     contextHolder->absolutePath(driveKey, "tests/test.txt", callback);
     // },
     //                                                             true);
     // traversal.acceptFolder(*folder);
@@ -80,92 +80,93 @@ void onFilesystemReceived(const DriveKey& driveKey,
 
 void onAppliedStorageModifications(const DriveKey& driveKey,
                                    GlobalEnvironment& environment,
-                                   std::shared_ptr<Storage> pStorage,
+                                   ContextHolder& contextHolder,
                                    std::promise<void>& promise) {
 
-    auto [_, callback] = createAsyncQuery<std::unique_ptr<Folder>>([=, &environment, &promise](auto&& res) {
+    auto [_, callback] = createAsyncQuery<std::unique_ptr<Folder>>([=, &environment, &contextHolder, &promise](auto&& res) {
         ASSERT_TRUE(res);
-        onFilesystemReceived(driveKey, environment, pStorage, promise, std::move(*res)); }, [] {}, environment, false, true);
-    pStorage->filesystem(driveKey, callback);
+        onFilesystemReceived(driveKey, environment, contextHolder, promise, std::move(*res)); }, [] {}, environment, false, true);
+    contextHolder.m_storage->filesystem(driveKey, callback);
 }
 
 void onEvaluatedStorageHash(const DriveKey& driveKey,
                             GlobalEnvironment& environment,
-                            std::shared_ptr<Storage> pStorage,
+                            ContextHolder& contextHolder,
                             std::promise<void>& barrier,
                             const StorageState& digest) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onAppliedStorageModifications(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
-    pStorage->applyStorageModifications(driveKey, true, callback);
+        onAppliedStorageModifications(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
+    contextHolder.m_storageModification->applyStorageModifications(true, callback);
 }
 
 void onAppliedSandboxModifications(const DriveKey& driveKey,
                                    GlobalEnvironment& environment,
-                                   std::shared_ptr<Storage> pStorage,
+                                   ContextHolder& contextHolder,
                                    std::promise<void>& barrier,
                                    const SandboxModificationDigest& digest) {
-    auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onEvaluatedStorageHash(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
+        onEvaluatedStorageHash(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
 
-    pStorage->evaluateStorageHash(driveKey, callback);
+    contextHolder.m_storageModification->evaluateStorageHash(callback);
 }
 
 void onCreatedDirectory(const DriveKey& driveKey,
                         GlobalEnvironment& environment,
-                        std::shared_ptr<Storage> pStorage,
+                        ContextHolder& contextHolder,
                         std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onAppliedSandboxModifications(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
+        onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
 
-    pStorage->applySandboxStorageModifications(driveKey, true, callback);
+    contextHolder.m_sandboxModification->applySandboxModifications(true, callback);
 }
 
 void onFileClosed(const DriveKey& driveKey,
                   GlobalEnvironment& environment,
-                  std::shared_ptr<Storage> pStorage,
+                  ContextHolder& contextHolder,
                   std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_FALSE(res);
         ASSERT_EQ(res.error(), storage::StorageError::create_directory_error);
-        onCreatedDirectory(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+        onCreatedDirectory(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
 
-    pStorage->createDirectories(driveKey, "tests", callback);
+    contextHolder.m_sandboxModification->createDirectories("tests", callback);
 }
 
 void onFileOpened(const DriveKey& driveKey,
                   GlobalEnvironment& environment,
-                  std::shared_ptr<Storage> pStorage,
+                  ContextHolder& contextHolder,
                   std::promise<void>& barrier, uint64_t fileID) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onFileClosed(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+        onFileClosed(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
 
-    pStorage->closeFile(driveKey, fileID, callback);
+    contextHolder.m_sandboxModification->closeFile(fileID, callback);
 }
 
 void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      GlobalEnvironment& environment,
-                                     std::shared_ptr<Storage> pStorage,
+                                     ContextHolder& contextHolder,
                                      std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onFileOpened(driveKey, environment, pStorage, barrier, *res); }, [] {}, environment, false, true);
+        onFileOpened(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
 
-    pStorage->openFile(driveKey, "tests", OpenFileMode::WRITE, callback);
+    contextHolder.m_sandboxModification->openFile("tests", OpenFileMode::WRITE, callback);
 }
 
 void onModificationsInitiated(const DriveKey& driveKey,
                               GlobalEnvironment& environment,
-                              std::shared_ptr<Storage> pStorage,
+                              ContextHolder& contextHolder,
                               std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onSandboxModificationsInitiated(driveKey, environment, pStorage, barrier); }, [] {}, environment, false, true);
+        contextHolder.m_sandboxModification = std::move(*res);
+        onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
 
-    pStorage->initiateSandboxModifications(driveKey, callback);
+    contextHolder.m_storageModification->initiateSandboxModification(callback);
 }
 
 TEST(Storage, CreateDirSameNameWithFile) {
@@ -176,20 +177,29 @@ TEST(Storage, CreateDirSameNameWithFile) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
+    ContextHolder contextHolder;
+
     DriveKey driveKey{{3}};
 
     threadManager.execute([&] {
         std::string address = "127.0.0.1:5551";
 
-        auto pStorage = std::make_shared<RPCStorage>(environment, address);
+        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, address);
 
-        auto [_, callback] = createAsyncQuery<void>([=, &environment, &p](auto&& res) {
+        auto [_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>([=, &environment, &contextHolder, &p](auto&& res) {
             ASSERT_TRUE(res);
-            onModificationsInitiated(driveKey, environment, pStorage, p); }, [] {}, environment, false, true);
-        pStorage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
+            contextHolder.m_storageModification = std::move(*res);
+            onModificationsInitiated(driveKey, environment, contextHolder, p); }, [] {}, environment, false, true);
+        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
     });
 
     barrier.get();
+
+    threadManager.execute([&] {
+        contextHolder.m_sandboxModification.reset();
+        contextHolder.m_storageModification.reset();
+        contextHolder.m_storage.reset();
+    });
 
     threadManager.stop();
 }

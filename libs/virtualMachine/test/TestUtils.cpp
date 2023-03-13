@@ -42,4 +42,15 @@ void StorageObserverMock::actualModificationId(const DriveKey& key,
                                                std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) {
 
 }
+
+void StorageObserverMock::synchronizeStorage(const DriveKey& driveKey, const ModificationId& modificationId,
+                                             const StorageHash& storageHash,
+                                             std::shared_ptr<AsyncQueryCallback<void>> callback) {
+
+}
+
+void StorageObserverMock::initiateModifications(const DriveKey& driveKey, const ModificationId& modificationId,
+                                                std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::StorageModification>>> callback) {
+
+}
 }

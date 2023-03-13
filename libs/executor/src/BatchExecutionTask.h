@@ -24,6 +24,9 @@ private:
 
     std::shared_ptr<AsyncQuery> m_storageQuery;
 
+    std::shared_ptr<storage::StorageModification> m_storageModification;
+    std::shared_ptr<storage::SandboxModification> m_sandboxModification;
+
     std::optional<SuccessfulEndBatchExecutionOpinion> m_successfulEndBatchOpinion;
     std::optional<UnsuccessfulEndBatchExecutionOpinion> m_unsuccessfulEndBatchOpinion;
 
@@ -80,9 +83,10 @@ public:
 
 private:
 
-    void onInitiatedStorageModifications();
+    void onInitiatedStorageModifications(std::unique_ptr<storage::StorageModification>&& storageModification);
 
-    void onInitiatedSandboxModification(std::shared_ptr<CallRequest>&& callRequest);
+    void onInitiatedSandboxModification(std::unique_ptr<storage::SandboxModification>&& sandboxModification,
+                                        std::shared_ptr<CallRequest>&& callRequest);
 
     void onAppliedSandboxStorageModifications(std::shared_ptr<CallRequest>&& callRequest,
                                               vm::CallExecutionResult&& executionResult,

@@ -25,14 +25,17 @@ private:
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
 
-   const std::string m_pathPrefix;
+    std::shared_ptr<storage::SandboxModification> m_sandboxModification;
 
-   std::shared_ptr<AsyncQuery> m_asyncQuery;
+    const std::string m_pathPrefix;
+
+    std::shared_ptr<AsyncQuery> m_asyncQuery;
 
 public:
     StorageQueryHandler(const CallId& callId,
                         ExecutorEnvironment& executorEnvironment,
                         ContractEnvironment& contractEnvironment,
+                        std::shared_ptr<storage::SandboxModification> sandboxModification,
                         const std::string& pathPrefix = "");
 
     void openFile(const std::string& path, const std::string& mode,

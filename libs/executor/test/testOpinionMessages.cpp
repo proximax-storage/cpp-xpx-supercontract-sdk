@@ -143,7 +143,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
     proofOfExecutionBuilder.addToProof(results.back().m_proofOfExecutionSecretData);
     expectedOpinion.m_proof = proofOfExecutionBuilder.buildActualProof();
 
-    storage::StorageState expectedState = storageMock->m_state;
+    storage::StorageState expectedState = storageMock->m_info->m_state;
     for (uint i = 0; i < callsNumber; i++) {
         expectedState = nextState(expectedState);
     }

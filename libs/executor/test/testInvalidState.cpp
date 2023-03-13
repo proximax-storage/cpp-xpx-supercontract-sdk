@@ -172,8 +172,8 @@ TEST(BatchExecutionTask, InvalidState) {
     expectedInfo.m_signatures.emplace_back();
     expectedInfo.m_proofs.emplace_back();
 
-    storage::StorageState initialState = storageMock->m_state;
-    storage::StorageState expectedState = storageMock->m_state;
+    storage::StorageState initialState = storageMock->m_info->m_state;
+    storage::StorageState expectedState = storageMock->m_info->m_state;
     for (uint i = 0; i < callsNumber; i++) {
         expectedState = nextState(expectedState);
     }
@@ -283,8 +283,8 @@ TEST(BatchExecutionTask, InvalidState) {
     {
         std::promise<void> storageStatePromise;
         threadManager.execute([&] {
-            ASSERT_EQ(storageMock->m_state.m_storageHash, initialState.m_storageHash);
-            ASSERT_EQ(storageMock->m_historicBatches.size(), 0);
+            ASSERT_EQ(storageMock->m_info->m_state.m_storageHash, initialState.m_storageHash);
+            ASSERT_EQ(storageMock->m_info->m_historicBatches.size(), 0);
             storageStatePromise.set_value();
         });
         ASSERT_EQ(std::future_status::ready, storageStatePromise.get_future().wait_for(std::chrono::seconds(5)));

@@ -13,10 +13,10 @@
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::StorageObserver> storageContentManager,
+RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::Storage> storage,
                                      GlobalEnvironment& environment,
                                      const std::string& serverAddress)
-        : m_storageContentManager(std::move(storageContentManager)), m_environment(environment), m_stub(
+        : m_storage(std::move(storage)), m_environment(environment), m_stub(
         supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
                 serverAddress, grpc::InsecureChannelCredentials()))), m_completionQueueThread([this] {
     waitForRPCResponse();
@@ -49,9 +49,9 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
                                 request.m_callId,
                                 static_cast<uint8_t>(request.m_callLevel));
 
-    auto storageContentManager = m_storageContentManager.lock();
+    auto storage = m_storage.lock();
 
-    if (!storageContentManager) {
+    if (!storage) {
         callback->postReply(
                 tl::unexpected<std::error_code>(storage::make_error_code(storage::StorageError::storage_unavailable)));
         return;
@@ -75,7 +75,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
             },
             m_environment, true, true);
     m_pathQueries[request.m_callId] = std::move(pathQuery);
-    storageContentManager->absolutePath(DriveKey(), request.m_file, pathCallback);
+    storage->absolutePath(DriveKey(), request.m_file, pathCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,

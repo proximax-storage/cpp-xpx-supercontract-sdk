@@ -13,7 +13,6 @@
 #include <executor/ExecutorInfo.h>
 #include <executor/Requests.h>
 #include <messenger/Messenger.h>
-#include <storage/StorageModifier.h>
 #include "ContractMessageEventHandler.h"
 #include "ContractBlockchainEventHandler.h"
 #include <virtualMachine/VirtualMachine.h>
