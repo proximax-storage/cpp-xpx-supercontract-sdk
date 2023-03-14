@@ -203,8 +203,8 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
 
         auto pRequest = std::make_shared<CallRequest>(
                 CallId{callIdH.array()},
-                m_contractEnvironment.contractConfig().automaticExecutionFile(),
-                m_contractEnvironment.contractConfig().automaticExecutionFunction(),
+                m_contractEnvironment.contractConfig().automaticExecutionsFile(),
+                m_contractEnvironment.contractConfig().automaticExecutionsFunction(),
                 m_contractEnvironment.automaticExecutionsSCLimit(),
                 m_contractEnvironment.automaticExecutionsSMLimit(),
                 CallerKey(),

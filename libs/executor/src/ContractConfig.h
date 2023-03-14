@@ -20,8 +20,8 @@ private:
 
     int m_unsuccessfulApprovalDelayMs = 2 * 60 * 60 * 1000; // 2 hours
 
-    std::string                         m_automaticExecutionFile = "default.wasm";
-    std::string                         m_automaticExecutionFunction = "main";
+    std::string                         m_automaticExecutionsFile = "default.wasm";
+    std::string                         m_automaticExecutionsFunction = "main";
 
 public:
 
@@ -35,20 +35,20 @@ public:
         m_unsuccessfulApprovalDelayMs = unsuccessfulApprovalDelayMs;
     }
 
-    const std::string& automaticExecutionFile() const {
-        return m_automaticExecutionFile;
+    const std::string& automaticExecutionsFile() const {
+        return m_automaticExecutionsFile;
     }
 
-    void setAutomaticExecutionFile( const std::string& automaticExecutionFile ) {
-        m_automaticExecutionFile = automaticExecutionFile;
+    void setAutomaticExecutionsFile( const std::string& automaticExecutionsFile ) {
+        m_automaticExecutionsFile = automaticExecutionsFile;
     }
 
-    const std::string& automaticExecutionFunction() const {
-        return m_automaticExecutionFunction;
+    const std::string& automaticExecutionsFunction() const {
+        return m_automaticExecutionsFunction;
     }
 
-    void setAutomaticExecutionFunction( const std::string& automaticExecutionFunction ) {
-        m_automaticExecutionFunction = automaticExecutionFunction;
+    void setAutomaticExecutionsFunction( const std::string& automaticExecutionsFunction ) {
+        m_automaticExecutionsFunction = automaticExecutionsFunction;
     }
 
 };

@@ -17,7 +17,7 @@ ManualCallBlockchainQueryHandler::ManualCallBlockchainQueryHandler(
         uint64_t downloadPayment,
         const TransactionHash& transactionHash,
         std::vector<ServicePayment> servicePayments)
-        : AutomaticExecutionBlockchainQueryHandler(executorEnvironment, contractEnvironment, callerKey, blockHeight,
+        : AutomaticExecutionsBlockchainQueryHandler(executorEnvironment, contractEnvironment, callerKey, blockHeight,
                                                    executionPayment, downloadPayment)
           , m_transactionHash(transactionHash)
           , m_servicePayments(std::move(servicePayments)) {}
