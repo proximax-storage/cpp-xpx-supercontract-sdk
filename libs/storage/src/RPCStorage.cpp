@@ -4,7 +4,7 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "AbsolutePathTag.h"
+#include "FileInfoTag.h"
 #include "FilesystemTag.h"
 #include "InitiateModificationsTag.h"
 #include "SynchronizeStorageTag.h"
@@ -67,19 +67,19 @@ void RPCStorage::initiateModifications(const DriveKey& driveKey,
     tag->start();
 }
 
-void RPCStorage::absolutePath(const DriveKey& driveKey,
-                              const std::string& relativePath,
-                              std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+void RPCStorage::fileInfo(const DriveKey& driveKey,
+                          const std::string& relativePath,
+                          std::shared_ptr<AsyncQueryCallback<FileInfo>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    storageServer::AbsolutePathRequest request;
+    storageServer::FileInfoRequest request;
     request.set_drive_key(driveKey.toString());
     request.set_relative_path(relativePath);
-    auto* tag = new AbsolutePathTag(m_environment,
-                                    std::move(request),
-                                    m_pRPCClient->stub(),
-                                    m_pRPCClient->completionQueue(),
-                                    std::move(callback));
+    auto* tag = new FileInfoTag(m_environment,
+                                std::move(request),
+                                m_pRPCClient->stub(),
+                                m_pRPCClient->completionQueue(),
+                                std::move(callback));
     m_pRPCClient->addTag(tag);
     tag->start();
 }

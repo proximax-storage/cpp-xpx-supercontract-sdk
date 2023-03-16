@@ -57,7 +57,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
                           std::promise<void>& promise,
                           std::unique_ptr<Folder> folder) {
     FilesystemSimpleTraversal traversal([=, &environment, &contextHolder, &promise](const std::string& path) {
-        auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &contextHolder, &promise](auto&& res) { ASSERT_TRUE(res); }, [] {}, environment, false, true);
+        auto [_, callback] = createAsyncQuery<FileInfo>([=, &environment, &contextHolder, &promise](auto&& res) { ASSERT_TRUE(res); }, [] {}, environment, false, true);
         contextHolder.m_storage->absolutePath(driveKey, "test.txt", callback);
     });
     traversal.acceptFolder(*folder);

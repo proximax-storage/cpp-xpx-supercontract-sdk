@@ -23,4 +23,9 @@ struct SandboxModificationDigest {
     int64_t m_stateSizeDelta;
 };
 
+struct FileInfo {
+    std::string m_absolutePath;
+    uint64_t m_size;
+};
+
 }

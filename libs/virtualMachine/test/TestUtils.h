@@ -34,8 +34,8 @@ private:
 
 class StorageObserverMock: public storage::Storage {
 public:
-    void absolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                         std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+    void fileInfo(const DriveKey& driveKey, const std::string& relativePath,
+                  std::shared_ptr<AsyncQueryCallback<storage::FileInfo>> callback) override;
 
     void
     actualModificationId(const DriveKey& key, std::shared_ptr<AsyncQueryCallback<ModificationId>> callback) override;

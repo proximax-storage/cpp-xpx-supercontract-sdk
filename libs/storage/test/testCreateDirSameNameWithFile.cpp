@@ -70,7 +70,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
     // move::createDirAndMove::FilesystemSimpleTraversal traversal([=, &environment, &promise](const std::string& path) {
     //     auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &promise](auto&& res) {
     //         ASSERT_TRUE(res);
-    //         onPathReceived(driveKey, environment, contextHolder, promise, *res); }, [] {}, environment, false, true);
+    //         onPathReceived(driveKey, environment, contextHolder, promise, res->m_absolutePath); }, [] {}, environment, false, true);
     //     contextHolder->absolutePath(driveKey, "tests/test.txt", callback);
     // },
     //                                                             true);

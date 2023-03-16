@@ -42,7 +42,7 @@ private:
     grpc::CompletionQueue m_completionQueue;
     std::thread m_completionQueueThread;
 
-    std::map<CallId, std::shared_ptr<AsyncQuery>> m_pathQueries;
+    std::map<CallId, std::shared_ptr<AsyncQuery>> m_fileInfoQueries;
 
     std::map<CallId, CallContext> m_callContexts;
 
@@ -62,12 +62,12 @@ public:
 
 private:
     void
-    onReceivedCallAbsolutePath(CallRequest&& request,
-                               expected<std::string>&& callAbsolutePath,
-                               std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
-                               std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-                               std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
-                               std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
+    onReceivedCallFileInfo(CallRequest&& request,
+                           expected<storage::FileInfo>&& fileInfo,
+                           std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
+                           std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                           std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
+                           std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback);
 
     void waitForRPCResponse();
 

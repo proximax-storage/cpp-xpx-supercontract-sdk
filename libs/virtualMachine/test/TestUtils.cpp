@@ -28,9 +28,9 @@ logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
     return config;
 }
 
-void StorageObserverMock::absolutePath(const DriveKey& driveKey, const std::string& relativePath,
-                                                std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
-    callback->postReply(std::filesystem::absolute(relativePath));
+void StorageObserverMock::fileInfo(const DriveKey& driveKey, const std::string& relativePath,
+                                   std::shared_ptr<AsyncQueryCallback<storage::FileInfo>> callback) {
+    callback->postReply(storage::FileInfo{std::filesystem::absolute(relativePath), 0});
 }
 
 void StorageObserverMock::filesystem(const DriveKey& key,

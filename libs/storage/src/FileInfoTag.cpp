@@ -4,27 +4,27 @@
 *** license that can be found in the LICENSE file.
 */
 
-#include "AbsolutePathTag.h"
+#include "FileInfoTag.h"
 #include "storage/StorageErrorCode.h"
 
 namespace sirius::contract::storage {
 
-AbsolutePathTag::AbsolutePathTag(
+FileInfoTag::FileInfoTag(
         GlobalEnvironment &environment,
-        storageServer::AbsolutePathRequest &&request,
+        storageServer::FileInfoRequest &&request,
         storageServer::StorageServer::Stub &stub,
         grpc::CompletionQueue &completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::string>> &&callback)
+        std::shared_ptr<AsyncQueryCallback<FileInfo>> &&callback)
         : m_environment(environment), m_request(std::move(request)),
-          m_responseReader(stub.PrepareAsyncGetAbsolutePath(&m_context, m_request, &completionQueue)),
+          m_responseReader(stub.PrepareAsyncGetFileInfo(&m_context, m_request, &completionQueue)),
           m_callback(std::move(callback)) {}
 
-void AbsolutePathTag::start() {
+void FileInfoTag::start() {
     m_responseReader->StartCall();
     m_responseReader->Finish(&m_response, &m_status, this);
 }
 
-void AbsolutePathTag::process(bool ok) {
+void FileInfoTag::process(bool ok) {
 
     ASSERT(!isSingleThread(), m_environment.logger())
 
@@ -38,11 +38,11 @@ void AbsolutePathTag::process(bool ok) {
         auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory));
         m_callback->postReply(error);
     } else {
-        m_callback->postReply(m_response.absolute_path());
+        m_callback->postReply(FileInfo{m_response.absolute_path(), m_response.size()});
     }
 }
 
-void AbsolutePathTag::cancel() {
+void FileInfoTag::cancel() {
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_context.TryCancel();

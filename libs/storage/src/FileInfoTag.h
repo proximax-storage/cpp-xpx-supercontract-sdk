@@ -16,32 +16,32 @@
 namespace sirius::contract::storage {
 
 
-class AbsolutePathTag
+class FileInfoTag
         : private SingleThread, public RPCTag {
 
 private:
 
     GlobalEnvironment& m_environment;
 
-    storageServer::AbsolutePathRequest m_request;
-    storageServer::AbsolutePathResponse m_response;
+    storageServer::FileInfoRequest m_request;
+    storageServer::FileInfoResponse m_response;
 
     grpc::ClientContext m_context;
     std::unique_ptr<
             grpc::ClientAsyncResponseReader<
-                    storageServer::AbsolutePathResponse>> m_responseReader;
+                    storageServer::FileInfoResponse>> m_responseReader;
 
     grpc::Status m_status;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<FileInfo>> m_callback;
 
 public:
 
-    AbsolutePathTag(GlobalEnvironment& environment,
-                    storageServer::AbsolutePathRequest&& request,
+    FileInfoTag(GlobalEnvironment& environment,
+                    storageServer::FileInfoRequest&& request,
                     storageServer::StorageServer::Stub& stub,
                     grpc::CompletionQueue& completionQueue,
-                    std::shared_ptr<AsyncQueryCallback<std::string>>&& callback);
+                    std::shared_ptr<AsyncQueryCallback<FileInfo>>&& callback);
 
     void start();
 

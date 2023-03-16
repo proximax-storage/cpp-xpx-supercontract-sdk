@@ -26,7 +26,7 @@ RPCVirtualMachine::~RPCVirtualMachine() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_pathQueries.clear();
+    m_fileInfoQueries.clear();
 
     m_callContexts.clear();
 
@@ -57,12 +57,12 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
         return;
     }
 
-    auto[pathQuery, pathCallback] = createAsyncQuery<std::string>(
+    auto[fileInfoQuery, fileInfoCallback] = createAsyncQuery<storage::FileInfo>(
             [=, this, request = request, internetQueryHandler = std::move(
                     internetQueryHandler), blockchainQueryHandler = std::move(
                     blockchainQueryHandler), storageQueryHandler = std::move(storageQueryHandler)](
                     auto&& callAbsolutePath) mutable -> void {
-                onReceivedCallAbsolutePath(std::move(request),
+                onReceivedCallFileInfo(std::move(request),
                                            std::forward<decltype(callAbsolutePath)>(callAbsolutePath),
                                            std::move(internetQueryHandler),
                                            std::move(blockchainQueryHandler),
@@ -74,16 +74,16 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
                         tl::unexpected<std::error_code>(make_error_code(VirtualMachineError::vm_unavailable)));
             },
             m_environment, true, true);
-    m_pathQueries[request.m_callId] = std::move(pathQuery);
-    storage->absolutePath(DriveKey(), request.m_file, pathCallback);
+    m_fileInfoQueries[request.m_callId] = std::move(fileInfoQuery);
+    storage->fileInfo(DriveKey(), request.m_file, fileInfoCallback);
 }
 
-void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
-                                                   expected<std::string>&& callAbsolutePath,
-                                                   std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
-                                                   std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
-                                                   std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
-                                                   std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback) {
+void RPCVirtualMachine::onReceivedCallFileInfo(CallRequest&& request,
+                                               expected<storage::FileInfo>&& fileInfo,
+                                               std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
+                                               std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
+                                               std::weak_ptr<VirtualMachineStorageQueryHandler> storageQueryHandler,
+                                               std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>&& callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -91,10 +91,10 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
 
     ASSERT(!m_callContexts.contains(callId), m_environment.logger())
 
-    m_pathQueries.erase(request.m_callId);
+    m_fileInfoQueries.erase(request.m_callId);
 
-    if (!callAbsolutePath) {
-        if (callAbsolutePath.error() == std::errc::no_such_file_or_directory) {
+    if (!fileInfo) {
+        if (fileInfo.error() == std::errc::no_such_file_or_directory) {
             CallExecutionResult executionResult;
             executionResult.m_success = false;
             executionResult.m_return = 0;
@@ -103,12 +103,12 @@ void RPCVirtualMachine::onReceivedCallAbsolutePath(CallRequest&& request,
             executionResult.m_proofOfExecutionSecretData = request.m_proofOfExecutionPrefix;
             callback->postReply(executionResult);
         } else {
-            callback->postReply(tl::unexpected(callAbsolutePath.error()));
+            callback->postReply(tl::unexpected(fileInfo.error()));
         }
         return;
     }
 
-    request.m_file = *callAbsolutePath;
+    request.m_file = fileInfo->m_absolutePath;
 
     auto[vmQuery, vmCallback] = createAsyncQuery<CallExecutionResult>(
             [=, this](expected<CallExecutionResult>&& result) {

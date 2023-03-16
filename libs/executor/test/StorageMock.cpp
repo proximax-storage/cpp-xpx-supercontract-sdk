@@ -33,9 +33,9 @@ StorageMock::initiateModifications(const DriveKey& driveKey,
     callback->postReply(std::make_unique<StorageModificationMock>(m_info));
 }
 
-void StorageMock::absolutePath(const DriveKey& key, const std::string& relativePath,
-                               std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
-    callback->postReply(std::filesystem::absolute(relativePath));
+void StorageMock::fileInfo(const DriveKey& key, const std::string& relativePath,
+                           std::shared_ptr<AsyncQueryCallback<storage::FileInfo>> callback) {
+    callback->postReply(storage::FileInfo{std::filesystem::absolute(relativePath), 0});
 }
 
 void
