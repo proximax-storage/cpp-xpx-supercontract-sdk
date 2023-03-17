@@ -78,7 +78,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
         auto [_, callback] = createAsyncQuery<FileInfo>([=, &environment, &contextHolder, &promise](auto&& res) {
             ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, contextHolder, promise, res->m_absolutePath); }, [] {}, environment, false, true);
-        contextHolder.m_storage->absolutePath(driveKey, "test.txt", callback);
+        contextHolder.m_storage->fileInfo(driveKey, "test.txt", callback);
     });
     traversal.acceptFolder(*folder);
 }

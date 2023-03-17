@@ -83,7 +83,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
             ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, contextHolder, promise, res->m_absolutePath);
         }, [] {}, environment, false, true);
-        contextHolder.m_storage->absolutePath(driveKey, "moved/test.txt", callback);
+        contextHolder.m_storage->fileInfo(driveKey, "moved/test.txt", callback);
     });
     traversal.acceptFolder(*folder);
     promise.set_value();

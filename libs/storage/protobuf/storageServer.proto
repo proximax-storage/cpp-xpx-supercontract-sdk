@@ -143,8 +143,9 @@ message FileInfoRequest {
 }
 
 message FileInfoResponse {
-  string absolute_path = 1;
-  uint64 size = 2;
+  bool exists = 1;
+  string absolute_path = 2;
+  uint64 size = 3;
 }
 
 message ActualModificationIdRequest {

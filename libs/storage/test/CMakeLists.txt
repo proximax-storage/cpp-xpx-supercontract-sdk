@@ -6,8 +6,6 @@ find_package(GTest REQUIRED)
 
 file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
-set(TEST_FILES testWriteWithWrongID.cpp)
-
 add_executable(storage-tests ${TEST_FILES} TestUtils.cpp)
 enable_testing()
 add_test(storage-tests "./test")

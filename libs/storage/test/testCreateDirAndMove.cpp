@@ -89,7 +89,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
         auto [_, callback] = createAsyncQuery<FileInfo>([=, &environment, &contextHolder, &promise](auto&& res) {
             ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, contextHolder, promise, res->m_absolutePath); }, [] {}, environment, false, true);
-        contextHolder.m_storage->absolutePath(driveKey, "tests/test.txt", callback);
+        contextHolder.m_storage->fileInfo(driveKey, "tests/test.txt", callback);
     },
                                         true);
     traversal.acceptFolder(*folder);
@@ -230,7 +230,7 @@ void onFilesystemReceived(const DriveKey& driveKey,
         auto [_, callback] = createAsyncQuery<FileInfo>([=, &environment, &contextHolder, &promise](auto&& res) {
             ASSERT_TRUE(res);
             onPathReceived(driveKey, environment, contextHolder, promise, res->m_absolutePath); }, [] {}, environment, false, true);
-        contextHolder.m_storage->absolutePath(driveKey, "moved/test.txt", callback);
+        contextHolder.m_storage->fileInfo(driveKey, "moved/test.txt", callback);
     },
                                         false);
     traversal.acceptFolder(*folder);

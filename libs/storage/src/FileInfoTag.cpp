@@ -34,7 +34,7 @@ void FileInfoTag::process(bool ok) {
         m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
         auto error = tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable));
         m_callback->postReply(error);
-    } else if (m_response.absolute_path().empty()) {
+    } else if (!m_response.exists()) {
         auto error = tl::unexpected<std::error_code>(std::make_error_code(std::errc::no_such_file_or_directory));
         m_callback->postReply(error);
     } else {
