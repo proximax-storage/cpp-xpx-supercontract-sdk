@@ -36,8 +36,8 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
                 ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,
                 *this,
                 m_executorEnvironment)) {
-    m_contractConfig.setAutomaticExecutionFile(addContractRequest.m_automaticExecutionsFileName);
-    m_contractConfig.setAutomaticExecutionFunction(addContractRequest.m_automaticExecutionsFunctionName);
+    m_contractConfig.setAutomaticExecutionsFile(addContractRequest.m_automaticExecutionsFileName);
+    m_contractConfig.setAutomaticExecutionsFunction(addContractRequest.m_automaticExecutionsFunctionName);
     runInitializeContractTask(std::move(addContractRequest));
 }
 

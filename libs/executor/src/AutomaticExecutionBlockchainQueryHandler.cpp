@@ -8,7 +8,7 @@
 
 namespace sirius::contract {
 
-AutomaticExecutionBlockchainQueryHandler::AutomaticExecutionBlockchainQueryHandler(
+AutomaticExecutionsBlockchainQueryHandler::AutomaticExecutionsBlockchainQueryHandler(
         ExecutorEnvironment& executorEnvironment,
         ContractEnvironment& contractEnvironment,
         const CallerKey& callerKey,
@@ -20,7 +20,7 @@ AutomaticExecutionBlockchainQueryHandler::AutomaticExecutionBlockchainQueryHandl
           , m_executionPayment(executionPayment)
           , m_downloadPayment(downloadPayment) {}
 
-void AutomaticExecutionBlockchainQueryHandler::callerPublicKey(
+void AutomaticExecutionsBlockchainQueryHandler::callerPublicKey(
         std::shared_ptr<AsyncQueryCallback<CallerKey>> callback) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -28,21 +28,21 @@ void AutomaticExecutionBlockchainQueryHandler::callerPublicKey(
     callback->postReply(m_caller);
 }
 
-void AutomaticExecutionBlockchainQueryHandler::downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+void AutomaticExecutionsBlockchainQueryHandler::downloadPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     callback->postReply(m_downloadPayment);
 }
 
 void
-AutomaticExecutionBlockchainQueryHandler::executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+AutomaticExecutionsBlockchainQueryHandler::executionPayment(std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     callback->postReply(m_executionPayment);
 }
 
 void
-AutomaticExecutionBlockchainQueryHandler::contractPublicKey(std::shared_ptr<AsyncQueryCallback<ContractKey>> callback) {
+AutomaticExecutionsBlockchainQueryHandler::contractPublicKey(std::shared_ptr<AsyncQueryCallback<ContractKey>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     callback->postReply(m_contractEnvironment.contractKey());

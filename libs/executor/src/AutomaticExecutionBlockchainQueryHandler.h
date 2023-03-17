@@ -10,7 +10,7 @@
 
 namespace sirius::contract {
 
-class AutomaticExecutionBlockchainQueryHandler : public AutorunBlockchainQueryHandler {
+class AutomaticExecutionsBlockchainQueryHandler : public AutorunBlockchainQueryHandler {
 
 protected:
 
@@ -21,7 +21,7 @@ protected:
 
 public:
 
-    AutomaticExecutionBlockchainQueryHandler(ExecutorEnvironment& executorEnvironment,
+    AutomaticExecutionsBlockchainQueryHandler(ExecutorEnvironment& executorEnvironment,
                                              ContractEnvironment& contractEnvironment,
                                              const CallerKey& callerKey,
                                              uint64_t blockHeight,

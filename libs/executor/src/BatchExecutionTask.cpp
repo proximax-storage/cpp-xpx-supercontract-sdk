@@ -239,7 +239,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                 callRequest->callId().array(),
                 callRequest->servicePayments());
     } else {
-        blockchainQueryHandler = std::make_shared<AutomaticExecutionBlockchainQueryHandler>(
+        blockchainQueryHandler = std::make_shared<AutomaticExecutionsBlockchainQueryHandler>(
                 m_executorEnvironment,
                 m_contractEnvironment,
                 callRequest->callerKey(),

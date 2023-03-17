@@ -10,7 +10,7 @@
 
 namespace sirius::contract {
 
-class ManualCallBlockchainQueryHandler : public AutomaticExecutionBlockchainQueryHandler {
+class ManualCallBlockchainQueryHandler : public AutomaticExecutionsBlockchainQueryHandler {
 
 private:
 
