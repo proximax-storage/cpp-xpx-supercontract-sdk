@@ -10,15 +10,20 @@
 #include "storage/Storage.h"
 #include <supercontract/ServiceBuilder.h>
 
+#include <map>
+
 namespace sirius::contract::vm {
 
 class VirtualMachineBuilder : public ServiceBuilder<VirtualMachine> {
 
 protected:
 
-    std::weak_ptr<storage::Storage> m_storageContentObserver;
+    std::map<CallRequest::CallLevel, uint64_t> m_maxExecutableSizes;
+    std::weak_ptr<storage::Storage> m_storage;
 
 public:
+
+    void setMaxExecutableSizes(const std::map<CallRequest::CallLevel, uint64_t> maxExecutableSizes);
 
     void setStorage(std::weak_ptr<storage::Storage>);
 

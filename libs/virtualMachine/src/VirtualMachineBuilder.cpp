@@ -8,8 +8,12 @@
 
 namespace sirius::contract::vm {
 
+void VirtualMachineBuilder::setMaxExecutableSizes(const std::map<CallRequest::CallLevel, uint64_t> maxExecutableSizes) {
+    m_maxExecutableSizes = maxExecutableSizes;
+}
+
 void VirtualMachineBuilder::setStorage(std::weak_ptr<storage::Storage> storage) {
-    m_storageContentObserver = std::move(storage);
+    m_storage = std::move(storage);
 }
 
 }

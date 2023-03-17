@@ -33,7 +33,9 @@ private:
         CallContext& operator=(CallContext&& other) noexcept = default;
     };
 
-    std::weak_ptr<storage::Storage> m_storage;
+    const std::weak_ptr<storage::Storage> m_storage;
+
+    const std::map<CallRequest::CallLevel, uint64_t> m_maxExecutableSizes;
 
     GlobalEnvironment& m_environment;
 
@@ -48,9 +50,10 @@ private:
 
 public:
     RPCVirtualMachine(
-        std::weak_ptr<storage::Storage> storage,
+        std::weak_ptr<storage::Storage>&& storage,
         GlobalEnvironment& environment,
-        const std::string& serverAddress);
+        const std::string& serverAddress,
+        std::map<CallRequest::CallLevel, uint64_t>&& maxExecutableSizes = {});
 
     ~RPCVirtualMachine() override;
 
@@ -72,6 +75,8 @@ private:
     void waitForRPCResponse();
 
     void onCallExecuted(const CallId&);
+
+    uint64_t maxExecutableSize(CallRequest::CallLevel callLevel);
 };
 
 } // namespace sirius::contract::vm

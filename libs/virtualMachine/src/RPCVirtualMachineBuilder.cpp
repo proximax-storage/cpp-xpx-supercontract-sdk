@@ -14,7 +14,8 @@ RPCVirtualMachineBuilder::RPCVirtualMachineBuilder(
         : m_address(address) {}
 
 std::shared_ptr<VirtualMachine> RPCVirtualMachineBuilder::build(GlobalEnvironment& environment) {
-    return std::make_shared<RPCVirtualMachine>(m_storageContentObserver, environment, m_address);
+    return std::make_shared<RPCVirtualMachine>(std::move(m_storage), environment, m_address,
+                                               std::move(m_maxExecutableSizes));
 }
 
 }

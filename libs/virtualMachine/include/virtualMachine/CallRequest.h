@@ -8,6 +8,7 @@
 
 #include <cstdint>
 #include <blockchain/AggregatedTransaction.h>
+#include "CallRequest.h"
 
 namespace sirius::contract::vm {
 

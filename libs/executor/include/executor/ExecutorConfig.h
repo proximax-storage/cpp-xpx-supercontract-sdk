@@ -26,6 +26,11 @@ private:
     std::string             m_autorunFile = "autorun.wasm";
     std::string             m_autorunFunction = "main";
 
+    // TODO Consider other default values
+    uint64_t                m_maxAutorunExecutableSize = 5U * 1024U * 1024U;
+    uint64_t                m_maxAutomaticExecutableSize = 5U * 1024U * 1024U;
+    uint64_t                m_maxManualExecutableSize = 5U * 1024U * 1024U;
+
     std::string             m_storagePathPrefix = "SC_DATA";
 
     int                     m_serviceUnavailableTimeoutMs = 5000;
@@ -172,6 +177,30 @@ public:
 
     void setStoragePathPrefix(const std::string& storagePathPrefix) {
         m_storagePathPrefix = storagePathPrefix;
+    }
+
+    uint64_t maxAutorunExecutableSize() const {
+        return m_maxAutorunExecutableSize;
+    }
+
+    void setMaxAutorunExecutableSize(uint64_t maxAutorunExecutableSize) {
+        m_maxAutorunExecutableSize = maxAutorunExecutableSize;
+    }
+
+    uint64_t maxAutomaticExecutableSize() const {
+        return m_maxAutomaticExecutableSize;
+    }
+
+    void setMaxAutomaticExecutableSize(uint64_t maxAutomaticExecutableSize) {
+        m_maxAutomaticExecutableSize = maxAutomaticExecutableSize;
+    }
+
+    uint64_t maxManualExecutableSize() const {
+        return m_maxManualExecutableSize;
+    }
+
+    void setMaxManualExecutableSize(uint64_t maxManualExecutableSize) {
+        m_maxManualExecutableSize = maxManualExecutableSize;
     }
 };
 

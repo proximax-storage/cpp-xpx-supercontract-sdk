@@ -51,6 +51,11 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
 
         m_blockchain = std::make_shared<blockchain::CachedBlockchain>(*this, blockchainBuilder->build(*this));
 
+        std::map<vm::CallRequest::CallLevel, uint64_t> maxExecutableSizes;
+        maxExecutableSizes[vm::CallRequest::CallLevel::AUTORUN] = m_config.maxAutorunExecutableSize();
+        maxExecutableSizes[vm::CallRequest::CallLevel::AUTOMATIC] = m_config.maxAutomaticExecutableSize();
+        maxExecutableSizes[vm::CallRequest::CallLevel::MANUAL] = m_config.maxManualExecutableSize();
+        vmBuilder->setMaxExecutableSizes(maxExecutableSizes);
         vmBuilder->setStorage(m_storage);
         m_virtualMachine = vmBuilder->build(*this);
 

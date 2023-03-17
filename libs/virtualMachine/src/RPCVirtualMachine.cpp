@@ -13,12 +13,17 @@
 
 namespace sirius::contract::vm {
 
-RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::Storage> storage,
+RPCVirtualMachine::RPCVirtualMachine(std::weak_ptr<storage::Storage>&& storage,
                                      GlobalEnvironment& environment,
-                                     const std::string& serverAddress)
-        : m_storage(std::move(storage)), m_environment(environment), m_stub(
+                                     const std::string& serverAddress,
+                                     std::map<CallRequest::CallLevel, uint64_t>&& maxExecutableSizes)
+        : m_storage(std::move(storage))
+        , m_maxExecutableSizes(std::move(maxExecutableSizes))
+        , m_environment(environment)
+        , m_stub(
         supercontractserver::SupercontractServer::NewStub(grpc::CreateChannel(
-                serverAddress, grpc::InsecureChannelCredentials()))), m_completionQueueThread([this] {
+                serverAddress, grpc::InsecureChannelCredentials())))
+        , m_completionQueueThread([this] {
     waitForRPCResponse();
 }) {}
 
@@ -94,7 +99,8 @@ void RPCVirtualMachine::onReceivedCallFileInfo(CallRequest&& request,
     m_fileInfoQueries.erase(request.m_callId);
 
     if (!fileInfo) {
-        if (fileInfo.error() == std::errc::no_such_file_or_directory) {
+        if (fileInfo.error() == std::errc::no_such_file_or_directory ||
+            fileInfo->m_size > maxExecutableSize(request.m_callLevel)) {
             CallExecutionResult executionResult;
             executionResult.m_success = false;
             executionResult.m_return = 0;
@@ -154,6 +160,15 @@ void RPCVirtualMachine::onCallExecuted(const CallId& callId) {
     ASSERT(it != m_callContexts.end(), m_environment.logger())
 
     m_callContexts.erase(it);
+}
+
+uint64_t RPCVirtualMachine::maxExecutableSize(CallRequest::CallLevel callLevel) {
+    auto it = m_maxExecutableSizes.find(callLevel);
+    if (it == m_maxExecutableSizes.end()) {
+        return UINT64_MAX;
+    }
+
+    return it->second;
 }
 
 RPCVirtualMachine::CallContext::CallContext(ExecuteCallRPCRequest&& request, std::shared_ptr<AsyncQuery> query)
