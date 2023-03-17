@@ -250,7 +250,10 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
 
     m_callExecutionManager = std::make_unique<CallExecutionManager>(
             m_executorEnvironment,
-            std::make_shared<InternetQueryHandler>(callRequest->callId(), m_executorEnvironment, m_contractEnvironment),
+            std::make_shared<InternetQueryHandler>(callRequest->callId(),
+                                                   m_executorEnvironment.executorConfig().maxInternetConnections(),
+                                                   m_executorEnvironment,
+                                                   m_contractEnvironment),
             blockchainQueryHandler,
             std::make_shared<StorageQueryHandler>(callRequest->callId(),
                                                   m_executorEnvironment,

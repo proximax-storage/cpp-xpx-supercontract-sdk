@@ -10,11 +10,13 @@
 namespace sirius::contract {
 
 InternetQueryHandler::InternetQueryHandler(const CallId& callId,
+                                           uint16_t maxConnections,
                                            ExecutorEnvironment& executorEnvironment,
                                            ContractEnvironment& contractEnvironment)
         : m_executorEnvironment(executorEnvironment)
           , m_contractEnvironment(contractEnvironment)
-          , m_callId(callId) {}
+          , m_callId(callId)
+          , m_maxConnections(maxConnections) {}
 
 void InternetQueryHandler::openConnection(const std::string& url,
                                           bool softRevocationMode,
@@ -23,6 +25,13 @@ void InternetQueryHandler::openConnection(const std::string& url,
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(!m_asyncQuery, m_executorEnvironment.logger())
+
+    if (m_internetConnections.size() >= m_maxConnections) {
+        callback->postReply(
+                tl::unexpected<std::error_code>(
+                        internet::make_error_code(internet::InternetError::connections_limit_reached)));
+        return;
+    }
 
     auto urlDescription = parseURL(url);
 

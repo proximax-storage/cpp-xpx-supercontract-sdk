@@ -25,6 +25,8 @@ private:
 
     const CallId m_callId;
 
+    uint16_t m_maxConnections;
+
     std::shared_ptr<AsyncQuery> m_asyncQuery;
 
     uint64_t totalConnectionsCreated = 0;
@@ -32,6 +34,7 @@ private:
 
 public:
     InternetQueryHandler(const CallId& callId,
+                         uint16_t maxConnections,
                          ExecutorEnvironment& executorEnvironment,
                          ContractEnvironment& contractEnvironment);
 

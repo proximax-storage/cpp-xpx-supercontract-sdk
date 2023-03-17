@@ -12,6 +12,7 @@ namespace sirius::contract::internet {
 
 enum class InternetError {
     internet_unavailable = 1,
+    connections_limit_reached,
     incorrect_query,
     invalid_url_error,
     invalid_resource_error,

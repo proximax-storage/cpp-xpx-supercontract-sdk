@@ -115,7 +115,9 @@ TEST(Supercontract, Storage) {
                 26 * 1024,
                 vm::CallRequest::CallLevel::MANUAL, 0);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
+                                                                 executorConfig.maxInternetConnections(),
+                                                                 environment,
                                                                  contractEnvironmentMock);
         storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
                                                                environment,
@@ -260,7 +262,9 @@ TEST(Supercontract, Iterator) {
                 26 * 1024,
                 vm::CallRequest::CallLevel::MANUAL, 0);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
+                                                                 executorConfig.maxInternetConnections(),
+                                                                 environment,
                                                                  contractEnvironmentMock);
         storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
                                                                environment,
@@ -405,7 +409,9 @@ TEST(Supercontract, FaultyStorage) {
                 26 * 1024,
                 vm::CallRequest::CallLevel::MANUAL, 0);
 
-        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId, environment,
+        internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
+                                                                 executorConfig.maxInternetConnections(),
+                                                                 environment,
                                                                  contractEnvironmentMock);
         storageHandler = std::make_shared<StorageQueryHandler>(callRequest.m_callId,
                                                                environment,

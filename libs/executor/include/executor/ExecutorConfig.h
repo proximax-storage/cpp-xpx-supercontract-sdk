@@ -39,6 +39,7 @@ private:
     int                     m_internetConnectionTimeoutMilliseconds = 10000;
     int                     m_ocspQueryTimerMilliseconds = 500;
     int                     m_ocspQueryMaxEfforts = 60;
+    int                     m_maxInternetConnections = 5;
 
     int                     m_shareOpinionTimeoutMs = 2 * 1000 * 60;
 
@@ -201,6 +202,14 @@ public:
 
     void setMaxManualExecutableSize(uint64_t maxManualExecutableSize) {
         m_maxManualExecutableSize = maxManualExecutableSize;
+    }
+
+    int maxInternetConnections() const {
+        return m_maxInternetConnections;
+    }
+
+    void setMaxInternetConnections(int maxInternetConnections) {
+        m_maxInternetConnections = maxInternetConnections;
     }
 };
 
