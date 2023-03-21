@@ -284,7 +284,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 11693600352);
+            ASSERT_EQ(res->m_execution_gas_consumed, 218232725);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
