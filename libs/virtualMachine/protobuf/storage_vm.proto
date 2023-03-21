@@ -112,7 +112,8 @@ message NextDirIterator {
 
 message NextDirIteratorReturn {
   string name = 1;
-  bool success = 2;
+  uint32 depth = 2;
+  bool success = 3;
 }
 
 message RemoveDirIterator {

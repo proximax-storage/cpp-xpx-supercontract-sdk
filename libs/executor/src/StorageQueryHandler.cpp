@@ -151,19 +151,18 @@ StorageQueryHandler::hasNextIterator(uint64_t iteratorID, std::shared_ptr<AsyncQ
 }
 
 void StorageQueryHandler::nextIterator(uint64_t iteratorID,
-                                            std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+                                            std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(!m_asyncQuery, m_executorEnvironment.logger())
 
-    auto[asyncQuery, storageCallback] = createAsyncQuery<std::string>([=, this](auto&& res) {
+    auto[asyncQuery, storageCallback] = createAsyncQuery<storage::DirectoryIteratorInfo>([=, this](auto&& res) {
         m_asyncQuery.reset();
         if (!res) {
             callback->postReply(
                     tl::make_unexpected(storage::make_error_code(storage::StorageError::iterator_next_error)));
         } else {
-            std::vector<uint8_t> reply(res->begin(), res->end());
-            callback->postReply(std::move(reply));
+            callback->postReply(std::move(*res));
         }
     }, [=] {
         callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::iterator_next_error)));

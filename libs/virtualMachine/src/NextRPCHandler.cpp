@@ -28,14 +28,14 @@ void NextRPCHandler::process() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<std::vector<uint8_t>>([this](auto&& result) { onResult(result); }, [] {}, m_environment, true, true);
+    auto [query, callback] = createAsyncQuery<storage::DirectoryIteratorInfo>([this](auto&& result) { onResult(result); }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
 
     handler->nextIterator(m_request.identifier(), callback);
 }
 
-void NextRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {
+void NextRPCHandler::onResult(const expected<storage::DirectoryIteratorInfo>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -48,8 +48,8 @@ void NextRPCHandler::onResult(const expected<std::vector<uint8_t>>& res) {
 
     if (res.has_value()) {
         response.set_success(true);
-        std::string buffer(res->begin(), res->end());
-        response.set_name(std::move(buffer));
+        response.set_name(std::string(res->m_name.begin(), res->m_name.end()));
+        response.set_depth(res->m_depth);
     } else {
         response.set_success(false);
     }

@@ -300,7 +300,7 @@ void RPCSandboxModification::directoryIteratorHasNext(uint64_t id,
 }
 
 void RPCSandboxModification::directoryIteratorNext(uint64_t id,
-                                                   std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+                                                   std::shared_ptr<AsyncQueryCallback<DirectoryIteratorInfo>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     auto rpcClient = m_pRPCClient.lock();

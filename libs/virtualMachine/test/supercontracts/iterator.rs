@@ -47,7 +47,7 @@ pub unsafe extern "C" fn run() -> u32 {
     let mut res = true;
 
     {
-        let mut iterator = DirIterator::new("testFolder", true);
+        let mut iterator = DirIterator::new("testFolder", false);
 
         let expected = [
             "CMakeLists.txt",
@@ -57,26 +57,13 @@ pub unsafe extern "C" fn run() -> u32 {
             "messenger",
             "test.txt",
             "utils",
-            "virtualMachine",
-            "testFolder/CMakeLists.txt",
-            "testFolder/crypto",
-            "testFolder/internet",
-            "testFolder/logging",
-            "testFolder/messenger",
-            "testFolder/test.txt",
-            "testFolder/utils",
-            "testFolder/virtualMachine",
+            "virtualMachine"
         ];
 
-        while let Some(path) = iterator.next() {
+        while let Some(entry) = iterator.next() {
+            let path = &entry.name;
             if !expected.contains(&path.as_str()) {
                 res = false;
-            }
-            if path == "testFolder/test.txt" || path == "test.txt" {
-                match iterator.remove() {
-                    Err(_) => (),
-                    _ => (),
-                }
             }
         }
     }

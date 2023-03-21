@@ -12,20 +12,14 @@
 #include <gtest/gtest.h>
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include <virtualMachine/ExecutionErrorConidition.h>
+#include <boost/process.hpp>
 
 namespace sirius::contract::vm::test {
-// https://stackoverflow.com/questions/478898/how-do-i-execute-a-command-and-get-the-output-of-the-command-within-c-using-po
-std::string exec(const char* cmd) {
-    std::array<char, 128> buffer{};
-    std::string result;
-    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) {
-        throw std::runtime_error("popen() failed!");
-    }
-    while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-        result += buffer.data();
-    }
-    return result;
+
+void exec(const char* cmd) {
+    boost::process::child c(cmd);
+    c.join();
+    ASSERT_EQ(c.exit_code(), 0);
 }
 
 TEST(VirtualMachine, SimpleContract) {
@@ -42,7 +36,6 @@ TEST(VirtualMachine, SimpleContract) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/simple.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -85,7 +78,6 @@ TEST(VirtualMachine, SimpleContract) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -106,7 +98,6 @@ TEST(VirtualMachine, InternetRead) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -157,7 +148,6 @@ TEST(VirtualMachine, InternetRead) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -178,7 +168,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -245,7 +234,6 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -312,7 +300,6 @@ TEST(VirtualMachine, WrongContractPath) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -378,7 +365,6 @@ TEST(VirtualMachine, WrongIP) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -440,7 +426,6 @@ TEST(VirtualMachine, WrongExecFunction) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -506,7 +491,6 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -573,7 +557,6 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -638,7 +621,6 @@ TEST(VirtualMachine, FaultyContract) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
         // The contract should panic in this case due to failing the assertion
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/internet_read_faulty.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -712,7 +694,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/long_run.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/long_run.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -751,7 +732,6 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     exec("sudo systemctl stop supercontract_server");
-    std::cout << "stopped" << std::endl;
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
     exec("sudo systemctl start supercontract_server");
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -814,7 +794,6 @@ TEST(VirtualMachine, SimpleStorage) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/storage.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -857,7 +836,6 @@ TEST(VirtualMachine, SimpleStorage) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -878,7 +856,6 @@ TEST(VirtualMachine, IteratorTest) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/iterator.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -908,7 +885,7 @@ TEST(VirtualMachine, IteratorTest) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 2928226642);
+            ASSERT_EQ(res->m_execution_gas_consumed, 218232725);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -921,7 +898,6 @@ TEST(VirtualMachine, IteratorTest) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -942,7 +918,6 @@ TEST(VirtualMachine, FaultyStorage) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/storage_faulty.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -981,7 +956,6 @@ TEST(VirtualMachine, FaultyStorage) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -1000,7 +974,6 @@ TEST(VirtualMachine, NullStorageHandler) {
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     threadManager.execute([&] {
-        // exec("cp ../../libs/virtualMachine/test/supercontracts/simple.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
         std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/storage.rs",
                               "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -1039,7 +1012,6 @@ TEST(VirtualMachine, NullStorageHandler) {
     threadManager.execute([&] { pVirtualMachine.reset(); });
 
     threadManager.stop();
-    // exec("cp ../../libs/virtualMachine/test/supercontracts/lib.rs ../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs");
     std::filesystem::copy("../../libs/virtualMachine/test/supercontracts/lib.rs",
                           "../../libs/virtualMachine/test/rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }

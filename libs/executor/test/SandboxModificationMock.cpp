@@ -61,7 +61,7 @@ SandboxModificationMock::directoryIteratorHasNext(uint64_t id, std::shared_ptr<A
 }
 
 void
-SandboxModificationMock::directoryIteratorNext(uint64_t id, std::shared_ptr<AsyncQueryCallback<std::string>> callback) {
+SandboxModificationMock::directoryIteratorNext(uint64_t id, std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) {
 
 }
 

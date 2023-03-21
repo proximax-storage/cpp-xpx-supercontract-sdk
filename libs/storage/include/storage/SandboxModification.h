@@ -9,6 +9,7 @@
 #include <supercontract/AsyncQuery.h>
 
 #include "StorageRequests.h"
+#include "DirectoryIteratorInfo.h"
 
 namespace sirius::contract::storage {
 
@@ -50,7 +51,7 @@ public:
                                           std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
 
     virtual void directoryIteratorNext(uint64_t id,
-                                       std::shared_ptr<AsyncQueryCallback<std::string>> callback) = 0;
+                                       std::shared_ptr<AsyncQueryCallback<DirectoryIteratorInfo>> callback) = 0;
 
     virtual void directoryIteratorDestroy(uint64_t id,
                                           std::shared_ptr<AsyncQueryCallback<void>> callback) = 0;

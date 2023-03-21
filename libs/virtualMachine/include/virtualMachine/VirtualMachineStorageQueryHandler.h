@@ -10,6 +10,7 @@
 #include <storage/StorageErrorCode.h>
 #include <optional>
 #include <string>
+#include <storage/DirectoryIteratorInfo.h>
 
 namespace sirius::contract::vm {
 
@@ -63,7 +64,7 @@ public:
 
     virtual void nextIterator(
         uint64_t iteratorId,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+        std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) {
         callback->postReply(tl::unexpected<std::error_code>(storage::make_error_code(storage::StorageError::incorrect_query)));
     }
 

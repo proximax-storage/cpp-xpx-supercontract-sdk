@@ -14,7 +14,7 @@ DirectoryIteratorNextTag::DirectoryIteratorNextTag(
         storageServer::DirectoryIteratorNextRequest&& request,
         storageServer::StorageServer::Stub& stub,
         grpc::CompletionQueue& completionQueue,
-        std::shared_ptr<AsyncQueryCallback<std::string>>&& callback)
+        std::shared_ptr<AsyncQueryCallback<DirectoryIteratorInfo>>&& callback)
         : m_environment(environment), m_request(std::move(request)),
           m_responseReader(stub.PrepareAsyncDirectoryIteratorNext(&m_context, m_request, &completionQueue)),
           m_callback(std::move(callback)) {}
@@ -36,7 +36,10 @@ void DirectoryIteratorNextTag::process(bool ok) {
     } else if (!m_response.success()) {
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::iterator_next_error)));
     } else {
-        m_callback->postReply(m_response.name());
+        DirectoryIteratorInfo info;
+        info.m_name = m_response.name();
+        info.m_depth = m_response.depth();
+        m_callback->postReply(std::move(info));
     }
 }
 

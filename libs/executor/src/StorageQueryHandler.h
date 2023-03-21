@@ -56,7 +56,7 @@ public:
 
     void hasNextIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
-    void nextIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
+    void nextIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) override;
 
     void removeFileIterator(uint64_t iteratorID, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 

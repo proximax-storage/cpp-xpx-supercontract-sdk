@@ -267,7 +267,7 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        GlobalEnvironment& environment,
                        ContextHolder& contextHolder,
                        std::promise<void>& barrier, uint64_t id) {
-    auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &contextHolder, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<DirectoryIteratorInfo>([=, &environment, &contextHolder, &barrier](auto&& res) {
         if (!res) {
             ASSERT_EQ(res.error(), StorageError::iterator_next_error);
             flag = true;

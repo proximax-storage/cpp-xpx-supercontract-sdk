@@ -100,24 +100,23 @@ void MockStorageHandler::hasNextIterator(
     if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
-        if (m_iterator->path().string() == "testFolder/internet") {
-            callback->postReply(std::move(false));
+        if (m_iterator == end(m_iterator)) {
+            callback->postReply(false);
         } else {
-            m_iterator++;
-            callback->postReply(std::move(true));
+            callback->postReply(true);
         }
     }
 }
 
 void MockStorageHandler::nextIterator(
     uint64_t iteratorId,
-    std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) {
+    std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) {
     if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::iterator_next_error)));
     } else {
-        auto ret = m_iterator->path().string();
-        std::vector<uint8_t> name(ret.begin(), ret.end());
-        callback->postReply(std::move(name));
+        auto name = m_iterator->path().filename();
+        m_iterator++;
+        callback->postReply(storage::DirectoryIteratorInfo{name, 0});
     }
 }
 
@@ -140,7 +139,6 @@ void MockStorageHandler::destroyFSIterator(
     if (iteratorId != 231546131) {
         callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::destroy_iterator_error)));
     } else {
-        m_iterator.~directory_iterator();
         expected<void> res;
         callback->postReply(std::move(res));
     }
@@ -168,6 +166,7 @@ void MockStorageHandler::createDir(
         std::filesystem::create_directory(absolutePath);
         expected<void> res;
         callback->postReply(std::move(res));
+        return;
     }
     callback->postReply(tl::make_unexpected(make_error_code(sirius::contract::storage::StorageError::create_directory_error)));
 }

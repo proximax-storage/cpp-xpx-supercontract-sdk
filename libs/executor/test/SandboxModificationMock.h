@@ -45,7 +45,7 @@ public:
 
     void directoryIteratorHasNext(uint64_t id, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
-    void directoryIteratorNext(uint64_t id, std::shared_ptr<AsyncQueryCallback<std::string>> callback) override;
+    void directoryIteratorNext(uint64_t id, std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) override;
 
     void directoryIteratorDestroy(uint64_t id, std::shared_ptr<AsyncQueryCallback<void>> callback) override;
 

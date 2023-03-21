@@ -56,7 +56,7 @@ public:
 
     void nextIterator(
         uint64_t iteratorId,
-        std::shared_ptr<AsyncQueryCallback<std::vector<uint8_t>>> callback) override;
+        std::shared_ptr<AsyncQueryCallback<storage::DirectoryIteratorInfo>> callback) override;
 
     void removeFileIterator(
         uint64_t iteratorId,

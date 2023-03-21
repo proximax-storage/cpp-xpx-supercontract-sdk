@@ -11,6 +11,7 @@
 #include "supercontract/GlobalEnvironment.h"
 #include "supercontract/AsyncQuery.h"
 #include "storage/StorageRequests.h"
+#include "storage/DirectoryIteratorInfo.h"
 #include "storageServer.grpc.pb.h"
 
 namespace sirius::contract::storage {
@@ -33,7 +34,7 @@ private:
 
     grpc::Status m_status;
 
-    std::shared_ptr<AsyncQueryCallback<std::string>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<DirectoryIteratorInfo>> m_callback;
 
 public:
 
@@ -41,7 +42,7 @@ public:
                              storageServer::DirectoryIteratorNextRequest&& request,
                              storageServer::StorageServer::Stub& stub,
                              grpc::CompletionQueue& completionQueue,
-                             std::shared_ptr<AsyncQueryCallback<std::string>>&& callback);
+                             std::shared_ptr<AsyncQueryCallback<DirectoryIteratorInfo>>&& callback);
 
     void start();
 

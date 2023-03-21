@@ -33,7 +33,7 @@ public:
     void process() override;
 
 private:
-    void onResult(const expected<std::vector<uint8_t>>& result);
+    void onResult(const expected<storage::DirectoryIteratorInfo>& result);
 };
 
 } // namespace sirius::contract::vm

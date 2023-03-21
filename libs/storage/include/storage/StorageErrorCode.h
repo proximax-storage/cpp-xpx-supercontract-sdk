@@ -28,7 +28,8 @@ enum class StorageError {
     destroy_iterator_error,
     path_exist_error,
     is_file_error,
-    synchronization_error
+    synchronization_error,
+    file_size_error
 };
 
 class StorageErrorCategory

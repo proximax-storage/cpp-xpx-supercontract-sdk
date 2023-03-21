@@ -383,9 +383,9 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        GlobalEnvironment& environment,
                        ContextHolder& contextHolder,
                        std::promise<void>& barrier, uint64_t id) {
-    auto [_, callback] = createAsyncQuery<std::string>([=, &environment, &contextHolder, &barrier](auto&& res) {
+    auto [_, callback] = createAsyncQuery<DirectoryIteratorInfo>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        auto filename = *res;
+        auto filename = std::move(res->m_name);
         ASSERT_TRUE(filename == expected[i++]);
         onIteratorCreated(driveKey, environment, contextHolder, barrier, id); }, [] {}, environment, false, true);
 
