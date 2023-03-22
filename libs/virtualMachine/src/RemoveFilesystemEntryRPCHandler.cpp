@@ -3,19 +3,19 @@
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
-#include "IsFileRPCHandler.h"
+#include "RemoveFilesystemEntryRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
-IsFileRPCHandler::IsFileRPCHandler(GlobalEnvironment& environment,
-                                   const supercontractserver::IsFile& request,
-                                   std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                                   std::shared_ptr<AsyncQueryCallback<supercontractserver::IsFileReturn>> callback)
+RemoveFilesystemEntryRPCHandler::RemoveFilesystemEntryRPCHandler(GlobalEnvironment& environment,
+                                           const supercontractserver::RemoveFsEntry& request,
+                                           std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
+                                           std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> callback)
     : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(std::move(callback)) {}
 
-void IsFileRPCHandler::process() {
+void RemoveFilesystemEntryRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -27,14 +27,14 @@ void IsFileRPCHandler::process() {
         return;
     }
 
-    auto [query, callback] = createAsyncQuery<bool>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
+    auto [query, callback] = createAsyncQuery<void>([this](auto&& res) { onResult(res); }, [] {}, m_environment, true, true);
 
     m_query = std::move(query);
 
-    handler->isFile(m_request.path(), callback);
+    handler->removeFsEntry(m_request.path(), callback);
 }
 
-void IsFileRPCHandler::onResult(const expected<bool>& res) {
+void RemoveFilesystemEntryRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -43,14 +43,9 @@ void IsFileRPCHandler::onResult(const expected<bool>& res) {
         return;
     }
 
-    supercontractserver::IsFileReturn status;
+    supercontractserver::RemoveFsEntryReturn status;
 
-    if (res.has_value()) {
-        status.set_success(true);
-        status.set_is_file(*res);
-    } else {
-        status.set_success(false);
-    }
+    status.set_success(res.has_value());
 
     m_callback->postReply(std::move(status));
 }

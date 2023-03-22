@@ -60,7 +60,17 @@ message IsFile {
 }
 
 message IsFileReturn {
-  bool is_file = 1;
+  bool success = 1;
+  bool is_file = 2;
+}
+
+message FileSize {
+  string path = 1;
+}
+
+message FileSizeReturn {
+  bool success = 1;
+  uint64 file_size = 2;
 }
 
 message CreateDir {
@@ -71,12 +81,12 @@ message CreateDirReturn {
   bool success = 1;
 }
 
-message MoveFile {
+message MoveFsEntry {
   string old_path = 1;
   string new_path = 2;
 }
 
-message MoveFileReturn {
+message MoveFsEntryReturn {
   bool success = 1;
 }
 

@@ -40,7 +40,7 @@ public:
               storageServer::FileSizeRequest&& request,
               storageServer::StorageServer::Stub& stub,
               grpc::CompletionQueue& completionQueue,
-              std::shared_ptr<AsyncQueryCallback<bool>>&& callback);
+              std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback);
 
     void start();
 

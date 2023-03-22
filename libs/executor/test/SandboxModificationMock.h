@@ -57,6 +57,8 @@ public:
     void pathExist(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
 
     void isFile(const std::string& path, std::shared_ptr<AsyncQueryCallback<bool>> callback) override;
+
+    void fileSize(const std::string& path, std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) override;
 };
 
 }

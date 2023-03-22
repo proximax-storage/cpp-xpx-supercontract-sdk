@@ -295,4 +295,20 @@ std::string StorageQueryHandler::getPrefixedPath(const std::string& path) {
     return prefixedPath;
 }
 
+void StorageQueryHandler::fileSize(const std::string& path, std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    ASSERT(!m_asyncQuery, m_executorEnvironment.logger())
+
+    auto[asyncQuery, storageCallback] = createAsyncQuery<uint64_t>([=, this](auto&& res) {
+        m_asyncQuery.reset();
+        callback->postReply(std::forward<decltype(res)>(res));
+        }, [=] {
+        callback->postReply(tl::make_unexpected(storage::make_error_code(storage::StorageError::is_file_error)));
+        }, m_executorEnvironment, true, true);
+
+    m_asyncQuery = std::move(asyncQuery);
+    m_sandboxModification->fileSize(getPrefixedPath(path), storageCallback);
+}
+
 } // namespace sirius::contract

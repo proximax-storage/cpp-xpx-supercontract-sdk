@@ -92,6 +92,12 @@ public:
         callback->postReply(tl::unexpected<std::error_code>(storage::make_error_code(storage::StorageError::incorrect_query)));
     }
 
+    virtual void fileSize(
+            const std::string& path,
+            std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+        callback->postReply(tl::unexpected<std::error_code>(storage::make_error_code(storage::StorageError::incorrect_query)));
+    }
+
     virtual void createDir(
         const std::string& path,
         std::shared_ptr<AsyncQueryCallback<void>> callback) {

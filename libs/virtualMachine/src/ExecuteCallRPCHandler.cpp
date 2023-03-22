@@ -17,7 +17,8 @@
 #include "FlushRPCHandler.h"
 #include "HasNextRPCHandler.h"
 #include "IsFileRPCHandler.h"
-#include "MoveFileRPCHandler.h"
+#include "FileSizeRPCHandler.h"
+#include "MoveFilesystemEntryRPCHandler.h"
 #include "NextRPCHandler.h"
 #include "OpenConnectionRPCHandler.h"
 #include "OpenFileRPCHandler.h"
@@ -25,7 +26,7 @@
 #include "ReadConnectionRPCHandler.h"
 #include "ReadFileRPCHandler.h"
 #include "RemoveFileIteratorRPCHandler.h"
-#include "RemoveFileRPCHandler.h"
+#include "RemoveFilesystemEntryRPCHandler.h"
 #include "WriteFileRPCHandler.h"
 #include "GetBlockHeightRPCHandler.h"
 #include "GetBlockHashRPCHandler.h"
@@ -254,12 +255,16 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
             processIsFile(response->is_file());
             break;
         }
+        case supercontractserver::Response::kFileSize: {
+            processFileSize(response->file_size());
+            break;
+        }
         case supercontractserver::Response::kCreateDir: {
             processCreateDir(response->create_dir());
             break;
         }
-        case supercontractserver::Response::kMoveFile: {
-            processMoveFile(response->move_file());
+        case supercontractserver::Response::kMoveFilesystemEntry: {
+            processMoveFilesystemEntry(response->move_filesystem_entry());
             break;
         }
         case supercontractserver::Response::kRemoveFilesystemEntry: {
@@ -302,6 +307,7 @@ void ExecuteCallRPCHandler::onRead(expected<supercontractserver::Response>&& res
             ASSERT("Received unknown message from virtual machine", m_environment.logger());
             break;
         }
+
     }
 }
 
@@ -632,6 +638,38 @@ void ExecuteCallRPCHandler::processPathExist(const supercontractserver::PathExis
     m_responseHandler->process();
 }
 
+void ExecuteCallRPCHandler::processFileSize(const supercontractserver::FileSize& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::FileSizeReturn>(
+            [this](auto&& res) {
+                ASSERT(isSingleThread(), m_environment.logger())
+
+                ASSERT(!m_tagQuery, m_environment.logger())
+                ASSERT(m_responseHandler, m_environment.logger())
+
+                m_responseHandler.reset();
+
+                if (!res && res.error() == ExecutionError::storage_unavailable) {
+                    postResponse(tl::unexpected<std::error_code>(res.error()));
+                    return;
+                }
+
+                ASSERT(res, m_environment.logger())
+
+                auto* status = new supercontractserver::FileSizeReturn(std::move(*res));
+                supercontractserver::Request requestWrapper;
+                requestWrapper.set_allocated_file_size_return(status);
+                writeRequest(std::move(requestWrapper));
+                },
+                [] {}, m_environment, false, false);
+    m_responseHandler = std::make_unique<FileSizeRPCHandler>(
+            m_environment,
+            request,
+            m_storageQueryHandler,
+            callback);
+
+    m_responseHandler->process();
+}
+
 void ExecuteCallRPCHandler::processIsFile(const supercontractserver::IsFile& request) {
     auto[_, callback] = createAsyncQuery<supercontractserver::IsFileReturn>(
             [this](auto&& res) {
@@ -696,8 +734,8 @@ void ExecuteCallRPCHandler::processCreateDir(const supercontractserver::CreateDi
     m_responseHandler->process();
 }
 
-void ExecuteCallRPCHandler::processMoveFile(const supercontractserver::MoveFile& request) {
-    auto[_, callback] = createAsyncQuery<supercontractserver::MoveFileReturn>(
+void ExecuteCallRPCHandler::processMoveFilesystemEntry(const supercontractserver::MoveFsEntry& request) {
+    auto[_, callback] = createAsyncQuery<supercontractserver::MoveFsEntryReturn>(
             [this](auto&& res) {
                 ASSERT(isSingleThread(), m_environment.logger())
 
@@ -713,13 +751,13 @@ void ExecuteCallRPCHandler::processMoveFile(const supercontractserver::MoveFile&
 
                 ASSERT(res, m_environment.logger())
 
-                auto* status = new supercontractserver::MoveFileReturn(std::move(*res));
+                auto* status = new supercontractserver::MoveFsEntryReturn(std::move(*res));
                 supercontractserver::Request requestWrapper;
-                requestWrapper.set_allocated_move_file_return(status);
+                requestWrapper.set_allocated_move_filesystem_entry_return(status);
                 writeRequest(std::move(requestWrapper));
             },
             [] {}, m_environment, false, false);
-    m_responseHandler = std::make_unique<MoveFileRPCHandler>(
+    m_responseHandler = std::make_unique<MoveFilesystemEntryRPCHandler>(
             m_environment,
             request,
             m_storageQueryHandler,
@@ -751,7 +789,7 @@ void ExecuteCallRPCHandler::processRemoveFile(const supercontractserver::RemoveF
                 writeRequest(std::move(requestWrapper));
             },
             [] {}, m_environment, false, false);
-    m_responseHandler = std::make_unique<RemoveFileRPCHandler>(
+    m_responseHandler = std::make_unique<RemoveFilesystemEntryRPCHandler>(
             m_environment,
             request,
             m_storageQueryHandler,

@@ -67,6 +67,9 @@ public:
 
     virtual void isFile(const std::string& path,
                         std::shared_ptr<AsyncQueryCallback<bool>> callback) = 0;
+
+    virtual void fileSize(const std::string& path,
+                        std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) = 0;
 };
 
 }

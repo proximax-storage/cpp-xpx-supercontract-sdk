@@ -3,19 +3,19 @@
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
-#include "RemoveFileRPCHandler.h"
+#include "MoveFilesystemEntryRPCHandler.h"
 #include "virtualMachine/ExecutionErrorConidition.h"
 #include <storage/StorageErrorCode.h>
 
 namespace sirius::contract::vm {
 
-RemoveFileRPCHandler::RemoveFileRPCHandler(GlobalEnvironment& environment,
-                                           const supercontractserver::RemoveFsEntry& request,
-                                           std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                                           std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> callback)
+MoveFilesystemEntryRPCHandler::MoveFilesystemEntryRPCHandler(GlobalEnvironment& environment,
+                                       const supercontractserver::MoveFsEntry& request,
+                                       std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
+                                       std::shared_ptr<AsyncQueryCallback<supercontractserver::MoveFsEntryReturn>> callback)
     : m_environment(environment), m_request(request), m_handler(std::move(handler)), m_callback(std::move(callback)) {}
 
-void RemoveFileRPCHandler::process() {
+void MoveFilesystemEntryRPCHandler::process() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -31,10 +31,10 @@ void RemoveFileRPCHandler::process() {
 
     m_query = std::move(query);
 
-    handler->removeFsEntry(m_request.path(), callback);
+    handler->moveFile(m_request.old_path(), m_request.new_path(), callback);
 }
 
-void RemoveFileRPCHandler::onResult(const expected<void>& res) {
+void MoveFilesystemEntryRPCHandler::onResult(const expected<void>& res) {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -43,7 +43,7 @@ void RemoveFileRPCHandler::onResult(const expected<void>& res) {
         return;
     }
 
-    supercontractserver::RemoveFsEntryReturn status;
+    supercontractserver::MoveFsEntryReturn status;
 
     status.set_success(res.has_value());
 

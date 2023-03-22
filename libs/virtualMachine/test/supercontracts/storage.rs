@@ -33,13 +33,13 @@ pub unsafe extern "C" fn run() -> u32 {
 
     create_dir("move").unwrap();
 
-    move_file("test.txt", "move/moved.txt").unwrap();
+    move_filesystem_entry("test.txt", "move/moved.txt").unwrap();
 
     if !path_exists("move/moved.txt") {
         return 888;
     }
 
-    if !is_file("move/moved.txt") {
+    if !is_file("move/moved.txt").unwrap() {
         return 999;
     }
 

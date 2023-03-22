@@ -88,6 +88,11 @@ void SandboxModificationMock::isFile(const std::string& path, std::shared_ptr<As
 
 }
 
+void
+SandboxModificationMock::fileSize(const std::string& path, std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+
+}
+
 
 }
 

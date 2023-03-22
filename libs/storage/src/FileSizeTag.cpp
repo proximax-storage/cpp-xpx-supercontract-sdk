@@ -13,7 +13,7 @@ FileSizeTag::FileSizeTag(GlobalEnvironment& environment,
                      storageServer::FileSizeRequest&& request,
                      storageServer::StorageServer::Stub& stub,
                      grpc::CompletionQueue& completionQueue,
-                     std::shared_ptr<AsyncQueryCallback<bool>>&& callback)
+                     std::shared_ptr<AsyncQueryCallback<uint64_t>>&& callback)
     : m_environment(environment), m_request(std::move(request)),
       m_responseReader(stub.PrepareAsyncFileSize(&m_context, m_request, &completionQueue)),
       m_callback(std::move(callback)) {}
@@ -30,7 +30,7 @@ void FileSizeTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to file size: {}", m_status.error_message());
+        m_environment.logger().warn("Failed to obtain file size: {}", m_status.error_message());
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
     } else if (!m_response.success()) {
         m_callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));

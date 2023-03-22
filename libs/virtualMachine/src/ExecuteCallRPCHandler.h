@@ -93,9 +93,11 @@ private:
 
     void processIsFile(const supercontractserver::IsFile&);
 
+    void processFileSize(const supercontractserver::FileSize&);
+
     void processCreateDir(const supercontractserver::CreateDir&);
 
-    void processMoveFile(const supercontractserver::MoveFile&);
+    void processMoveFilesystemEntry(const supercontractserver::MoveFsEntry&);
 
     void processRemoveFile(const supercontractserver::RemoveFsEntry&);
 

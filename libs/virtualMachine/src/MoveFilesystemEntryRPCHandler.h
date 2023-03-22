@@ -14,21 +14,21 @@
 
 namespace sirius::contract::vm {
 
-class MoveFileRPCHandler
+class MoveFilesystemEntryRPCHandler
     : public RPCResponseHandler,
       private SingleThread {
 
     GlobalEnvironment& m_environment;
-    supercontractserver::MoveFile m_request;
+    supercontractserver::MoveFsEntry m_request;
     std::weak_ptr<VirtualMachineStorageQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<supercontractserver::MoveFileReturn>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::MoveFsEntryReturn>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
-    MoveFileRPCHandler(GlobalEnvironment& environment,
-                       const supercontractserver::MoveFile& request,
+    MoveFilesystemEntryRPCHandler(GlobalEnvironment& environment,
+                       const supercontractserver::MoveFsEntry& request,
                        std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                       std::shared_ptr<AsyncQueryCallback<supercontractserver::MoveFileReturn>> callback);
+                       std::shared_ptr<AsyncQueryCallback<supercontractserver::MoveFsEntryReturn>> callback);
 
     void process() override;
 

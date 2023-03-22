@@ -13,6 +13,7 @@
 #include "DirectoryIteratorNextTag.h"
 #include "FlushFileTag.h"
 #include "IsFileTag.h"
+#include "FileSizeTag.h"
 #include "MoveFilesystemEntryTag.h"
 #include "OpenFileTag.h"
 #include "PathExistTag.h"
@@ -255,6 +256,27 @@ void RPCSandboxModification::isFile(const std::string& path,
     tag->start();
 }
 
+void RPCSandboxModification::fileSize(const std::string& path, std::shared_ptr<AsyncQueryCallback<uint64_t>> callback) {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    auto rpcClient = m_pRPCClient.lock();
+    if (!rpcClient) {
+        callback->postReply(tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable)));
+        return;
+    }
+
+    storageServer::FileSizeRequest request;
+    request.set_drive_key(m_driveKey.toString());
+    request.set_path(path);
+    auto* tag = new FileSizeTag(m_environment,
+                              std::move(request),
+                              rpcClient->stub(),
+                              rpcClient->completionQueue(),
+                              std::move(callback));
+    rpcClient->addTag(tag);
+    tag->start();
+}
+
 void RPCSandboxModification::pathExist(const std::string& path,
                                        std::shared_ptr<AsyncQueryCallback<bool>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
@@ -364,6 +386,5 @@ void RPCSandboxModification::applySandboxModification(bool success,
     rpcClient->addTag(tag);
     tag->start();
 }
-
 
 }

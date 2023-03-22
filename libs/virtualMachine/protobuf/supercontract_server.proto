@@ -90,7 +90,7 @@ message Request {
     PathExistReturn path_exist_return = 18;
     IsFileReturn is_file_return = 19;
     CreateDirReturn create_dir_return = 20;
-    MoveFileReturn move_file_return = 21;
+    MoveFsEntryReturn move_filesystem_entry_return = 21;
     RemoveFsEntryReturn remove_filesystem_entry_return = 22;
     OpenConnectionReturn open_connection_return = 23;
     ReadConnectionStreamReturn read_connection_stream_return = 24;
@@ -100,6 +100,7 @@ message Request {
     HasNextIteratorReturn has_next_iterator_return = 28;
     NextDirIteratorReturn next_dir_iterator_return = 29;
     RemoveDirIteratorReturn remove_dir_iterator_return = 30;
+    FileSizeReturn file_size_return = 31;
   }
 }
 
@@ -124,7 +125,7 @@ message Response {
     PathExist path_exist = 18;
     IsFile is_file = 19;
     CreateDir create_dir = 20;
-    MoveFile move_file = 21;
+    MoveFsEntry move_filesystem_entry = 21;
     RemoveFsEntry remove_filesystem_entry = 22;
     OpenConnection open_connection = 23;
     ReadConnectionStream read_connection_stream = 24;
@@ -134,5 +135,6 @@ message Response {
     HasNextIterator has_next_iterator = 28;
     NextDirIterator next_dir_iterator = 29;
     RemoveDirIterator remove_dir_iterator = 30;
+    FileSize file_size = 31;
   }
 }

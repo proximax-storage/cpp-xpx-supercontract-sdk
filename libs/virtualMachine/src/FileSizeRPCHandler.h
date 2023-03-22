@@ -14,26 +14,26 @@
 
 namespace sirius::contract::vm {
 
-class RemoveFileRPCHandler
+class FileSizeRPCHandler
     : public RPCResponseHandler,
       private SingleThread {
 
     GlobalEnvironment& m_environment;
-    supercontractserver::RemoveFsEntry m_request;
+    supercontractserver::FileSize m_request;
     std::weak_ptr<VirtualMachineStorageQueryHandler> m_handler;
-    std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<supercontractserver::FileSizeReturn>> m_callback;
     std::shared_ptr<AsyncQuery> m_query;
 
 public:
-    RemoveFileRPCHandler(GlobalEnvironment& environment,
-                         const supercontractserver::RemoveFsEntry& request,
-                         std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
-                         std::shared_ptr<AsyncQueryCallback<supercontractserver::RemoveFsEntryReturn>> callback);
+    FileSizeRPCHandler(GlobalEnvironment& environment,
+                     const supercontractserver::FileSize& request,
+                     std::weak_ptr<VirtualMachineStorageQueryHandler> handler,
+                     std::shared_ptr<AsyncQueryCallback<supercontractserver::FileSizeReturn>> callback);
 
     void process() override;
 
 private:
-    void onResult(const expected<void>& res);
+    void onResult(const expected<uint64_t>& res);
 };
 
 } // namespace sirius::contract::vm
