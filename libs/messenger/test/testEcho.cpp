@@ -10,6 +10,8 @@
 
 namespace sirius::contract::messenger::test {
 
+namespace {
+
 class MessageSubscriberImpl : public MessageSubscriber {
 public:
 
@@ -40,10 +42,25 @@ private:
     std::set<std::string> subscriptions() override {
         return m_tags;
     }
-
 };
 
+std::optional<std::string> messengerAddress() {
+#ifdef SIRIUS_CONTRACT_MESSENGER_ECHO_ADDRESS_TEST
+    return  SIRIUS_CONTRACT_MESSENGER_ECHO_ADDRESS_TEST;
+#else
+    return {};
+#endif
+};
+
+}
+
 TEST(Messenger, Echo) {
+
+    auto messengerAddressOpt = messengerAddress();
+
+    if (!messengerAddressOpt) {
+        GTEST_SKIP();
+    }
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -56,15 +73,13 @@ TEST(Messenger, Echo) {
     MessageSubscriberImpl messageSubscriber(p);
 
     threadManager.execute([&] {
-        std::string address = "127.0.0.1:5052";
-
         int r = 100;
 
         for (int i = 0; i < r; i++) {
             messageSubscriber.m_tags.insert("tag_" + std::to_string(i));
         }
 
-        messenger = std::make_shared<RPCMessenger>(environment, address, messageSubscriber);
+        messenger = std::make_shared<RPCMessenger>(environment, *messengerAddressOpt, messageSubscriber);
 
         for (int i = 0; i < 2 * r; i++) {
             std::string tag = "tag_" + std::to_string(i / 2);
@@ -77,7 +92,7 @@ TEST(Messenger, Echo) {
         }
     });
 
-    barrier.get();
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
 
     threadManager.execute([&] {
         messenger.reset();

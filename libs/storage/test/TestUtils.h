@@ -11,11 +11,13 @@
 
 namespace sirius::contract::storage::test {
 
-class GlobalEnvironmentMock: public GlobalEnvironment{
+std::optional<std::string> storageAddress();
+
+class GlobalEnvironmentMock : public GlobalEnvironment {
 
 private:
 
-    ThreadManager   m_threadManager;
+    ThreadManager m_threadManager;
     logging::Logger m_logger;
 
 public:

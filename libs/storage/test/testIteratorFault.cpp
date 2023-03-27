@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 namespace sirius::contract::storage::test {
 
 namespace {
-template <class T>
+template<class T>
 class FilesystemSimpleTraversal : public FilesystemTraversal {
 
 private:
@@ -31,7 +31,7 @@ private:
 
 public:
     FilesystemSimpleTraversal(T&& fileHandler, int phase, GlobalEnvironment& environment)
-        : m_fileHandler(std::move(fileHandler)), m_phase(phase), m_environment(environment) {}
+            : m_fileHandler(std::move(fileHandler)), m_phase(phase), m_environment(environment) {}
 
     void acceptFolder(const Folder& folder) override {
         // ASSERT_TRUE(rootFolderVisited);
@@ -61,7 +61,7 @@ public:
             }
         }
 
-        for (const auto& [name, entry] : children) {
+        for (const auto&[name, entry] : children) {
             entry->acceptTraversal(*this);
         }
     }
@@ -89,9 +89,10 @@ void onEvaluatedStorageHash(const DriveKey& driveKey,
                             ContextHolder& contextHolder,
                             std::promise<void>& barrier,
                             const StorageState& digest) {
-    auto [_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
+    auto[_, callback] = createAsyncQuery<void>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onAppliedStorageModifications(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
+        onAppliedStorageModifications(driveKey, environment, contextHolder, barrier);
+    }, [] {}, environment, false, true);
     contextHolder.m_storageModification->applyStorageModification(true, callback);
 }
 
@@ -100,9 +101,10 @@ void onAppliedSandboxModifications(const DriveKey& driveKey,
                                    ContextHolder& contextHolder,
                                    std::promise<void>& barrier,
                                    const SandboxModificationDigest& digest) {
-    auto [_, callback] = createAsyncQuery<StorageState>([=, &environment, &contextHolder, &barrier](auto&& res) {
+    auto[_, callback] = createAsyncQuery<StorageState>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_TRUE(res);
-        onEvaluatedStorageHash(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
+        onEvaluatedStorageHash(driveKey, environment, contextHolder, barrier, *res);
+    }, [] {}, environment, false, true);
 
     contextHolder.m_storageModification->evaluateStorageHash(callback);
 }
@@ -111,9 +113,11 @@ void onIteratorCreated(const DriveKey& driveKey,
                        GlobalEnvironment& environment,
                        ContextHolder& contextHolder,
                        std::promise<void>& barrier, uint64_t id) {
-    auto [_, callback] = createAsyncQuery<SandboxModificationDigest>([=, &environment, &contextHolder, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<SandboxModificationDigest>(
+            [=, &environment, &contextHolder, &barrier](auto&& res) {
+                ASSERT_TRUE(res);
+                onAppliedSandboxModifications(driveKey, environment, contextHolder, barrier, *res);
+            }, [] {}, environment, false, true);
 
     contextHolder.m_sandboxModification->applySandboxModification(true, callback);
 }
@@ -122,9 +126,10 @@ void onSandboxModificationsInitiated(const DriveKey& driveKey,
                                      GlobalEnvironment& environment,
                                      ContextHolder& contextHolder,
                                      std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<uint64_t>([=, &environment, &contextHolder, &barrier](auto&& res) {
+    auto[_, callback] = createAsyncQuery<uint64_t>([=, &environment, &contextHolder, &barrier](auto&& res) {
         ASSERT_EQ(res.error(), StorageError::create_iterator_error);
-        onIteratorCreated(driveKey, environment, contextHolder, barrier, *res); }, [] {}, environment, false, true);
+        onIteratorCreated(driveKey, environment, contextHolder, barrier, *res);
+    }, [] {}, environment, false, true);
 
     contextHolder.m_sandboxModification->directoryIteratorCreate("tests", true, callback);
 }
@@ -133,15 +138,23 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               GlobalEnvironment& environment,
                               ContextHolder& contextHolder,
                               std::promise<void>& barrier) {
-    auto [_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>([=, &environment, &contextHolder, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        contextHolder.m_sandboxModification = std::move(*res);
-        onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier); }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>(
+            [=, &environment, &contextHolder, &barrier](auto&& res) {
+                ASSERT_TRUE(res);
+                contextHolder.m_sandboxModification = std::move(*res);
+                onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
+            }, [] {}, environment, false, true);
 
     contextHolder.m_storageModification->initiateSandboxModification(callback);
 }
 
 TEST(Storage, IteratorFault) {
+
+    auto storageAddressOpt = storageAddress();
+
+    if (!storageAddressOpt) {
+        GTEST_SKIP();
+    }
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -154,18 +167,19 @@ TEST(Storage, IteratorFault) {
     auto barrierIterate = pIterate.get_future();
 
     threadManager.execute([&] {
-        std::string address = "127.0.0.1:5551";
+        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);
 
-        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, address);
-
-        auto [_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>([=, &environment, &contextHolder, &pIterate](auto&& res) {
-            ASSERT_TRUE(res);
-            contextHolder.m_storageModification = std::move(*res);
-            onModificationsInitiated(driveKey, environment, contextHolder, pIterate); }, [] {}, environment, false, true);
-        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
+        auto[_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>(
+                [=, &environment, &contextHolder, &pIterate](auto&& res) {
+                    ASSERT_TRUE(res);
+                    contextHolder.m_storageModification = std::move(*res);
+                    onModificationsInitiated(driveKey, environment, contextHolder, pIterate);
+                }, [] {}, environment, false, true);
+        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(),
+                                                       callback);
     });
 
-    barrierIterate.get();
+    ASSERT_EQ(std::future_status::ready, barrierIterate.wait_for(std::chrono::seconds(10)));
 
     threadManager.execute([&] {
         contextHolder.m_sandboxModification.reset();

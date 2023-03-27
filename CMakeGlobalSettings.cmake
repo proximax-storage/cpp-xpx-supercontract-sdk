@@ -238,3 +238,9 @@ function(supercontract_sdk_third_party_lib config)
         endif()
         include(${config})
 endfunction()
+
+function (supercontract_sdk_add_test executable)
+        add_test(NAME ${executable}
+                WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+                COMMAND ${executable})
+endfunction()

@@ -423,11 +423,14 @@ void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code
     sharedConnection->read(readCallback);
 }
 
-#ifdef __linux__
 /**
 Prerequisites: the user must be allowed to run sudo ip without password
 */
 TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
+
+#ifndef SIRIUS_CONTRACT_RUN_SUDO_TESTS
+    GTEST_SKIP();
+#endif
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
@@ -481,13 +484,15 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
     exec_http(ss.str().c_str());
     std::this_thread::sleep_for(std::chrono::milliseconds(20000)); // Give the OS some time to reboot the interface
 }
-#endif
 
-#ifdef __linux__
 /**
 Prerequisites: the user must be allowed to run sudo iptables and sudo ip6tables without password
 */
 TEST(TEST_NAME, ConnectWhenBlockingConnection) {
+
+#ifndef SIRIUS_CONTRACT_RUN_SUDO_TESTS
+    GTEST_SKIP();
+#endif
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
@@ -521,13 +526,15 @@ TEST(TEST_NAME, ConnectWhenBlockingConnection) {
     exec_http("sudo iptables -D INPUT 1");
     exec_http("sudo ip6tables -D INPUT 1");
 }
-#endif
 
-#ifdef __linux__
 /**
 Prerequisites: the user must be allowed to run sudo iptables without password
 */
 TEST(TEST_NAME, ReadWhenBlockingConnection) {
+
+#ifndef SIRIUS_CONTRACT_RUN_SUDO_TESTS
+    GTEST_SKIP();
+#endif
 
     GlobalEnvironmentImpl globalEnvironment;
     auto& threadManager = globalEnvironment.threadManager();
@@ -570,6 +577,5 @@ TEST(TEST_NAME, ReadWhenBlockingConnection) {
     threadManager.stop();
     exec_http("sudo iptables -D INPUT 1");
 }
-#endif
 
 }

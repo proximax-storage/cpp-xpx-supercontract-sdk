@@ -1,15 +1,14 @@
 cmake_minimum_required(VERSION 3.9)
-set(CMAKE_CXX_STANDARD 20)
 
-supercontract_sdk_library_target(executor)
+supercontract_sdk_library_target(sirius.contract.executor)
 
-target_include_directories(executor PUBLIC ../include ../../../include)
-target_include_directories(executor PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
-target_link_libraries(executor
+target_include_directories(sirius.contract.executor PUBLIC ../include ../../../include)
+target_include_directories(sirius.contract.executor PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
+target_link_libraries(sirius.contract.executor
         expected
         magic_enum
         cereal::cereal
-        contract-internet
-        contract-virtualMachine
-        contract-crypto
-        contract-messenger)
+        sirius.contract.internet
+        sirius.contract.vm
+        sirius.contract.crypto
+        sirius.contract.messenger)

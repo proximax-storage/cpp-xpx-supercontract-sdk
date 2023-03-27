@@ -1,6 +1,4 @@
-cmake_minimum_required(VERSION 3.2)
-
-set(CMAKE_CXX_STANDARD 20)
+cmake_minimum_required(VERSION 3.9)
 
 find_package(GTest REQUIRED)
 
@@ -8,9 +6,8 @@ file(GLOB TEST_FILES "${CMAKE_CURRENT_SOURCE_DIR}/test*.cpp")
 
 message(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_executable(crypto-tests ${TEST_FILES})
-enable_testing()
-add_test(crypto-tests "./test")
-target_link_libraries(crypto-tests contract-crypto Threads::Threads ${GTEST_LIBRARIES} gtest_main contract-utils)
-target_include_directories(crypto-tests PUBLIC ../include)
-target_include_directories(crypto-tests PUBLIC ../src)
+add_executable(sirius.contract.crypto.tests ${TEST_FILES})
+supercontract_sdk_add_test(sirius.contract.crypto.tests)
+target_link_libraries(sirius.contract.crypto.tests sirius.contract.crypto Threads::Threads ${GTEST_LIBRARIES} gtest_main sirius.contract.utils)
+target_include_directories(sirius.contract.crypto.tests PUBLIC ../include)
+target_include_directories(sirius.contract.crypto.tests PUBLIC ../src)

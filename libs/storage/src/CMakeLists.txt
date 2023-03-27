@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.9)
 
 find_package(OpenSSL REQUIRED)
 
-supercontract_sdk_library_target(contract-storage)
+supercontract_sdk_library_target(sirius.contract.storage)
 
 supercontract_sdk_proto(storageServer "")
-target_link_libraries(contract-storage storageServer_contract_grpc_proto)
+target_link_libraries(sirius.contract.storage storageServer_contract_grpc_proto)
 
-target_include_directories(contract-storage PUBLIC ../include ../../../include)
-target_include_directories(contract-storage PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
+target_include_directories(sirius.contract.storage PUBLIC ../include ../../../include)
+target_include_directories(sirius.contract.storage PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(contract-storage expected contract-logging contract-utils OpenSSL::SSL)
+target_link_libraries(sirius.contract.storage expected sirius.contract.logging sirius.contract.utils OpenSSL::SSL)

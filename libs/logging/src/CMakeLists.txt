@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.9)
-supercontract_sdk_library_target(contract-logging)
+supercontract_sdk_library_target(sirius.contract.logging)
 
 supercontract_sdk_third_party_lib(spdlog.cmake)
 
-target_include_directories(contract-logging PUBLIC ../include)
-target_link_libraries(contract-logging spdlog)
+target_include_directories(sirius.contract.logging PUBLIC ../include)
+target_link_libraries(sirius.contract.logging spdlog)

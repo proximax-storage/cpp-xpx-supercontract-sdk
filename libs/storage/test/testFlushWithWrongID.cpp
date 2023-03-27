@@ -90,10 +90,11 @@ void onAppliedStorageModifications(const DriveKey& driveKey,
                                    ContextHolder& contextHolder,
                                    std::promise<void>& promise) {
 
-    auto[_, callback] = createAsyncQuery<std::unique_ptr<Folder>>([=, &environment, &contextHolder, &promise](auto&& res) {
-        ASSERT_TRUE(res);
-        onFilesystemReceived(driveKey, environment, contextHolder, promise, std::move(*res));
-    }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<std::unique_ptr<Folder>>(
+            [=, &environment, &contextHolder, &promise](auto&& res) {
+                ASSERT_TRUE(res);
+                onFilesystemReceived(driveKey, environment, contextHolder, promise, std::move(*res));
+            }, [] {}, environment, false, true);
     contextHolder.m_storage->filesystem(driveKey, callback);
 }
 
@@ -191,16 +192,23 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               GlobalEnvironment& environment,
                               ContextHolder& contextHolder,
                               std::promise<void>& barrier) {
-    auto[_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>([=, &environment, &contextHolder, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        contextHolder.m_sandboxModification = std::move(*res);
-        onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
-    }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>(
+            [=, &environment, &contextHolder, &barrier](auto&& res) {
+                ASSERT_TRUE(res);
+                contextHolder.m_sandboxModification = std::move(*res);
+                onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
+            }, [] {}, environment, false, true);
 
     contextHolder.m_storageModification->initiateSandboxModification(callback);
 }
 
 TEST(Storage, FlushWithWrongID) {
+
+    auto storageAddressOpt = storageAddress();
+
+    if (!storageAddressOpt) {
+        GTEST_SKIP();
+    }
 
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
@@ -213,9 +221,7 @@ TEST(Storage, FlushWithWrongID) {
     DriveKey driveKey{{6}};
 
     threadManager.execute([&] {
-        std::string address = "127.0.0.1:5551";
-
-        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, address);
+        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);
 
         auto[_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>(
                 [=, &environment, &contextHolder, &p](auto&& res) {
@@ -227,7 +233,7 @@ TEST(Storage, FlushWithWrongID) {
                                                        callback);
     });
 
-    barrier.get();
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
 
     threadManager.execute([&] {
         contextHolder.m_sandboxModification.reset();

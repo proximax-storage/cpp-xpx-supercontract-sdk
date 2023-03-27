@@ -1,3 +1,6 @@
 [submodule "libs/virtualMachine/test/rust-xpx-supercontract-client-sdk"]
 	path = libs/virtualMachine/test/rust-xpx-supercontract-client-sdk
 	url = https://github.com/proximax-storage/rust-xpx-supercontract-client-sdk.git
+[submodule "test/rust-xpx-supercontract-client-sdk"]
+	path = test/rust-xpx-supercontract-client-sdk
+	url = https://github.com/proximax-storage/rust-xpx-supercontract-client-sdk

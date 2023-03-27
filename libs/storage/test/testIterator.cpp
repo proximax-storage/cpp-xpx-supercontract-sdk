@@ -162,11 +162,12 @@ void onModificationsInitiated(const DriveKey& driveKey,
                               GlobalEnvironment& environment,
                               ContextHolder& contextHolder,
                               std::promise<void>& barrier) {
-    auto[_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>([=, &environment, &contextHolder, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        contextHolder.m_sandboxModification = std::move(*res);
-        onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
-    }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<std::unique_ptr<SandboxModification>>(
+            [=, &environment, &contextHolder, &barrier](auto&& res) {
+                ASSERT_TRUE(res);
+                contextHolder.m_sandboxModification = std::move(*res);
+                onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
+            }, [] {}, environment, false, true);
 
     contextHolder.m_storageModification->initiateSandboxModification(callback);
 }
@@ -415,12 +416,13 @@ void onIteratorHasNext(const DriveKey& driveKey,
                        GlobalEnvironment& environment,
                        ContextHolder& contextHolder,
                        std::promise<void>& barrier, uint64_t id) {
-    auto[_, callback] = createAsyncQuery<DirectoryIteratorInfo>([=, &environment, &contextHolder, &barrier](auto&& res) {
-        ASSERT_TRUE(res);
-        auto filename = std::move(res->m_name);
-        ASSERT_TRUE(filename == expected[i++]);
-        onIteratorCreated(driveKey, environment, contextHolder, barrier, id);
-    }, [] {}, environment, false, true);
+    auto[_, callback] = createAsyncQuery<DirectoryIteratorInfo>(
+            [=, &environment, &contextHolder, &barrier](auto&& res) {
+                ASSERT_TRUE(res);
+                auto filename = std::move(res->m_name);
+                ASSERT_TRUE(filename == expected[i++]);
+                onIteratorCreated(driveKey, environment, contextHolder, barrier, id);
+            }, [] {}, environment, false, true);
 
     contextHolder.m_sandboxModification->directoryIteratorNext(id, callback);
 }
@@ -471,6 +473,12 @@ void onModificationsInitiated(const DriveKey& driveKey,
 
 TEST(Storage, Iterator) {
 
+    auto storageAddressOpt = storageAddress();
+
+    if (!storageAddressOpt) {
+        GTEST_SKIP();
+    }
+
     GlobalEnvironmentMock environment;
     auto& threadManager = environment.threadManager();
 
@@ -482,19 +490,19 @@ TEST(Storage, Iterator) {
     DriveKey driveKey{{7}};
 
     threadManager.execute([&] {
-        std::string address = "127.0.0.1:5551";
+        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);
 
-        contextHolder.m_storage = std::make_unique<RPCStorage>(environment, address);
-
-        auto[_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>([=, &environment, &contextHolder, &p](auto&& res) {
-            ASSERT_TRUE(res);
-            contextHolder.m_storageModification = std::move(*res);
-            createFolders::onModificationsInitiated(driveKey, environment, contextHolder, p);
-        }, [] {}, environment, false, true);
-        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
+        auto[_, callback] = createAsyncQuery<std::unique_ptr<StorageModification>>(
+                [=, &environment, &contextHolder, &p](auto&& res) {
+                    ASSERT_TRUE(res);
+                    contextHolder.m_storageModification = std::move(*res);
+                    createFolders::onModificationsInitiated(driveKey, environment, contextHolder, p);
+                }, [] {}, environment, false, true);
+        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(),
+                                                       callback);
     });
 
-    barrier.get();
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
 
     std::promise<void> pCreateFile;
     auto barrierCreateFile = pCreateFile.get_future();
@@ -506,10 +514,11 @@ TEST(Storage, Iterator) {
                     contextHolder.m_storageModification = std::move(*res);
                     createFiles::onModificationsInitiated(driveKey, environment, contextHolder, pCreateFile);
                 }, [] {}, environment, false, true);
-        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
+        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(),
+                                                       callback);
     });
 
-    barrierCreateFile.get();
+    ASSERT_EQ(std::future_status::ready, barrierCreateFile.wait_for(std::chrono::seconds(10)));
 
     std::promise<void> pIterate;
     auto barrierIterate = pIterate.get_future();
@@ -521,10 +530,11 @@ TEST(Storage, Iterator) {
                     contextHolder.m_storageModification = std::move(*res);
                     iterator::onModificationsInitiated(driveKey, environment, contextHolder, pIterate);
                 }, [] {}, environment, false, true);
-        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(), callback);
+        contextHolder.m_storage->initiateModifications(driveKey, utils::generateRandomByteValue<ModificationId>(),
+                                                       callback);
     });
 
-    barrierIterate.get();
+    ASSERT_EQ(std::future_status::ready, barrierIterate.wait_for(std::chrono::seconds(10)));
 
     threadManager.execute([&] {
         contextHolder.m_sandboxModification.reset();
