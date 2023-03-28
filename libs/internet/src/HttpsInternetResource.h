@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -14,8 +14,8 @@
 #include <boost/asio/strand.hpp>
 #include <boost/beast/ssl.hpp>
 
-#include "supercontract/GlobalEnvironment.h"
-#include "supercontract/SingleThread.h"
+#include <common/GlobalEnvironment.h>
+#include <common/SingleThread.h>
 #include <internet/InternetResource.h>
 #include <internet/HttpsRevokationMode.h>
 #include "OCSPVerifier.h"

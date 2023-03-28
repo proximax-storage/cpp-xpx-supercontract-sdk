@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -7,9 +7,9 @@
 #pragma once
 
 #include "RPCTag.h"
-#include "supercontract/SingleThread.h"
-#include "supercontract/GlobalEnvironment.h"
-#include "supercontract/AsyncQuery.h"
+#include <common/SingleThread.h>
+#include <common/GlobalEnvironment.h>
+#include <common/AsyncQuery.h>
 #include "storage/StorageRequests.h"
 #include "storage/DirectoryIteratorInfo.h"
 #include "storageServer.grpc.pb.h"

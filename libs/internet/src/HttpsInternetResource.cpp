@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -16,8 +16,8 @@
 #include "OCSPHandler.h"
 #include "OCSPVerifier.h"
 #include "utils/Random.h"
-#include "supercontract/Identifiers.h"
-#include "supercontract/AsyncQuery.h"
+#include <common/Identifiers.h>
+#include <common/AsyncQuery.h>
 #include <internet/InternetErrorCode.h>
 
 namespace sirius::contract::internet {

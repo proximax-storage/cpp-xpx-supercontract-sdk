@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -8,7 +8,7 @@
 
 #include <boost/beast/ssl.hpp>
 
-#include "supercontract/ThreadManager.h"
+#include <common/ThreadManager.h>
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
@@ -17,7 +17,7 @@
 #include <blockchain/Blockchain.h>
 #include "executor/Executor.h"
 #include "crypto/KeyPair.h"
-#include "supercontract/Identifiers.h"
+#include <common/Identifiers.h>
 
 #include "utils/Serializer.h"
 #include <magic_enum.hpp>

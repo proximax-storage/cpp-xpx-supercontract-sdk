@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -9,9 +9,9 @@
 #include "Block.h"
 
 #include <system_error>
-#include <supercontract/Identifiers.h>
-#include <supercontract/GlobalEnvironment.h>
-#include <supercontract/AsyncQuery.h>
+#include <common/Identifiers.h>
+#include <common/GlobalEnvironment.h>
+#include <common/AsyncQuery.h>
 
 namespace sirius::contract::blockchain {
 

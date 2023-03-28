@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -8,8 +8,8 @@
 
 #include <virtualMachine/VirtualMachineInternetQueryHandler.h>
 #include "supercontract_server.pb.h"
-#include "supercontract/AsyncQuery.h"
-#include "supercontract/SingleThread.h"
+#include <common/AsyncQuery.h>
+#include <common/SingleThread.h>
 #include "RPCResponseHandler.h"
 
 namespace sirius::contract::vm {

@@ -1,5 +1,5 @@
 /*
-*** Copyright 2021 ProximaX Limited. All rights reserved.
+*** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
 *** license that can be found in the LICENSE file.
 */
@@ -7,12 +7,12 @@
 #pragma once
 
 #include <storage/Storage.h>
-#include "supercontract/SingleThread.h"
+#include <common/SingleThread.h>
 #include "executor/Executor.h"
 #include "ExecutorEnvironment.h"
 #include "Contract.h"
 #include <blockchain/CachedBlockchain.h>
-#include <supercontract/ServiceBuilder.h>
+#include <common/ServiceBuilder.h>
 #include <messenger/MessengerBuilder.h>
 #include <virtualMachine/VirtualMachineBuilder.h>
 
