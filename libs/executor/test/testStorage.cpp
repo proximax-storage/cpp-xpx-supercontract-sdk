@@ -29,7 +29,7 @@ void exec(const char* cmd) {
 
 std::optional<std::string> storageAddress() {
 #ifdef SIRIUS_CONTRACT_STORAGE_ADDRESS_TEST
-    return  SIRIUS_CONTRACT_VM_ADDRESS_TEST;
+    return  SIRIUS_CONTRACT_STORAGE_ADDRESS_TEST;
 #else
     return {};
 #endif
@@ -156,7 +156,7 @@ TEST(Supercontract, Storage) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 4402853086);
+            ASSERT_EQ(res->m_execution_gas_consumed, 4402891458);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -310,7 +310,7 @@ TEST(Supercontract, Iterator) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 218232725);
+            ASSERT_EQ(res->m_execution_gas_consumed, 218275185);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
