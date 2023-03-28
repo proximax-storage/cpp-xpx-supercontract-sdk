@@ -181,7 +181,7 @@ TEST(Storage, Write) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{18}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     threadManager.execute([&] {
         contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);

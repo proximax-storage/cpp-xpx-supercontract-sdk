@@ -196,7 +196,7 @@ TEST(Storage, CreateDirSameNameWithFile) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{3}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     threadManager.execute([&] {
         contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);

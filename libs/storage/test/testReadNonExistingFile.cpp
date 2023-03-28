@@ -156,7 +156,7 @@ TEST(Storage, ReadNonExisting) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{13}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     std::promise<void> pRead;
     auto barrierRead = pRead.get_future();

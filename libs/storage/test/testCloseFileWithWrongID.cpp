@@ -216,7 +216,8 @@ TEST(Storage, CloseFileWithWrongID) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{1}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
+
     ContextHolder contextHolder;
 
     threadManager.execute([&] {

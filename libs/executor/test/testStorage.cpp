@@ -72,7 +72,7 @@ TEST(Supercontract, Storage) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
-    contractEnvironmentMock.m_driveKey = DriveKey({1});
+    contractEnvironmentMock.m_driveKey = utils::generateRandomByteValue<DriveKey>();
 
     auto storageObserver = std::make_shared<StorageMock>();
 
@@ -227,7 +227,7 @@ TEST(Supercontract, Iterator) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
-    contractEnvironmentMock.m_driveKey = DriveKey({2});
+    contractEnvironmentMock.m_driveKey = utils::generateRandomByteValue<DriveKey>();
 
     auto storageObserver = std::make_shared<StorageMock>();
 
@@ -381,7 +381,7 @@ TEST(Supercontract, FaultyStorage) {
     uint64_t automaticExecutionsSMLimit = 0;
     ContractEnvironmentMock contractEnvironmentMock(environment, contractKey, automaticExecutionsSCLimit,
                                                     automaticExecutionsSMLimit);
-    contractEnvironmentMock.m_driveKey = DriveKey({3});
+    contractEnvironmentMock.m_driveKey = utils::generateRandomByteValue<DriveKey>();
 
     auto storageObserver = std::make_shared<StorageMock>();
 

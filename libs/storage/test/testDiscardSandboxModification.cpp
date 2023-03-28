@@ -219,7 +219,7 @@ TEST(Storage, DiscardSandboxModification) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{4}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     threadManager.execute([&] {
         contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);

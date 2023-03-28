@@ -366,7 +366,7 @@ TEST(Storage, CreateDirAndMove) {
     std::promise<void> p;
     auto barrier = p.get_future();
 
-    DriveKey driveKey{{2}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     ContextHolder contextHolder;
 

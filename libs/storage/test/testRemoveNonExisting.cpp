@@ -152,7 +152,7 @@ TEST(Storage, RemoveNonExisting) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{16}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     std::promise<void> pRemove;
     auto barrierRemove = pRemove.get_future();

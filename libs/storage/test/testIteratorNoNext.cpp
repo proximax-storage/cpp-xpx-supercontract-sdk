@@ -353,7 +353,7 @@ TEST(Storage, IteratorNoNext) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{10}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     std::promise<void> pCreateFile;
     auto barrierCreateFile = pCreateFile.get_future();

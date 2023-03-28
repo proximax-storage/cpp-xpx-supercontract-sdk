@@ -12,7 +12,7 @@ namespace sirius::contract::storage::test {
 
 std::optional<std::string> storageAddress() {
 #ifdef SIRIUS_CONTRACT_STORAGE_ADDRESS_TEST
-    return  SIRIUS_CONTRACT_VM_ADDRESS_TEST;
+    return  SIRIUS_CONTRACT_STORAGE_ADDRESS_TEST;
 #else
     return {};
 #endif

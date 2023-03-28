@@ -161,7 +161,7 @@ TEST(Storage, IteratorFault) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{9}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     std::promise<void> pIterate;
     auto barrierIterate = pIterate.get_future();

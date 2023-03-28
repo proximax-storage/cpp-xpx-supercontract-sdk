@@ -218,7 +218,7 @@ TEST(Storage, FlushWithWrongID) {
 
     ContextHolder contextHolder;
 
-    DriveKey driveKey{{6}};
+     auto driveKey = utils::generateRandomByteValue<DriveKey>();
 
     threadManager.execute([&] {
         contextHolder.m_storage = std::make_unique<RPCStorage>(environment, *storageAddressOpt);
