@@ -30,7 +30,8 @@ DefaultContract::DefaultContract(const ContractKey& contractKey,
           , m_automaticExecutionsSMLimit(addContractRequest.m_automaticExecutionsSMLimit)
           , m_executorEnvironment(contractContext)
           , m_contractConfig()
-          , m_proofOfExecution(m_executorEnvironment.keyPair())
+          , m_proofOfExecution(m_executorEnvironment.keyPair(),
+                               m_executorEnvironment.executorConfig().maxBatchesHistorySize())
           , m_batchesManager(std::make_unique<DefaultBatchesManager>(
                 addContractRequest.m_recentBatchesInformation.empty()
                 ? 0 : (--addContractRequest.m_recentBatchesInformation.end())->first,

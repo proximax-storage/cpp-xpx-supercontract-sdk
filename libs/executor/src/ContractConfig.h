@@ -18,7 +18,7 @@ class ContractConfig {
 
 private:
 
-    int m_unsuccessfulApprovalDelayMs = 2 * 60 * 60 * 1000; // 2 hours
+    int m_unsuccessfulApprovalDelayMs = 10 * 60 * 60; // 10 minutes
 
     std::string                         m_automaticExecutionsFile = "default.wasm";
     std::string                         m_automaticExecutionsFunction = "main";
