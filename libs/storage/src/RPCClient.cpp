@@ -20,8 +20,11 @@ RPCClient::RPCClient(GlobalEnvironment& environment, const std::string& serverAd
 RPCClient::~RPCClient() {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    for (auto* pTag : m_activeTags) {
-        pTag->cancel();
+    {
+        std::lock_guard<std::mutex> guard(m_activeTagsMutex);
+        for (auto* pTag : m_activeTags) {
+            pTag->cancel();
+        }
     }
 
     m_completionQueue.Shutdown();
@@ -37,8 +40,11 @@ void RPCClient::waitForRPCResponse() {
     bool ok;
     while (m_completionQueue.Next(&pTag, &ok)) {
         auto* pQuery = static_cast<RPCTag*>(pTag);
-        ASSERT(m_activeTags.contains(pQuery), m_environment.logger())
-        m_activeTags.erase(pQuery);
+        {
+            std::lock_guard<std::mutex> guard(m_activeTagsMutex);
+            ASSERT(m_activeTags.contains(pQuery), m_environment.logger())
+            m_activeTags.erase(pQuery);
+        }
         pQuery->process(ok);
         delete pQuery;
     }
@@ -53,6 +59,7 @@ grpc::CompletionQueue& RPCClient::completionQueue() {
 }
 
 void RPCClient::addTag(RPCTag* tag) {
+    std::lock_guard<std::mutex> guard(m_activeTagsMutex);
     m_activeTags.insert(tag);
 }
 

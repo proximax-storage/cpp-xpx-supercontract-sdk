@@ -24,6 +24,7 @@ private:
 
     // This set does NOT own the tags
     std::set<RPCTag*> m_activeTags;
+    std::mutex m_activeTagsMutex;
 
 public:
 
