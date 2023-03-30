@@ -5,9 +5,14 @@
 */
 
 #include <messenger/RPCMessengerBuilder.h>
+#include "RPCMessenger.h"
 
 namespace sirius::contract::messenger {
 
+	RPCMessengerBuilder::RPCMessengerBuilder(const std::string& address) : m_address(address) {}
 
+	std::shared_ptr<Messenger> RPCMessengerBuilder::build(GlobalEnvironment& environment) {
+		return std::make_shared<RPCMessenger>(environment, m_address, *m_messageSubscriber);
+	}
 
 }

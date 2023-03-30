@@ -13,6 +13,10 @@ namespace sirius::contract::messenger {
 
 class RPCMessengerBuilder: public MessengerBuilder {
 
+private:
+
+	std::string m_address;
+
 public:
 
     RPCMessengerBuilder(const std::string& address);
