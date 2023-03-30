@@ -26,7 +26,7 @@ if(SIRIUS_CONTRACT_BUILD_TESTS)
 endif()
 
 add_subdirectory(libs)
-#add_subdirectory(src)
+add_subdirectory(src)
 
 if(SIRIUS_CONTRACT_BUILD_TESTS)
     add_subdirectory(test)

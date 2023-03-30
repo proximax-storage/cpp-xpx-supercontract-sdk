@@ -52,11 +52,8 @@ ExecuteCallRPCHandler::ExecuteCallRPCHandler(
         std::weak_ptr<VirtualMachineInternetQueryHandler>&& internetQueryHandler,
         std::weak_ptr<VirtualMachineBlockchainQueryHandler>&& blockchainQueryHandler,
         std::weak_ptr<VirtualMachineStorageQueryHandler>&& storageQueryHandler,
-        std::shared_ptr<AsyncQueryCallback<CallExecutionResult>>
-
-        && callback)
+        std::shared_ptr<AsyncQueryCallback<CallExecutionResult>> && callback)
         :
-
         m_environment(environment), m_request(std::move(callRequest)), m_stream(
         stub.PrepareAsyncExecuteCall(&m_context, &completionQueue)), m_callback(std::move(callback))
         , m_internetQueryHandler(std::move(internetQueryHandler)), m_blockchainQueryHandler(

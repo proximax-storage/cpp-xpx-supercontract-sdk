@@ -1,0 +1,33 @@
+/*
+*** Copyright 2023 ProximaX Limited. All rights reserved.
+*** Use of this source code is governed by the Apache 2.0
+*** license that can be found in the LICENSE file.
+*/
+
+syntax = "proto3";
+
+package executor_server;
+
+service ExecutorServer {
+  rpc RunExecutor(stream RunExecutorRequest) returns (stream RunExecutorResponse) {}
+}
+
+message RunExecutorRequest {
+  oneof client_message {
+    StartExecutorRequest startRequest = 1;
+  }
+}
+
+message RunExecutorResponse {
+  oneof server_message {
+    StartExecutorResponse startResponse = 1;
+  }
+}
+
+message StartExecutorRequest {
+
+}
+
+message StartExecutorResponse {
+
+}
