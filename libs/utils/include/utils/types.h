@@ -66,6 +66,7 @@ namespace sirius {
             KeyName() = default; \
             KeyName( const Key& key ) : Key(key) {} \
             KeyName( const std::array<uint8_t,32>& array ) : Key(array) {} \
+            KeyName( const std::string& s ) : KeyName(*reinterpret_cast<const KeyName*>(s.data())) {} \
             std::string toString() const {     \
                 return std::string(reinterpret_cast<const char*>(data()), Key_Size);\
             } \

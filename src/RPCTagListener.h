@@ -20,7 +20,7 @@ public:
 
     virtual void onStarted(tl::expected<void, std::error_code>&& res) = 0;
 
-    virtual void onRead(tl::expected<executor_server::RunExecutorResponse, std::error_code>&& res) = 0;
+    virtual void onRead(tl::expected<executor_server::ServerMessage, std::error_code>&& res) = 0;
 
     virtual void onWritten(tl::expected<void, std::error_code>&& res) = 0;
 

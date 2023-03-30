@@ -9,18 +9,28 @@ syntax = "proto3";
 package executor_server;
 
 service ExecutorServer {
-  rpc RunExecutor(stream RunExecutorRequest) returns (stream RunExecutorResponse) {}
+  rpc RunExecutor(stream ClientMessage) returns (stream ServerMessage) {}
 }
 
-message RunExecutorRequest {
-  oneof client_message {
-    StartExecutorRequest startRequest = 1;
-  }
+message ClientMessage {
+//  oneof client_message {
+//  }
 }
 
-message RunExecutorResponse {
+message ServerMessage {
   oneof server_message {
-    StartExecutorResponse startResponse = 1;
+    StartExecutor start_executor = 1;
+    AddContract add_contract = 2;
+    AddManualCall add_manual_call = 3;
+    SetAutomaticExecutionsEnabledSince set_automatic_executions_enabled_since = 4;
+    AddBlockInfo add_block_info = 5;
+    AddBlock add_block = 6;
+    RemoveContract remove_contract = 7;
+    SetExecutors set_executors = 8;
+    PublishedEndBatchExecutionTransaction published_end_batch_execution_transaction = 9;
+    PublishedEndBatchExecutionSingleTransaction published_end_batch_execution_single_transaction = 10;
+    FailedEndBatchExecution failed_end_batch_execution = 11;
+    PublishedSynchronizeSingleTransaction published_synchronize_single_transaction = 12;
   }
 }
 
@@ -28,6 +38,108 @@ message StartExecutorRequest {
 
 }
 
-message StartExecutorResponse {
+message StartExecutor {
+  bytes private_key = 1;
+  string rpc_storage_address = 2;
+  string rpc_messenger_address = 3;
+  string rpc_blockchain_address = 4;
+  string rpc_vm_address = 5;
+  string log_path = 6;
+  uint32 network_identifier = 7;
+}
 
+message ExecutorInfo {
+  bytes executor_key = 1;
+  uint64 next_batch_to_approve = 2;
+  uint64 initial_batch = 3;
+  bytes point_t = 4;
+  bytes scalar_r = 5;
+}
+
+message BatchInfo {
+  uint64 batch_id = 1;
+  bytes verification_info = 2;
+}
+
+message AddContract {
+  bytes contract_key = 1;
+  bytes drive_key = 2;
+  repeated ExecutorInfo executors = 3;
+  repeated BatchInfo batches = 4;
+  bytes contract_deployment_base_modificationId = 5;
+  string automatic_executions_file_name = 6;
+  string automatic_executions_function_name = 7;
+  uint64 automatic_executions_sc_limit = 8;
+  uint64 automatic_executions_sm_limit = 9;
+}
+
+message ServicePayment {
+  uint64 mosaic_id = 1;
+  uint64 amount = 2;
+}
+
+message AddManualCall {
+  bytes contract_key = 1;
+  bytes call_id = 2;
+  string file = 3;
+  string function = 4;
+  uint64 execution_payment = 5;
+  uint64 download_payment = 6;
+  bytes caller_key = 7;
+  uint64 block_height = 8;
+  string arguments = 9;
+  repeated ServicePayment service_payments = 10;
+}
+
+message SetAutomaticExecutionsEnabledSince {
+  bytes contract_key = 1;
+  uint64 block_height = 2;
+}
+
+message AddBlockInfo {
+  uint64 block_height = 1;
+  bytes block_hash = 2;
+  uint64 block_time = 3;
+}
+
+message AddBlock {
+  bytes contract_key = 1;
+  uint64 height = 2;
+}
+
+message RemoveContract {
+  bytes contract_key = 1;
+}
+
+message SetExecutors {
+  bytes contract_key = 1;
+  repeated ExecutorInfo executors = 2;
+}
+
+message PublishedEndBatchExecutionTransaction {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+  bool batch_success = 3;
+  bytes drive_state = 4;
+  bytes proof_verification_info = 5;
+  uint64 automatic_executions_checked_up_to = 6;
+  bool automatic_executions_enabled = 7;
+  uint64 automatic_executions_enabled_since = 8;
+  repeated bytes cosigners = 9;
+}
+
+message PublishedEndBatchExecutionSingleTransaction {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+}
+
+message FailedEndBatchExecution {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+  bool batch_success = 3;
+}
+
+message PublishedSynchronizeSingleTransaction {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
 }

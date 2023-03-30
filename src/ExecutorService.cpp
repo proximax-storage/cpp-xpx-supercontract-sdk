@@ -4,7 +4,23 @@
 *** license that can be found in the LICENSE file.
 */
 
-int main() {
+#include <string>
+#include "RPCExecutorClient.h"
+
+int main(int argc, char * argv[]) {
+
+    const int expectedArgc = 1 + 1;
+
+    if (argc < expectedArgc) {
+        return 1;
+    }
+
+    std::string rpcAddress = argv[1];
+
+    sirius::contract::executor::RPCExecutorClient executorClient(rpcAddress);
+    auto barrier = executorClient.run();
+    barrier.wait();
+
     return 0;
 }
 

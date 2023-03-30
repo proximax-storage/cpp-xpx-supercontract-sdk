@@ -18,7 +18,7 @@ struct PublishedEndBatchExecutionTransactionInfo {
     ContractKey                 m_contractKey;
     uint64_t                    m_batchIndex;
     bool                        m_batchSuccess;
-    Hash256                     m_driveState;
+    StorageHash                 m_driveState;
     crypto::CurvePoint          m_PoExVerificationInfo;
     uint64_t                    m_automaticExecutionsCheckedUpTo;
     std::optional<uint64_t>     m_automaticExecutionsEnabledSince;

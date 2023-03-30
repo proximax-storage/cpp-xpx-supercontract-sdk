@@ -19,7 +19,7 @@ private:
 
 public:
 
-    executor_server::RunExecutorResponse m_response;
+    executor_server::ServerMessage m_response;
 
 public:
 
