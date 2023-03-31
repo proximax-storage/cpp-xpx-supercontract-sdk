@@ -8,12 +8,20 @@
 
 #include "executor.pb.h"
 #include <executor/ExecutorEventHandler.h>
+#include "ExecutorClientMessageSender.h"
 
 namespace sirius::contract::executor {
 
 class RPCExecutorClientEventHandler: public ExecutorEventHandler {
 
+private:
+
+    ExecutorClientMessageSender& m_sender;
+
 public:
+
+    RPCExecutorClientEventHandler(ExecutorClientMessageSender& sender);
+
     void endBatchTransactionIsReady(const blockchain::SuccessfulEndBatchExecutionTransactionInfo& info) override;
 
     void endBatchTransactionIsReady(const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& info) override;

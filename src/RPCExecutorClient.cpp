@@ -14,6 +14,7 @@
 #include "ReadRPCTag.h"
 #include "StartRPCTag.h"
 #include "FinishRPCTag.h"
+#include "RPCExecutorClientEventHandler.h"
 
 #include <executor/DefaultExecutorBuilder.h>
 #include <storage/RPCStorageBuilder.h>
@@ -234,8 +235,7 @@ void RPCExecutorClient::processStartExecutor(const executor_server::StartExecuto
     std::unique_ptr<vm::VirtualMachineBuilder> vmBuilder = std::make_unique<vm::RPCVirtualMachineBuilder>(
             response.rpc_vm_address());
 
-    // TODO init event handler
-    std::unique_ptr<ExecutorEventHandler> eventHandler;
+    std::unique_ptr<ExecutorEventHandler> eventHandler = std::make_unique<RPCExecutorClientEventHandler>(*this);
 
     sirius::contract::ExecutorConfig config;
     config.setNetworkIdentifier(static_cast<uint8_t>(response.network_identifier()));

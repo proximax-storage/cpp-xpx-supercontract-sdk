@@ -24,12 +24,15 @@ void fillInProofMessage(executor_server::Proof& proofMessage, blockchain::Proofs
 
 }
 
+RPCExecutorClientEventHandler::RPCExecutorClientEventHandler(ExecutorClientMessageSender& sender)
+: m_sender(sender) {}
+
 void RPCExecutorClientEventHandler::endBatchTransactionIsReady(
         const blockchain::SuccessfulEndBatchExecutionTransactionInfo& info) {
-    executor_server::SuccessfulEndBatchTransactionIsReady message;
-    message.set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
-    message.set_batch_index(info.m_batchIndex);
-    message.set_automatic_executions_checked_up_to(info.m_automaticExecutionsCheckedUpTo);
+    auto* message = new executor_server::SuccessfulEndBatchTransactionIsReady();
+    message->set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
+    message->set_batch_index(info.m_batchIndex);
+    message->set_automatic_executions_checked_up_to(info.m_automaticExecutionsCheckedUpTo);
 
     const auto& successfulBatchInfo = info.m_successfulBatchInfo;
     auto* pSuccessfulBatchInfoMessage = new executor_server::SuccessfulBatchInfo();
@@ -40,10 +43,10 @@ void RPCExecutorClientEventHandler::endBatchTransactionIsReady(
     auto verificationInfoBuffer = successfulBatchInfo.m_PoExVerificationInfo.toBytes();
     pSuccessfulBatchInfoMessage->set_proof_verification_info(std::string(verificationInfoBuffer.begin(),
                                                                          verificationInfoBuffer.end()));
-    message.set_allocated_successful_batch_info(pSuccessfulBatchInfoMessage);
+    message->set_allocated_successful_batch_info(pSuccessfulBatchInfoMessage);
 
     for (const auto& callExecutionInfo: info.m_callsExecutionInfo) {
-        auto* pCallExecutionInfoMessage = message.add_calls_execution_info();
+        auto* pCallExecutionInfoMessage = message->add_calls_execution_info();
         pCallExecutionInfoMessage->set_call_id(
                 std::string(callExecutionInfo.m_callId.begin(), callExecutionInfo.m_callId.end()));
         pCallExecutionInfoMessage->set_manual(callExecutionInfo.m_manual);
@@ -59,28 +62,32 @@ void RPCExecutorClientEventHandler::endBatchTransactionIsReady(
     }
 
     for (const auto& proof: info.m_proofs) {
-        auto* proofMessage = message.add_proofs();
+        auto* proofMessage = message->add_proofs();
         fillInProofMessage(*proofMessage, proof);
     }
 
     for (const auto& executorKey: info.m_executorKeys) {
-        message.add_executor_keys(std::string(executorKey.begin(), executorKey.end()));
+        message->add_executor_keys(std::string(executorKey.begin(), executorKey.end()));
     }
 
     for (const auto& signature: info.m_signatures) {
-        message.add_signatures(std::string(signature.begin(), signature.end()));
+        message->add_signatures(std::string(signature.begin(), signature.end()));
     }
+
+    executor_server::ClientMessage clientMessage;
+    clientMessage.set_allocated_successful_end_batch_transaction_is_ready(message);
+    m_sender.sendMessage(std::move(clientMessage));
 }
 
 void RPCExecutorClientEventHandler::endBatchTransactionIsReady(
         const blockchain::UnsuccessfulEndBatchExecutionTransactionInfo& info) {
-    executor_server::UnsuccessfulEndBatchTransactionIsReady message;
-    message.set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
-    message.set_batch_index(info.m_batchIndex);
-    message.set_automatic_executions_checked_up_to(info.m_automaticExecutionsCheckedUpTo);
+    auto* message = new executor_server::UnsuccessfulEndBatchTransactionIsReady();
+    message->set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
+    message->set_batch_index(info.m_batchIndex);
+    message->set_automatic_executions_checked_up_to(info.m_automaticExecutionsCheckedUpTo);
 
     for (const auto& callExecutionInfo: info.m_callsExecutionInfo) {
-        auto* pCallExecutionInfoMessage = message.add_calls_execution_info();
+        auto* pCallExecutionInfoMessage = message->add_calls_execution_info();
         pCallExecutionInfoMessage->set_call_id(
                 std::string(callExecutionInfo.m_callId.begin(), callExecutionInfo.m_callId.end()));
         pCallExecutionInfoMessage->set_manual(callExecutionInfo.m_manual);
@@ -93,44 +100,60 @@ void RPCExecutorClientEventHandler::endBatchTransactionIsReady(
     }
 
     for (const auto& proof: info.m_proofs) {
-        auto* proofMessage = message.add_proofs();
+        auto* proofMessage = message->add_proofs();
         fillInProofMessage(*proofMessage, proof);
     }
 
     for (const auto& executorKey: info.m_executorKeys) {
-        message.add_executor_keys(std::string(executorKey.begin(), executorKey.end()));
+        message->add_executor_keys(std::string(executorKey.begin(), executorKey.end()));
     }
 
     for (const auto& signature: info.m_signatures) {
-        message.add_signatures(std::string(signature.begin(), signature.end()));
+        message->add_signatures(std::string(signature.begin(), signature.end()));
     }
+
+    executor_server::ClientMessage clientMessage;
+    clientMessage.set_allocated_unsuccessful_end_batch_transaction_is_ready(message);
+    m_sender.sendMessage(std::move(clientMessage));
 }
 
 void RPCExecutorClientEventHandler::endBatchSingleTransactionIsReady(
         const blockchain::EndBatchExecutionSingleTransactionInfo& info) {
-    executor_server::EndBatchExecutionSingleTransactionIsReady message;
-    message.set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
-    message.set_batch_index(info.m_batchIndex);
+    auto* message = new executor_server::EndBatchExecutionSingleTransactionIsReady();
+    message->set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
+    message->set_batch_index(info.m_batchIndex);
 
     auto* proofMessage = new executor_server::Proof();
     fillInProofMessage(*proofMessage, info.m_proofOfExecution);
-    message.set_allocated_proof(proofMessage);
+    message->set_allocated_proof(proofMessage);
+
+    executor_server::ClientMessage clientMessage;
+    clientMessage.set_allocated_end_batch_single_transaction_is_ready(message);
+    m_sender.sendMessage(std::move(clientMessage));
 }
 
 void RPCExecutorClientEventHandler::synchronizationSingleTransactionIsReady(
         const blockchain::SynchronizationSingleTransactionInfo& info) {
-    executor_server::SynchronizationSingleTransactionIsReady message;
-    message.set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
-    message.set_batch_index(info.m_batchIndex);
+    auto* message = new executor_server::SynchronizationSingleTransactionIsReady();
+    message->set_contract_key(std::string(info.m_contractKey.begin(), info.m_contractKey.end()));
+    message->set_batch_index(info.m_batchIndex);
+
+    executor_server::ClientMessage clientMessage;
+    clientMessage.set_allocated_synchronization_single_transaction_is_ready(message);
+    m_sender.sendMessage(std::move(clientMessage));
 }
 
 void RPCExecutorClientEventHandler::releasedTransactionsAreReady(
         const blockchain::SerializedAggregatedTransaction& transaction) {
-    executor_server::ReleasedTransactionsAreReady message;
-    message.set_max_fee(transaction.m_maxFee);
+    auto* message = new executor_server::ReleasedTransactionsAreReady();
+    message->set_max_fee(transaction.m_maxFee);
     for (const auto& embeddedTransaction: transaction.m_transactions) {
-        message.add_transactions(std::string(embeddedTransaction.begin(), embeddedTransaction.end()));
+        message->add_transactions(std::string(embeddedTransaction.begin(), embeddedTransaction.end()));
     }
+
+    executor_server::ClientMessage clientMessage;
+    clientMessage.set_allocated_released_transactions_are_ready(message);
+    m_sender.sendMessage(std::move(clientMessage));
 }
 
 }

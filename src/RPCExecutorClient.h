@@ -9,11 +9,12 @@
 #include "executor.grpc.pb.h"
 #include <executor/Executor.h>
 #include "RPCTagListener.h"
+#include "ExecutorClientMessageSender.h"
 #include <queue>
 
 namespace sirius::contract::executor {
 
-class RPCExecutorClient : public RPCTagListener {
+class RPCExecutorClient : public RPCTagListener, public ExecutorClientMessageSender {
 
 private:
 
@@ -46,7 +47,7 @@ public:
 
     std::future<void> run();
 
-    void sendMessage(executor_server::ClientMessage&& request);
+    void sendMessage(executor_server::ClientMessage&& request) override;
 
 private:
 
