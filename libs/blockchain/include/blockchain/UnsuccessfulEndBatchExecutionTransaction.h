@@ -17,7 +17,6 @@
 namespace sirius::contract::blockchain {
 
 struct UnsuccessfulCallExecutionInfo {
-
     CallId m_callId;
     bool m_manual;
     uint64_t m_block;

@@ -13,8 +13,86 @@ service ExecutorServer {
 }
 
 message ClientMessage {
-//  oneof client_message {
-//  }
+  oneof client_message {
+    SuccessfulEndBatchTransactionIsReady successful_end_batch_transaction_is_ready = 1;
+    UnsuccessfulEndBatchTransactionIsReady unsuccessful_end_batch_transaction_is_ready = 2;
+    EndBatchExecutionSingleTransactionIsReady end_batch_single_transaction_is_ready = 3;
+    SynchronizationSingleTransactionIsReady synchronization_single_transaction_is_ready = 4;
+    ReleasedTransactionsAreReady released_transactions_are_ready = 5;
+  }
+}
+
+message SuccessfulEndBatchTransactionIsReady {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+  uint64 automatic_executions_checked_up_to = 3;
+  SuccessfulBatchInfo successful_batch_info = 4;
+  repeated SuccessfulCallExecutionInfo calls_execution_info = 5;
+  repeated Proof proofs = 6;
+  repeated bytes executor_keys = 7;
+  repeated bytes signatures = 8;
+}
+
+message UnsuccessfulEndBatchTransactionIsReady {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+  uint64 automatic_executions_checked_up_to = 3;
+  repeated UnsuccessfulCallExecutionInfo calls_execution_info = 5;
+  repeated Proof proofs = 6;
+  repeated bytes executor_keys = 7;
+  repeated bytes signatures = 8;
+}
+
+message EndBatchExecutionSingleTransactionIsReady {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+  Proof proof = 3;
+}
+
+message SynchronizationSingleTransactionIsReady {
+  bytes contract_key = 1;
+  uint64 batch_index = 2;
+}
+
+message ReleasedTransactionsAreReady {
+  uint64 max_fee = 1;
+  repeated bytes transactions = 2;
+}
+
+message SuccessfulBatchInfo {
+  bytes storage_hash = 1;
+  uint64 used_storage_size = 2;
+  uint64 meta_files_size = 3;
+  bytes proof_verification_info = 4;
+}
+
+message SuccessfulCallExecutionInfo {
+  bytes call_id = 1;
+  bool manual = 2;
+  uint64 block = 3;
+  uint32 call_execution_status = 4;
+  bytes released_transaction = 5;
+  repeated CallExecutorParticipation call_executors_participation = 6;
+}
+
+message UnsuccessfulCallExecutionInfo {
+  bytes call_id = 1;
+  bool manual = 2;
+  uint64 block = 3;
+  repeated CallExecutorParticipation call_executors_participation = 6;
+}
+
+message CallExecutorParticipation {
+  uint64 sc_consumed = 1;
+  uint64 sm_consumed = 2;
+}
+
+message Proof {
+  uint64 initial_batch = 1;
+  bytes point_t = 2;
+  bytes scalar_r = 3;
+  bytes point_f = 4;
+  bytes scalar_k = 5;
 }
 
 message ServerMessage {
