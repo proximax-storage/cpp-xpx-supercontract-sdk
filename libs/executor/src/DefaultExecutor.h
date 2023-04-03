@@ -21,7 +21,8 @@ namespace sirius::contract {
 class DefaultExecutor
         : private SingleThread,
         public Executor,
-        public ExecutorEnvironment {
+        public ExecutorEnvironment,
+        public messenger::MessageSubscriber {
 
 private:
 

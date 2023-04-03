@@ -21,7 +21,6 @@
 namespace sirius::contract {
 
 class Executor :
-        public messenger::MessageSubscriber,
         public BlockchainEventHandler {
 
 public:
