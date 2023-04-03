@@ -112,10 +112,6 @@ message ServerMessage {
   }
 }
 
-message StartExecutorRequest {
-
-}
-
 message StartExecutor {
   bytes private_key = 1;
   string rpc_storage_address = 2;

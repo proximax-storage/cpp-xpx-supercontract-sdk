@@ -30,6 +30,8 @@ private:
 
     boost::process::child m_childReplicatorProcess;
 
+    std::mutex m_sendMutex;
+
 public:
 
     RPCExecutor(const std::string& executorRPCAddress);
@@ -57,6 +59,8 @@ public:
 private:
 
     void waitForRPCResponse();
+
+    void sendMessage(const executor_server::ServerMessage& message);
 
 };
 
