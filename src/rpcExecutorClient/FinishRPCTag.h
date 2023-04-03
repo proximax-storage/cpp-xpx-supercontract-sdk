@@ -11,7 +11,7 @@
 
 #include <grpcpp/support/status.h>
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 class FinishRPCTag: public RPCTag {
 

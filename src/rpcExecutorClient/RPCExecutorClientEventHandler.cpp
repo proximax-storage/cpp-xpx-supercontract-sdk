@@ -6,7 +6,7 @@
 
 #include "RPCExecutorClientEventHandler.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 namespace {
 

@@ -10,7 +10,7 @@
 #include <system_error>
 #include "executor.pb.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 class RPCTagListener {
 

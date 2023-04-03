@@ -6,7 +6,7 @@
 
 #include "RPCExecutorClientErrorCode.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 const char* RPCExecutorErrorCategory::name() const noexcept {
     return "executor";

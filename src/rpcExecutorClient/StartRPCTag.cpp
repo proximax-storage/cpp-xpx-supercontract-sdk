@@ -7,7 +7,7 @@
 #include "StartRPCTag.h"
 #include "RPCExecutorClientErrorCode.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 StartRPCTag::StartRPCTag(RPCTagListener& listener)
         : m_listener(listener) {}

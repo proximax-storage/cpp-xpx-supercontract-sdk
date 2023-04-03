@@ -12,7 +12,7 @@
 #include "ExecutorClientMessageSender.h"
 #include <queue>
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 class RPCExecutorClient : public RPCTagListener, public ExecutorClientMessageSender {
 

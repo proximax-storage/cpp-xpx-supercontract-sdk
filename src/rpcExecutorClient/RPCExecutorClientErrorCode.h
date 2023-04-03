@@ -8,7 +8,7 @@
 
 #include <system_error>
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 enum class RPCExecutorError {
     read_error = 1,
@@ -36,7 +36,7 @@ std::error_code make_error_code(RPCExecutorError e);
 namespace std {
 
 template<>
-struct is_error_code_enum<sirius::contract::executor::RPCExecutorError>
+struct is_error_code_enum<sirius::contract::rpcExecutorClient::RPCExecutorError>
         : public true_type {
 };
 

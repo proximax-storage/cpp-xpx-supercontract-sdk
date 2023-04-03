@@ -5,12 +5,12 @@ find_package(OpenSSL REQUIRED)
 supercontract_sdk_library_target(sirius.contract.vm)
 
 foreach(service blockchain_vm internet_vm storage_vm)
-    supercontract_sdk_proto(${service} "")
+    supercontract_sdk_proto(${service} "../protobuf/" "")
     target_link_libraries(sirius.contract.vm ${service}_contract_grpc_proto)
     list(APPEND SIRIUS_SUPERCONTRACT_DEPENDENCIES ${service}_contract_grpc_proto)
 endforeach()
 
-supercontract_sdk_proto(supercontract_server ${SIRIUS_SUPERCONTRACT_DEPENDENCIES})
+supercontract_sdk_proto(supercontract_server "../protobuf/" ${SIRIUS_SUPERCONTRACT_DEPENDENCIES})
 target_link_libraries(sirius.contract.vm supercontract_server_contract_grpc_proto)
 
 target_include_directories(sirius.contract.vm PUBLIC ../include ../../../include)

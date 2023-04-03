@@ -23,7 +23,7 @@
 #include <blockchain/Blockchain.h>
 #include <crypto/KeyPair.h>
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 namespace {
 

@@ -6,7 +6,7 @@
 
 #pragma once
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 class RPCTag {
 

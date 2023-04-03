@@ -9,9 +9,9 @@
 #include "RPCTag.h"
 #include "RPCTagListener.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
-class ReadRPCTag: public RPCTag {
+class StartRPCTag: public RPCTag {
 
 private:
 
@@ -19,11 +19,7 @@ private:
 
 public:
 
-    executor_server::ServerMessage m_response;
-
-public:
-
-    ReadRPCTag(RPCTagListener& listener);
+    StartRPCTag(RPCTagListener& listener);
 
     void process(bool ok) override;
 

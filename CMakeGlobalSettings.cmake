@@ -196,9 +196,8 @@ function(supercontract_sdk_header_only_target TARGET_NAME)
         endif()
 endfunction()
 
-function(supercontract_sdk_proto SERVICE DEPENDENCIES)
-        # Proto file
-        get_filename_component(${SERVICE}_proto "../protobuf/${SERVICE}.proto" ABSOLUTE)
+function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
+        get_filename_component(${SERVICE}_proto "${PROTO_PATH}${SERVICE}.proto" ABSOLUTE)
         get_filename_component(${SERVICE}_proto_path "${${SERVICE}_proto}" PATH)
         list(APPEND DEPENDENCIES ${${SERVICE}_proto})
 

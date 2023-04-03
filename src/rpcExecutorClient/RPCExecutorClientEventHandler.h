@@ -10,7 +10,7 @@
 #include <executor/ExecutorEventHandler.h>
 #include "ExecutorClientMessageSender.h"
 
-namespace sirius::contract::executor {
+namespace sirius::contract::rpcExecutorClient {
 
 class RPCExecutorClientEventHandler: public ExecutorEventHandler {
 

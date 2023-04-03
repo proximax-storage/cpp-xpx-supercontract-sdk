@@ -17,7 +17,7 @@ int main(int argc, char * argv[]) {
 
     std::string rpcAddress = argv[1];
 
-    sirius::contract::executor::RPCExecutorClient executorClient(rpcAddress);
+    sirius::contract::rpcExecutorClient::RPCExecutorClient executorClient(rpcAddress);
     auto barrier = executorClient.run();
     barrier.wait();
 
