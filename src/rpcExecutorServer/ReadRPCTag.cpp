@@ -8,14 +8,14 @@
 
 namespace sirius::contract::rpcExecutorServer {
 
-ReadRPCTag::ReadRPCTag(std::promise<tl::expected<executor_server::ClientMessage, std::error_code>>&& promise)
-: m_promise(std::move(promise)) {}
+ReadRPCTag::ReadRPCTag(std::shared_ptr<AsyncQueryCallback<executor_server::ClientMessage>>&& callback)
+        : m_callback(std::move(callback)) {}
 
 void ReadRPCTag::process(bool ok) {
     if (!ok) {
         return;
     }
-    m_promise.set_value(std::move(m_clientMessage));
+    m_callback->postReply(std::move(m_clientMessage));
 }
 
 }

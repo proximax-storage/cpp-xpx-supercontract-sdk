@@ -25,7 +25,7 @@ public :
 
 RPCExecutor::RPCExecutor(std::shared_ptr<logging::Logger> logger)
         : GlobalEnvironment(std::move(logger))
-        , m_stream(&m_serverContext) {}
+          , m_stream(&m_serverContext) {}
 
 RPCExecutor::~RPCExecutor() {
 
@@ -36,9 +36,7 @@ RPCExecutor::~RPCExecutor() {
         m_completionQueueThread.join();
     }
 
-    if (m_readThread.joinable()) {
-        m_readThread.join();
-    }
+    m_threadManager.stop();
 
     if (m_childReplicatorProcess.joinable()) {
         m_childReplicatorProcess.join();
@@ -73,7 +71,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
         waitForRPCResponse();
     });
 
-    m_readThread = std::thread([this] {
+    m_threadManager.execute([this] {
         readMessage();
     });
 
@@ -301,41 +299,44 @@ void RPCExecutor::onStorageSynchronizedPublished(blockchain::PublishedSynchroniz
 }
 
 void RPCExecutor::readMessage() {
-    tl::expected<executor_server::ClientMessage, std::error_code> msg;
-    do {
-        // Actually, futures are not needed here
-        // We use them just for uniformity with write
-        std::promise<tl::expected<executor_server::ClientMessage, std::error_code>> promise;
-        auto barrier = promise.get_future();
-        auto* tag = new ReadRPCTag(std::move(promise));
-        m_stream.Read(&tag->m_clientMessage, tag);
-        msg = barrier.get();
-        if (msg) {
-            switch (msg->client_message_case()) {
-                case executor_server::ClientMessage::kSuccessfulEndBatchTransactionIsReady:
-                    processSuccessfulEndBatchTransactionIsReadyMessage(
-                            msg->successful_end_batch_transaction_is_ready());
-                    break;
-                case executor_server::ClientMessage::kUnsuccessfulEndBatchTransactionIsReady:
-                    processUnsuccessfulEndBatchTransactionIsReadyMessage(
-                            msg->unsuccessful_end_batch_transaction_is_ready());
-                    break;
-                case executor_server::ClientMessage::kEndBatchSingleTransactionIsReady:
-                    processEndBatchExecutionSingleTransactionIsReadyMessage(
-                            msg->end_batch_single_transaction_is_ready());
-                    break;
-                case executor_server::ClientMessage::kSynchronizationSingleTransactionIsReady:
-                    processSynchronizationSingleTransactionIsReadyMessage(
-                            msg->synchronization_single_transaction_is_ready());
-                    break;
-                case executor_server::ClientMessage::kReleasedTransactionsAreReady:
-                    processReleasedTransactionsAreReadyMessage(msg->released_transactions_are_ready());
-                    break;
-                case executor_server::ClientMessage::CLIENT_MESSAGE_NOT_SET:
-                    break;
-            }
-        }
-    } while (msg);
+    auto[query, callback] = createAsyncQuery<executor_server::ClientMessage>([this](auto&& res) {
+        onRead(res);
+    }, [] {}, *this, false, true);
+    auto* tag = new ReadRPCTag(std::move(callback));
+    m_stream.Read(&tag->m_clientMessage, tag);
+}
+
+void RPCExecutor::onRead(const expected<executor_server::ClientMessage>& message) {
+
+    if (!message) {
+        return;
+    }
+
+    readMessage();
+
+    switch (message->client_message_case()) {
+        case executor_server::ClientMessage::kSuccessfulEndBatchTransactionIsReady:
+            processSuccessfulEndBatchTransactionIsReadyMessage(
+                    message->successful_end_batch_transaction_is_ready());
+            break;
+        case executor_server::ClientMessage::kUnsuccessfulEndBatchTransactionIsReady:
+            processUnsuccessfulEndBatchTransactionIsReadyMessage(
+                    message->unsuccessful_end_batch_transaction_is_ready());
+            break;
+        case executor_server::ClientMessage::kEndBatchSingleTransactionIsReady:
+            processEndBatchExecutionSingleTransactionIsReadyMessage(
+                    message->end_batch_single_transaction_is_ready());
+            break;
+        case executor_server::ClientMessage::kSynchronizationSingleTransactionIsReady:
+            processSynchronizationSingleTransactionIsReadyMessage(
+                    message->synchronization_single_transaction_is_ready());
+            break;
+        case executor_server::ClientMessage::kReleasedTransactionsAreReady:
+            processReleasedTransactionsAreReadyMessage(message->released_transactions_are_ready());
+            break;
+        case executor_server::ClientMessage::CLIENT_MESSAGE_NOT_SET:
+            break;
+    }
 }
 
 void RPCExecutor::sendMessage(const executor_server::ServerMessage& message) {
@@ -388,7 +389,8 @@ void RPCExecutor::processSuccessfulEndBatchTransactionIsReadyMessage(
 
         blockchain::TProof tProof;
         tProof.m_F.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.point_f().data()));
-        tProof.m_k = crypto::Scalar(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.scalar_k().data()));
+        tProof.m_k = crypto::Scalar(
+                *reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.scalar_k().data()));
 
         blockchain::BatchProof batchProof;
         batchProof.m_T.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.point_t().data()));
@@ -443,7 +445,8 @@ void RPCExecutor::processUnsuccessfulEndBatchTransactionIsReadyMessage(
 
         blockchain::TProof tProof;
         tProof.m_F.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.point_f().data()));
-        tProof.m_k = crypto::Scalar(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.scalar_k().data()));
+        tProof.m_k = crypto::Scalar(
+                *reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.scalar_k().data()));
 
         blockchain::BatchProof batchProof;
         batchProof.m_T.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(proofMessage.point_t().data()));
@@ -477,7 +480,8 @@ void RPCExecutor::processEndBatchExecutionSingleTransactionIsReadyMessage(
     info.m_batchIndex = message.batch_index();
     blockchain::TProof tProof;
     tProof.m_F.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(message.proof().point_f().data()));
-    tProof.m_k = crypto::Scalar(*reinterpret_cast<const std::array<uint8_t, 32>*>(message.proof().scalar_k().data()));
+    tProof.m_k = crypto::Scalar(
+            *reinterpret_cast<const std::array<uint8_t, 32>*>(message.proof().scalar_k().data()));
 
     blockchain::BatchProof batchProof;
     batchProof.m_T.fromBytes(*reinterpret_cast<const std::array<uint8_t, 32>*>(message.proof().point_t().data()));
@@ -502,7 +506,8 @@ void RPCExecutor::processSynchronizationSingleTransactionIsReadyMessage(
 }
 
 void
-RPCExecutor::processReleasedTransactionsAreReadyMessage(const executor_server::ReleasedTransactionsAreReady& message) {
+RPCExecutor::processReleasedTransactionsAreReadyMessage(
+        const executor_server::ReleasedTransactionsAreReady& message) {
     blockchain::SerializedAggregatedTransaction info;
     info.m_maxFee = message.max_fee();
     info.m_transactions.reserve(message.transactions_size());

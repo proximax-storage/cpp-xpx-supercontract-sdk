@@ -5,9 +5,9 @@
 */
 
 #include "RPCTag.h"
-#include <future>
 #include "executor.pb.h"
 #include <tl/expected.hpp>
+#include <common/AsyncQuery.h>
 
 namespace sirius::contract::rpcExecutorServer {
 
@@ -15,7 +15,7 @@ class ReadRPCTag: public RPCTag {
 
 private:
 
-    std::promise<tl::expected<executor_server::ClientMessage, std::error_code>> m_promise;
+    std::shared_ptr<AsyncQueryCallback<executor_server::ClientMessage>> m_callback;
 
 public:
 
@@ -23,7 +23,7 @@ public:
 
 public:
 
-    ReadRPCTag(std::promise<tl::expected<executor_server::ClientMessage, std::error_code>>&& promise);
+    ReadRPCTag(std::shared_ptr<AsyncQueryCallback<executor_server::ClientMessage>>&& callback);
 
     void process(bool ok) override;
 };

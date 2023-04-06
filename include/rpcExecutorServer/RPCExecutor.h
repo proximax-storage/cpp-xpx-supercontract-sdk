@@ -11,6 +11,7 @@
 #include "executor.grpc.pb.h"
 #include <executor/ExecutorEventHandler.h>
 #include <common/GlobalEnvironment.h>
+#include <common/AsyncQuery.h>
 
 namespace sirius::contract::rpcExecutorServer {
 
@@ -28,8 +29,6 @@ private:
     std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
     std::unique_ptr<grpc::Server> m_serviceServer;
     std::thread m_completionQueueThread;
-
-    std::thread m_readThread;
 
     boost::process::child m_childReplicatorProcess;
 
@@ -80,6 +79,8 @@ private:
     void waitForRPCResponse();
 
     void readMessage();
+
+    void onRead(const expected<executor_server::ClientMessage>& message);
 
     void sendMessage(const executor_server::ServerMessage& message);
 
