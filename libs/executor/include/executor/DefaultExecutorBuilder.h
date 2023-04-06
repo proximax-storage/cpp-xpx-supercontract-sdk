@@ -30,7 +30,7 @@ public:
                                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                     std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                                     std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                                    logging::Logger&& logger);
+                                    std::shared_ptr<logging::Logger> logger);
 
 };
 

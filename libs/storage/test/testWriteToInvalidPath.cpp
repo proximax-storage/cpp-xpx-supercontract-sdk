@@ -173,7 +173,7 @@ TEST(Storage, Write) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     std::promise<void> p;

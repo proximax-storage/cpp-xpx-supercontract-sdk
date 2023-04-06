@@ -348,7 +348,7 @@ TEST(Storage, IteratorNoNext) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     ContextHolder contextHolder;

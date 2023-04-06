@@ -37,7 +37,9 @@ std::string exec_http(const char* cmd) {
     return result;
 }
 
-void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec,
+                          std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection,
+                          GlobalEnvironment& globalEnvironment) {
     read_flag = true;
     ASSERT_TRUE(res);
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
@@ -51,9 +53,9 @@ void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag,
     }
 
     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
-        readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-    },
-        [] {}, globalEnvironment, false, true);
+                                                                       readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                                                   },
+                                                                   [] {}, globalEnvironment, false, true);
     sharedConnection->read(readCallback);
 }
 
@@ -61,7 +63,7 @@ void readFuncHttpNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag,
 
 TEST(TEST_NAME, ValidRead) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -150,7 +152,7 @@ TEST(TEST_NAME, ValidRead) {
 
 TEST(TEST_NAME, TerminateCall) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     bool read_flag = false;
@@ -190,7 +192,7 @@ TEST(TEST_NAME, TerminateCall) {
 
 TEST(HttpConnection, NonExisting) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
 
@@ -221,7 +223,7 @@ TEST(HttpConnection, NonExisting) {
 
 TEST(HttpConnection, NonExistingTarget) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     bool read_flag = false;
@@ -246,7 +248,7 @@ TEST(HttpConnection, NonExistingTarget) {
                                 const std::string expected = "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}\n  </style>\n  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>\n  <p><b>404.</b> <ins>That\xE2\x80\x99s an error.</ins>\n  <p>The requested URL <code>/eg</code> was not found on this server.  <ins>That\xE2\x80\x99s all we know.</ins>\n";
                                 ASSERT_EQ(actual, expected);
                             },
-                        [] {}, globalEnvironment, false, false);
+                            [] {}, globalEnvironment, false, false);
                     sharedConnection->read(readCallback);
                 },
                 [] {}, globalEnvironment, false, false);
@@ -266,7 +268,7 @@ TEST(HttpConnection, NonExistingTarget) {
 
 TEST(HttpConnection, ConnectingLocalhost) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
 
@@ -297,7 +299,7 @@ TEST(HttpConnection, ConnectingLocalhost) {
 
 TEST(HttpConnection, ConnectingToIPAddress) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
 
@@ -330,7 +332,7 @@ TEST(HttpConnection, ConnectingToIPAddress) {
 // Everyone has different router address, so i remove this test
 // TEST(HttpConnection, ConnectingToRouter) {
 
-//     GlobalEnvironmentImpl globalEnvironment;
+//     GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
 //     auto& threadManager = globalEnvironment.threadManager();
 
 
@@ -362,7 +364,7 @@ TEST(HttpConnection, ConnectingToIPAddress) {
 
 TEST(TEST_NAME, ReadBigWebsite) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
     std::vector<uint8_t> actual_vec;
     bool read_flag = false;
@@ -382,7 +384,8 @@ TEST(TEST_NAME, ReadBigWebsite) {
 
                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
                             [&, sharedConnection](auto&& res) {
-                                readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                readFuncHttpNormally(std::move(res), read_flag, actual_vec, sharedConnection,
+                                                     globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, false);
 
@@ -404,9 +407,12 @@ TEST(TEST_NAME, ReadBigWebsite) {
     ASSERT_TRUE(read_flag);
 }
 
-void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec, std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection, GlobalEnvironmentImpl& globalEnvironment) {
+void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code>&& res, bool& read_flag,
+                              std::vector<uint8_t>& actual_vec,
+                              std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection,
+                              GlobalEnvironment& globalEnvironment) {
     if (!res.has_value()) {
-        read_flag = true; 
+        read_flag = true;
         return;
     }
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
@@ -417,9 +423,9 @@ void readFuncHttpDisconnected(tl::expected<std::vector<uint8_t>, std::error_code
     }
 
     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>([&, sharedConnection](auto&& res) {
-        readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
-    },
-        [] {}, globalEnvironment, false, true);
+                                                                       readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                                                   },
+                                                                   [] {}, globalEnvironment, false, true);
     sharedConnection->read(readCallback);
 }
 
@@ -432,7 +438,7 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
     std::vector<uint8_t> actual_vec;
     bool read_flag = false;
@@ -456,7 +462,8 @@ TEST(TEST_NAME, ReadWhenNetworkAdapterDown) {
                     // std::this_thread::sleep_for(std::chrono::milliseconds(20000));
                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
                             [&, sharedConnection](auto&& res) {
-                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection,
+                                                         globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
 
@@ -494,7 +501,7 @@ TEST(TEST_NAME, ConnectWhenBlockingConnection) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     exec_http("sudo iptables -A INPUT -s 93.184.216.34 -j DROP");
@@ -536,7 +543,7 @@ TEST(TEST_NAME, ReadWhenBlockingConnection) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     std::vector<uint8_t> actual_vec;
@@ -555,7 +562,8 @@ TEST(TEST_NAME, ReadWhenBlockingConnection) {
                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
                             [&, sharedConnection](auto&& res) {
-                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection, globalEnvironment);
+                                readFuncHttpDisconnected(std::move(res), read_flag, actual_vec, sharedConnection,
+                                                         globalEnvironment);
                             },
                             [] {}, globalEnvironment, false, true);
 

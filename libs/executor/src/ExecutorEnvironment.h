@@ -27,6 +27,9 @@ class ExecutorEnvironment: public GlobalEnvironment {
 
 public:
 
+    ExecutorEnvironment(std::shared_ptr<logging::Logger> logger)
+    : GlobalEnvironment(std::move(logger)) {}
+
     ~ExecutorEnvironment() override = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;

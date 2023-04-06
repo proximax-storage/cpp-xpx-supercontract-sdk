@@ -25,7 +25,6 @@ ExecuteCallRPCRequest::ExecuteCallRPCRequest(ExecuteCallRPCRequest&& other) noex
     : m_environment(other.m_environment), m_handler(std::move(other.m_handler)) {}
 
 ExecuteCallRPCRequest& ExecuteCallRPCRequest::operator=(ExecuteCallRPCRequest&& other) noexcept {
-    m_environment = other.m_environment;
     m_handler = std::move(other.m_handler);
     return *this;
 }

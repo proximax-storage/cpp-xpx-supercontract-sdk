@@ -10,18 +10,8 @@
 
 namespace sirius::contract::vm::test {
 
-GlobalEnvironmentMock::GlobalEnvironmentMock()
-        : m_logger(getLoggerConfig(), "executor") {}
 
-        ThreadManager& GlobalEnvironmentMock::threadManager() {
-    return m_threadManager;
-}
-
-logging::Logger& GlobalEnvironmentMock::logger() {
-    return m_logger;
-}
-
-logging::LoggerConfig GlobalEnvironmentMock::getLoggerConfig() {
+logging::LoggerConfig getLoggerConfig() {
     logging::LoggerConfig config;
     config.setLogToConsole(true);
     config.setLogPath({});

@@ -10,4 +10,4 @@ target_link_libraries(sirius.contract.messenger messengerServer_contract_grpc_pr
 target_include_directories(sirius.contract.messenger PUBLIC ../include ../../../include)
 target_include_directories(sirius.contract.messenger PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(sirius.contract.messenger expected sirius.contract.logging sirius.contract.utils OpenSSL::SSL)
+target_link_libraries(sirius.contract.messenger expected sirius.contract.common OpenSSL::SSL)

@@ -8,7 +8,6 @@
 
 #include <boost/beast/ssl.hpp>
 
-#include <common/ThreadManager.h>
 #include "ExecutorEnvironment.h"
 #include "Messages.h"
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
@@ -32,9 +31,9 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
                                  std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                  std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                                  std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                                 logging::Logger&& logger)
-        : m_keyPair(std::move(keyPair))
-          , m_logger(std::move(logger))
+                                 std::shared_ptr<logging::Logger> logger)
+        : ExecutorEnvironment(std::move(logger))
+        , m_keyPair(std::move(keyPair))
           , m_sslContext(boost::asio::ssl::context::tlsv12_client)
           , m_config(config)
           , m_eventHandler(std::move(eventHandler)) {
@@ -62,13 +61,13 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
         m_sslContext.set_default_verify_paths();
         m_sslContext.set_verify_mode(boost::asio::ssl::verify_peer);
 
-        m_logger.info("Executor is started. Key: {}", m_keyPair.publicKey());
+        m_logger->info("Executor is started. Key: {}", m_keyPair.publicKey());
     });
 }
 
 DefaultExecutor::~DefaultExecutor() {
 
-    m_logger.info("Started executor destruction");
+    m_logger->info("Started executor destruction");
 
     m_threadManager.execute([this] {
         terminate();
@@ -76,7 +75,7 @@ DefaultExecutor::~DefaultExecutor() {
 
     m_threadManager.stop();
 
-    m_logger.info("Executor is destructed");
+    m_logger->info("Executor is destructed");
 }
 
 void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& request) {
@@ -88,13 +87,13 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
         auto it = request.m_executors.find(m_keyPair.publicKey());
 
         if (it == request.m_executors.end()) {
-            m_logger.critical("The executor is not in the list of {} contract", key);
+            m_logger->critical("The executor is not in the list of {} contract", key);
             return;
         }
 
         request.m_executors.erase(it);
 
-        m_logger.info("New contract is added: Key: {}", key);
+        m_logger->info("New contract is added: Key: {}", key);
         m_contracts[key] = std::make_unique<DefaultContract>(key, std::move(request), *this);
     });
 }
@@ -105,7 +104,7 @@ void DefaultExecutor::addManualCall(const ContractKey& key, ManualCallRequest&& 
         auto contractIt = m_contracts.find(key);
 
         if (contractIt == m_contracts.end()) {
-            m_logger.critical("Added call to non-existing contract {}", key);
+            m_logger->critical("Added call to non-existing contract {}", key);
             return;
         }
 
@@ -116,7 +115,7 @@ void DefaultExecutor::addManualCall(const ContractKey& key, ManualCallRequest&& 
 void DefaultExecutor::addBlockInfo(uint64_t blockHeight, blockchain::Block&& block) {
     m_threadManager.execute([=, this, block = std::move(block)] {
 
-        m_logger.debug("New block is added. Height: {}", blockHeight);
+        m_logger->debug("New block is added. Height: {}", blockHeight);
 
         m_blockchain->addBlock(blockHeight, block);
     });
@@ -128,7 +127,7 @@ void DefaultExecutor::addBlock(const ContractKey& contractKey, uint64_t height) 
         auto contractIt = m_contracts.find(contractKey);
 
         if (contractIt == m_contracts.end()) {
-            m_logger.critical("Added block info to non-existing contract {}", contractKey);
+            m_logger->critical("Added block info to non-existing contract {}", contractKey);
             return;
         }
 
@@ -149,7 +148,7 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
             m_contracts.erase(key);
         }, [] {}, *this, false, false);
 
-        m_logger.info("Contract is removed: Key: {}", key);
+        m_logger->info("Contract is removed: Key: {}", key);
         contractIt->second->removeContract(request, std::move(callback));
     });
 }
@@ -166,7 +165,7 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey,
         auto executorIt = executors.find(m_keyPair.publicKey());
 
         if (executorIt == executors.end()) {
-            m_logger.critical("Executor is not in the updated list of contract executors", key);
+            m_logger->critical("Executor is not in the updated list of contract executors", key);
             return;
         }
 
@@ -196,7 +195,7 @@ void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMess
                     }
                 }
             } else {
-                m_logger.warn("Received unknown tag message: {}", inputMessage.m_tag);
+                m_logger->warn("Received unknown tag message: {}", inputMessage.m_tag);
             }
         } catch (...) {
             logger().warn("Received malformed message. Tag: {}", inputMessage.m_tag);
@@ -219,17 +218,6 @@ std::set<std::string> DefaultExecutor::subscriptions() {
 
 // endregion
 
-// region global environment
-
-ThreadManager& DefaultExecutor::threadManager() {
-    return m_threadManager;
-}
-
-logging::Logger& DefaultExecutor::logger() {
-    return m_logger;
-}
-
-// endregion
 
 // region executor environment
 
@@ -336,7 +324,7 @@ void DefaultExecutor::setAutomaticExecutionsEnabledSince(
 
 void DefaultExecutor::terminate() {
 
-    ASSERT(isSingleThread(), m_logger)
+    ASSERT(isSingleThread(), *m_logger)
     for (auto&[_, contract]: m_contracts) {
         contract->terminate();
     }

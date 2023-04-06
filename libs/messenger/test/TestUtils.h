@@ -10,25 +10,6 @@
 
 namespace sirius::contract::messenger::test {
 
-class GlobalEnvironmentMock: public GlobalEnvironment{
-
-private:
-
-    ThreadManager   m_threadManager;
-    logging::Logger m_logger;
-
-public:
-
-    GlobalEnvironmentMock();
-
-    ThreadManager& threadManager() override;
-
-    logging::Logger& logger() override;
-
-private:
-
-    logging::LoggerConfig getLoggerConfig();
-
-};
+logging::LoggerConfig getLoggerConfig();
 
 }

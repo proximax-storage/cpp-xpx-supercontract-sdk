@@ -15,27 +15,21 @@
 namespace sirius::contract {
 
 class ThreadManager {
+
+private:
+
     boost::asio::io_context m_context;
     boost::asio::executor_work_guard<boost::asio::io_context::executor_type> m_work;
     std::thread m_thread;
 
 public:
-    ThreadManager()
-            : m_context()
-            , m_work( boost::asio::make_work_guard( m_context ))
-            , m_thread( std::thread( [this] { m_context.run(); } )) {
-    }
+    ThreadManager();
 
-    ~ThreadManager() {
-        stop();
-    }
+    ~ThreadManager();
 
-    void stop() {
-        m_work.reset();
-        if ( m_thread.joinable() ) {
-            m_thread.join();
-        }
-    }
+    void stop();
+
+public:
 
     template<class Function>
     void execute( Function&& task ) {
@@ -48,13 +42,9 @@ public:
         return {m_context, milliseconds, std::forward<Function>(func)};;
     }
 
-    boost::asio::io_context& context() {
-        return m_context;
-    }
+    boost::asio::io_context& context();
 
-    auto threadId() {
-        return m_thread.get_id();
-    }
+    std::thread::id threadId();
 };
 
 }

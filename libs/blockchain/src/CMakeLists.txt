@@ -6,4 +6,4 @@ supercontract_sdk_library_target(sirius.contract.blockchain)
 
 target_include_directories(sirius.contract.blockchain PUBLIC ../include ../../../include)
 
-target_link_libraries(sirius.contract.blockchain expected sirius.contract.logging sirius.contract.utils sirius.contract.crypto OpenSSL::SSL)
+target_link_libraries(sirius.contract.blockchain expected sirius.contract.common sirius.contract.crypto OpenSSL::SSL)

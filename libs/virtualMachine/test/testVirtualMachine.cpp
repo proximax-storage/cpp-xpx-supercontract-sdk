@@ -42,7 +42,7 @@ TEST(VirtualMachine, SimpleContract) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -106,7 +106,7 @@ TEST(VirtualMachine, InternetRead) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -176,7 +176,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -247,7 +247,7 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -317,7 +317,7 @@ TEST(VirtualMachine, WrongContractPath) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -381,7 +381,7 @@ TEST(VirtualMachine, WrongContractPath) {
 
 TEST(VirtualMachine, WrongIP) {
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -447,7 +447,7 @@ TEST(VirtualMachine, WrongExecFunction) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -516,7 +516,7 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -587,7 +587,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -655,7 +655,7 @@ TEST(VirtualMachine, FaultyContract) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -734,7 +734,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -838,7 +838,7 @@ TEST(VirtualMachine, SimpleStorage) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -905,7 +905,7 @@ TEST(VirtualMachine, IteratorTest) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -972,7 +972,7 @@ TEST(VirtualMachine, FaultyStorage) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();
@@ -1035,7 +1035,7 @@ TEST(VirtualMachine, NullStorageHandler) {
         GTEST_SKIP();
     }
 
-    GlobalEnvironmentMock environment;
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = environment.threadManager();
 
     auto storageObserver = std::make_shared<StorageObserverMock>();

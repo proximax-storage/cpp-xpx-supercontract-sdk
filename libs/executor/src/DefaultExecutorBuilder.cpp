@@ -15,7 +15,7 @@ std::shared_ptr<Executor> DefaultExecutorBuilder::build(crypto::KeyPair&& keyPai
                                                         std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                                                         std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                                                         std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                                                        logging::Logger&& logger) {
+                                                        std::shared_ptr<logging::Logger> logger) {
     return std::make_shared<DefaultExecutor>(std::move(keyPair), config, eventHandler, std::move(vmBuilder),
                                             std::move(storageBuilder), std::move(blockchainBuilder),
                                             std::move(messengerBuilder), std::move(logger));

@@ -13,26 +13,7 @@ namespace sirius::contract::storage::test {
 
 std::optional<std::string> storageAddress();
 
-class GlobalEnvironmentMock : public GlobalEnvironment {
-
-private:
-
-    ThreadManager m_threadManager;
-    logging::Logger m_logger;
-
-public:
-
-    GlobalEnvironmentMock();
-
-    ThreadManager& threadManager() override;
-
-    logging::Logger& logger() override;
-
-private:
-
-    logging::LoggerConfig getLoggerConfig();
-
-};
+logging::LoggerConfig getLoggerConfig();
 
 struct ContextHolder {
     std::unique_ptr<storage::Storage> m_storage;

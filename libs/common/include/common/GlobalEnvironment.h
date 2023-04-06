@@ -12,13 +12,20 @@ namespace sirius::contract {
 
 class GlobalEnvironment {
 
+protected:
+
+    ThreadManager m_threadManager;
+    std::shared_ptr<logging::Logger> m_logger;
+
 public:
+
+    explicit GlobalEnvironment(std::shared_ptr<logging::Logger> logger);
 
     virtual ~GlobalEnvironment() = default;
 
-    virtual ThreadManager& threadManager() = 0;
+    ThreadManager& threadManager();
 
-    virtual logging::Logger& logger() = 0;
+    logging::Logger& logger();
 };
 
 }

@@ -10,34 +10,11 @@
 
 namespace sirius::contract::internet::test {
 
-class GlobalEnvironmentImpl: public GlobalEnvironment{
-
-private:
-
-    ThreadManager   m_threadManager;
-    logging::Logger m_logger;
-
-public:
-
-    GlobalEnvironmentImpl() : m_logger(getLoggerConfig(), "executor") {}
-
-    ThreadManager& threadManager() override {
-        return m_threadManager;
-    }
-
-    logging::Logger& logger() override {
-        return m_logger;
-    }
-
-private:
-
-    logging::LoggerConfig getLoggerConfig() {
-        logging::LoggerConfig config;
-        config.setLogToConsole(true);
-        config.setLogPath({});
-        return config;
-    }
-
-};
+inline logging::LoggerConfig getLoggerConfig() {
+    logging::LoggerConfig config;
+    config.setLogToConsole(true);
+    config.setLogPath({});
+    return config;
+}
 
 }

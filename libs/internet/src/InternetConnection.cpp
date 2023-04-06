@@ -32,7 +32,6 @@ InternetConnection& InternetConnection::operator=(InternetConnection&& other) no
 
     ASSERT(isSingleThread(), m_environment.logger())
 
-    m_environment = other.m_environment;
     m_resource = std::move(other.m_resource);
     return *this;
 }

@@ -17,7 +17,7 @@ class RPCExecutor: public Executor {
 
 private:
 
-    std::string m_address;
+    std::unique_ptr<executor::ExecutorEventHandler> m_eventHandler;
 
     executor_server::ExecutorServer::AsyncService m_service;
 
@@ -27,6 +27,8 @@ private:
     std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
     std::unique_ptr<grpc::Server> m_serviceServer;
     std::thread m_completionQueueThread;
+
+    std::thread m_readThread;
 
     boost::process::child m_childReplicatorProcess;
 
@@ -56,12 +58,43 @@ public:
 
     void setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) override;
 
+    void onEndBatchExecutionPublished(blockchain::PublishedEndBatchExecutionTransactionInfo&& info) override;
+
+    void onEndBatchExecutionSingleTransactionPublished(
+            blockchain::PublishedEndBatchExecutionSingleTransactionInfo&& info) override;
+
+    void onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) override;
+
+    void onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) override;
+
 private:
 
     void waitForRPCResponse();
 
+    void readMessage();
+
     void sendMessage(const executor_server::ServerMessage& message);
 
+    SuccessfulEndBatchTransactionIsReady successful_end_batch_transaction_is_ready = 1;
+    UnsuccessfulEndBatchTransactionIsReady unsuccessful_end_batch_transaction_is_ready = 2;
+    EndBatchExecutionSingleTransactionIsReady end_batch_single_transaction_is_ready = 3;
+    SynchronizationSingleTransactionIsReady synchronization_single_transaction_is_ready = 4;
+    ReleasedTransactionsAreReady released_transactions_are_ready = 5;
+
+    void processSuccessfulEndBatchTransactionIsReadyMessage(
+            const executor_server::SuccessfulEndBatchTransactionIsReady& message);
+
+    void processUnsuccessfulEndBatchTransactionIsReadyMessage(
+            const executor_server::UnsuccessfulEndBatchTransactionIsReady& message);
+
+    void processEndBatchExecutionSingleTransactionIsReadyMessage(
+            const executor_server::EndBatchExecutionSingleTransactionIsReady& message);
+
+    void processSynchronizationSingleTransactionIsReadyMessage(
+            const executor_server::SynchronizationSingleTransactionIsReady& message);
+
+    void processReleasedTransactionsAreReadyMessage(
+            const executor_server::ReleasedTransactionsAreReady& message);
 };
 
 }

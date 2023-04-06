@@ -28,9 +28,6 @@ private:
 
     crypto::KeyPair m_keyPair;
 
-    ThreadManager m_threadManager;
-    logging::Logger m_logger;
-
     boost::asio::ssl::context m_sslContext;
 
     std::map<ContractKey, std::unique_ptr<Contract>> m_contracts;
@@ -54,7 +51,7 @@ public:
                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
                     std::unique_ptr<ServiceBuilder<blockchain::Blockchain>>&& blockchainBuilder,
                     std::unique_ptr<messenger::MessengerBuilder>&& messengerBuilder,
-                    logging::Logger&& logger);
+                    std::shared_ptr<logging::Logger> logger);
 
     ~DefaultExecutor() override;
 
@@ -77,16 +74,6 @@ public:
     void onMessageReceived(const messenger::InputMessage& message) override;
 
     std::set<std::string> subscriptions() override;
-
-    // endregion
-
-public:
-
-    // region global environment
-
-    ThreadManager& threadManager() override;
-
-    logging::Logger& logger() override;
 
     // endregion
 

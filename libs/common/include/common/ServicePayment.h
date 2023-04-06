@@ -11,8 +11,8 @@
 namespace sirius::contract {
 
 struct ServicePayment {
-    uint64_t m_mosaicId;
-    uint64_t m_amount;
+    uint64_t m_mosaicId = 0;
+    uint64_t m_amount = 0;
 };
 
 }

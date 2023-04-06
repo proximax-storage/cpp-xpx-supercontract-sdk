@@ -26,21 +26,6 @@ std::vector<size_t> argSort(const std::vector<T>& v) {
     return indices;
 }
 
-class GlobalEnvironmentMock : public GlobalEnvironment {
-
-private:
-    ThreadManager m_threadManager;
-    logging::Logger m_logger;
-
-public:
-    GlobalEnvironmentMock();
-
-    ThreadManager& threadManager() override;
-
-    logging::Logger& logger() override;
-
-private:
-    logging::LoggerConfig getLoggerConfig();
-};
+logging::LoggerConfig getLoggerConfig();
 
 } // namespace sirius::contract::test

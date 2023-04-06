@@ -39,7 +39,7 @@ std::string exec_https(const char* cmd) {
 
 TEST(HttpsConnection, ValidRead) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -134,7 +134,7 @@ TEST(HttpsConnection, ValidRead) {
 
 TEST(HttpsConnection, ConnectingLocalhost) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     ssl::context ctx{ssl::context::tlsv12_client};
@@ -171,7 +171,7 @@ TEST(HttpsConnection, ConnectingLocalhost) {
 
 void readFuncNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec,
                       std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection,
-                      GlobalEnvironmentImpl& globalEnvironment) {
+                      GlobalEnvironment& globalEnvironment) {
     read_flag = true;
     ASSERT_TRUE(res);
     actual_vec.insert(actual_vec.end(), res->begin(), res->end());
@@ -193,7 +193,7 @@ void readFuncNormally(expected<std::vector<uint8_t>>&& res, bool& read_flag, std
 
 TEST(HttpsConnection, ReadBigWebsite) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     std::vector<uint8_t> actual_vec;
@@ -248,7 +248,7 @@ TEST(HttpsConnection, ReadBigWebsite) {
 
 void readFuncDisconneted(expected<std::vector<uint8_t>>&& res, bool& read_flag, std::vector<uint8_t>& actual_vec,
                          std::shared_ptr<sirius::contract::internet::InternetConnection> sharedConnection,
-                         GlobalEnvironmentImpl& globalEnvironment) {
+                         GlobalEnvironment& globalEnvironment) {
     if (!res.has_value()) {
         read_flag = true;
         return;
@@ -276,7 +276,7 @@ TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     std::vector<uint8_t> actual_vec;
@@ -349,7 +349,7 @@ TEST(HttpsConnection, ConnectWhenBlockingConnection) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     exec_https("sudo iptables -A INPUT -s 93.184.216.34 -j DROP");
@@ -397,7 +397,7 @@ TEST(HttpsConnection, ReadWhenBlockingConnection) {
     GTEST_SKIP();
 #endif
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     std::vector<uint8_t> actual_vec;
@@ -451,7 +451,7 @@ TEST(HttpsConnection, ReadWhenBlockingConnection) {
 
 TEST(HttpsConnection, ValidCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -488,7 +488,7 @@ TEST(HttpsConnection, ValidCertificate) {
 
 TEST(HttpsConnection, TerminateCall) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     bool read_flag = false;
@@ -534,7 +534,7 @@ TEST(HttpsConnection, TerminateCall) {
 
 TEST(HttpsConnection, NonExisting) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
 
@@ -572,7 +572,7 @@ TEST(HttpsConnection, NonExisting) {
 
 TEST(HttpsConnection, NonExistingTarget) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     bool read_flag = false;
@@ -623,7 +623,7 @@ TEST(HttpsConnection, NonExistingTarget) {
 
 TEST(HttpsConnection, RevokedCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -661,7 +661,7 @@ TEST(HttpsConnection, RevokedCertificate) {
 
 TEST(HttpsConnection, ExpiredCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -697,7 +697,7 @@ TEST(HttpsConnection, ExpiredCertificate) {
 
 TEST(HttpsConnection, UntrustedRootCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -733,7 +733,7 @@ TEST(HttpsConnection, UntrustedRootCertificate) {
 
 TEST(HttpsConnection, SelfSignedCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -770,7 +770,7 @@ TEST(HttpsConnection, SelfSignedCertificate) {
 
 TEST(HttpsConnection, WrongHostCertificate) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -807,7 +807,7 @@ TEST(HttpsConnection, WrongHostCertificate) {
 
 TEST(HttpsConnection, PinningTest) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -844,7 +844,7 @@ TEST(HttpsConnection, PinningTest) {
 
 TEST(HttpsConnection, ClientCertMissing) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -881,7 +881,7 @@ TEST(HttpsConnection, ClientCertMissing) {
 
 TEST(HttpsConnection, WeakSignature) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {
@@ -918,7 +918,7 @@ TEST(HttpsConnection, WeakSignature) {
 
 TEST(HttpsConnection, ConnectingNonHttpsURL) {
 
-    GlobalEnvironmentImpl globalEnvironment;
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
     auto& threadManager = globalEnvironment.threadManager();
 
     threadManager.execute([&] {

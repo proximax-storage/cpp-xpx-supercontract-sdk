@@ -16,4 +16,4 @@ target_link_libraries(sirius.contract.vm supercontract_server_contract_grpc_prot
 target_include_directories(sirius.contract.vm PUBLIC ../include ../../../include)
 target_include_directories(sirius.contract.vm PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(sirius.contract.vm expected sirius.contract.logging sirius.contract.utils OpenSSL::SSL sirius.contract.storage sirius.contract.internet sirius.contract.blockchain)
+target_link_libraries(sirius.contract.vm expected sirius.contract.common OpenSSL::SSL sirius.contract.storage sirius.contract.internet sirius.contract.blockchain)

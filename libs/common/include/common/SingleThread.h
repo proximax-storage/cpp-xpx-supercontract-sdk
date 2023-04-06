@@ -15,15 +15,13 @@ protected:
 
     std::thread::id m_threadId;
 
-    SingleThread(): m_threadId(std::this_thread::get_id()) {}
+protected:
 
-    bool isSingleThread() const {
-        return m_threadId == std::this_thread::get_id();
-    }
+    SingleThread();
 
-	void setThreadId(const std::thread::id& threadId) {
-		m_threadId = threadId;
-	}
+    bool isSingleThread() const;
+
+	void setThreadId(const std::thread::id& threadId);
 
 };
 

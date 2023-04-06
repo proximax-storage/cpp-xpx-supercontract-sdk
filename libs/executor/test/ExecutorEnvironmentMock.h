@@ -55,9 +55,5 @@ public:
     ExecutorConfig& executorConfig() override;
 
     boost::asio::ssl::context& sslContext() override;
-
-    ThreadManager& threadManager() override;
-
-    logging::Logger& logger() override;
 };
 } // namespace sirius::contract::test

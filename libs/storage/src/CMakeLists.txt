@@ -10,4 +10,4 @@ target_link_libraries(sirius.contract.storage storageServer_contract_grpc_proto)
 target_include_directories(sirius.contract.storage PUBLIC ../include ../../../include)
 target_include_directories(sirius.contract.storage PUBLIC SYSTEM ${Boost_INCLUDE_DIR})
 
-target_link_libraries(sirius.contract.storage expected sirius.contract.logging sirius.contract.utils OpenSSL::SSL)
+target_link_libraries(sirius.contract.storage expected sirius.contract.common OpenSSL::SSL)
