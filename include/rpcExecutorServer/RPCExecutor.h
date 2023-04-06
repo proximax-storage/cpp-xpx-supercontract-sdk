@@ -10,14 +10,15 @@
 #include <boost/process.hpp>
 #include "executor.grpc.pb.h"
 #include <executor/ExecutorEventHandler.h>
+#include <common/GlobalEnvironment.h>
 
 namespace sirius::contract::rpcExecutorServer {
 
-class RPCExecutor: public Executor {
+class RPCExecutor: public Executor, GlobalEnvironment {
 
 private:
 
-    std::unique_ptr<executor::ExecutorEventHandler> m_eventHandler;
+    std::unique_ptr<ExecutorEventHandler> m_eventHandler;
 
     executor_server::ExecutorServer::AsyncService m_service;
 
@@ -36,11 +37,18 @@ private:
 
 public:
 
-    RPCExecutor(const std::string& executorRPCAddress);
+    RPCExecutor(std::shared_ptr<logging::Logger> logger);
 
     ~RPCExecutor() override;
 
-    void start();
+    void start(const std::string& executorRPCAddress,
+               const crypto::KeyPair& keyPair,
+               const std::string& rpcStorageAddress,
+               const std::string& rpcMessengerAddress,
+               const std::string& rpcBlockchainAddress,
+               const std::string& rpcVMAddress,
+               const std::string& logPath,
+               uint8_t networkIdentifier);
 
 public:
 
@@ -74,12 +82,6 @@ private:
     void readMessage();
 
     void sendMessage(const executor_server::ServerMessage& message);
-
-    SuccessfulEndBatchTransactionIsReady successful_end_batch_transaction_is_ready = 1;
-    UnsuccessfulEndBatchTransactionIsReady unsuccessful_end_batch_transaction_is_ready = 2;
-    EndBatchExecutionSingleTransactionIsReady end_batch_single_transaction_is_ready = 3;
-    SynchronizationSingleTransactionIsReady synchronization_single_transaction_is_ready = 4;
-    ReleasedTransactionsAreReady released_transactions_are_ready = 5;
 
     void processSuccessfulEndBatchTransactionIsReadyMessage(
             const executor_server::SuccessfulEndBatchTransactionIsReady& message);

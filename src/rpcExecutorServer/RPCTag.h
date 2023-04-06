@@ -4,6 +4,8 @@
 *** license that can be found in the LICENSE file.
 */
 
+#pragma once
+
 namespace sirius::contract::rpcExecutorServer {
 
 class RPCTag {

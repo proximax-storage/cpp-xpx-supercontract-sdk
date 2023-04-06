@@ -247,6 +247,8 @@ void RPCExecutorClient::processStartExecutor(const executor_server::StartExecuto
     loggerConfig.setMaxLogFiles(10);
     loggerConfig.setMaxLogSize(50 * 1024 * 1024);
 
+    auto logger = std::make_shared<logging::Logger>(loggerConfig, "executor");
+
     m_executor = sirius::contract::DefaultExecutorBuilder().build(
             std::move(keyPair),
             config,
@@ -255,7 +257,7 @@ void RPCExecutorClient::processStartExecutor(const executor_server::StartExecuto
             std::move(storageBuilder),
             std::move(blockchainBuilder),
             std::move(messengerBuilder),
-            sirius::logging::Logger(loggerConfig, "executor"));
+            logger);
 }
 
 void RPCExecutorClient::processAddContract(const executor_server::AddContract& message) {
