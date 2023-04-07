@@ -1,0 +1,22 @@
+/*
+*** Copyright 2023 ProximaX Limited. All rights reserved.
+*** Use of this source code is governed by the Apache 2.0
+*** license that can be found in the LICENSE file.
+*/
+
+syntax = "proto3";
+
+package blockchainServer;
+
+service BlockchainServer {
+  rpc Block(BlockRequest) returns (BlockResponse) {}
+}
+
+message BlockRequest {
+  uint64 height = 1;
+}
+
+message BlockResponse {
+  bytes block_hash = 1;
+  uint64 block_time = 2;
+}
