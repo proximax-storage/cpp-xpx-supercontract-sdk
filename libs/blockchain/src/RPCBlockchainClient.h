@@ -34,7 +34,7 @@ public:
             GlobalEnvironment& environment,
             const std::string& serverAddress);
 
-    ~RPCBlockchainClient();
+    ~RPCBlockchainClient() override;
 
 public:
 

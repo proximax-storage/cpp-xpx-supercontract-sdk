@@ -15,10 +15,10 @@ namespace sirius::contract::rpcExecutorServer {
 
 namespace bp = boost::process;
 
-class RPCReplicatorException : public std::runtime_error {
+class RPCExecutorException : public std::runtime_error {
 public :
 
-    explicit RPCReplicatorException(const std::string& what)
+    explicit RPCExecutorException(const std::string& what)
             : std::runtime_error(what) {}
 
 };
@@ -30,6 +30,7 @@ RPCExecutor::RPCExecutor(std::shared_ptr<logging::Logger> logger)
 RPCExecutor::~RPCExecutor() {
 
     m_serviceServer->Shutdown();
+    m_blockchainServer.reset();
     m_completionQueue->Shutdown();
 
     if (m_completionQueueThread.joinable()) {
@@ -64,6 +65,9 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
     grpc::ServerBuilder builder;
     builder.AddListeningPort(executorRPCAddress, grpc::InsecureServerCredentials());
     builder.RegisterService(&m_service);
+
+    m_blockchainServer = std::make_unique<blockchain::RPCBlockchainServer>(*this, builder);
+
     m_completionQueue = builder.AddCompletionQueue();
     m_serviceServer = builder.BuildAndStart();
 
@@ -91,7 +95,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
 
     auto status = barrier.wait_for(std::chrono::seconds(5));
     if (status != std::future_status::ready || !barrier.get()) {
-        throw RPCReplicatorException("RPC Replicator start failed");
+        throw RPCExecutorException("RPC Replicator start failed");
     }
 
     auto* message = new executor_server::StartExecutor();
@@ -347,7 +351,7 @@ void RPCExecutor::sendMessage(const executor_server::ServerMessage& message) {
     m_stream.Write(message, tag);
     auto success = barrier.get();
     if (!success) {
-        throw RPCReplicatorException("RPC Replicator send failed");
+        throw RPCExecutorException("RPC Replicator send failed");
     }
 }
 

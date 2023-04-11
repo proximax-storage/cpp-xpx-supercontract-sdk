@@ -12,10 +12,11 @@
 #include <executor/ExecutorEventHandler.h>
 #include <common/GlobalEnvironment.h>
 #include <common/AsyncQuery.h>
+#include <blockchain/RPCBlockchainServer.h>
 
 namespace sirius::contract::rpcExecutorServer {
 
-class RPCExecutor: public Executor, GlobalEnvironment {
+class RPCExecutor: public Executor, public GlobalEnvironment {
 
 private:
 
@@ -33,6 +34,8 @@ private:
     boost::process::child m_childReplicatorProcess;
 
     std::mutex m_sendMutex;
+
+    std::unique_ptr<blockchain::RPCBlockchainServer> m_blockchainServer;
 
 public:
 
