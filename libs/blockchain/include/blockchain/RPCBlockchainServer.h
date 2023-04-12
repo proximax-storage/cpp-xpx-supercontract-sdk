@@ -36,7 +36,8 @@ private:
 public:
 
     RPCBlockchainServer(GlobalEnvironment& environment,
-                        grpc::ServerBuilder& builder);
+                        grpc::ServerBuilder& builder,
+                        std::unique_ptr<blockchain::Blockchain>&& blockchain);
 
     ~RPCBlockchainServer();
 

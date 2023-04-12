@@ -29,13 +29,15 @@ RPCExecutor::RPCExecutor(std::shared_ptr<logging::Logger> logger)
 
 RPCExecutor::~RPCExecutor() {
 
-    m_serviceServer->Shutdown();
-    m_blockchainServer.reset();
-    m_completionQueue->Shutdown();
+    m_threadManager.execute([this] {
+        m_serviceServer->Shutdown();
+        m_blockchainServer.reset();
+        m_completionQueue->Shutdown();
 
-    if (m_completionQueueThread.joinable()) {
-        m_completionQueueThread.join();
-    }
+        if (m_completionQueueThread.joinable()) {
+            m_completionQueueThread.join();
+        }
+    });
 
     m_threadManager.stop();
 
@@ -55,48 +57,53 @@ void RPCExecutor::waitForRPCResponse() {
 }
 
 void RPCExecutor::start(const std::string& executorRPCAddress,
+                        std::unique_ptr<blockchain::Blockchain>&& blockchain,
                         const crypto::KeyPair& keyPair,
                         const std::string& rpcStorageAddress,
                         const std::string& rpcMessengerAddress,
-                        const std::string& rpcBlockchainAddress,
                         const std::string& rpcVMAddress,
                         const std::string& logPath,
                         uint8_t networkIdentifier) {
-    grpc::ServerBuilder builder;
-    builder.AddListeningPort(executorRPCAddress, grpc::InsecureServerCredentials());
-    builder.RegisterService(&m_service);
-
-    m_blockchainServer = std::make_unique<blockchain::RPCBlockchainServer>(*this, builder);
-
-    m_completionQueue = builder.AddCompletionQueue();
-    m_serviceServer = builder.BuildAndStart();
-
-    m_completionQueueThread = std::thread([this] {
-        waitForRPCResponse();
-    });
-
-    m_threadManager.execute([this] {
-        readMessage();
-    });
-
     std::promise<bool> startPromise;
     auto barrier = startPromise.get_future();
-    auto* startTag = new StartRPCTag(std::move(startPromise));
 
-    m_service.RequestRunExecutor(&m_serverContext, &m_stream, m_completionQueue.get(), m_completionQueue.get(),
-                                 startTag);
+    m_threadManager.execute([&, this, startPromise=std::move(startPromise)] () mutable {
 
-    m_childReplicatorProcess = bp::child(
-            boost::dll::program_location().parent_path() / "sirius.contract.rpc_executor_client",
-            executorRPCAddress,
-            bp::std_out > bp::null,
-            bp::std_err > bp::null,
-            bp::std_in < bp::null);
+        grpc::ServerBuilder builder;
+        builder.AddListeningPort(executorRPCAddress, grpc::InsecureServerCredentials());
+        builder.RegisterService(&m_service);
+
+        m_blockchainServer =
+                std::make_unique<blockchain::RPCBlockchainServer>(*this, builder, std::move(blockchain));
+
+        m_completionQueue = builder.AddCompletionQueue();
+        m_serviceServer = builder.BuildAndStart();
+
+        m_completionQueueThread = std::thread([this] {
+            waitForRPCResponse();
+        });
+
+        auto* startTag = new StartRPCTag(std::move(startPromise));
+
+        m_service.RequestRunExecutor(&m_serverContext, &m_stream, m_completionQueue.get(), m_completionQueue.get(),
+                                     startTag);
+
+        m_childReplicatorProcess = bp::child(
+                boost::dll::program_location().parent_path() / "sirius.contract.rpc_executor_client",
+                executorRPCAddress,
+                bp::std_out > bp::null,
+                bp::std_err > bp::null,
+                bp::std_in < bp::null);
+    });
 
     auto status = barrier.wait_for(std::chrono::seconds(5));
     if (status != std::future_status::ready || !barrier.get()) {
         throw RPCExecutorException("RPC Replicator start failed");
     }
+
+    m_threadManager.execute([this] {
+        readMessage();
+    });
 
     auto* message = new executor_server::StartExecutor();
     std::string privateKeyBuffer = {keyPair.privateKey().begin(), keyPair.privateKey().end()};
@@ -104,7 +111,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
     message->set_rpc_storage_address(rpcStorageAddress);
     message->set_rpc_messenger_address(rpcMessengerAddress);
     message->set_rpc_vm_address(rpcVMAddress);
-    message->set_rpc_blockchain_address(rpcBlockchainAddress);
+    message->set_rpc_blockchain_address(executorRPCAddress);
     message->set_log_path(logPath);
     message->set_network_identifier(networkIdentifier);
     executor_server::ServerMessage serverMessage;

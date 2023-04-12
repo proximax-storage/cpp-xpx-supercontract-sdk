@@ -11,6 +11,44 @@
 
 namespace sirius::contract::blockchain {
 
+RPCBlockchainServer::RPCBlockchainServer(GlobalEnvironment& environment,
+                                         grpc::ServerBuilder& builder,
+                                         std::unique_ptr<blockchain::Blockchain>&& blockchain)
+                                         : m_environment(environment)
+                                         , m_blockchain(std::move(blockchain)) {
+    builder.RegisterService(&m_service);
+    m_completionQueue = builder.AddCompletionQueue();
+
+    m_completionQueueThread = std::thread([this] {
+        waitForRPCResponse();
+    });
+}
+
+void RPCBlockchainServer::waitForRPCResponse() {
+    ASSERT(!isSingleThread(), m_environment.logger())
+
+    void* pTag;
+    bool ok;
+    while (m_completionQueue->Next(&pTag, &ok)) {
+        auto* pQuery = static_cast<ServerRPCTag*>(pTag);
+        pQuery->process(ok);
+        delete pQuery;
+    }
+}
+
+RPCBlockchainServer::~RPCBlockchainServer() {
+    ASSERT(isSingleThread(), m_environment.logger())
+
+    m_blockchainQueries.clear();
+    m_blockServerRequest.reset();
+
+    m_completionQueue->Shutdown();
+
+    if (m_completionQueueThread.joinable()) {
+        m_completionQueueThread.join();
+    }
+}
+
 void RPCBlockchainServer::acceptBlockRequest() {
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -54,42 +92,6 @@ RPCBlockchainServer::onBlockReceived(uint64_t queryId, std::unique_ptr<BlockCont
     response.set_block_hash(std::string(block.m_blockHash.begin(), block.m_blockHash.end()));
     response.set_block_time(block.m_blockTime);
     tag->m_context->m_responder.Finish(response, grpc::Status::OK, tag);
-}
-
-RPCBlockchainServer::RPCBlockchainServer(GlobalEnvironment& environment, grpc::ServerBuilder& builder)
-: m_environment(environment)
-{
-    builder.RegisterService(&m_service);
-    m_completionQueue = builder.AddCompletionQueue();
-
-    m_completionQueueThread = std::thread([this] {
-        waitForRPCResponse();
-    });
-}
-
-void RPCBlockchainServer::waitForRPCResponse() {
-    ASSERT(!isSingleThread(), m_environment.logger())
-
-    void* pTag;
-    bool ok;
-    while (m_completionQueue->Next(&pTag, &ok)) {
-        auto* pQuery = static_cast<ServerRPCTag*>(pTag);
-        pQuery->process(ok);
-        delete pQuery;
-    }
-}
-
-RPCBlockchainServer::~RPCBlockchainServer() {
-    ASSERT(isSingleThread(), m_environment.logger())
-
-    m_blockchainQueries.clear();
-    m_blockServerRequest.reset();
-
-    m_completionQueue->Shutdown();
-
-    if (m_completionQueueThread.joinable()) {
-        m_completionQueueThread.join();
-    }
 }
 
 }
