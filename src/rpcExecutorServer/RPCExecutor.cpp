@@ -23,9 +23,11 @@ public :
 
 };
 
-RPCExecutor::RPCExecutor(std::shared_ptr<logging::Logger> logger)
-        : GlobalEnvironment(std::move(logger))
-          , m_stream(&m_serverContext) {}
+RPCExecutor::RPCExecutor(std::shared_ptr<ExecutorEventHandler> eventHandler,
+						 std::shared_ptr<logging::Logger> logger)
+	: GlobalEnvironment(std::move(logger))
+	, m_eventHandler(std::move(eventHandler))
+	, m_stream(&m_serverContext) {}
 
 RPCExecutor::~RPCExecutor() {
 

@@ -20,7 +20,7 @@ class RPCExecutor: public Executor, public GlobalEnvironment {
 
 private:
 
-    std::unique_ptr<ExecutorEventHandler> m_eventHandler;
+    std::shared_ptr<ExecutorEventHandler> m_eventHandler;
 
     executor_server::ExecutorServer::AsyncService m_service;
 
@@ -39,7 +39,8 @@ private:
 
 public:
 
-    RPCExecutor(std::shared_ptr<logging::Logger> logger);
+	RPCExecutor(std::shared_ptr<ExecutorEventHandler> eventHandler,
+				std::shared_ptr<logging::Logger> logger);
 
     ~RPCExecutor() override;
 

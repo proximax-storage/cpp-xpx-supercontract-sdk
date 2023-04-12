@@ -1,4 +1,3 @@
-
 /*
 *** Copyright 2023 ProximaX Limited. All rights reserved.
 *** Use of this source code is governed by the Apache 2.0
@@ -21,6 +20,7 @@
 #include <virtualMachine/RPCVirtualMachineBuilder.h>
 #include <messenger/RPCMessengerBuilder.h>
 #include <blockchain/Blockchain.h>
+#include <blockchain/RPCBlockchainClientBuilder.h>
 #include <crypto/KeyPair.h>
 
 namespace sirius::contract::rpcExecutorClient {
@@ -223,8 +223,8 @@ void RPCExecutorClient::processStartExecutor(const executor_server::StartExecuto
     auto privateKey = std::move(*reinterpret_cast<sirius::crypto::PrivateKey*>(keyBuffer.data()));
     auto keyPair = sirius::crypto::KeyPair::FromPrivate(std::move(privateKey));
 
-    // TODO blockchain builder
-    std::unique_ptr<ServiceBuilder<blockchain::Blockchain>> blockchainBuilder;
+    std::unique_ptr<ServiceBuilder<blockchain::Blockchain>> blockchainBuilder =
+			std::make_unique<blockchain::RPCBlockchainClientBuilder>(response.rpc_blockchain_address());
 
     std::unique_ptr<ServiceBuilder<storage::Storage>> storageBuilder =
             std::make_unique<storage::RPCStorageBuilder>(response.rpc_storage_address());
