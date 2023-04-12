@@ -41,7 +41,7 @@ private:
 
 public:
 
-    RPCExecutorClient(const std::string& address);
+    explicit RPCExecutorClient(const std::string& address);
 
     ~RPCExecutorClient() override;
 
