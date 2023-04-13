@@ -21,13 +21,13 @@ private:
     int                     m_unsuccessfulExecutionDelayMs = 10 * 1000;
     int                     m_successfulExecutionDelayMs = 10 * 1000;
 
-    uint64_t                m_autorunSCLimit = 50;
+    uint64_t                m_autorunSCLimit = 100000;
 
     std::string             m_autorunFile = "autorun.wasm";
     std::string             m_autorunFunction = "main";
 
     // TODO Consider other default values
-    uint64_t                m_maxAutorunExecutableSize = 5U * 1024U * 1024U;
+    uint64_t                m_maxAutorunExecutableSize = 1024U;
     uint64_t                m_maxAutomaticExecutableSize = 5U * 1024U * 1024U;
     uint64_t                m_maxManualExecutableSize = 5U * 1024U * 1024U;
 
