@@ -2,4 +2,4 @@ cmake_minimum_required(VERSION 3.9)
 
 supercontract_sdk_executable(sirius.contract.rpc_executor_client)
 
-target_link_libraries(sirius.contract.rpc_executor_client sirius.contract.executor executor_contract_grpc_proto)
+target_link_libraries(sirius.contract.rpc_executor_client sirius.contract.executor executor_sirius_grpc_proto)
