@@ -10,8 +10,7 @@
 
 namespace sirius::contract {
 
-ThreadManager::ThreadManager(): m_context()
-                                , m_work(boost::asio::make_work_guard(m_context))
+ThreadManager::ThreadManager(): m_work(boost::asio::make_work_guard(m_context))
                                 , m_thread(std::thread([this] { m_context.run(); })) {}
 
 ThreadManager::~ThreadManager() {

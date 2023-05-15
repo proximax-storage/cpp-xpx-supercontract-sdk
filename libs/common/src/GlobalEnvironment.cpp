@@ -11,10 +11,16 @@
 namespace sirius::contract {
 
 GlobalEnvironment::GlobalEnvironment(std::shared_ptr<logging::Logger> logger)
-        : m_logger(std::move(logger)) {}
+        : m_threadManager(std::make_shared<ThreadManager>())
+        , m_logger(std::move(logger)) {}
+
+GlobalEnvironment::GlobalEnvironment(std::shared_ptr<logging::Logger> logger,
+                                     std::shared_ptr<ThreadManager> threadManager)
+                                     : m_threadManager(std::move(threadManager))
+                                     , m_logger(std::move(logger)) {}
 
 ThreadManager& GlobalEnvironment::threadManager() {
-    return m_threadManager;
+    return *m_threadManager;
 }
 
 logging::Logger& GlobalEnvironment::logger() {

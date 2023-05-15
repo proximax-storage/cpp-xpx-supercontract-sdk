@@ -90,7 +90,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
         return utils::generateRandomByteValue<uint8_t>();
     });
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
 
     ExecutorConfig executorConfig;
     executorConfig.setSuccessfulExecutionDelayMs(1000);
@@ -132,7 +132,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
             callRequests
     };
 
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results, 3000U);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, results, 3000U);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     auto storageMock = std::make_shared<StorageMock>();
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -224,7 +224,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
     executorEventHandler->m_expectedInfo = expectedInfo;
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
 
         auto[_, callback] = createAsyncQuery<void>([](auto&&) {}, [] {}, executorEnvironmentMock, false, false);
 
@@ -252,7 +252,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
     publishedInfo.m_driveState = expectedState.m_storageHash;
     publishedInfo.m_cosigners = {transactionInfo.m_executorKeys.begin(), transactionInfo.m_executorKeys.end()};
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         pBatchExecutionTask->onEndBatchExecutionPublished(publishedInfo);
     });
 
@@ -260,7 +260,7 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
 
     {
         std::promise<void> postStatePromise;
-        threadManager.execute([&] {
+        executorEnvironmentMock.threadManager().execute([&] {
             ASSERT_EQ(storageMock->m_info->m_state.m_storageHash, expectedState.m_storageHash);
             ASSERT_EQ(storageMock->m_info->m_historicBatches.size(), 1);
             const auto& historicBatch = storageMock->m_info->m_historicBatches.front();
@@ -281,11 +281,11 @@ TEST(BatchExecutionTask, EnoughUnsuccessfulOpinions) {
         ASSERT_EQ(std::future_status::ready, postStatePromise.get_future().wait_for(std::chrono::seconds(5)));
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         pBatchExecutionTask.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 }

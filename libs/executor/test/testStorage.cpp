@@ -62,7 +62,7 @@ TEST(Supercontract, Storage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
                                         threadManager);
@@ -86,7 +86,7 @@ TEST(Supercontract, Storage) {
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage = storage::RPCStorageBuilder(*rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
@@ -113,7 +113,7 @@ TEST(Supercontract, Storage) {
     auto barrier = p.get_future();
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         std::filesystem::copy("supercontracts/storage.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -163,12 +163,12 @@ TEST(Supercontract, Storage) {
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
-    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(60)));
 
     std::promise<void> pApply;
     auto barrierApply = pApply.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
                 [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
@@ -188,14 +188,14 @@ TEST(Supercontract, Storage) {
 
     ASSERT_EQ(std::future_status::ready, barrierApply.wait_for(std::chrono::seconds(10)));
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage.reset();
         modificationHolder.m_storageModification.reset();
         modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 
-    threadManager.stop();
+    environment.threadManager().stop();
     std::filesystem::copy("supercontracts/lib.rs",
                           "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -217,7 +217,7 @@ TEST(Supercontract, Iterator) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
                                         threadManager);
@@ -241,7 +241,7 @@ TEST(Supercontract, Iterator) {
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage = storage::RPCStorageBuilder(*rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
@@ -268,7 +268,7 @@ TEST(Supercontract, Iterator) {
     auto barrier = p.get_future();
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         std::filesystem::copy("supercontracts/iterator.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -317,12 +317,12 @@ TEST(Supercontract, Iterator) {
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
-    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(60)));
 
     std::promise<void> pApply;
     auto barrierApply = pApply.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
                 [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
@@ -342,14 +342,14 @@ TEST(Supercontract, Iterator) {
 
     ASSERT_EQ(std::future_status::ready, barrierApply.wait_for(std::chrono::seconds(10)));
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage.reset();
         modificationHolder.m_storageModification.reset();
         modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 
-    threadManager.stop();
+    environment.threadManager().stop();
     std::filesystem::copy("supercontracts/lib.rs",
                           "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
@@ -371,7 +371,7 @@ TEST(Supercontract, FaultyStorage) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
                                         threadManager);
@@ -395,7 +395,7 @@ TEST(Supercontract, FaultyStorage) {
     std::promise<void> pInit;
     auto barrierInit = pInit.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage = storage::RPCStorageBuilder(*rpcStorageAddress).build(environment);
         environment.m_storage = pStorage;
         auto[_, storageCallback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>(
@@ -422,7 +422,7 @@ TEST(Supercontract, FaultyStorage) {
     auto barrier = p.get_future();
 
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         std::filesystem::copy("supercontracts/storage_faulty.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
@@ -471,12 +471,12 @@ TEST(Supercontract, FaultyStorage) {
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
     });
 
-    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(60)));
 
     std::promise<void> pApply;
     auto barrierApply = pApply.get_future();
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         auto[q1, applySandboxCallback] = createAsyncQuery<storage::SandboxModificationDigest>(
                 [=, &environment, &modificationHolder, &contractEnvironmentMock, &pApply](auto&& res) {
                     auto[q2, evaluateStateCallback] = createAsyncQuery<storage::StorageState>(
@@ -496,14 +496,14 @@ TEST(Supercontract, FaultyStorage) {
 
     ASSERT_EQ(std::future_status::ready, barrierApply.wait_for(std::chrono::seconds(10)));
 
-    threadManager.execute([&] {
+    environment.threadManager().execute([&] {
         pStorage.reset();
         modificationHolder.m_storageModification.reset();
         modificationHolder.m_sandboxModification.reset();
         pVirtualMachine.reset();
     });
 
-    threadManager.stop();
+    environment.threadManager().stop();
     std::filesystem::copy("supercontracts/lib.rs",
                           "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }

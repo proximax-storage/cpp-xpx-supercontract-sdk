@@ -14,12 +14,17 @@ class GlobalEnvironment {
 
 protected:
 
-    ThreadManager m_threadManager;
+    std::shared_ptr<ThreadManager> m_threadManager;
     std::shared_ptr<logging::Logger> m_logger;
 
 public:
 
     explicit GlobalEnvironment(std::shared_ptr<logging::Logger> logger);
+
+    GlobalEnvironment(std::shared_ptr<logging::Logger> logger, std::shared_ptr<ThreadManager> threadManager);
+
+    GlobalEnvironment(const GlobalEnvironment&) = delete;
+    GlobalEnvironment& operator =(const GlobalEnvironment&) = delete;
 
     virtual ~GlobalEnvironment() = default;
 

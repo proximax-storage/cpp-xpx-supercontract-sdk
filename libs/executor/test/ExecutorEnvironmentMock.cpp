@@ -13,26 +13,27 @@ namespace sirius::contract::test {
 ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                                                  std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                                                  const ExecutorConfig& executorConfig,
-                                                 ThreadManager& threadManager): ExecutorEnvironment(
-        std::make_shared<logging::Logger>(getLoggerConfig(), "executor"))
-                                                                                , m_keyPair(std::move(keyPair))
-                                                                                , m_executorConfig(
-                executorConfig), m_threadManager(threadManager), m_logger(logging::LoggerConfig(), "executor")
-                                                                                , m_virtualMachineMock(
-                std::move(virtualMachineMock)) {}
+                                                 std::shared_ptr<ThreadManager> threadManager)
+                                                 : ExecutorEnvironment(
+                                                         std::make_shared<logging::Logger>(getLoggerConfig(), "executor")
+                                                                 , std::move(threadManager))
+                                                 , m_keyPair(std::move(keyPair))
+                                                 , m_executorConfig(executorConfig)
+                                                 , m_logger(logging::LoggerConfig(), "executor")
+                                                 , m_virtualMachineMock(std::move(virtualMachineMock)) {}
 
 ExecutorEnvironmentMock::ExecutorEnvironmentMock(crypto::KeyPair&& keyPair,
                                                  std::weak_ptr<vm::VirtualMachine> virtualMachineMock,
                                                  const ExecutorConfig& executorConfig,
-                                                 ThreadManager& threadManager,
+                                                 std::shared_ptr<ThreadManager> threadManager,
                                                  std::weak_ptr<storage::Storage> storageMock,
                                                  std::weak_ptr<messenger::Messenger> messengerMock,
                                                  std::shared_ptr<ExecutorEventHandler> handler)
-        : ExecutorEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"))
+        : ExecutorEnvironment(
+        std::make_shared<logging::Logger>(getLoggerConfig(), "executor"), std::move(threadManager))
           , m_keyPair(std::move(keyPair))
           , m_executorConfig(executorConfig)
           , m_executorEventHandlerMock(std::move(handler))
-          , m_threadManager(threadManager)
           , m_logger(logging::LoggerConfig(), "executor")
           , m_messenger(std::move(messengerMock))
           , m_storage(std::move(storageMock))

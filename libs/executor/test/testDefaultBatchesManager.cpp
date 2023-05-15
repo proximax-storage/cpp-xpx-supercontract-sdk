@@ -43,7 +43,7 @@ TEST(TEST_NAME, BatchTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, true, false, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
@@ -51,7 +51,7 @@ TEST(TEST_NAME, BatchTest) {
         callExecutionResult.m_success = result;
         executionResults.push_back(callExecutionResult);
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -88,13 +88,14 @@ TEST(TEST_NAME, BatchTest) {
         }
     }
 
-    threadManager.execute([&] {
+    
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addManualCall(requests[1]);
@@ -106,7 +107,7 @@ TEST(TEST_NAME, BatchTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -130,11 +131,11 @@ TEST(TEST_NAME, BatchTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, AllFalseTest) {
@@ -158,13 +159,13 @@ TEST(TEST_NAME, AllFalseTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {false, false, false, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -201,12 +202,12 @@ TEST(TEST_NAME, AllFalseTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addManualCall(requests[1]);
@@ -228,7 +229,7 @@ TEST(TEST_NAME, AllFalseTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -260,11 +261,11 @@ TEST(TEST_NAME, AllFalseTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, StorageSynchronisedTest) {
@@ -291,13 +292,13 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, false, true, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -334,12 +335,12 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->skipBatches(3);
         batchesManager->addManualCall(requests[0]);
@@ -352,7 +353,7 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 3);
@@ -368,11 +369,11 @@ TEST(TEST_NAME, StorageSynchronisedTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
@@ -399,13 +400,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, false, true, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -443,13 +444,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlock(1);
@@ -462,7 +463,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 3);
@@ -478,11 +479,11 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtMiddleTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
@@ -509,13 +510,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, false, true, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -553,13 +554,13 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlock(1);
@@ -571,7 +572,7 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->skipBatches(3);
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -588,11 +589,11 @@ TEST(TEST_NAME, StorageSynchronisedBatchesDeclareAtEndTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
@@ -619,13 +620,13 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, false, true, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -665,13 +666,13 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addManualCall(requests[0]);
         batchesManager->addBlock(1);
@@ -684,7 +685,7 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         batchesManager->addBlock(4);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -711,11 +712,11 @@ TEST(TEST_NAME, DisableAutomaticExecutionsEnabledSinceTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, MultipleEnabledSinceTest) {
@@ -741,7 +742,7 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
     // addCall
     // addBlockInfo12 - false
     // create contract environment
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     srand(time(nullptr));
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
@@ -758,7 +759,7 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), virtualMachineMock, executorConfig,
                                                     threadManager);
@@ -797,13 +798,13 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addBlock(1);
         batchesManager->addBlock(2);
@@ -832,7 +833,7 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
 
     sleep(4);
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         // enabled
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
@@ -889,11 +890,11 @@ TEST(TEST_NAME, MultipleEnabledSinceTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
@@ -931,13 +932,13 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, false, true, false, true, false, true, false, true, false, true, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -975,13 +976,13 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addBlock(1);
         batchesManager->addBlock(2);
@@ -1005,7 +1006,7 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         batchesManager->addBlock(12);
     });
     sleep(4);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -1045,11 +1046,11 @@ TEST(TEST_NAME, DisableThenEnableEnabledSinceTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, VirtualMachineUnavailableTest) {
@@ -1073,13 +1074,13 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, true, false, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 4);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 4);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1117,13 +1118,13 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addBlock(1);
         batchesManager->addManualCall(requests[0]);
@@ -1133,7 +1134,7 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         batchesManager->addBlock(4);
     });
     sleep(10);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -1153,11 +1154,11 @@ TEST(TEST_NAME, VirtualMachineUnavailableTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, DelayBatchesTest) {
@@ -1181,13 +1182,13 @@ TEST(TEST_NAME, DelayBatchesTest) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
     std::deque<bool> results = {true, true, false, false};
     std::deque<vm::CallExecutionResult> executionResults;
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 4);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 4);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1225,13 +1226,13 @@ TEST(TEST_NAME, DelayBatchesTest) {
         }
     }
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(index, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         batchesManager->addBlock(1);
         batchesManager->addManualCall(requests[0]);
@@ -1241,7 +1242,7 @@ TEST(TEST_NAME, DelayBatchesTest) {
         batchesManager->addBlock(4);
     });
     sleep(10);
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         ASSERT_TRUE(batchesManager->hasNextBatch());
         auto batch1 = batchesManager->nextBatch();
         ASSERT_EQ(batch1.m_batchIndex, 1);
@@ -1282,11 +1283,11 @@ TEST(TEST_NAME, DelayBatchesTest) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, MovingEnabledSince) {
@@ -1319,7 +1320,7 @@ TEST(TEST_NAME, MovingEnabledSince) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
 
     std::deque<bool> results;
 
@@ -1331,7 +1332,7 @@ TEST(TEST_NAME, MovingEnabledSince) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1343,20 +1344,20 @@ TEST(TEST_NAME, MovingEnabledSince) {
     // create default batches manager
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         for (uint i = 0; i < totalBlocks; i++) {
             batchesManager->addBlock(i);
         }
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->fixUnmodifiable(unmodifiableUpTo);
     });
 
@@ -1367,20 +1368,20 @@ TEST(TEST_NAME, MovingEnabledSince) {
     enableMover = [&]() {
         if (moversExecuted <= enabledSince) {
             batchesManager->setAutomaticExecutionsEnabledSince(moversExecuted++);
-            timer = Timer(threadManager.context(), 100, enableMover);
+            timer = Timer(executorEnvironmentMock.threadManager().context(), 100, enableMover);
         } else {
             promise.set_value();
         }
     };
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         enableMover();
     });
 
     sleep(4);
     promise.get_future().wait();
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
 
         uint batchesObtained = 0;
         for (uint i = 0; i < unmodifiableUpTo; i++) {
@@ -1442,11 +1443,11 @@ TEST(TEST_NAME, MovingEnabledSince) {
         }
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, DelayedBatchCancel) {
@@ -1474,7 +1475,7 @@ TEST(TEST_NAME, DelayedBatchCancel) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
 
     std::deque<bool> results;
     results.push_back(true);
@@ -1483,7 +1484,7 @@ TEST(TEST_NAME, DelayedBatchCancel) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1495,7 +1496,7 @@ TEST(TEST_NAME, DelayedBatchCancel) {
     // create default batches manager
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
@@ -1505,7 +1506,7 @@ TEST(TEST_NAME, DelayedBatchCancel) {
 
     sleep(4);
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->fixUnmodifiable(1);
         batchesManager->setAutomaticExecutionsEnabledSince({});
         {
@@ -1542,11 +1543,11 @@ TEST(TEST_NAME, DelayedBatchCancel) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
@@ -1576,7 +1577,7 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
     crypto::PrivateKey privateKey;
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
     ExecutorConfig executorConfig;
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
 
     std::deque<bool> results;
 
@@ -1588,7 +1589,7 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
     for (const auto& result: results) {
         executionResults.push_back(vm::CallExecutionResult{result});
     }
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, executionResults, MAX_VM_DELAY, 0);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, executionResults, MAX_VM_DELAY, 0);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
 
     ExecutorEnvironmentMock executorEnvironmentMock(std::move(keyPair), pVirtualMachineMock, executorConfig,
@@ -1600,13 +1601,13 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
     // create default batches manager
     std::unique_ptr<BaseBatchesManager> batchesManager;
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager = std::make_unique<DefaultBatchesManager>(0, contractEnvironmentMock,
                                                                  executorEnvironmentMock);
         batchesManager->run();
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager->setAutomaticExecutionsEnabledSince(0);
         for (uint i = 0; i < totalBlocks; i++) {
             batchesManager->addBlock(i);
@@ -1615,7 +1616,7 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
 
     sleep(4);
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         {
             ASSERT_TRUE(batchesManager->hasNextBatch());
             auto batch = batchesManager->nextBatch();
@@ -1639,11 +1640,11 @@ TEST(TEST_NAME, DelayBatchAfterFixUnmodifiable) {
         ASSERT_FALSE(batchesManager->hasNextBatch());
     });
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         batchesManager.reset();
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 }

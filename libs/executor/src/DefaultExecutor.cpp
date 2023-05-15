@@ -37,8 +37,8 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
           , m_sslContext(boost::asio::ssl::context::tlsv12_client)
           , m_config(config)
           , m_eventHandler(std::move(eventHandler)) {
-    setThreadId(m_threadManager.threadId());
-    m_threadManager.execute([this,
+    setThreadId(m_threadManager->threadId());
+    m_threadManager->execute([this,
                                     vmBuilder = std::move(vmBuilder),
                                     storageBuilder = std::move(storageBuilder),
                                     blockchainBuilder = std::move(blockchainBuilder),
@@ -69,17 +69,17 @@ DefaultExecutor::~DefaultExecutor() {
 
     m_logger->info("Started executor destruction");
 
-    m_threadManager.execute([this] {
+    m_threadManager->execute([this] {
         terminate();
     });
 
-    m_threadManager.stop();
+    m_threadManager->stop();
 
     m_logger->info("Executor is destructed");
 }
 
 void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& request) {
-    m_threadManager.execute([=, this, request = std::move(request)]() mutable {
+    m_threadManager->execute([=, this, request = std::move(request)]() mutable {
         if (m_contracts.contains(key)) {
             return;
         }
@@ -99,7 +99,7 @@ void DefaultExecutor::addContract(const ContractKey& key, AddContractRequest&& r
 }
 
 void DefaultExecutor::addManualCall(const ContractKey& key, ManualCallRequest&& request) {
-    m_threadManager.execute([=, this, request = std::move(request)] {
+    m_threadManager->execute([=, this, request = std::move(request)] {
 
         auto contractIt = m_contracts.find(key);
 
@@ -113,7 +113,7 @@ void DefaultExecutor::addManualCall(const ContractKey& key, ManualCallRequest&& 
 }
 
 void DefaultExecutor::addBlockInfo(uint64_t blockHeight, blockchain::Block&& block) {
-    m_threadManager.execute([=, this, block = std::move(block)] {
+    m_threadManager->execute([=, this, block = std::move(block)] {
 
         m_logger->debug("New block is added. Height: {}", blockHeight);
 
@@ -122,7 +122,7 @@ void DefaultExecutor::addBlockInfo(uint64_t blockHeight, blockchain::Block&& blo
 }
 
 void DefaultExecutor::addBlock(const ContractKey& contractKey, uint64_t height) {
-    m_threadManager.execute([=, this] {
+    m_threadManager->execute([=, this] {
 
         auto contractIt = m_contracts.find(contractKey);
 
@@ -136,7 +136,7 @@ void DefaultExecutor::addBlock(const ContractKey& contractKey, uint64_t height) 
 }
 
 void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& request) {
-    m_threadManager.execute([=, this, request = std::move(request)] {
+    m_threadManager->execute([=, this, request = std::move(request)] {
 
         auto contractIt = m_contracts.find(key);
 
@@ -154,7 +154,7 @@ void DefaultExecutor::removeContract(const ContractKey& key, RemoveRequest&& req
 }
 
 void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey, ExecutorInfo>&& executors) {
-    m_threadManager.execute([=, this, executors = std::move(executors)]() mutable {
+    m_threadManager->execute([=, this, executors = std::move(executors)]() mutable {
 
         auto contractIt = m_contracts.find(key);
 
@@ -178,7 +178,7 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey,
 // region message subscriber
 
 void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
-    m_threadManager.execute([=, this] {
+    m_threadManager->execute([=, this] {
         try {
             auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
             if (tag.has_value()) {
@@ -258,7 +258,7 @@ boost::asio::ssl::context& DefaultExecutor::sslContext() {
 // region blockchain event handler
 
 void DefaultExecutor::onEndBatchExecutionPublished(blockchain::PublishedEndBatchExecutionTransactionInfo&& info) {
-    m_threadManager.execute([this, info = std::move(info)] {
+    m_threadManager->execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -271,7 +271,7 @@ void DefaultExecutor::onEndBatchExecutionPublished(blockchain::PublishedEndBatch
 
 void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
         blockchain::PublishedEndBatchExecutionSingleTransactionInfo&& info) {
-    m_threadManager.execute([this, info = std::move(info)] {
+    m_threadManager->execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -283,7 +283,7 @@ void DefaultExecutor::onEndBatchExecutionSingleTransactionPublished(
 }
 
 void DefaultExecutor::onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) {
-    m_threadManager.execute([this, info = std::move(info)] {
+    m_threadManager->execute([this, info = std::move(info)] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -295,7 +295,7 @@ void DefaultExecutor::onEndBatchExecutionFailed(blockchain::FailedEndBatchExecut
 }
 
 void DefaultExecutor::onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) {
-    m_threadManager.execute([=, this] {
+    m_threadManager->execute([=, this] {
         auto contractIt = m_contracts.find(info.m_contractKey);
 
         if (contractIt == m_contracts.end()) {
@@ -309,7 +309,7 @@ void DefaultExecutor::onStorageSynchronizedPublished(blockchain::PublishedSynchr
 void DefaultExecutor::setAutomaticExecutionsEnabledSince(
         const ContractKey& contractKey,
         uint64_t blockHeight) {
-    m_threadManager.execute([=, this] {
+    m_threadManager->execute([=, this] {
         auto contractIt = m_contracts.find(contractKey);
 
         if (contractIt == m_contracts.end()) {

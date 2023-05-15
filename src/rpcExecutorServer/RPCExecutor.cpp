@@ -31,7 +31,7 @@ RPCExecutor::RPCExecutor(std::shared_ptr<ExecutorEventHandler> eventHandler,
 
 RPCExecutor::~RPCExecutor() {
 
-    m_threadManager.execute([this] {
+    m_threadManager->execute([this] {
         m_serviceServer->Shutdown();
         m_blockchainServer.reset();
         m_completionQueue->Shutdown();
@@ -41,7 +41,7 @@ RPCExecutor::~RPCExecutor() {
         }
     });
 
-    m_threadManager.stop();
+    m_threadManager->stop();
 
     if (m_childReplicatorProcess.joinable()) {
         m_childReplicatorProcess.join();
@@ -69,7 +69,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
     std::promise<bool> startPromise;
     auto barrier = startPromise.get_future();
 
-    m_threadManager.execute([&, this, startPromise=std::move(startPromise)] () mutable {
+    m_threadManager->execute([&, this, startPromise=std::move(startPromise)] () mutable {
 
         grpc::ServerBuilder builder;
         builder.AddListeningPort(executorRPCAddress, grpc::InsecureServerCredentials());
@@ -103,7 +103,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
         throw RPCExecutorException("RPC Replicator start failed");
     }
 
-    m_threadManager.execute([this] {
+    m_threadManager->execute([this] {
         readMessage();
     });
 

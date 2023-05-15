@@ -60,7 +60,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
         return utils::generateRandomByteValue<uint8_t>();
     });
     crypto::KeyPair keyPair = crypto::KeyPair::FromPrivate(std::move(privateKey));
-    ThreadManager threadManager;
+    auto threadManager = std::make_shared<ThreadManager>();
 
     ExecutorConfig executorConfig;
     executorConfig.setShareOpinionTimeoutMs(messagesPeriodicity);
@@ -101,7 +101,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
             callRequests
     };
 
-    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(threadManager, results, 0U);
+    auto virtualMachineMock = std::make_shared<VirtualMachineMock>(*threadManager, results, 0U);
     std::weak_ptr<VirtualMachineMock> pVirtualMachineMock = virtualMachineMock;
     auto storageMock = std::make_shared<StorageMock>();
     auto messengerMock = std::make_shared<MessengerMock>();
@@ -171,7 +171,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
     }
 
     std::unique_ptr<BaseContractTask> pBatchExecutionTask;
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
 
         auto[_, callback] = createAsyncQuery<void>([](auto&&) {}, [] {}, executorEnvironmentMock, false, false);
 
@@ -187,7 +187,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
 
     std::this_thread::sleep_for(std::chrono::milliseconds((messagesNumber - 1) * messagesPeriodicity + 1000));
 
-    threadManager.execute([&] {
+    executorEnvironmentMock.threadManager().execute([&] {
         pBatchExecutionTask.reset();
 
         ASSERT_EQ(executorKeys.size(), messengerMock->m_sentMessages.size());
@@ -266,7 +266,7 @@ TEST(BatchExecutionTask, OpinionMessages) {
         }
     });
 
-    threadManager.stop();
+    executorEnvironmentMock.threadManager().stop();
 }
 
 }

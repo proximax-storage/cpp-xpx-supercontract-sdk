@@ -30,6 +30,10 @@ public:
     ExecutorEnvironment(std::shared_ptr<logging::Logger> logger)
     : GlobalEnvironment(std::move(logger)) {}
 
+    ExecutorEnvironment(std::shared_ptr<logging::Logger> logger,
+                        std::shared_ptr<ThreadManager> threadManager)
+    : GlobalEnvironment(std::move(logger), std::move(threadManager)) {}
+
     ~ExecutorEnvironment() override = default;
 
     virtual const crypto::KeyPair& keyPair() const = 0;
