@@ -594,7 +594,7 @@ TEST(Supercontract, Fund) {
                 params,
                 25000000000,
                 26 * 1024,
-                vm::CallRequest::CallLevel::AUTORUN, 0);  // change to autorun
+                vm::CallRequest::CallLevel::MANUAL, 0);
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
                                                                  executorConfig.maxInternetConnections(),
