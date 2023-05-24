@@ -577,7 +577,7 @@ TEST(Supercontract, Fund) {
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     
     environment.threadManager().execute([&] {
-        std::filesystem::copy("supercontracts/mytest.rs",
+        std::filesystem::copy("supercontracts/fund.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
         exec("wasm-pack build --debug rust-xpx-supercontract-client-sdk/");
@@ -617,7 +617,7 @@ TEST(Supercontract, Fund) {
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
-                                                                               0,
+                                                                               2000,
                                                                                25000000000,
                                                                                26 * 1024,
                                                                                callRequest.m_callId.array(),
@@ -628,7 +628,7 @@ TEST(Supercontract, Fund) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-//            ASSERT_EQ(res->m_execution_gas_consumed, 9803); //1437180
+            ASSERT_EQ(res->m_execution_gas_consumed, 28026132);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
