@@ -1059,7 +1059,6 @@ TEST(Supercontract, ReadBtc) {
     std::promise<void> p;
     auto barrier = p.get_future();
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
-    std::filesystem::current_path("../");
     environment.threadManager().execute([&] {
         std::filesystem::copy("supercontracts/internet_btc.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
@@ -1067,7 +1066,7 @@ TEST(Supercontract, ReadBtc) {
         std::filesystem::copy("supercontracts/btc_price.rs",
                               "rust-xpx-supercontract-client-sdk/src/btc_price.rs",
                               copyOptions);
-        exec("/home/jackshen/.cargo/bin/wasm-pack build --dev rust-xpx-supercontract-client-sdk/");
+        exec("wasm-pack build --dev rust-xpx-supercontract-client-sdk/");
         vm::RPCVirtualMachineBuilder builder(*rpcVirtualMachineAddress);
         builder.setStorage(storageObserver);
         pVirtualMachine = builder.build(environment);
