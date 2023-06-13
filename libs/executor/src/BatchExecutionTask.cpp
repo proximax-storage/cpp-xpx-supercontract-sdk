@@ -211,7 +211,8 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                                   callRequest->downloadPayment() *
                                   m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier(),
                                   isManual ? vm::CallRequest::CallLevel::MANUAL : vm::CallRequest::CallLevel::AUTOMATIC,
-                                  m_proofOfExecutionSecretData);
+                                  m_proofOfExecutionSecretData,
+								  m_contractEnvironment.driveKey());
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
             [this, callRequest](auto&& res) mutable {
@@ -280,7 +281,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
     m_storageQuery.reset();
 
     if (!executionResult.m_success) {
-        ASSERT(digest.m_success, m_executorEnvironment.logger())
+        ASSERT(!digest.m_success, m_executorEnvironment.logger())
     }
 
     m_proofOfExecutionSecretData = executionResult.m_proofOfExecutionSecretData;

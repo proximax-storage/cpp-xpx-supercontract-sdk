@@ -148,7 +148,9 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
                             {},
                             m_executorEnvironment.executorConfig().autorunSCLimit(),
                             0,
-                            vm::CallRequest::CallLevel::AUTORUN, 0);
+                            vm::CallRequest::CallLevel::AUTORUN,
+							0,
+							m_contractEnvironment.driveKey());
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([blockHeight = height, this](auto&& result) {
         if (result) {

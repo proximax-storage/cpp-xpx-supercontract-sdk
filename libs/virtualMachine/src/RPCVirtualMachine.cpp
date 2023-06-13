@@ -80,7 +80,7 @@ void RPCVirtualMachine::executeCall(const CallRequest& request,
             },
             m_environment, true, true);
     m_fileInfoQueries[request.m_callId] = std::move(fileInfoQuery);
-    storage->fileInfo(DriveKey(), request.m_file, fileInfoCallback);
+    storage->fileInfo(request.m_driveKey, request.m_file, fileInfoCallback);
 }
 
 void RPCVirtualMachine::onReceivedCallFileInfo(CallRequest&& request,

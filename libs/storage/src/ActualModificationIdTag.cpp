@@ -31,7 +31,7 @@ void ActualModificationIdTag::process(bool ok) {
     ASSERT(ok, m_environment.logger())
 
     if (!m_status.ok()) {
-        m_environment.logger().warn("Failed to obtain the absolute path: {}", m_status.error_message());
+        m_environment.logger().warn("Failed to obtain actual modification id: {}", m_status.error_message());
         auto error = tl::unexpected<std::error_code>(make_error_code(StorageError::storage_unavailable));
         m_callback->postReply(error);
     }

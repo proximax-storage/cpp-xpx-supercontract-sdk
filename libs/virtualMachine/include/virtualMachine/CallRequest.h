@@ -28,6 +28,7 @@ struct CallRequest {
     uint64_t m_downloadGasLimit;
     CallLevel m_callLevel;
     uint64_t m_proofOfExecutionPrefix;
+	DriveKey m_driveKey;
 
     CallRequest(const CallId& callId,
                 const std::string& file,
@@ -36,7 +37,8 @@ struct CallRequest {
                 uint64_t executionGasLimit,
                 uint64_t downloadGasLimit,
                 CallLevel callLevel,
-                uint64_t proofOfExecutionPrefix)
+                uint64_t proofOfExecutionPrefix,
+				const DriveKey& driveKey)
                 : m_callId(callId)
                 , m_file(file)
                 , m_function(function)
@@ -44,7 +46,8 @@ struct CallRequest {
                 , m_executionGasLimit(executionGasLimit)
                 , m_downloadGasLimit(downloadGasLimit)
                 , m_callLevel(callLevel)
-                , m_proofOfExecutionPrefix(proofOfExecutionPrefix) {}
+                , m_proofOfExecutionPrefix(proofOfExecutionPrefix)
+				, m_driveKey(driveKey) {}
 };
 
 struct CallExecutionResult {
