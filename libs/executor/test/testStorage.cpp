@@ -100,7 +100,7 @@ TEST(Supercontract, Storage) {
                                 pInit.set_value();
                             },
                             [] {}, environment, false, true);
-                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
+                    modificationHolder.m_storageModification->initiateSandboxModification({}, sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
@@ -196,8 +196,8 @@ TEST(Supercontract, Storage) {
     });
 
     environment.threadManager().stop();
-    std::filesystem::copy("supercontracts/lib.rs",
-                          "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+//    std::filesystem::copy("supercontracts/lib.rs",
+//                          "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
 TEST(Supercontract, Iterator) {
@@ -255,7 +255,7 @@ TEST(Supercontract, Iterator) {
                                 pInit.set_value();
                             },
                             [] {}, environment, false, true);
-                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
+                    modificationHolder.m_storageModification->initiateSandboxModification({}, sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),
@@ -409,7 +409,7 @@ TEST(Supercontract, FaultyStorage) {
                                 pInit.set_value();
                             },
                             [] {}, environment, false, true);
-                    modificationHolder.m_storageModification->initiateSandboxModification(sandboxCallback);
+                    modificationHolder.m_storageModification->initiateSandboxModification({}, sandboxCallback);
                 },
                 [] {}, environment, false, true);
         pStorage->initiateModifications(contractEnvironmentMock.driveKey(),

@@ -23,6 +23,7 @@ public:
     StorageModificationMock(std::shared_ptr<StorageInfo> statistics);
 
     void initiateSandboxModification(
+            const std::vector<std::string>& serviceFolders,
             std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::SandboxModification>>> callback) override;
 
     void evaluateStorageHash(std::shared_ptr<AsyncQueryCallback<storage::StorageState>> callback) override;

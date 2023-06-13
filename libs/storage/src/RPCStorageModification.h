@@ -26,6 +26,7 @@ public:
                            const DriveKey& driveKey);
 
     void initiateSandboxModification(
+            const std::vector<std::string>& serviceFolders,
             std::shared_ptr<AsyncQueryCallback<std::unique_ptr<SandboxModification>>> callback) override;
 
     void evaluateStorageHash(std::shared_ptr<AsyncQueryCallback<StorageState>> callback) override;

@@ -186,7 +186,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                 onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_storageModification->initiateSandboxModification(callback);
+    contextHolder.m_storageModification->initiateSandboxModification({}, callback);
 }
 } // namespace write
 
@@ -327,7 +327,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                 onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_storageModification->initiateSandboxModification(callback);
+    contextHolder.m_storageModification->initiateSandboxModification({}, callback);
 }
 } // namespace read
 

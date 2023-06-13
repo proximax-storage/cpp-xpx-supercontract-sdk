@@ -938,7 +938,8 @@ void BatchExecutionTask::executeNextCall() {
 
         m_storageQuery = std::move(query);
 
-        m_storageModification->initiateSandboxModification(callback);
+        m_storageModification->initiateSandboxModification({m_executorEnvironment.executorConfig().storagePathPrefix()},
+                                                           callback);
     } else {
         computeProofOfExecution();
 

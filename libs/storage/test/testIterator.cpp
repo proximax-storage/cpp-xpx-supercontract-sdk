@@ -169,7 +169,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                 onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_storageModification->initiateSandboxModification(callback);
+    contextHolder.m_storageModification->initiateSandboxModification({}, callback);
 }
 } // namespace createFolders
 
@@ -340,7 +340,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                 onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_storageModification->initiateSandboxModification(callback);
+    contextHolder.m_storageModification->initiateSandboxModification({}, callback);
 }
 } // namespace createFiles
 
@@ -467,7 +467,7 @@ void onModificationsInitiated(const DriveKey& driveKey,
                 onSandboxModificationsInitiated(driveKey, environment, contextHolder, barrier);
             }, [] {}, environment, false, true);
 
-    contextHolder.m_storageModification->initiateSandboxModification(callback);
+    contextHolder.m_storageModification->initiateSandboxModification({}, callback);
 }
 } // namespace iterator
 

@@ -14,6 +14,7 @@ StorageModificationMock::StorageModificationMock(std::shared_ptr<StorageInfo> in
 : m_info(std::move(info)) {}
 
 void StorageModificationMock::initiateSandboxModification(
+        const std::vector<std::string>& serviceFolders,
         std::shared_ptr<AsyncQueryCallback<std::unique_ptr<storage::SandboxModification>>> callback) {
     ASSERT_TRUE(m_info->m_actualBatch);
     m_info->m_actualBatch->m_calls.emplace_back();

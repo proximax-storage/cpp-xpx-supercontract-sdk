@@ -21,7 +21,9 @@ public:
     virtual ~StorageModification() = default;
 
     virtual void
-    initiateSandboxModification(std::shared_ptr<AsyncQueryCallback<std::unique_ptr<SandboxModification>>> callback) = 0;
+    initiateSandboxModification(
+            const std::vector<std::string>& serviceFolders,
+            std::shared_ptr<AsyncQueryCallback<std::unique_ptr<SandboxModification>>> callback) = 0;
 
     virtual void
     evaluateStorageHash(std::shared_ptr<AsyncQueryCallback<StorageState>> callback) = 0;

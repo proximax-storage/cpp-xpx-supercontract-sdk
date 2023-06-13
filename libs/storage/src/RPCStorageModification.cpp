@@ -21,6 +21,7 @@ RPCStorageModification::RPCStorageModification(GlobalEnvironment& environment,
           , m_driveKey(driveKey) {}
 
 void RPCStorageModification::initiateSandboxModification(
+        const std::vector<std::string>& serviceFolders,
         std::shared_ptr<AsyncQueryCallback<std::unique_ptr<SandboxModification>>> callback) {
     ASSERT(isSingleThread(), m_environment.logger())
 
@@ -43,6 +44,9 @@ void RPCStorageModification::initiateSandboxModification(
 
     storageServer::InitSandboxRequest request;
     request.set_drive_key(m_driveKey.toString());
+    for (const auto& folder: serviceFolders) {
+        request.add_service_folders(folder);
+    }
     auto* tag = new InitiateSandboxModificationsTag(m_environment,
                                                     std::move(request),
                                                     rpcClient->stub(),
