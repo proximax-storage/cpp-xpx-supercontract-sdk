@@ -72,7 +72,8 @@ TEST(VirtualMachine, SimpleContract) {
                 52000000,
                 20 * 1024,
                 CallRequest::CallLevel::AUTOMATIC,
-                0);
+                0,
+                DriveKey());
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
 
@@ -140,7 +141,8 @@ TEST(VirtualMachine, InternetRead) {
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
                 CallRequest::CallLevel::MANUAL,
-                0);
+                0,
+                DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -211,7 +213,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSC) {
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
                 CallRequest::CallLevel::MANUAL,
-                0);
+                0,
+                DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -281,7 +284,8 @@ TEST(VirtualMachine, InternetReadNotEnoughSM) {
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 25 * 1024,
                 CallRequest::CallLevel::MANUAL,
-                0);
+                0,
+                DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -351,7 +355,7 @@ TEST(VirtualMachine, WrongContractPath) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -415,7 +419,7 @@ TEST(VirtualMachine, WrongIP) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -480,7 +484,7 @@ TEST(VirtualMachine, WrongExecFunction) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -551,7 +555,8 @@ TEST(VirtualMachine, UnauthorizedImportFunction) {
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
                 CallRequest::CallLevel::AUTOMATIC,
-                0);
+                0,
+                DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -621,7 +626,7 @@ TEST(VirtualMachine, AbortVMDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -690,7 +695,7 @@ TEST(VirtualMachine, FaultyContract) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -768,7 +773,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -805,7 +810,7 @@ TEST(VirtualMachine, AbortServerDuringExecution) {
                 // It needs to be 16kb more than the actual amount needed to pass the memory read limit check
                 // (the last call to read rpc function should expect 0 return but it will need to pass the 16kb check first anyways)
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         internetHandler = std::make_shared<MockVirtualMachineInternetQueryHandler>();
 
@@ -870,7 +875,7 @@ TEST(VirtualMachine, SimpleStorage) {
                 params,
                 25000000000,
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         storageHandler = std::make_shared<MockStorageHandler>();
 
@@ -937,7 +942,7 @@ TEST(VirtualMachine, IteratorTest) {
                 params,
                 25000000000,
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         storageHandler = std::make_shared<MockStorageHandler>();
 
@@ -1004,7 +1009,7 @@ TEST(VirtualMachine, FaultyStorage) {
                 params,
                 25000000000,
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         storageHandler = std::make_shared<FaultyMockStorageHandler>();
 
@@ -1065,7 +1070,7 @@ TEST(VirtualMachine, NullStorageHandler) {
                 params,
                 25000000000,
                 26 * 1024,
-                CallRequest::CallLevel::MANUAL, 0);
+                CallRequest::CallLevel::MANUAL, 0, DriveKey());
 
         auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
 

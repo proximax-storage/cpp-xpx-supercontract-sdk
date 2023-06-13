@@ -132,7 +132,7 @@ TEST(Supercontract, Storage) {
                 params,
                 25000000000,
                 26 * 1024,
-                vm::CallRequest::CallLevel::MANUAL, 0);
+                vm::CallRequest::CallLevel::MANUAL, 0, contractEnvironmentMock.driveKey());
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
                                                                  executorConfig.maxInternetConnections(),
@@ -286,7 +286,7 @@ TEST(Supercontract, Iterator) {
                 params,
                 25000000000,
                 26 * 1024,
-                vm::CallRequest::CallLevel::MANUAL, 0);
+                vm::CallRequest::CallLevel::MANUAL, 0, contractEnvironmentMock.driveKey());
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
                                                                  executorConfig.maxInternetConnections(),
@@ -440,7 +440,7 @@ TEST(Supercontract, FaultyStorage) {
                 params,
                 25000000000,
                 26 * 1024,
-                vm::CallRequest::CallLevel::MANUAL, 0);
+                vm::CallRequest::CallLevel::MANUAL, 0, contractEnvironmentMock.driveKey());
 
         internetHandler = std::make_shared<InternetQueryHandler>(callRequest.m_callId,
                                                                  executorConfig.maxInternetConnections(),
