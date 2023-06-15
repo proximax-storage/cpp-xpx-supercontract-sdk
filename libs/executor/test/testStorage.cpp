@@ -1262,7 +1262,7 @@ TEST(Supercontract, Voting) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_execution_gas_consumed, 930757091);
+            ASSERT_EQ(res->m_execution_gas_consumed, 930770813);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 

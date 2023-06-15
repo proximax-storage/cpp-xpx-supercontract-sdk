@@ -80,7 +80,7 @@ impl Election {
     }
     // Cast a vote for a candidate
     pub fn cast_vote(&mut self, candidate_id: u8) -> i32 {
-        let voter_key = [0u8; 32];
+        let voter_key = blockchain::get_caller_public_key();
         let voter = self
             .voters
             .iter_mut()
@@ -95,14 +95,18 @@ impl Election {
             concatenated_vec.push(candidate_id);
             concatenated_vec.extend_from_slice(&voter_key);
 
-            let mut file = FileWriter::new("testFolder/voter.txt").unwrap();
-            file.write(concatenated_vec.as_mut_slice()).unwrap();
-            file.flush().unwrap();
+            {
+                let mut file = FileWriter::new("voter.txt").unwrap();
+                file.write(concatenated_vec.as_mut_slice()).unwrap();
+                file.flush().unwrap();
 
-            let mut file_read = FileReader::new("testFolder/voter.txt").unwrap();
+            }
             let mut buffer = vec![0u8; 33]; // Create a buffer to store the read data
-            let len = file_read.read(&mut buffer[..]).unwrap();
-            assert_eq!(len, 33);
+            {
+                let mut file_read = FileReader::new("voter.txt").unwrap();
+                let len = file_read.read(&mut buffer[..]).unwrap();
+                assert_eq!(len, 33);
+            }
 
             // check vote
             if concatenated_vec != buffer {
