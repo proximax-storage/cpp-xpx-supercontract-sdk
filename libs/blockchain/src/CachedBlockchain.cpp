@@ -52,6 +52,7 @@ void CachedBlockchain::block(uint64_t height, std::shared_ptr<AsyncQueryCallback
 
                 auto queryIt = m_queries.find(height);
 
+				ASSERT(block, m_environment.logger())
                 ASSERT(queryIt != m_queries.end(), m_environment.logger())
 
                 addBlock(height, *block);

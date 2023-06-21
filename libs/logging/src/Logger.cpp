@@ -30,7 +30,7 @@ Logger::Logger(const LoggerConfig& loggerConfig, std::string prefix)
                                                       m_guard->pool(),
                                                       spdlog::async_overflow_policy::block);
     // TODO read log level from config
-    m_logger->set_level(spdlog::level::debug);
+    m_logger->set_level(spdlog::level::trace);
     m_logger->flush_on(spdlog::level::err);
 }
 

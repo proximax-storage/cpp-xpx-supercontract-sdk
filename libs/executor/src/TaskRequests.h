@@ -9,7 +9,7 @@
 namespace sirius::contract {
 
 struct SynchronizationRequest {
-    uint64_t m_batchIndex = 0;
+    int64_t m_batchIndex = -1;
     StorageHash m_storageHash;
 };
 

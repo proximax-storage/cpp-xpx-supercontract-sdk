@@ -127,9 +127,9 @@ bool DefaultContract::onEndBatchExecutionPublished(const blockchain::PublishedEn
 
     clearOutdatedCache(m_unknownPublishedEndBatchTransactions, m_batchesManager->minBatchIndex());
 
-    ASSERT(info.m_batchIndex > m_lastKnownStorageState.m_batchIndex, m_executorEnvironment.logger())
+    ASSERT(static_cast<int64_t>(info.m_batchIndex) > m_lastKnownStorageState.m_batchIndex, m_executorEnvironment.logger())
 
-    m_lastKnownStorageState = {info.m_batchIndex, info.m_driveState};
+    m_lastKnownStorageState = {static_cast<int64_t>(info.m_batchIndex), info.m_driveState};
 
     m_executorEnvironment.logger().debug("Updated last known storage state. Contract key: {}, storage state: {}",
                                          m_contractKey,
