@@ -1420,9 +1420,6 @@ TEST(Supercontract, Storage_Iter_Serde) {
             ASSERT_EQ(res->m_return, 1);
             ASSERT_EQ(res->m_execution_gas_consumed, 8371887844);
             ASSERT_EQ(res->m_download_gas_consumed, 77);
-            std::cout << res->m_return << std::endl;
-            std::cout << res->m_download_gas_consumed << std::endl;
-            std::cout << res->m_execution_gas_consumed << std::endl;
         }, [] {}, environment, false, false);
 
         pVirtualMachine->executeCall(callRequest, internetHandler, blockchainHandler, storageHandler, callback);
