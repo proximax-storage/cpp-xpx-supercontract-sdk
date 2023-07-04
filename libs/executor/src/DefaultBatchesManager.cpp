@@ -113,6 +113,14 @@ void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
         if (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::MANUAL) {
             batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
         }
+
+        if (hasNextBatch()) {
+        	// Note that we do not check here that exactly this batch is the next batch
+        	// That's why the number of notifications might not be the same as the number of ready batches
+        	// due to gaps
+        	m_contractEnvironment.notifyHasNextBatch();
+        }
+
     } else {
         if (m_batches.empty() || (--m_batches.end())->first < blockHeight) {
             m_batches.try_emplace(blockHeight);
@@ -325,7 +333,7 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t nextBlockHei
                 batch.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
             } else if (!batch.m_requests.back()->isManual()) {
                 ASSERT(batch.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED,
-                       m_executorEnvironment.logger());
+                       m_executorEnvironment.logger())
                 batch.m_requests.pop_back();
             }
 
