@@ -24,7 +24,7 @@ private:
     uint64_t                m_autorunSCLimit = 100000;
 
     std::string             m_autorunFile = "autorun.wasm";
-    std::string             m_autorunFunction = "main";
+    std::string             m_autorunFunction = "run";
 
     // TODO Consider other default values
     uint64_t                m_maxAutorunExecutableSize = 1024U;
