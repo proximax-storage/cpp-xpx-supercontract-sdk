@@ -18,24 +18,34 @@ class ExecutorConfig {
 
 private:
 
+	// The config values that must be the same on all the executors
+
+	uint64_t                m_autorunSCLimit = 100000;
+
+	std::string             m_autorunFile = "autorun.wasm";
+	std::string             m_autorunFunction = "run";
+
+	// TODO Consider other default values
+	uint64_t                m_maxAutorunExecutableSize = 1024U;
+	uint64_t                m_maxAutomaticExecutableSize = 5U * 1024U * 1024U;
+	uint64_t                m_maxManualExecutableSize = 5U * 1024U * 1024U;
+
+	std::string             m_storagePathPrefix = "SC_DATA";
+
+	int                     m_internetBufferSize = 16 * 1024;
+
+	uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
+	uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
+
+	uint8_t                 m_networkIdentifier;
+
+	// The config values that may differ between executors
+
     int                     m_unsuccessfulExecutionDelayMs = 10 * 1000;
     int                     m_successfulExecutionDelayMs = 10 * 1000;
 
-    uint64_t                m_autorunSCLimit = 100000;
-
-    std::string             m_autorunFile = "autorun.wasm";
-    std::string             m_autorunFunction = "run";
-
-    // TODO Consider other default values
-    uint64_t                m_maxAutorunExecutableSize = 1024U;
-    uint64_t                m_maxAutomaticExecutableSize = 5U * 1024U * 1024U;
-    uint64_t                m_maxManualExecutableSize = 5U * 1024U * 1024U;
-
-    std::string             m_storagePathPrefix = "SC_DATA";
-
     int                     m_serviceUnavailableTimeoutMs = 5000;
 
-    int                     m_internetBufferSize = 16 * 1024;
     int                     m_internetConnectionTimeoutMilliseconds = 10000;
     int                     m_ocspQueryTimerMilliseconds = 500;
     int                     m_ocspQueryMaxEfforts = 60;
@@ -44,11 +54,6 @@ private:
     int                     m_shareOpinionTimeoutMs = 2 * 1000 * 60;
 
     uint64_t                m_maxBatchesHistorySize = 10000U;
-
-    uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
-    uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
-
-    uint8_t                 m_networkIdentifier;
 
 public:
 
