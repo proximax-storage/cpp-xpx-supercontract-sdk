@@ -85,9 +85,6 @@ void StorageQueryHandler::flush(uint64_t fileId, std::shared_ptr<AsyncQueryCallb
 
     ASSERT(!m_asyncQuery, m_executorEnvironment.logger())
 
-    m_executorEnvironment.logger().info("Contract call {} requested to flush a write buffer to file {}",
-                                        m_callId, fileId);
-
     auto[asyncQuery, storageCallback] = createAsyncQuery<void>([=, this](auto&& res) {
                                                                    m_asyncQuery.reset();
                                                                    callback->postReply(std::forward<decltype(res)>(res));
