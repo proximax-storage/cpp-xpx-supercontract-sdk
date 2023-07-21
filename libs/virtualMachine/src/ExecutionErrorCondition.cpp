@@ -8,6 +8,7 @@
 #include <internet/InternetErrorCode.h>
 #include <virtualMachine/ExecutionErrorConidition.h>
 #include <virtualMachine/VirtualMachineErrorCode.h>
+#include <blockchain/BlockchainErrorCode.h>
 
 namespace sirius::contract::vm {
 
@@ -23,10 +24,14 @@ std::string ExecutionErrorCategory::message(int ev) const {
             return "Storage is unavailable";
         case static_cast<unsigned int>(ExecutionError::internet_unavailable):
             return "Internet is unavailable";
+        case static_cast<unsigned int>(ExecutionError::blockchain_unavailable):
+            return "Blockchain is unavailable";
         case static_cast<unsigned int>(ExecutionError::internet_incorrect_query):
             return "Incorrect internet query";
         case static_cast<unsigned int>(ExecutionError::storage_incorrect_query):
             return "Incorrect storage query";
+        case static_cast<unsigned int>(ExecutionError::blockchain_incorrect_query):
+            return "Invalid blockchain query";
         default:
             return "Other error";
     }
@@ -46,6 +51,11 @@ bool ExecutionErrorCategory::equivalent(const std::error_code& code, int conditi
         case static_cast<int>(ExecutionError::internet_incorrect_query):
             return code.category() == internet::internetErrorCategory() &&
                    code != internet::InternetError::internet_unavailable;
+        case static_cast<int>(ExecutionError::blockchain_unavailable):
+            return code == blockchain::BlockchainError::blockchain_unavailable;
+        case static_cast<int>(ExecutionError::blockchain_incorrect_query):
+            return code.category() == blockchain::blockchainErrorCategory() &&
+                   code != blockchain::BlockchainError::blockchain_unavailable;
         default:
             return false;
     }
