@@ -198,6 +198,7 @@ endfunction()
 
 function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
         if (NOT NOT_BUILD_SIRIUS_${SERVICE})
+                message(ERROR built ${SERVICE}_sirius_grpc_proto)
                 get_filename_component(${SERVICE}_proto "${PROTO_PATH}${SERVICE}.proto" ABSOLUTE)
                 get_filename_component(${SERVICE}_proto_path "${${SERVICE}_proto}" PATH)
                 list(APPEND DEPENDENCIES ${${SERVICE}_proto})
