@@ -66,6 +66,26 @@ pub extern "C" fn run() -> i32 {
     map.insert("bnb".to_string(), bnb_value);
     assert_eq!(map.len(), 3);
 
+    let mut res = 1i32;
+    {
+        let mut iterator = DirIterator::new("unsorted", false);
+
+        let expected = [
+            "btc.txt",
+            "eth.txt",
+            "bnb.txt"
+
+        ];
+
+        while let Some(entry) = iterator.next() {
+            let path = &entry.name;
+            if !expected.contains(&path.as_str()) {
+                res = 99;
+            }
+        }
+        assert_eq!(res, 1);
+    }
+
     if blockchain::get_block_height() % 240 == 0 {
         for (name, number) in &map {
             let old_path = format!("unsorted/{}.txt", name);
@@ -79,7 +99,6 @@ pub extern "C" fn run() -> i32 {
         }
     }
 
-    let mut res = 1i32;
     {
         let mut iterator = DirIterator::new("over", false);
 
@@ -93,8 +112,8 @@ pub extern "C" fn run() -> i32 {
                 res = 99;
             }
         }
+        assert_eq!(res, 1);
     }
-    assert_eq!(res, 1);
 
     {
         let mut iterator = DirIterator::new("under", false);
@@ -110,8 +129,8 @@ pub extern "C" fn run() -> i32 {
                 res = 99;
             }
         }
+        assert_eq!(res, 1);
     }
-    assert_eq!(res, 1);
 
     return 1;
 }

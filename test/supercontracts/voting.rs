@@ -50,6 +50,7 @@ pub extern "C" fn run() -> i32 {
     return election.check_votes();
 }
 // Candidate structure
+#[allow(dead_code)]
 struct Candidate {
     id: u8,
     name: String,

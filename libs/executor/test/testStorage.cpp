@@ -156,7 +156,8 @@ TEST(Supercontract, Storage) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 4402891458);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -266,7 +267,6 @@ TEST(Supercontract, Iterator) {
 
     std::promise<void> p;
     auto barrier = p.get_future();
-    std::filesystem::current_path("../");
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     environment.threadManager().execute([&] {
         std::filesystem::copy("supercontracts/iterator.rs",
@@ -310,7 +310,8 @@ TEST(Supercontract, Iterator) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 218275185);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -464,7 +465,8 @@ TEST(Supercontract, FaultyStorage) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 1437180);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -617,7 +619,7 @@ TEST(Supercontract, Fund) {
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
-                                                                               2000,
+                                                                               0,
                                                                                25000000000,
                                                                                26 * 1024,
                                                                                callRequest.m_callId.array(),
@@ -628,7 +630,8 @@ TEST(Supercontract, Fund) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 28026132);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -788,7 +791,8 @@ TEST(Supercontract, Loan) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 11475540);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -930,14 +934,16 @@ TEST(Supercontract, Lottery) {
                                                                modificationHolder.m_sandboxModification);
         ServicePayment sp;  //add service payments
         sp.m_mosaicId = 1;
-        sp.m_amount = 500;
+        sp.m_amount = 1000;
         std::vector<ServicePayment> servicePayments;
+        servicePayments.push_back(sp);
+        servicePayments.push_back(sp);
         servicePayments.push_back(sp);
 
         blockchainHandler = std::make_shared<ManualCallBlockchainQueryHandler>(environment,
                                                                                contractEnvironmentMock,
                                                                                CallerKey(),
-                                                                               2000,
+                                                                               0,
                                                                                25000000000,
                                                                                26 * 1024,
                                                                                callRequest.m_callId.array(),
@@ -948,7 +954,8 @@ TEST(Supercontract, Lottery) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 15676873);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -1106,7 +1113,8 @@ TEST(Supercontract, ReadBtc) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 5525586917);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 25);
         }, [] {}, environment, false, false);
 
@@ -1169,9 +1177,8 @@ TEST(Supercontract, Voting) {
     ExecutorConfig executorConfig;
     auto threadManager = std::make_shared<ThreadManager>();
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
-    std::shared_ptr<blockchain::Blockchain> pBlockchain;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
-                                        threadManager, std::move(pBlockchain));
+                                        threadManager);
 
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
@@ -1262,7 +1269,8 @@ TEST(Supercontract, Voting) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 0);
-            ASSERT_EQ(res->m_execution_gas_consumed, 930770813);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 0);
         }, [] {}, environment, false, false);
 
@@ -1325,9 +1333,8 @@ TEST(Supercontract, Storage_Iter_Serde) {
     ExecutorConfig executorConfig;
     auto threadManager = std::make_shared<ThreadManager>();
     std::shared_ptr<vm::VirtualMachine> pVirtualMachine;
-    std::shared_ptr<blockchain::Blockchain> pBlockchain;
     ExecutorEnvironmentMock environment(std::move(keyPair), std::move(pVirtualMachine), executorConfig,
-                                        threadManager, std::move(pBlockchain));
+                                        threadManager);
 
     ContractKey contractKey;
     uint64_t automaticExecutionsSCLimit = 0;
@@ -1375,7 +1382,7 @@ TEST(Supercontract, Storage_Iter_Serde) {
     auto barrier = p.get_future();
     const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
     environment.threadManager().execute([&] {
-        std::filesystem::copy("supercontracts/mytest.rs",
+        std::filesystem::copy("supercontracts/storage_iter_serde.rs",
                               "rust-xpx-supercontract-client-sdk/src/lib.rs",
                               copyOptions);
         exec("wasm-pack build --dev rust-xpx-supercontract-client-sdk/");
@@ -1418,7 +1425,8 @@ TEST(Supercontract, Storage_Iter_Serde) {
             ASSERT_TRUE(res);
             ASSERT_EQ(res->m_success, true);
             ASSERT_EQ(res->m_return, 1);
-            ASSERT_EQ(res->m_execution_gas_consumed, 8371887844);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
             ASSERT_EQ(res->m_download_gas_consumed, 77);
         }, [] {}, environment, false, false);
 

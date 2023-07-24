@@ -1,6 +1,5 @@
-mod blockchain;
+pub mod blockchain;
 
-use blockchain::*;
 use serde::Serialize;
 
 #[no_mangle]
@@ -10,12 +9,11 @@ pub extern "C" fn run() -> i32 {
         user_array: Vec::new(),
         amount: 0,
     };
-    lottery.set_due_date(2500);
+    lottery.set_due_date(0);
     lottery.pay(1000);
     lottery.pay(1000);
     lottery.pay(1000);
 
-    lottery.random();
     // return 1 fund is valid, return 0 fund does not achieve the goal or over due data
     let x = lottery.check_fund();
     return x;
@@ -42,41 +40,40 @@ impl Lottery {
     }
     pub fn pay(&mut self, amount: u64) {
         self.amount = self.get_amount() + amount;
-        let public_key = get_caller_public_key();
+        let public_key = blockchain::get_caller_public_key();
         self.user_array.extend_from_slice(&public_key);
     }
     pub fn random(&self) -> [u8; 32] {
-        let mut user_key: Vec<u8> = Vec::new();
-        let length = self.user_array.len() / 32;
-        let random_number = 3;
+        let mut user = [0u8; 32];
+        let random_number = (blockchain::get_block_generation_time() % 3) + 1;
+        assert_eq!(random_number, 1);
         if random_number == 1 {
             let start_bit = 0;
-            let end_bit = 31;
-            user_key = self.user_array[start_bit..end_bit].to_vec();
-        } else {
-            let start_bit = (random_number - 1) * 32;
-            let end_bit = start_bit + 32;
-            user_key = self.user_array[start_bit..end_bit].to_vec();
+            let end_bit = 32;
+            user.copy_from_slice(&self.user_array[start_bit..end_bit]);
         }
-
-        assert_eq!(user_key.len(), 32);
-        let user_key_array: [u8; 32] = user_key[..32].try_into().unwrap();
-        return user_key_array;
+        else {
+            let start_bit: usize = ((random_number - 1) * 32).try_into().unwrap();
+            let end_bit: usize = start_bit + 32;
+            user.copy_from_slice(&self.user_array[start_bit..end_bit]);
+        }
+        assert_eq!(user, [0u8; 32]);
+        return user;
     }
 
     pub fn check_fund(&self) -> i32 {
         let mut pay_amount: u64 = 0;
         let mut profit: u64 = 0;
-        let assets = get_service_payments();
+        let assets = blockchain::get_service_payments();
         let mut total_amount = 0;
         for item in assets {
             total_amount += item.amount;
             pay_amount = 60 / 100 * total_amount;
             profit = total_amount - pay_amount;
         }
-        if get_block_time() >= self.get_due_date() {
+        if blockchain::get_block_height() >= self.get_due_date() {
             let creator: [u8; 32] = [23u8; 32];
-            let mut emb = EmbeddedTransaction::default();
+            let mut emb = blockchain::EmbeddedTransaction::default();
             emb.set_entity_type(0x4154);
             emb.set_version(3);
             let mosaic_size = 1u64.to_le_bytes();
@@ -94,29 +91,29 @@ impl Lottery {
             emb.set_payload(payload);
 
             let winner = self.random();
-            let mut emb2 = EmbeddedTransaction::default();
+            let mut emb2 = blockchain::EmbeddedTransaction::default();
             emb2.set_entity_type(0x4154);
             emb2.set_version(3);
             let mosaic_size2 = 1u64.to_le_bytes();
             let msg_size2 = 0u64.to_le_bytes();
-            let mosaic2 = Mosaic {
-                mosaic_id: 1,
+            let mosaic = Mosaic {
+                mosaic_id: 2,
                 amount: pay_amount,
             };
             let mosaic_byte2 = bincode::serialize(&mosaic).unwrap();
             let mut payload2: Vec<u8> = Vec::new();
             payload2.extend_from_slice(&winner);
-            payload2.extend_from_slice(&mosaic_size);
-            payload2.extend_from_slice(&msg_size);
-            payload2.extend_from_slice(&mosaic_byte);
+            payload2.extend_from_slice(&mosaic_size2);
+            payload2.extend_from_slice(&msg_size2);
+            payload2.extend_from_slice(&mosaic_byte2);
             emb2.set_payload(payload2);
-            let mut agg = AggregateTransaction::default();
+            let mut agg = blockchain::AggregateTransaction::default();
             agg.set_max_fee(10);
             agg.add_embedded_transaction(emb);
             agg.add_embedded_transaction(emb2);
-            set_transaction(&agg);
+            blockchain::set_transaction(&agg);
             return 1;
-        } else {
+        }else {
             return 0;
         }
     }

@@ -1,6 +1,5 @@
-mod blockchain;
+pub mod blockchain;
 
-use blockchain::*;
 use serde::Serialize;
 
 #[no_mangle]
@@ -41,7 +40,7 @@ struct Mosaic {
 impl Loan {
     fn new(mortgage: u64) -> Loan {
         Loan {
-            due_date: get_block_height() + 2000,
+            due_date: blockchain::get_block_height() + 2000,
             loan_amount: mortgage*2,
             interest: mortgage*2*10/100,
             paid: 0,
@@ -57,13 +56,13 @@ impl Loan {
         self.paid = self.paid + amount;
 
         // fine for late payment
-        if get_block_height() > self.due_date && self.loan_amount + self.interest > 0 {
+        if blockchain::get_block_height() > self.due_date && self.loan_amount + self.interest > 0 {
             self.interest = self.interest + self.mortgage * 10 / 100;
         }
 
         // finish repay loan return mortgage
         if self.loan_amount + self.interest == self.paid {
-            let mut emb = EmbeddedTransaction::default();
+            let mut emb = blockchain::EmbeddedTransaction::default();
             emb.set_entity_type(0x4154);
             emb.set_version(3);
             let receiver = [99u8; 32];
@@ -80,10 +79,10 @@ impl Loan {
             payload.extend_from_slice(&msg_size);
             payload.extend_from_slice(&mosaic_byte);
             emb.set_payload(payload);
-            let mut agg = AggregateTransaction::default();
+            let mut agg = blockchain::AggregateTransaction::default();
             agg.set_max_fee(10);
             agg.add_embedded_transaction(emb);
-            set_transaction(&agg);
+            blockchain::set_transaction(&agg);
             return 1;
         }
         return 0;

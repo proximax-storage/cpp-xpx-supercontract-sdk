@@ -1,6 +1,5 @@
-mod blockchain;
+pub mod blockchain;
 
-use blockchain::*;
 use serde::Serialize;
 use std::collections::HashMap;
 
@@ -16,9 +15,9 @@ pub extern "C" fn run() -> i32 {
     fund.set_end_date(2000);
     fund.set_goal(1000);
     fund.pay(500);
-    // assert_eq!(fund.investors.len(), 1);
+    assert_eq!(fund.investors.len(), 1);
     fund.pay(501);
-    // assert_eq!(fund.investors.len(), 2);
+    assert_eq!(fund.investors.len(), 2);
 
     // return 1 fund is valid, return 0 fund does not achieve the goal or over due data
     let x = fund.check_fund();
@@ -62,21 +61,21 @@ impl Fund {
 
     pub fn pay(&mut self, amount: u64) {
         self.amount = self.get_amount() + amount;
-        let investor = get_caller_public_key();
+        let investor = blockchain::get_caller_public_key();
         self.investors.insert(amount, investor);
     }
 
     pub fn check_fund(&self) -> i32 {
         // calculate amount transfered to the contract
-        let assets = get_service_payments();
+        let assets = blockchain::get_service_payments();
         let mut total_amount = 0;
         for item in assets {
             total_amount += item.amount;
         }
 
-        // check fund goal and due date,  if yes set transaction
-        if total_amount >= self.get_goal() && get_block_time() <= self.get_end_date() {
-            let mut emb = EmbeddedTransaction::default();
+        // check fund goal and due date,  if yes set transaction && blockchain::get_block_time() <= self.get_end_date()
+        if total_amount >= self.get_goal() && blockchain::get_block_height() <= self.get_end_date() {
+            let mut emb = blockchain::EmbeddedTransaction::default();
             emb.set_entity_type(0x4154);
             emb.set_version(3);
             let receiver = [99u8; 32];
@@ -90,14 +89,14 @@ impl Fund {
             payload.extend_from_slice(&msg_size);
             payload.extend_from_slice(&mosaic_byte);
             emb.set_payload(payload);
-            let mut agg = AggregateTransaction::default();
+            let mut agg = blockchain::AggregateTransaction::default();
             agg.set_max_fee(10);
             agg.add_embedded_transaction(emb);
-            set_transaction(&agg);
+            blockchain::set_transaction(&agg);
             return 1;
-        }else if get_block_time() > self.get_end_date() {
+        } else if blockchain::get_block_time() > self.get_end_date() {
             for it in &self.investors {
-                let mut emb = EmbeddedTransaction::default();
+                let mut emb = blockchain::EmbeddedTransaction::default();
                 emb.set_entity_type(0x4154);
                 emb.set_version(3);
                 let receiver = it.1;
@@ -111,12 +110,11 @@ impl Fund {
                 payload.extend_from_slice(&msg_size);
                 payload.extend_from_slice(&mosaic_byte);
                 emb.set_payload(payload);
-                let mut agg = AggregateTransaction::default();
+                let mut agg = blockchain::AggregateTransaction::default();
                 agg.set_max_fee(10);
                 agg.add_embedded_transaction(emb);
-                set_transaction(&agg);
+                blockchain::set_transaction(&agg);
             }
-
             return 2;
         }else {
             return 0;
