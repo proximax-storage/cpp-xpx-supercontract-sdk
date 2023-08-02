@@ -32,7 +32,7 @@ private:
 
 	std::string             m_storagePathPrefix = "SC_DATA";
 
-	int                     m_internetBufferSize = 16 * 1024;
+	unsigned int            m_internetBufferSize = 16 * 1024;
 
 	uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
 	uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
@@ -97,11 +97,11 @@ public:
         m_autorunFunction = autorunFunction;
     }
 
-    int internetBufferSize() const {
+    unsigned int internetBufferSize() const {
         return m_internetBufferSize;
     }
 
-    void setInternetBufferSize( int internetBufferSize ) {
+    void setInternetBufferSize( unsigned int internetBufferSize ) {
         m_internetBufferSize = internetBufferSize;
     }
 
