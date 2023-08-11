@@ -1,5 +1,5 @@
 include(FetchContent)
-
+add_definitions(-w)
 FetchContent_Declare(
         expected
         GIT_REPOSITORY https://github.com/TartanLlama/expected

@@ -1,4 +1,5 @@
 include(FetchContent)
+add_definitions(-w)
 option(RE2_BUILD_TESTING "enable testing for RE2" OFF)
 set(ABSL_PROPAGATE_CXX_STD ON)
 set(gRPC_SSL_PROVIDER "package" CACHE STRING "Provider of ssl library")
