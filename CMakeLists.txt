@@ -17,7 +17,7 @@ set(BUILD_DOC OFF)
 set(BUILD_SANDBOX OFF)
 
 ### setup boost
-find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
+find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random stacktrace_backtrace REQUIRED)
 
 supercontract_sdk_third_party_lib(cmake/grpc.cmake)
 supercontract_sdk_third_party_lib(cmake/expected.cmake)
