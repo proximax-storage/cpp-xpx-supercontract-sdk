@@ -38,8 +38,6 @@ void CachedBlockchain::block(uint64_t height, std::shared_ptr<AsyncQueryCallback
         return;
     }
 
-    m_environment.logger().warn("Block not found in blockchain cache. Height: {}", height);
-
     auto queryIt = m_queries.find(height);
 
     if (queryIt != m_queries.end()) {
@@ -52,10 +50,14 @@ void CachedBlockchain::block(uint64_t height, std::shared_ptr<AsyncQueryCallback
 
                 auto queryIt = m_queries.find(height);
 
-				ASSERT(block, m_environment.logger())
-                ASSERT(queryIt != m_queries.end(), m_environment.logger())
+				if (block) {
+					addBlock(height, *block);
+				}
+				else {
+					m_environment.logger().error("No block at height {} found", height);
+				}
 
-                addBlock(height, *block);
+                ASSERT(queryIt != m_queries.end(), m_environment.logger())
 
                 for (const auto& callback: queryIt->second.m_callbacks) {
                     callback->postReply(expected<Block>(block));
@@ -81,7 +83,7 @@ void CachedBlockchain::block(uint64_t height, std::shared_ptr<AsyncQueryCallback
 
     m_queries.try_emplace(height, std::move(query));
 
-    m_blockchain->block(height, callback);
+    m_blockchain->block(height, cacheCallback);
 }
 
 }

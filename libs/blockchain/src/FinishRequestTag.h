@@ -17,11 +17,11 @@ class FinishRequestTag : public ServerRPCTag {
 
 public:
 
-    std::unique_ptr<TContext> m_context;
+    std::shared_ptr<TContext> m_context;
 
 public:
 
-    FinishRequestTag(std::unique_ptr<TContext>&& context)
+    FinishRequestTag(std::shared_ptr<TContext>&& context)
             : m_context(std::move(context)) {}
 
     void process(bool ok) override {
