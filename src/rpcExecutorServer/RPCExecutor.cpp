@@ -114,7 +114,7 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
     message->set_rpc_messenger_address(rpcMessengerAddress);
     message->set_rpc_vm_address(rpcVMAddress);
     message->set_rpc_blockchain_address(executorRPCAddress);
-    message->set_log_path(logPath);
+    message->set_log_path(std::filesystem::absolute(logPath));
     message->set_network_identifier(networkIdentifier);
     executor_server::ServerMessage serverMessage;
     serverMessage.set_allocated_start_executor(message);
