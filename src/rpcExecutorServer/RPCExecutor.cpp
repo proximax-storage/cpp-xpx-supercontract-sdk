@@ -31,15 +31,17 @@ RPCExecutor::RPCExecutor(std::shared_ptr<ExecutorEventHandler> eventHandler,
 
 RPCExecutor::~RPCExecutor() {
 
-    m_threadManager->execute([this] {
-        m_serviceServer->Shutdown();
-        m_blockchainServer.reset();
-        m_completionQueue->Shutdown();
+	m_threadManager->execute([this] {
+			m_readQuery.reset();
+			m_serverContext.TryCancel();
+			m_serviceServer->Shutdown();
+			m_blockchainServer.reset();
+			m_completionQueue->Shutdown();
 
-        if (m_completionQueueThread.joinable()) {
-            m_completionQueueThread.join();
-        }
-    });
+			if (m_completionQueueThread.joinable()) {
+				m_completionQueueThread.join();
+			}
+	});
 
     m_threadManager->stop();
 
@@ -52,10 +54,10 @@ void RPCExecutor::waitForRPCResponse() {
     void* pTag;
     bool ok;
     while (m_completionQueue->Next(&pTag, &ok)) {
-        auto* pQuery = static_cast<RPCTag*>(pTag);
-        pQuery->process(ok);
-        delete pQuery;
-    }
+			auto* pQuery = static_cast<RPCTag*>(pTag);
+			pQuery->process(ok);
+			delete pQuery;
+		}
 }
 
 void RPCExecutor::start(const std::string& executorRPCAddress,
@@ -81,11 +83,13 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
         m_completionQueue = builder.AddCompletionQueue();
         m_serviceServer = builder.BuildAndStart();
 
+		m_blockchainServer->start();
+
         m_completionQueueThread = std::thread([this] {
             waitForRPCResponse();
         });
 
-        auto* startTag = new StartRPCTag(std::move(startPromise));
+		auto* startTag = new StartRPCTag(std::move(startPromise));
 
         m_service.RequestRunExecutor(&m_serverContext, &m_stream, m_completionQueue.get(), m_completionQueue.get(),
                                      startTag);
@@ -314,7 +318,8 @@ void RPCExecutor::onStorageSynchronizedPublished(blockchain::PublishedSynchroniz
 void RPCExecutor::readMessage() {
     auto[query, callback] = createAsyncQuery<executor_server::ClientMessage>([this](auto&& res) {
         onRead(res);
-    }, [] {}, *this, false, true);
+    }, [] {}, *this, true, true);
+    m_readQuery = std::move(query);
     auto* tag = new ReadRPCTag(std::move(callback));
     m_stream.Read(&tag->m_clientMessage, tag);
 }
