@@ -166,6 +166,10 @@ void RPCExecutorClient::onRead(tl::expected<executor_server::ServerMessage, std:
             case executor_server::ServerMessage::SERVER_MESSAGE_NOT_SET: {
                 break;
             }
+			case executor_server::ServerMessage::kUpdateConfig: {
+				processUpdateConfig(response.update_config());
+				break;
+			}
         }
 
         createReadTag();
@@ -238,7 +242,9 @@ void RPCExecutorClient::processStartExecutor(const executor_server::StartExecuto
     std::unique_ptr<ExecutorEventHandler> eventHandler = std::make_unique<RPCExecutorClientEventHandler>(*this);
 
     sirius::contract::ExecutorConfig config;
+
     config.setNetworkIdentifier(static_cast<uint8_t>(response.network_identifier()));
+
 
     logging::LoggerConfig loggerConfig;
     // TODO Maybe not?
@@ -382,6 +388,12 @@ void RPCExecutorClient::processPublishedSynchronizeSingleTransaction(
     info.m_batchIndex = message.batch_index();
 
     m_executor->onStorageSynchronizedPublished(std::move(info));
+}
+
+void RPCExecutorClient::processUpdateConfig(const executor_server::UpdateConfig& message) {
+	uint64_t height = message.height();
+    MutableConfig&& config = (MutableConfig&&)message.config();
+	m_executor->updateConfig(height, std::move(config));
 }
 
 }

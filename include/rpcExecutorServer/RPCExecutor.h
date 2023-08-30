@@ -44,14 +44,15 @@ public:
 
     ~RPCExecutor() override;
 
-    void start(const std::string& executorRPCAddress,
-               std::unique_ptr<blockchain::Blockchain>&& blockchain,
-               const crypto::KeyPair& keyPair,
-               const std::string& rpcStorageAddress,
-               const std::string& rpcMessengerAddress,
-               const std::string& rpcVMAddress,
-               const std::string& logPath,
-               uint8_t networkIdentifier);
+	void
+			start(const std::string& executorRPCAddress,
+				  std::unique_ptr<blockchain::Blockchain>&& blockchain,
+				  const crypto::KeyPair& keyPair,
+				  const std::string& rpcStorageAddress,
+				  const std::string& rpcMessengerAddress,
+				  const std::string& rpcVMAddress,
+				  const std::string& logPath,
+				  uint8_t networkIdentifier);
 
 public:
 
@@ -77,6 +78,8 @@ public:
     void onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) override;
 
     void onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) override;
+
+	void updateConfig(uint64_t height, MutableConfig&& config) override;
 
 private:
 

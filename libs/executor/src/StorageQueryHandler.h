@@ -21,7 +21,6 @@ class StorageQueryHandler
 private:
 
     const CallId m_callId;
-
     ExecutorEnvironment& m_executorEnvironment;
     ContractEnvironment& m_contractEnvironment;
 
