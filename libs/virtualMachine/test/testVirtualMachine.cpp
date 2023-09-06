@@ -1102,4 +1102,71 @@ TEST(VirtualMachine, NullStorageHandler) {
                           "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
 }
 
+TEST(VirtualMachine, GetParams) {
+
+    auto virtualMachineAddressOpt = vmAddress();
+
+    if (!virtualMachineAddressOpt) {
+        GTEST_SKIP();
+    }
+
+    GlobalEnvironment environment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = environment.threadManager();
+
+    auto storageObserver = std::make_shared<StorageObserverMock>();
+
+    std::shared_ptr<VirtualMachine> pVirtualMachine;
+
+    std::promise<void> p;
+    auto barrier = p.get_future();
+    const auto copyOptions = std::filesystem::copy_options::overwrite_existing;
+    std::filesystem::copy("supercontracts/get_params.rs",
+                          "rust-xpx-supercontract-client-sdk/src/lib.rs",
+                          copyOptions);
+    exec("wasm-pack build --debug rust-xpx-supercontract-client-sdk/");
+
+    threadManager.execute([&] {
+        RPCVirtualMachineBuilder builder(*virtualMachineAddressOpt);
+        builder.setStorage(storageObserver);
+        pVirtualMachine = builder.build(environment);
+        
+        std::vector<uint8_t> params;
+        params.push_back(65);
+        params.push_back(66);
+        vm::CallRequest callRequest = CallRequest(
+                CallId(),
+                "rust-xpx-supercontract-client-sdk/pkg/sdk_bg.wasm",
+                "run",
+                params,
+                52000000,
+                20 * 1024,
+                CallRequest::CallLevel::MANUAL,
+                0,
+                DriveKey());
+
+        auto[_, callback] = createAsyncQuery<CallExecutionResult>([&](auto&& res) {
+
+            p.set_value();
+            ASSERT_TRUE(res);
+            ASSERT_EQ(res->m_success, true);
+            ASSERT_EQ(res->m_return, 65);
+            // We do not check an exact amount of gas because it depends on the wasm-pack version
+            ASSERT_TRUE(res->m_execution_gas_consumed > 0);
+            ASSERT_EQ(res->m_download_gas_consumed, 0);
+        }, [] {}, environment, false, false);
+
+        pVirtualMachine->executeCall(callRequest, std::weak_ptr<VirtualMachineInternetQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineBlockchainQueryHandler>(),
+                                     std::weak_ptr<VirtualMachineStorageQueryHandler>(), callback);
+    });
+
+    ASSERT_EQ(std::future_status::ready, barrier.wait_for(std::chrono::seconds(10)));
+
+    threadManager.execute([&] { pVirtualMachine.reset(); });
+
+    threadManager.stop();
+    std::filesystem::copy("supercontracts/lib.rs",
+                          "rust-xpx-supercontract-client-sdk/src/lib.rs", copyOptions);
+}
+
 } // namespace sirius::contract::vm::test
