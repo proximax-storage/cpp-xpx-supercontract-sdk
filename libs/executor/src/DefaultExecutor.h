@@ -15,7 +15,6 @@
 #include <common/ServiceBuilder.h>
 #include <messenger/MessengerBuilder.h>
 #include <virtualMachine/VirtualMachineBuilder.h>
-
 namespace sirius::contract {
 
 class DefaultExecutor
@@ -45,7 +44,7 @@ private:
 public:
 
     DefaultExecutor(crypto::KeyPair&& keyPair,
-                    const ExecutorConfig& config,
+					ExecutorConfig config,
                     std::shared_ptr<ExecutorEventHandler> eventHandler,
                     std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
@@ -93,7 +92,7 @@ public:
 
     std::weak_ptr<vm::VirtualMachine> virtualMachine() override;
 
-    ExecutorConfig& executorConfig() override;
+	ExecutorConfig& executorConfig() override;
 
     boost::asio::ssl::context& sslContext() override;
 
@@ -107,12 +106,13 @@ public:
 
     void onEndBatchExecutionSingleTransactionPublished(
             blockchain::PublishedEndBatchExecutionSingleTransactionInfo&& info) override;
-
     void onEndBatchExecutionFailed(blockchain::FailedEndBatchExecutionTransactionInfo&& info) override;
 
     void onStorageSynchronizedPublished(blockchain::PublishedSynchronizeSingleTransactionInfo&& info) override;
 
 	void setAutomaticExecutionsEnabledSince(const ContractKey& contractKey, uint64_t blockHeight) override;
+
+	void updateConfig(uint64_t height, MutableConfig&& config) override;
 
 	// endregion
 

@@ -38,6 +38,8 @@ BatchExecutionTask::BatchExecutionTask(Batch&& batch,
           , m_callIterator(m_batch.m_callRequests.begin())
           , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
+// m_batch.m_callRequests.begin()->get()->blockHeight();
+
 void BatchExecutionTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
@@ -201,18 +203,21 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
     ASSERT(!m_callExecutionManager, m_executorEnvironment.logger())
 
     bool isManual = callRequest->isManual();
+	MutableConfig* mutableConfig = &m_executorEnvironment.executorConfig().getConfigByHeight(callRequest->blockHeight());
+	uint64_t maxExecutableSize = isManual ? mutableConfig->maxManualExecutableSize() : mutableConfig->maxAutomaticExecutableSize();
 
     vm::CallRequest vmCallRequest(callRequest->callId(),
                                   callRequest->file(),
                                   callRequest->function(),
                                   callRequest->arguments(),
                                   callRequest->executionPayment() *
-                                  m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier(),
+                                  mutableConfig->executionPaymentToGasMultiplier(),
                                   callRequest->downloadPayment() *
-                                  m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier(),
+								  mutableConfig->downloadPaymentToGasMultiplier(),
                                   isManual ? vm::CallRequest::CallLevel::MANUAL : vm::CallRequest::CallLevel::AUTOMATIC,
                                   m_proofOfExecutionSecretData,
-								  m_contractEnvironment.driveKey());
+								  m_contractEnvironment.driveKey(),
+								  maxExecutableSize);
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>(
             [this, callRequest](auto&& res) mutable {
@@ -236,7 +241,8 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                 m_contractEnvironment,
                 callRequest->callerKey(),
                 callRequest->blockHeight(),
-                callRequest->executionPayment(),
+//				mutableConfig,
+				callRequest->executionPayment(),
                 callRequest->downloadPayment(),
                 callRequest->callId().array(),
                 callRequest->servicePayments());
@@ -246,6 +252,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                 m_contractEnvironment,
                 callRequest->callerKey(),
                 callRequest->blockHeight(),
+//				mutableConfig,
                 callRequest->executionPayment(),
                 callRequest->downloadPayment());
     }
@@ -253,6 +260,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
     m_callExecutionManager = std::make_unique<CallExecutionManager>(
             m_executorEnvironment,
             std::make_shared<InternetQueryHandler>(callRequest->callId(),
+												   callRequest->blockHeight(),
                                                    m_executorEnvironment.executorConfig().maxInternetConnections(),
                                                    m_executorEnvironment,
                                                    m_contractEnvironment),
@@ -261,7 +269,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                                                   m_executorEnvironment,
                                                   m_contractEnvironment,
                                                   m_sandboxModification,
-                                                  m_executorEnvironment.executorConfig().storagePathPrefix()),
+												  mutableConfig->storagePathPrefix()),
             std::move(query),
             vmCallRequest,
             std::move(callback));
@@ -296,13 +304,12 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
     auto blockchainHandler = m_callExecutionManager->blockchainQueryHandler();
 
     bool isManual = callRequest->isManual();
+	uint64_t executionMultiplier = m_executorEnvironment.executorConfig().getConfigByHeight(callRequest->blockHeight()).executionPaymentToGasMultiplier();
+	uint64_t downloadMultiplier = m_executorEnvironment.executorConfig().getConfigByHeight(callRequest->blockHeight()).downloadPaymentToGasMultiplier();
 
-    auto actualExecutionPayment = utils::DivideCeil(executionResult.m_execution_gas_consumed,
-                                                    m_executorEnvironment.executorConfig().executionPaymentToGasMultiplier());
+    auto actualExecutionPayment = utils::DivideCeil(executionResult.m_execution_gas_consumed, executionMultiplier);
     actualExecutionPayment = std::min(actualExecutionPayment, callRequest->executionPayment());
-
-    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_consumed,
-                                                   m_executorEnvironment.executorConfig().downloadPaymentToGasMultiplier());
+    auto actualDownloadPayment = utils::DivideCeil(executionResult.m_download_gas_consumed, downloadMultiplier);
     actualDownloadPayment = std::min(actualDownloadPayment, callRequest->downloadPayment());
 
     Hash256 releasedTransactionsHash;
@@ -314,7 +321,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
         m_releasedTransactions.emplace(hash, std::move(transaction));
     }
 
-    m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion{
+    m_callsExecutionOpinions.push_back(SuccessfulCallExecutionOpinion {
             callRequest->callId(),
             isManual,
             callRequest->blockHeight(),
@@ -923,8 +930,8 @@ void BatchExecutionTask::executeNextCall() {
 
     if (m_callIterator != m_batch.m_callRequests.end()) {
         auto callRequest = *m_callIterator;
+		uint64_t height = callRequest->blockHeight();
         m_callIterator++;
-
         auto[query, callback] = createAsyncQuery<std::unique_ptr<storage::SandboxModification>>(
                 [=, this, callRequest = std::move(callRequest)](auto&& res) mutable {
                     if (!res) {
@@ -938,8 +945,7 @@ void BatchExecutionTask::executeNextCall() {
                 }, [] {}, m_executorEnvironment, true, true);
 
         m_storageQuery = std::move(query);
-
-        m_storageModification->initiateSandboxModification({m_executorEnvironment.executorConfig().storagePathPrefix()},
+        m_storageModification->initiateSandboxModification({m_executorEnvironment.executorConfig().getConfigByHeight(height).storagePathPrefix()},
                                                            callback);
     } else {
         computeProofOfExecution();

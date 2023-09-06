@@ -25,7 +25,7 @@ namespace sirius::contract {
 
 
 DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
-                                 const ExecutorConfig& config,
+								 ExecutorConfig config,
                                  std::shared_ptr<ExecutorEventHandler> eventHandler,
                                  std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                                  std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,
@@ -49,12 +49,6 @@ DefaultExecutor::DefaultExecutor(crypto::KeyPair&& keyPair,
         m_storage = storageBuilder->build(*this);
 
         m_blockchain = std::make_shared<blockchain::CachedBlockchain>(*this, blockchainBuilder->build(*this));
-
-        std::map<vm::CallRequest::CallLevel, uint64_t> maxExecutableSizes;
-        maxExecutableSizes[vm::CallRequest::CallLevel::AUTORUN] = m_config.maxAutorunExecutableSize();
-        maxExecutableSizes[vm::CallRequest::CallLevel::AUTOMATIC] = m_config.maxAutomaticExecutableSize();
-        maxExecutableSizes[vm::CallRequest::CallLevel::MANUAL] = m_config.maxManualExecutableSize();
-        vmBuilder->setMaxExecutableSizes(maxExecutableSizes);
         vmBuilder->setStorage(m_storage);
         m_virtualMachine = vmBuilder->build(*this);
 
@@ -363,4 +357,7 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBa
     contractIt->second->onEndBatchExecutionOpinionReceived(opinion);
 }
 
+void DefaultExecutor::updateConfig(uint64_t height, MutableConfig&& mutableConfig) {
+	m_config.addConfig(height, std::move(mutableConfig));
+}
 }

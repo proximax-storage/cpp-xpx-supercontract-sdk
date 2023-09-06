@@ -24,7 +24,8 @@ private:
     ContractEnvironment& m_contractEnvironment;
 
     const CallId m_callId;
-
+	ExecutorConfig m_config;
+	uint64_t m_height;
     uint16_t m_maxConnections;
 
     std::shared_ptr<AsyncQuery> m_asyncQuery;
@@ -34,6 +35,7 @@ private:
 
 public:
     InternetQueryHandler(const CallId& callId,
+						 uint64_t height,
                          uint16_t maxConnections,
                          ExecutorEnvironment& executorEnvironment,
                          ContractEnvironment& contractEnvironment);

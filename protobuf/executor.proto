@@ -109,6 +109,7 @@ message ServerMessage {
     PublishedEndBatchExecutionSingleTransaction published_end_batch_execution_single_transaction = 10;
     FailedEndBatchExecution failed_end_batch_execution = 11;
     PublishedSynchronizeSingleTransaction published_synchronize_single_transaction = 12;
+    UpdateConfig update_config = 13;
   }
 }
 
@@ -216,4 +217,22 @@ message FailedEndBatchExecution {
 message PublishedSynchronizeSingleTransaction {
   bytes contract_key = 1;
   uint64 batch_index = 2;
+}
+
+message MutableConfig {
+	uint64 autorunSCLimit = 1;
+	string autorun_file = 2;
+	string autorun_function = 3;
+	uint64 max_autorun_executable_size = 4;
+	uint64 max_automatic_executable_size = 5;
+	uint64 max_manual_executable_size = 6;
+	string storage_path_prefix = 7;
+	uint64 internet_buffer_size = 8;
+	uint64 execution_payment_to_gas_multiplier = 9;
+	uint64 download_payment_to_gas_multiplier = 10;
+}
+
+message UpdateConfig {
+    uint64 height = 1;
+    MutableConfig config = 2;
 }

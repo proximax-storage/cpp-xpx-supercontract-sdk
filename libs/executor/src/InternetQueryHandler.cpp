@@ -10,12 +10,14 @@
 namespace sirius::contract {
 
 InternetQueryHandler::InternetQueryHandler(const CallId& callId,
+										   uint64_t height,
                                            uint16_t maxConnections,
                                            ExecutorEnvironment& executorEnvironment,
                                            ContractEnvironment& contractEnvironment)
         : m_executorEnvironment(executorEnvironment)
           , m_contractEnvironment(contractEnvironment)
           , m_callId(callId)
+		  , m_height(height)
           , m_maxConnections(maxConnections) {}
 
 void InternetQueryHandler::openConnection(const std::string& url,
@@ -68,13 +70,12 @@ void InternetQueryHandler::openConnection(const std::string& url,
 
         auto revocationMode = softRevocationMode ? internet::RevocationVerificationMode::SOFT
                                                  : internet::RevocationVerificationMode::HARD;
-
         internet::InternetConnection::buildHttpsInternetConnection(m_executorEnvironment.sslContext(),
                                                                    m_executorEnvironment,
                                                                    urlDescription->host,
                                                                    urlDescription->port,
                                                                    urlDescription->target,
-                                                                   m_executorEnvironment.executorConfig().internetBufferSize(),
+                                                                   m_executorEnvironment.executorConfig().getConfigByHeight(m_height).internetBufferSize(),
                                                                    m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                                    m_executorEnvironment.executorConfig().ocspQueryTimerMilliseconds(),
                                                                    m_executorEnvironment.executorConfig().ocspQueryMaxEfforts(),
@@ -85,7 +86,7 @@ void InternetQueryHandler::openConnection(const std::string& url,
                                                                   urlDescription->host,
                                                                   urlDescription->port,
                                                                   urlDescription->target,
-                                                                  m_executorEnvironment.executorConfig().internetBufferSize(),
+                                                                  m_executorEnvironment.executorConfig().getConfigByHeight(m_height).internetBufferSize(),
                                                                   m_executorEnvironment.executorConfig().internetConnectionTimeoutMilliseconds(),
                                                                   connectionCallback);
     }

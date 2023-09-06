@@ -48,7 +48,7 @@ public:
 
     virtual std::weak_ptr<vm::VirtualMachine> virtualMachine() = 0;
 
-    virtual ExecutorConfig& executorConfig() = 0;
+	virtual ExecutorConfig& executorConfig() = 0;
 
     virtual boost::asio::ssl::context& sslContext() = 0;
 };
