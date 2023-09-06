@@ -94,6 +94,8 @@ void ExecuteCallRPCHandler::onStarted(expected<void>&& res) {
     pRpcRequest->set_download_gas_limit(m_request.m_downloadGasLimit);
     pRpcRequest->set_call_mode((uint32_t) m_request.m_callLevel);
     pRpcRequest->set_poex_secret_data_prefix(m_request.m_proofOfExecutionPrefix);
+    std::string parameters(m_request.m_params.begin(), m_request.m_params.end());
+    pRpcRequest->set_parameters(parameters);
 
     supercontractserver::Request requestWrapper;
     requestWrapper.set_allocated_request(pRpcRequest);
