@@ -9,7 +9,7 @@ use blockchain::get_call_params;
 #[no_mangle]
 pub unsafe extern "C" fn run() -> u32 {
     let params = get_call_params();
-    assert_eq!(params, vec![65, 66]);
+    assert_eq!(params, vec![]);
 
     return 0;
 }
