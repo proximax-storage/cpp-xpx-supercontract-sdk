@@ -7,107 +7,65 @@
 #pragma once
 
 #include "logging/LoggerConfig.h"
-
 #include <common/Identifiers.h>
-
 #include <memory>
+#include <cassert>
 
 namespace sirius::contract {
 
 class MutableConfig {
-
-private:
-	uint64_t                m_autorunSCLimit = 100000;
-	std::string             m_autorunFile = "autorun.wasm";
-	std::string             m_autorunFunction = "run";
+public:
+	uint64_t                autorunSCLimit = 100000;
+	std::string             autorunFile = "autorun.wasm";
+	std::string             autorunFunction = "run";
 	//	 TODO Consider other default values
-	uint64_t                m_maxAutorunExecutableSize = 1024U;
-	uint64_t                m_maxAutomaticExecutableSize = 5U * 1024U * 1024U;
-	uint64_t                m_maxManualExecutableSize = 5U * 1024U * 1024U;
-	std::string             m_storagePathPrefix = "SC_DATA";
-	unsigned int            m_internetBufferSize = 16 * 1024;
-	uint64_t                m_executionPaymentToGasMultiplier = 1000000000U;
-	uint64_t                m_downloadPaymentToGasMultiplier = 1000000U;
+	uint64_t                maxAutorunExecutableSize = 1024U;
+	uint64_t                maxAutomaticExecutableSize = 5U * 1024U * 1024U;
+	uint64_t                maxManualExecutableSize = 5U * 1024U * 1024U;
+	std::string             storagePathPrefix = "SC_DATA";
+	unsigned int            internetBufferSize = 16 * 1024;
+	uint64_t                executionPaymentToGasMultiplier = 1000000000U;
+	uint64_t                downloadPaymentToGasMultiplier = 1000000U;
 
 public:
-	uint64_t autorunSCLimit() const {
-		return m_autorunSCLimit;
+	void setAutorunSCLimit( uint64_t newAutorunScLimit ) {
+		autorunSCLimit = newAutorunScLimit;
 	}
 
-	void setAutorunSCLimit( uint64_t autorunScLimit ) {
-		m_autorunSCLimit = autorunScLimit;
+	void setAutorunFile( const std::string& newAutorunFile ) {
+		autorunFile = newAutorunFile;
 	}
 
-	const std::string& autorunFile() const {
-		return m_autorunFile;
+	void setAutorunFunction( const std::string& newAutorunFunction ) {
+		autorunFunction = newAutorunFunction;
 	}
 
-	void setAutorunFile( const std::string& autorunFile ) {
-		m_autorunFile = autorunFile;
+	void setInternetBufferSize( unsigned int newInternetBufferSize ) {
+		internetBufferSize = newInternetBufferSize;
 	}
 
-	const std::string& autorunFunction() const {
-		return m_autorunFunction;
+	void setExecutionPaymentToGasMultiplier(uint64_t newExecutionPaymentToGasMultiplier) {
+		executionPaymentToGasMultiplier = newExecutionPaymentToGasMultiplier;
 	}
 
-	void setAutorunFunction( const std::string& autorunFunction ) {
-		m_autorunFunction = autorunFunction;
+	void setDownloadPaymentToGasMultiplier(uint64_t newDownloadPaymentToGasMultiplier) {
+		downloadPaymentToGasMultiplier = newDownloadPaymentToGasMultiplier;
 	}
 
-	unsigned int internetBufferSize() const {
-		return m_internetBufferSize;
+	void setStoragePathPrefix(const std::string& newStoragePathPrefix) {
+		storagePathPrefix = newStoragePathPrefix;
 	}
 
-	void setInternetBufferSize( unsigned int internetBufferSize ) {
-		m_internetBufferSize = internetBufferSize;
+	void setMaxAutorunExecutableSize(uint64_t newMaxAutorunExecutableSize) {
+		maxAutorunExecutableSize = newMaxAutorunExecutableSize;
 	}
 
-	uint64_t executionPaymentToGasMultiplier() const {
-		return m_executionPaymentToGasMultiplier;
+	void setMaxAutomaticExecutableSize(uint64_t newMaxAutomaticExecutableSize) {
+		maxAutomaticExecutableSize = newMaxAutomaticExecutableSize;
 	}
 
-	void setExecutionPaymentToGasMultiplier(uint64_t executionPaymentToGasMultiplier) {
-		m_executionPaymentToGasMultiplier = executionPaymentToGasMultiplier;
-	}
-
-	uint64_t downloadPaymentToGasMultiplier() const {
-		return m_downloadPaymentToGasMultiplier;
-	}
-
-	void setDownloadPaymentToGasMultiplier(uint64_t downloadPaymentToGasMultiplier) {
-		m_downloadPaymentToGasMultiplier = downloadPaymentToGasMultiplier;
-	}
-
-	const std::string& storagePathPrefix() const {
-		return m_storagePathPrefix;
-	}
-
-	void setStoragePathPrefix(const std::string& storagePathPrefix) {
-		m_storagePathPrefix = storagePathPrefix;
-	}
-
-	uint64_t maxAutorunExecutableSize() const {
-		return m_maxAutorunExecutableSize;
-	}
-
-	void setMaxAutorunExecutableSize(uint64_t maxAutorunExecutableSize) {
-		m_maxAutorunExecutableSize = maxAutorunExecutableSize;
-	}
-
-	uint64_t maxAutomaticExecutableSize() const {
-		return m_maxAutomaticExecutableSize;
-	}
-
-	void setMaxAutomaticExecutableSize(uint64_t maxAutomaticExecutableSize) {
-		m_maxAutomaticExecutableSize = maxAutomaticExecutableSize;
-	}
-
-	uint64_t maxManualExecutableSize() const {
-		return m_maxManualExecutableSize;
-	}
-
-	void setMaxManualExecutableSize(uint64_t maxManualExecutableSize) {
-		m_maxManualExecutableSize = maxManualExecutableSize;
+	void setMaxManualExecutableSize(uint64_t newMaxManualExecutableSize) {
+		maxManualExecutableSize = newMaxManualExecutableSize;
 	}
 
 };
@@ -137,11 +95,15 @@ public:
 		m_configs[0] = MutableConfig{};
 	}
 
-const MutableConfig& getConstConfigByHeight(uint64_t height) const {
+const MutableConfig& getConfigByHeight(uint64_t height) const {
+	//ASSERT(m_configs.size() > 0, ->logger());
+	assert(m_configs.size() > 0);
 	return (--m_configs.upper_bound(height))->second;
 }
 
 MutableConfig& getConfigByHeight(uint64_t height) {
+	//ASSERT(m_configs.size() > 0, ->logger());
+	assert(m_configs.size() > 0);
 	return (--m_configs.upper_bound(height))->second;
 }
 
