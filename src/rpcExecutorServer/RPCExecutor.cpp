@@ -523,14 +523,13 @@ void RPCExecutor::processSynchronizationSingleTransactionIsReadyMessage(
     m_eventHandler->synchronizationSingleTransactionIsReady(info);
 }
 
-void
-RPCExecutor::processReleasedTransactionsAreReadyMessage(
+void RPCExecutor::processReleasedTransactionsAreReadyMessage(
         const executor_server::ReleasedTransactionsAreReady& message) {
     blockchain::SerializedAggregatedTransaction info;
     info.m_maxFee = message.max_fee();
     info.m_transactions.reserve(message.transactions_size());
-    for (const auto& transactionMessage: info.m_transactions) {
-        info.m_transactions.push_back({transactionMessage.begin(), transactionMessage.end()});
+    for (const auto& transactionMessage : message.transactions()) {
+        info.m_transactions.emplace_back(transactionMessage.begin(), transactionMessage.end());
     }
 
     m_eventHandler->releasedTransactionsAreReady(info);
