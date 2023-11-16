@@ -39,15 +39,17 @@ public:
                         grpc::ServerBuilder& builder,
                         std::unique_ptr<blockchain::Blockchain>&& blockchain);
 
+	void start();
+
     ~RPCBlockchainServer();
 
 private:
 
     void acceptBlockRequest();
 
-    void onBlockRequestReceived(std::unique_ptr<BlockContext>&& context);
+    void onBlockRequestReceived(std::shared_ptr<BlockContext>&& context);
 
-    void onBlockReceived(uint64_t queryId, std::unique_ptr<BlockContext>&& context, const blockchain::Block& block);
+    void onBlockReceived(uint64_t queryId, std::shared_ptr<BlockContext>&& context, const blockchain::Block& block);
 
     void waitForRPCResponse();
 };

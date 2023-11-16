@@ -18,10 +18,17 @@ RPCBlockchainServer::RPCBlockchainServer(GlobalEnvironment& environment,
                                          , m_blockchain(std::move(blockchain)) {
     builder.RegisterService(&m_service);
     m_completionQueue = builder.AddCompletionQueue();
+}
 
-    m_completionQueueThread = std::thread([this] {
-        waitForRPCResponse();
-    });
+void RPCBlockchainServer::start() {
+
+	ASSERT(isSingleThread(), m_environment.logger())
+
+	acceptBlockRequest();
+
+	m_completionQueueThread = std::thread([this] {
+	  waitForRPCResponse();
+	});
 }
 
 void RPCBlockchainServer::waitForRPCResponse() {
@@ -52,8 +59,9 @@ RPCBlockchainServer::~RPCBlockchainServer() {
 void RPCBlockchainServer::acceptBlockRequest() {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    auto[query, callback] = createAsyncQuery<std::unique_ptr<BlockContext>>([this](auto&& context) {
+    auto[query, callback] = createAsyncQuery<std::shared_ptr<BlockContext>>([this](auto&& context) {
         ASSERT(context, m_environment.logger())
+		onBlockRequestReceived(std::move(*context));
     }, [] {}, m_environment, true, true);
 
     m_blockServerRequest = std::move(query);
@@ -66,23 +74,27 @@ void RPCBlockchainServer::acceptBlockRequest() {
                            tag);
 }
 
-void RPCBlockchainServer::onBlockRequestReceived(std::unique_ptr<BlockContext>&& context) {
+void RPCBlockchainServer::onBlockRequestReceived(std::shared_ptr<BlockContext>&& context) {
     ASSERT(isSingleThread(), m_environment.logger())
 
-    uint64_t queryId = m_blockchainQueriesCounter++;
-    auto[query, callback] = createAsyncQuery<blockchain::Block>(
-            [this, queryId, context = std::move(context)](auto&& block) mutable {
-                ASSERT(block, m_environment.logger());
-                onBlockReceived(queryId, std::move(context), *block);
-            }, [] {}, m_environment, true, true);
-    m_blockchainQueries[queryId] = std::move(query);
-    m_blockchain->block(context->m_request.height(), std::move(callback));
+	uint64_t queryId = m_blockchainQueriesCounter++;
+	auto [query, callback] = createAsyncQuery<blockchain::Block>(
+			[this, queryId, context = context](auto&& block) mutable {
+				ASSERT(block, m_environment.logger());
+				onBlockReceived(queryId, std::move(context), *block);
+			},
+			[context] { context->m_context.TryCancel(); },
+			m_environment,
+			true,
+			true);
+	m_blockchainQueries[queryId] = std::move(query);
+	m_blockchain->block(context->m_request.height(), std::move(callback));
 
-    acceptBlockRequest();
+	acceptBlockRequest();
 }
 
 void
-RPCBlockchainServer::onBlockReceived(uint64_t queryId, std::unique_ptr<BlockContext>&& context, const Block& block) {
+RPCBlockchainServer::onBlockReceived(uint64_t queryId, std::shared_ptr<BlockContext>&& context, const Block& block) {
     ASSERT(isSingleThread(), m_environment.logger())
 
     m_blockchainQueries.erase(queryId);

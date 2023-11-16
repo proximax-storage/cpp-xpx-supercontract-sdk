@@ -22,20 +22,22 @@ private:
 
     std::shared_ptr<ExecutorEventHandler> m_eventHandler;
 
+    std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
+    std::unique_ptr<grpc::Server> m_serviceServer;
+    std::thread m_completionQueueThread;
+
     executor_server::ExecutorServer::AsyncService m_service;
 
     grpc::ServerContext m_serverContext;
     grpc::ServerAsyncReaderWriter<executor_server::ServerMessage, executor_server::ClientMessage> m_stream;
-
-    std::unique_ptr<grpc::ServerCompletionQueue> m_completionQueue;
-    std::unique_ptr<grpc::Server> m_serviceServer;
-    std::thread m_completionQueueThread;
 
     boost::process::child m_childReplicatorProcess;
 
     std::mutex m_sendMutex;
 
     std::unique_ptr<blockchain::RPCBlockchainServer> m_blockchainServer;
+
+	std::shared_ptr<AsyncQuery> m_readQuery;
 
 public:
 

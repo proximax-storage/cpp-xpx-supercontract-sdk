@@ -5,6 +5,7 @@
 */
 
 #include "ReadRPCTag.h"
+#include "RPCExecutorServerErrorCode.h"
 
 namespace sirius::contract::rpcExecutorServer {
 
@@ -13,8 +14,9 @@ ReadRPCTag::ReadRPCTag(std::shared_ptr<AsyncQueryCallback<executor_server::Clien
 
 void ReadRPCTag::process(bool ok) {
     if (!ok) {
-        return;
-    }
+		m_callback->postReply(
+				tl::unexpected<std::error_code>(make_error_code(RPCExecutorError::read_error)));
+	}
     m_callback->postReply(std::move(m_clientMessage));
 }
 

@@ -225,7 +225,8 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                 if (!res) {
                     const auto& ec = res.error();
                     ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable ||
-                           ec == vm::ExecutionError::storage_unavailable, m_executorEnvironment.logger())
+                           ec == vm::ExecutionError::storage_unavailable ||
+                           ec == vm::ExecutionError::blockchain_unavailable, m_executorEnvironment.logger())
                     onUnableToExecuteBatch(ec);
                     return;
                 }
@@ -1021,7 +1022,7 @@ void BatchExecutionTask::onUnableToExecuteBatch(const std::error_code& ec) {
 
     m_unableToExecuteBatchTimer = Timer(m_executorEnvironment.threadManager().context(),
                                         m_executorEnvironment.executorConfig().serviceUnavailableTimeoutMs(), [this] {
-                m_onTaskFinishedCallback->postReply(expected<void>());
+				m_onTaskFinishedCallback->postReply(expected<void>());
             });
 }
 

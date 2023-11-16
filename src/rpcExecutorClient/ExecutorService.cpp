@@ -9,6 +9,10 @@
 
 int main(int argc, char * argv[]) {
 
+	// TODO This is a workaround to not to interrupt the process
+	//  when the parent process is interrupted
+	signal(SIGTERM, SIG_IGN);
+
     const int expectedArgc = 1 + 1;
 
     if (argc < expectedArgc) {

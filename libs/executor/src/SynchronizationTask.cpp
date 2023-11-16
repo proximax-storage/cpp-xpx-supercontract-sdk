@@ -116,7 +116,7 @@ void SynchronizationTask::onStorageStateSynchronized() {
                                         m_request.m_storageHash);
 
     m_executorEnvironment.executorEventHandler().synchronizationSingleTransactionIsReady(
-            blockchain::SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), m_request.m_batchIndex});
+            blockchain::SynchronizationSingleTransactionInfo{m_contractEnvironment.contractKey(), static_cast<uint64_t>(m_request.m_batchIndex)});
 
     m_contractEnvironment.batchesManager().run();
     m_contractEnvironment.batchesManager().skipBatches(m_request.m_batchIndex + 1);

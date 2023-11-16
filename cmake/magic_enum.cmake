@@ -1,4 +1,5 @@
 include(FetchContent)
+add_definitions(-w)
 FetchContent_Declare(
         magic_enum
         GIT_REPOSITORY https://github.com/Neargye/magic_enum

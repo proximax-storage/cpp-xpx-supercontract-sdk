@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <random>
 
 namespace sirius::utils {

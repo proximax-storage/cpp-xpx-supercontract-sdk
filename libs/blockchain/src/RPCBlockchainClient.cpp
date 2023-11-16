@@ -59,7 +59,11 @@ void RPCBlockchainClient::block(uint64_t height, std::shared_ptr<AsyncQueryCallb
     request.set_height(height);
 
     auto* tag = new ClientBlockTag(m_environment, std::move(request), *m_stub, m_completionQueue, std::move(callback));
-    tag->start();
+    {
+    	std::lock_guard<std::mutex> guard(m_activeTagsMutex);
+    	m_activeTags.insert(tag);
+    }
+	tag->start();
 }
 
 }

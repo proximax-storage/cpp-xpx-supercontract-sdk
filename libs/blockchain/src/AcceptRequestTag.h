@@ -17,16 +17,16 @@ class AcceptRequestTag : public ServerRPCTag {
 
 public:
 
-    std::unique_ptr<TContext> m_context;
+    std::shared_ptr<TContext> m_context;
 
 private:
 
-    std::shared_ptr<AsyncQueryCallback<std::unique_ptr<TContext>>> m_callback;
+    std::shared_ptr<AsyncQueryCallback<std::shared_ptr<TContext>>> m_callback;
 
 public:
 
-    AcceptRequestTag(std::shared_ptr<AsyncQueryCallback<std::unique_ptr<TContext>>>&& callback)
-            : m_context(std::make_unique<TContext>())
+	AcceptRequestTag(std::shared_ptr<AsyncQueryCallback<std::shared_ptr<TContext>>>&& callback)
+            : m_context(std::make_shared<TContext>())
               , m_callback(std::move(callback)) {}
 
     void process(bool ok) override {

@@ -11,6 +11,11 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(SIRIUS_CONTRACT_MASTER_PROJECT ON)
 endif()
 
+set(SKIP_PERFORMANCE_COMPARISON ON)
+set(SKIP_PORTABILITY_TEST ON)
+set(BUILD_DOC OFF)
+set(BUILD_SANDBOX OFF)
+
 ### setup boost
 find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random stacktrace_backtrace REQUIRED)
 
