@@ -24,7 +24,7 @@ public:
     DefaultExecutorBuilder() = default;
 
     std::shared_ptr<Executor> build(crypto::KeyPair&& keyPair,
-                                    const ExecutorConfig& config,
+									ExecutorConfig config,
                                     const std::shared_ptr<ExecutorEventHandler>& eventHandler,
                                     std::unique_ptr<vm::VirtualMachineBuilder>&& vmBuilder,
                                     std::unique_ptr<ServiceBuilder<storage::Storage>>&& storageBuilder,

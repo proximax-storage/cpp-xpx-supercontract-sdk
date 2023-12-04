@@ -41,6 +41,8 @@ public:
     virtual void removeContract(const ContractKey&, RemoveRequest&&) = 0;
 
     virtual void setExecutors(const ContractKey&, std::map<ExecutorKey, ExecutorInfo>&& executors) = 0;
+
+	virtual void updateConfig(uint64_t height, MutableConfig&& config) = 0;
 };
 
 }

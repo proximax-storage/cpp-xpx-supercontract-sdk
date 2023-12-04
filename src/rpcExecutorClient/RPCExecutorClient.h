@@ -98,6 +98,9 @@ private:
     void
     processPublishedSynchronizeSingleTransaction(const executor_server::PublishedSynchronizeSingleTransaction& message);
 
+	void processUpdateConfig(const executor_server::UpdateConfig& message);
+
+
 };
 
 }

@@ -120,6 +120,18 @@ void RPCExecutor::start(const std::string& executorRPCAddress,
     message->set_rpc_blockchain_address(executorRPCAddress);
     message->set_log_path(std::filesystem::absolute(logPath));
     message->set_network_identifier(networkIdentifier);
+
+//	message->set_autorun_file(state.config().Network.autorunFile);
+//	message->set_autorun_function(state.config().Network.autorunFunction);
+//	message->set_autorun_SC_limit(state.config().Network.autorunSCLimit);
+//	message->set_max_autorun_executable_size(state.config().Network.maxAutorunExecutableSize);
+//	message->set_max_automatic_executable_size(state.config().Network.maxAutomaticExecutableSize);
+//	message->set_max_manual_executable_size(state.config().Network.maxManualExecutableSize);
+//	message->set_storage_path_prefix(state.config().Network.storagePathPrefix);
+//	message->set_internet_buffer_size(state.config().Network.internetBufferSize);
+//	message->set_execution_payment_to_gas_multiplier(state.config().Network.executionPaymentToGasMultiplier);
+//	message->set_download_payment_to_gas_multiplier(state.config().Network.downloadPaymentToGasMultiplier);
+
     executor_server::ServerMessage serverMessage;
     serverMessage.set_allocated_start_executor(message);
     sendMessage(serverMessage);
@@ -523,17 +535,23 @@ void RPCExecutor::processSynchronizationSingleTransactionIsReadyMessage(
     m_eventHandler->synchronizationSingleTransactionIsReady(info);
 }
 
-void
-RPCExecutor::processReleasedTransactionsAreReadyMessage(
+void RPCExecutor::processReleasedTransactionsAreReadyMessage(
         const executor_server::ReleasedTransactionsAreReady& message) {
     blockchain::SerializedAggregatedTransaction info;
     info.m_maxFee = message.max_fee();
     info.m_transactions.reserve(message.transactions_size());
-    for (const auto& transactionMessage: info.m_transactions) {
-        info.m_transactions.push_back({transactionMessage.begin(), transactionMessage.end()});
+    for (const auto& transactionMessage : message.transactions()) {
+        info.m_transactions.emplace_back(transactionMessage.begin(), transactionMessage.end());
     }
 
     m_eventHandler->releasedTransactionsAreReady(info);
 }
 
+void RPCExecutor::updateConfig(uint64_t height, MutableConfig&& config) {
+	auto* message = new executor_server::UpdateConfig();
+
+	executor_server::ServerMessage serverMessage;
+	serverMessage.set_allocated_update_config(message);
+	sendMessage(serverMessage);
+}
 }

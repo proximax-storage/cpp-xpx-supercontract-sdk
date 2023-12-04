@@ -17,7 +17,7 @@ set(BUILD_DOC OFF)
 set(BUILD_SANDBOX OFF)
 
 ### setup boost
-find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random stacktrace_backtrace REQUIRED)
+find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
 
 supercontract_sdk_third_party_lib(cmake/grpc.cmake)
 supercontract_sdk_third_party_lib(cmake/expected.cmake)
@@ -28,11 +28,8 @@ option(SIRIUS_CONTRACT_BUILD_TESTS "Build sirius contract tests" ${SIRIUS_CONTRA
 if(SIRIUS_CONTRACT_BUILD_TESTS)
     enable_testing()
     configure_file(cmake/CTestCustom.cmake ${CMAKE_BINARY_DIR})
+    add_subdirectory(test)
 endif()
 
 add_subdirectory(libs)
 add_subdirectory(src)
-
-if(SIRIUS_CONTRACT_BUILD_TESTS)
-    add_subdirectory(test)
-endif()

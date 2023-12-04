@@ -151,14 +151,15 @@ std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(cons
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     vm::CallRequest request(callId,
-                            m_executorEnvironment.executorConfig().autorunFile(),
-                            m_executorEnvironment.executorConfig().autorunFunction(),
+                            m_executorEnvironment.executorConfig().getConfigByHeight(height).autorunFile(),
+                            m_executorEnvironment.executorConfig().getConfigByHeight(height).autorunFunction(),
                             {},
-                            m_executorEnvironment.executorConfig().autorunSCLimit(),
+                            m_executorEnvironment.executorConfig().getConfigByHeight(height).autorunSCLimit(),
                             0,
                             vm::CallRequest::CallLevel::AUTORUN,
 							0,
-							m_contractEnvironment.driveKey());
+							m_contractEnvironment.driveKey(),
+							m_executorEnvironment.executorConfig().getConfigByHeight(height).maxAutorunExecutableSize());
 
     auto[query, callback] = createAsyncQuery<vm::CallExecutionResult>([blockHeight = height, this](auto&& result) {
         if (result) {
