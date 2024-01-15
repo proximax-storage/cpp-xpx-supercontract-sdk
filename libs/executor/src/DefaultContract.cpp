@@ -283,11 +283,9 @@ void DefaultContract::runInitializeContractTask(AddContractRequest&& request) {
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
     m_task = std::make_unique<InitContractTask>(std::move(request), std::move(callback), *this, m_executorEnvironment);
-
-    m_contractRemoveRequest.reset();
 
     m_task->run();
 }
@@ -316,7 +314,7 @@ void DefaultContract::runSynchronizationTask() {
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
     m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest),
                                                    std::move(callback),
@@ -349,7 +347,7 @@ void DefaultContract::runBatchExecutionTask() {
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
     auto batchIndex = batch.m_batchIndex;
 
