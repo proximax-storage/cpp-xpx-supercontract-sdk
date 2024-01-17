@@ -25,7 +25,7 @@ private:
 
 public:
 
-    SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+    SynchronizationTask(const SynchronizationRequest& synchronizationRequest,
                         std::shared_ptr<AsyncQueryCallback<void>>&& m_onTaskFinishedCallback,
                         ContractEnvironment& contractEnvironment,
                         ExecutorEnvironment& executorEnvironment);

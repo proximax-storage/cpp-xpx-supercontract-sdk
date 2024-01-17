@@ -8,12 +8,12 @@
 
 namespace sirius::contract {
 
-SynchronizationTask::SynchronizationTask(SynchronizationRequest&& synchronizationRequest,
+SynchronizationTask::SynchronizationTask(const SynchronizationRequest& synchronizationRequest,
                                          std::shared_ptr<AsyncQueryCallback<void>>&& onTaskFinishedCallback,
                                          ContractEnvironment& contractEnvironment,
                                          ExecutorEnvironment& executorEnvironment)
         : BaseContractTask(executorEnvironment, contractEnvironment)
-        , m_request(std::move(synchronizationRequest))
+        , m_request(synchronizationRequest)
         , m_onTaskFinishedCallback(std::move(onTaskFinishedCallback)) {}
 
 // region blockchain event handler
