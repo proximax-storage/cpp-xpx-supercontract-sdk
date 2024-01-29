@@ -44,7 +44,7 @@ private:
 
     // Requests
     std::unique_ptr<BaseBatchesManager> m_batchesManager;
-    std::optional<SynchronizationRequest> m_synchronizationRequest;
+    bool m_hasSynchronizationRequest = false;
     std::optional<ExtendedRemoveRequest> m_contractRemoveRequest;
 
     std::unique_ptr<BaseContractTask> m_task;

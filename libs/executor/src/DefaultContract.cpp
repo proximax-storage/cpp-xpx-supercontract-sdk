@@ -246,7 +246,7 @@ void DefaultContract::addSynchronizationTask() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_synchronizationRequest = m_lastKnownStorageState;
+    m_hasSynchronizationRequest = true;
 }
 
 void DefaultContract::notifyHasNextBatch() {
@@ -270,7 +270,7 @@ void DefaultContract::runTask() {
 
     if (m_contractRemoveRequest) {
         runRemoveContractTask();
-    } else if (m_synchronizationRequest) {
+    } else if (m_hasSynchronizationRequest) {
         runSynchronizationTask();
     } else if (m_batchesManager->hasNextBatch()) {
         runBatchExecutionTask();
@@ -283,11 +283,9 @@ void DefaultContract::runInitializeContractTask(AddContractRequest&& request) {
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
     m_task = std::make_unique<InitContractTask>(std::move(request), std::move(callback), *this, m_executorEnvironment);
-
-    m_contractRemoveRequest.reset();
 
     m_task->run();
 }
@@ -312,18 +310,18 @@ void DefaultContract::runSynchronizationTask() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_synchronizationRequest, m_executorEnvironment.logger())
+    ASSERT(m_hasSynchronizationRequest, m_executorEnvironment.logger())
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
-    m_task = std::make_unique<SynchronizationTask>(std::move(*m_synchronizationRequest),
+    m_task = std::make_unique<SynchronizationTask>(m_lastKnownStorageState,
                                                    std::move(callback),
                                                    *this,
                                                    m_executorEnvironment);
 
-    m_synchronizationRequest.reset();
+    m_hasSynchronizationRequest = false;
 
     m_task->run();
 }
@@ -349,7 +347,7 @@ void DefaultContract::runBatchExecutionTask() {
 
     auto[_, callback] = createAsyncQuery<void>([this](auto&&) {
         runTask();
-    }, [] {}, m_executorEnvironment, false, false);
+    }, [] {}, m_executorEnvironment, false, true);
 
     auto batchIndex = batch.m_batchIndex;
 
