@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <map>
 #include <memory>
 #include "boost/beast.hpp"
 #include <boost/beast/core.hpp>

@@ -10,6 +10,7 @@
 
 #include <common/Identifiers.h>
 
+#include <map>
 #include <memory>
 
 namespace sirius::contract {

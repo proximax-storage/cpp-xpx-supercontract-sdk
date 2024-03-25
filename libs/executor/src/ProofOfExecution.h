@@ -11,6 +11,7 @@
 #include <blockchain/Proofs.h>
 #include <executor/ExecutorInfo.h>
 #include <common/Identifiers.h>
+#include <map>
 
 namespace sirius::contract {
 
