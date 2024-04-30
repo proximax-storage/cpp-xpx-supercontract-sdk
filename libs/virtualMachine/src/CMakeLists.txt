@@ -10,7 +10,7 @@ foreach(service blockchain_vm internet_vm storage_vm)
     list(APPEND SIRIUS_SUPERCONTRACT_DEPENDENCIES ${service}_sirius_grpc_proto)
 endforeach()
 
-supercontract_sdk_proto(supercontract_server "../protobuf/" ${SIRIUS_SUPERCONTRACT_DEPENDENCIES})
+supercontract_sdk_proto(supercontract_server "../protobuf/" "${SIRIUS_SUPERCONTRACT_DEPENDENCIES}")
 target_link_libraries(sirius.contract.vm supercontract_server_sirius_grpc_proto)
 
 target_include_directories(sirius.contract.vm PUBLIC ../include)

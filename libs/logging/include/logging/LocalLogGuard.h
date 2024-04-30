@@ -15,7 +15,7 @@ class LocalLogGuard {
 
 private:
 
-    const uint numThreads;
+    const uint8_t numThreads;
     std::shared_ptr<spdlog::details::thread_pool> m_pPool;
 
     std::condition_variable m_finishCV;

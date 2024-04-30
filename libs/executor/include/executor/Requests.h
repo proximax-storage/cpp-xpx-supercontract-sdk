@@ -7,6 +7,7 @@
 #pragma once
 
 #include <common/Identifiers.h>
+#include <map>
 #include "ExecutorInfo.h"
 
 namespace sirius::contract {

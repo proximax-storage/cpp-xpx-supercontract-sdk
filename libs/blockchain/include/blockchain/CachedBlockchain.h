@@ -10,6 +10,7 @@
 #include <common/SingleThread.h>
 #include <common/GlobalEnvironment.h>
 #include <utils/NonCopyable.h>
+#include <map>
 
 namespace sirius::contract::blockchain {
 

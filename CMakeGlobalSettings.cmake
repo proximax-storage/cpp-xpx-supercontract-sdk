@@ -82,7 +82,7 @@ function(supercontract_sdk_target TARGET_NAME)
                         # copy into ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/boost
                         set(BOOSTDLLNAME ${Boost_${BOOST_COMPONENT}_LIBRARY_RELEASE})
                         set(BOOSTVERSION "${Boost_MAJOR_VERSION}.${Boost_MINOR_VERSION}.${Boost_SUBMINOR_VERSION}")
-                        get_filename_component(BOOSTFILENAME ${BOOSTDLLNAME} NAME)
+                        get_filename_component(BOOSTFILENAME "${BOOSTDLLNAME}" NAME)
                         add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
                                 COMMAND ${CMAKE_COMMAND} -E copy_if_different
                                 "${BOOSTDLLNAME}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/boost")
@@ -215,7 +215,7 @@ function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
                         -I "${${SERVICE}_proto_path}"
                         --plugin=protoc-gen-grpc="${_GRPC_CPP_PLUGIN_EXECUTABLE}"
                         "${${SERVICE}_proto}"
-                        DEPENDS ${DEPENDENCIES})
+                        DEPENDS "${DEPENDENCIES}")
 
                 # vm_client_grpc_proto
                 add_library(${SERVICE}_sirius_grpc_proto SHARED
@@ -228,7 +228,8 @@ function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
                 target_link_libraries(${SERVICE}_sirius_grpc_proto
                         ${_REFLECTION}
                         ${_GRPC_GRPCPP}
-                        ${_PROTOBUF_LIBPROTOBUF})
+                        ${_PROTOBUF_LIBPROTOBUF}
+                        "${DEPENDENCIES}")
         endif()
 endfunction()
 
