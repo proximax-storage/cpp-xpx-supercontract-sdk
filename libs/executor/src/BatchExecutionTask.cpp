@@ -912,7 +912,7 @@ void BatchExecutionTask::sendEndBatchTransaction(const blockchain::UnsuccessfulE
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    m_executorEnvironment.logger().debug("Send successful end batch execution transaction. "
+    m_executorEnvironment.logger().debug("Send unsuccessful end batch execution transaction. "
                                          "Contract key: {}, batch index: {}",
                                          m_contractEnvironment.contractKey(),
                                          m_batch.m_batchIndex);
