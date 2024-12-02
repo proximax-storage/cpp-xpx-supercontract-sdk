@@ -198,7 +198,7 @@ endfunction()
 
 function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
         if (NOT NOT_BUILD_SIRIUS_${SERVICE})
-                get_filename_component(${SERVICE}_proto "${PROTO_PATH}${SERVICE}.proto" ABSOLUTE)
+                get_filename_component(${SERVICE}_proto "${PROTO_PATH}/../protobuf/${SERVICE}.proto" ABSOLUTE)
                 get_filename_component(${SERVICE}_proto_path "${${SERVICE}_proto}" PATH)
                 list(APPEND DEPENDENCIES ${${SERVICE}_proto})
 
@@ -226,10 +226,10 @@ function(supercontract_sdk_proto SERVICE PROTO_PATH DEPENDENCIES)
                 # Include generated *.pb.h files
                 target_include_directories(${SERVICE}_sirius_grpc_proto PUBLIC "${CMAKE_CURRENT_BINARY_DIR}")
                 target_link_libraries(${SERVICE}_sirius_grpc_proto
-                        ${_REFLECTION}
-                        ${_GRPC_GRPCPP}
-                        ${_PROTOBUF_LIBPROTOBUF}
-                        "${DEPENDENCIES}")
+                        grpc++_reflection
+                        protobuf
+                        grpc++
+                )
         endif()
 endfunction()
 

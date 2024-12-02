@@ -18,8 +18,6 @@ set(BUILD_SANDBOX OFF)
 
 ### setup boost
 find_package(Boost COMPONENTS atomic system date_time regex timer chrono log thread filesystem program_options random REQUIRED)
-
-supercontract_sdk_third_party_lib(cmake/grpc.cmake)
 supercontract_sdk_third_party_lib(cmake/expected.cmake)
 supercontract_sdk_third_party_lib(cmake/cereal.cmake)
 supercontract_sdk_third_party_lib(cmake/magic_enum.cmake)

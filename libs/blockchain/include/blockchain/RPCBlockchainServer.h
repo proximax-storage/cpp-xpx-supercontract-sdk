@@ -12,6 +12,7 @@
 #include "BlockContext.h"
 #include <thread>
 #include <memory>
+#include <grpcpp/server_builder.h>
 
 namespace sirius::contract::blockchain {
 

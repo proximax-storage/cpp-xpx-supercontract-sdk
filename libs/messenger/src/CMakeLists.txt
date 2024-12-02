@@ -4,7 +4,7 @@ find_package(OpenSSL REQUIRED)
 
 supercontract_sdk_library_target(sirius.contract.messenger)
 
-supercontract_sdk_proto(messengerServer "../protobuf/" "")
+supercontract_sdk_proto(messengerServer ${CMAKE_CURRENT_SOURCE_DIR} "")
 target_link_libraries(sirius.contract.messenger messengerServer_sirius_grpc_proto)
 
 target_include_directories(sirius.contract.messenger PUBLIC ../include)
