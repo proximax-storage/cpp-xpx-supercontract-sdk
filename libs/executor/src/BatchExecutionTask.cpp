@@ -165,7 +165,7 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const UnsuccessfulEn
         return false;
     }
 
-    if (!m_successfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
+    if (!m_unsuccessfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
         m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
     }
 
