@@ -44,6 +44,8 @@ void BatchExecutionTask::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("BatchExecution run() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
     m_executorEnvironment.logger().info("Batch execution task is run. "
                                         "Contract key: {}, "
                                         "batch index: {}, "
@@ -54,6 +56,7 @@ void BatchExecutionTask::run() {
 
     auto[query, callback] = createAsyncQuery<std::unique_ptr<storage::StorageModification>>([this](auto&& res) {
         if (!res) {
+            m_executorEnvironment.logger().error("BatchExecution run() onUnableToExecuteBatch() failed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             const auto& ec = res.error();
             ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
             onUnableToExecuteBatch(ec);
@@ -68,6 +71,7 @@ void BatchExecutionTask::run() {
     auto storage = m_executorEnvironment.storage().lock();
 
     if (!storage) {
+        m_executorEnvironment.logger().error("BatchExecution run() storage unavailable ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         onUnableToExecuteBatch(storage::make_error_code(storage::StorageError::storage_unavailable));
         return;
     }
@@ -80,6 +84,7 @@ void BatchExecutionTask::run() {
 void BatchExecutionTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution terminate() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_executorEnvironment.logger().warn("Batch execution task is terminated. "
                                         "Contract key: {}, batch index: {}",
@@ -107,6 +112,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_callExecutionManager, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onSuperContractCallExecuted() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     bool success = result.m_success;
 
@@ -114,6 +120,7 @@ void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest
             [this, callRequest = std::move(callRequest), result = std::move(result)](auto&& digest) mutable {
 
                 if (!digest) {
+                    m_executorEnvironment.logger().error("BatchExecution onSuperContractCallExecuted() onUnableToExecuteBatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     const auto& ec = digest.error();
                     ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
                     onUnableToExecuteBatch(ec);
@@ -135,16 +142,20 @@ void BatchExecutionTask::onSuperContractCallExecuted(std::shared_ptr<CallRequest
 bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onSuccessEndBatchExecutionOpinionReceived(): {} ````````````````````````````````````````", opinion.m_callsExecutionInfo.size());
 
     if (m_finished) {
+        m_executorEnvironment.logger().error("BatchExecution onSuccessEndBatchExecutionOpinionReceived() finished false ````````````````````````````````````````");
         return false;
     }
 
     if (opinion.m_batchIndex != m_batch.m_batchIndex) {
+        m_executorEnvironment.logger().error("BatchExecution onSuccessEndBatchExecutionOpinionReceived() invalid batch index ````````````````````````````````````````");
         return false;
     }
 
     if (!m_successfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
+        m_executorEnvironment.logger().error("BatchExecution onSuccessEndBatchExecutionOpinionReceived() no success opinion or not validate ````````````````````````````````````````");
         m_otherSuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
     }
 
@@ -156,16 +167,20 @@ bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const SuccessfulEndB
 bool BatchExecutionTask::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onUnsucessEndBatchExecutionOpinionReceived() ````````````````````````````````````````");
 
     if (m_finished) {
+        m_executorEnvironment.logger().error("BatchExecution onUnsucessEndBatchExecutionOpinionReceived() finish false ````````````````````````````````````````");
         return false;
     }
 
     if (opinion.m_batchIndex != m_batch.m_batchIndex) {
+        m_executorEnvironment.logger().error("BatchExecution onUnsucessEndBatchExecutionOpinionReceived() invalid batch index ````````````````````````````````````````");
         return false;
     }
 
     if (!m_unsuccessfulEndBatchOpinion || validateOtherBatchInfo(opinion)) {
+        m_executorEnvironment.logger().error("BatchExecution onUnsucessEndBatchExecutionOpinionReceived() no unsuccess opinion or not validate ````````````````````````````````````````");
         m_otherUnsuccessfulExecutorEndBatchOpinions[opinion.m_executorKey] = opinion;
     }
 
@@ -181,6 +196,7 @@ void BatchExecutionTask::onInitiatedStorageModifications(std::unique_ptr<storage
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_storageQuery, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onInitiatedStorageModifications() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_storageQuery.reset();
 
@@ -195,6 +211,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_storageQuery, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_storageQuery.reset();
 
@@ -223,6 +240,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
             [this, callRequest](auto&& res) mutable {
 
                 if (!res) {
+                    m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() onUnableToExecuteBatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                     const auto& ec = res.error();
                     ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable ||
                            ec == vm::ExecutionError::storage_unavailable ||
@@ -231,11 +249,13 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                     return;
                 }
 
+                m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() onSuperContractCallExecuted() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 onSuperContractCallExecuted(std::move(callRequest), std::move(*res));
             }, [] {}, m_executorEnvironment, true, true);
 
     std::shared_ptr<vm::VirtualMachineBlockchainQueryHandler> blockchainQueryHandler;
     if (isManual) {
+        m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() process manual() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         blockchainQueryHandler = std::make_shared<ManualCallBlockchainQueryHandler>(
                 m_executorEnvironment,
                 m_contractEnvironment,
@@ -247,6 +267,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
                 callRequest->callId().array(),
                 callRequest->servicePayments());
     } else {
+        m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() process auto req() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         blockchainQueryHandler = std::make_shared<AutomaticExecutionsBlockchainQueryHandler>(
                 m_executorEnvironment,
                 m_contractEnvironment,
@@ -274,6 +295,7 @@ void BatchExecutionTask::onInitiatedSandboxModification(std::unique_ptr<storage:
             vmCallRequest,
             std::move(callback));
 
+    m_executorEnvironment.logger().error("BatchExecution onInitiatedSandboxModification() run CallExecutionManager ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_callExecutionManager->run();
 }
 
@@ -287,9 +309,11 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
 
     ASSERT(m_callExecutionManager, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("BatchExecution onAppliedSandboxStorageModifications() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_storageQuery.reset();
 
     if (!executionResult.m_success) {
+        m_executorEnvironment.logger().error("BatchExecution onAppliedSandboxStorageModifications() execution fail ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         ASSERT(!digest.m_success, m_executorEnvironment.logger())
     }
 
@@ -297,6 +321,7 @@ void BatchExecutionTask::onAppliedSandboxStorageModifications(std::shared_ptr<Ca
 
     uint16_t status = 0;
     if (!digest.m_success) {
+        m_executorEnvironment.logger().error("BatchExecution onAppliedSandboxStorageModifications() digest fail ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         // TOTO add enum
         status = 1;
     }
@@ -343,6 +368,7 @@ void BatchExecutionTask::onStorageHashEvaluated(storage::StorageState&& storageS
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_storageQuery, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onStorageHashEvaluated() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_storageQuery.reset();
 
@@ -357,20 +383,25 @@ void BatchExecutionTask::onStorageHashEvaluated(storage::StorageState&& storageS
 bool BatchExecutionTask::onEndBatchExecutionPublished(const blockchain::PublishedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionPublished() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (m_finished) {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionPublished() finished false ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return false;
     }
 
     if (info.m_batchIndex != m_batch.m_batchIndex) {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionPublished() invalid batch index ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return false;
     }
 
     m_publishedEndBatchInfo = info;
 
     if (m_successfulEndBatchOpinion) {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionPublished() received success opinion, processPublishedEndBatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         processPublishedEndBatch();
     } else {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionPublished() no received success opinion ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         // We are not able to process the transaction yet, we will do it as soon as the batch will be executed
     }
 
@@ -380,20 +411,26 @@ bool BatchExecutionTask::onEndBatchExecutionPublished(const blockchain::Publishe
 bool BatchExecutionTask::onEndBatchExecutionFailed(const blockchain::FailedEndBatchExecutionTransactionInfo& info) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (m_finished) {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() finish false ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return false;
     }
 
     if (m_batch.m_batchIndex != info.m_batchIndex) {
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() invalid batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return false;
     }
 
     if (!m_publishedEndBatchInfo) {
 
+        m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() no publishedEndBatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         if (info.m_batchSuccess) {
 
+            m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() batchSuccess true ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             std::erase_if(m_otherSuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+                m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() erase sus {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", !validateOtherBatchInfo(item.second));
                 return !validateOtherBatchInfo(item.second);
             });
 
@@ -401,7 +438,9 @@ bool BatchExecutionTask::onEndBatchExecutionFailed(const blockchain::FailedEndBa
 
         } else {
 
+            m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() batchSuccess false ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+                m_executorEnvironment.logger().error("BatchExecution onEndBatchExecutionFailed() erase unsus {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", !validateOtherBatchInfo(item.second));
                 return !validateOtherBatchInfo(item.second);
             });
 
@@ -423,6 +462,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
                                                        uint64_t fileStructureSize) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution formSuccessfulEndBatchOpinion() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_successfulEndBatchOpinion = SuccessfulEndBatchExecutionOpinion();
     m_successfulEndBatchOpinion->m_contractKey = m_contractEnvironment.contractKey();
     m_successfulEndBatchOpinion->m_batchIndex = m_batch.m_batchIndex;
@@ -443,6 +483,7 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
     m_successfulEndBatchOpinion->sign(m_executorEnvironment.keyPair());
 
     if (m_publishedEndBatchInfo) {
+        m_executorEnvironment.logger().error("BatchExecution formSuccessfulEndBatchOpinion() processPublishedEndBatch return ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         processPublishedEndBatch();
         return;
     }
@@ -451,14 +492,19 @@ void BatchExecutionTask::formSuccessfulEndBatchOpinion(const StorageHash& storag
 
     m_unsuccessfulExecutionTimer = m_executorEnvironment.threadManager().startTimer(
             m_contractEnvironment.contractConfig().unsuccessfulApprovalDelayMs(), [this] {
+
+                m_executorEnvironment.logger().error("BatchExecution formSuccessfulEndBatchOpinion() unsuccessful timer ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 onUnsuccessfulExecutionTimerExpiration();
             });
 
     std::erase_if(m_otherSuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+
+        m_executorEnvironment.logger().error("BatchExecution formSuccessfulEndBatchOpinion() erase sus {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", !validateOtherBatchInfo(item.second));
         return !validateOtherBatchInfo(item.second);
     });
 
     std::erase_if(m_otherUnsuccessfulExecutorEndBatchOpinions, [this](const auto& item) {
+        m_executorEnvironment.logger().error("BatchExecution formSuccessfulEndBatchOpinion() erase unsus {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", !validateOtherBatchInfo(item.second));
         return !validateOtherBatchInfo(item.second);
     });
 
@@ -472,10 +518,12 @@ void BatchExecutionTask::processPublishedEndBatch() {
     ASSERT(m_publishedEndBatchInfo, m_executorEnvironment.logger())
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("BatchExecution processPublishedEndBatch()  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     bool batchIsSuccessful = m_publishedEndBatchInfo->m_batchSuccess;
 
     if (!batchIsSuccessful) {
 
+        m_executorEnvironment.logger().error("BatchExecution processPublishedEndBatch() batch failed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_executorEnvironment.logger().warn("Unsuccessful batch is published. "
                                             "Contract key: {}, batch index: {}",
                                             m_contractEnvironment.contractKey(),
@@ -489,6 +537,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
                               m_publishedEndBatchInfo->m_PoExVerificationInfo !=
                               m_successfulEndBatchOpinion->m_successfulBatchInfo.m_PoExVerificationInfo)) {
         // The received result differs from the common one, synchronization is needed
+        m_executorEnvironment.logger().error("BatchExecution processPublishedEndBatch() batch execution result differs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         m_executorEnvironment.logger().warn("Published batch execution result differs from the published one. "
                                             "Contract key: {}, batch index: {}",
@@ -503,6 +552,7 @@ void BatchExecutionTask::processPublishedEndBatch() {
 
     } else {
 
+        m_executorEnvironment.logger().error("BatchExecution processPublishedEndBatch() batch success ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_executorEnvironment.logger().info("Successful and correct batch execution is published. "
                                             "Contract key: {}, batch index: {}",
                                             m_contractEnvironment.contractKey(),
@@ -536,12 +586,13 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("BatchExecution validateOtherSuccessBatchInfo() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     const auto& executors = m_contractEnvironment.executors();
 
     auto executorIt = executors.find(other.m_executorKey);
 
     if (executorIt == executors.end()) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: executor. "
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: executor. "
                                             "Contract key: {}, batch index: {}",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
@@ -552,48 +603,48 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
     const auto& successfulBatchInfo = m_successfulEndBatchOpinion->m_successfulBatchInfo;
 
     if (other.m_automaticExecutionsCheckedUpTo != m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: automatic executions checked up to. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: automatic executions checked up to. "
+                                            "Contract key: {}, batch index: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (otherSuccessfulBatchInfo.m_PoExVerificationInfo != successfulBatchInfo.m_PoExVerificationInfo) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: PoEx verification info. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: PoEx verification info. "
+                                            "Contract key: {}, batch index: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (otherSuccessfulBatchInfo.m_storageHash != successfulBatchInfo.m_storageHash) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: storage hash. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: storage hash. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (otherSuccessfulBatchInfo.m_usedStorageSize != successfulBatchInfo.m_usedStorageSize) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: used storage size. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: used storage size. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (otherSuccessfulBatchInfo.m_metaFilesSize != successfulBatchInfo.m_metaFilesSize) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: meta files size. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: meta files size. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: calls number. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: calls number. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
@@ -607,8 +658,8 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
     auto batchCallIt = m_batch.m_callRequests.cbegin();
     for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++, batchCallIt++) {
         if (otherCallIt->m_callId != callIt->m_callId) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: call id. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: call id. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
@@ -616,16 +667,16 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
         if (otherCallIt->m_manual !=
             callIt->m_manual) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: call level. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: call level. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
         }
 
         if (otherCallIt->m_callExecutionStatus != callIt->m_callExecutionStatus) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: call execution status. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: call execution status. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
@@ -633,24 +684,24 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
 
         if (otherCallIt->m_releasedTransaction !=
             callIt->m_releasedTransaction) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: released transaction. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: released transaction. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
         }
 
         if (otherCallIt->m_executorParticipation.m_scConsumed > (*batchCallIt)->executionPayment()) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: execution payment. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: execution payment. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
         }
 
         if (otherCallIt->m_executorParticipation.m_smConsumed > (*batchCallIt)->downloadPayment()) {
-            m_executorEnvironment.logger().warn("Invalid successful opinion received: download payment. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: download payment. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
@@ -660,13 +711,14 @@ bool BatchExecutionTask::validateOtherBatchInfo(const SuccessfulEndBatchExecutio
     if (!m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
                                                               other.m_batchIndex,
                                                               other.m_successfulBatchInfo.m_PoExVerificationInfo)) {
-        m_executorEnvironment.logger().warn("Invalid successful opinion received: PoEx. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid successful opinion received: PoEx. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
+    m_executorEnvironment.logger().error("BatchExecution Validate successfull ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     return true;
 }
 
@@ -674,32 +726,33 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_unsuccessfulEndBatchOpinion, m_executorEnvironment.logger())
+    ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution validateOtherUnsuccessBatchInfo() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     const auto& executors = m_contractEnvironment.executors();
 
     auto executorIt = executors.find(other.m_executorKey);
 
     if (executorIt == executors.end()) {
-        m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: executor. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: executor. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
 
     if (other.m_automaticExecutionsCheckedUpTo != m_successfulEndBatchOpinion->m_automaticExecutionsCheckedUpTo) {
-        m_executorEnvironment.logger().warn(
-                "Invalid unsuccessful opinion received: automatic executions checked up to. "
-                "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error(
+                "BatchExecution Invalid unsuccessful opinion received: automatic executions checked up to. "
+                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                 m_contractEnvironment.contractKey(),
                 m_batch.m_batchIndex);
         return false;
     }
 
     if (other.m_callsExecutionInfo.size() != m_successfulEndBatchOpinion->m_callsExecutionInfo.size()) {
-        m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: calls number. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: calls number. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
@@ -713,8 +766,8 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
     auto batchCallIt = m_batch.m_callRequests.cbegin();
     for (; otherCallIt != other.m_callsExecutionInfo.end(); otherCallIt++, callIt++, batchCallIt++) {
         if (otherCallIt->m_callId != callIt->m_callId) {
-            m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: call id. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: call id. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
@@ -722,24 +775,24 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
 
         if (otherCallIt->m_manual !=
             callIt->m_manual) {
-            m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: call level. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: call level. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
         }
 
         if (otherCallIt->m_executorParticipation.m_scConsumed > (*batchCallIt)->executionPayment()) {
-            m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: execution payment. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: execution payment. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
         }
 
         if (otherCallIt->m_executorParticipation.m_smConsumed > (*batchCallIt)->downloadPayment()) {
-            m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: download payment. "
-                                                "Contract key: {}, batch index: {}",
+            m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: download payment. "
+                                                "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                                 m_contractEnvironment.contractKey(),
                                                 m_batch.m_batchIndex);
             return false;
@@ -749,21 +802,22 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
     if (!m_contractEnvironment.proofOfExecution().verifyProof(executorIt->first, executorIt->second, other.m_proof,
                                                               other.m_batchIndex,
                                                               crypto::CurvePoint())) {
-        m_executorEnvironment.logger().warn("Invalid unsuccessful opinion received: PoEx. "
-                                            "Contract key: {}, batch index: {}",
+        m_executorEnvironment.logger().error("BatchExecution Invalid unsuccessful opinion received: PoEx. "
+                                            "Contract key: {}, batch index: {}~~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                             m_contractEnvironment.contractKey(),
                                             m_batch.m_batchIndex);
         return false;
     }
-
+    m_executorEnvironment.logger().error("BatchExecution Validate unsuccess successfull ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     return true;
 }
 
 void BatchExecutionTask::checkEndBatchTransactionReadiness() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution checkEndBatchTransactionReadiness() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
-    m_executorEnvironment.logger().debug("Check opinions number. "
+    m_executorEnvironment.logger().error("Check opinions number. "
                                          "Contract key: {}, batch index: {}, total executors: {}."
                                          "Successful opinion: {}, other successful opinions: {}."
                                          "Unsuccessful opinion: {}, other unsuccessful opinions: {}",
@@ -778,6 +832,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
     if (m_successfulEndBatchOpinion &&
         enoughOpinions(m_otherSuccessfulExecutorEndBatchOpinions.size() + 1,
                        m_contractEnvironment.executors().size() + 1)) {
+        m_executorEnvironment.logger().error("BatchExecution checkEndBatchTransactionReadiness() enough success opinions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         // Enough signatures for successful batch
 
         if (!m_successfulEndBatchSent) {
@@ -797,6 +852,7 @@ void BatchExecutionTask::checkEndBatchTransactionReadiness() {
                enoughOpinions(m_otherUnsuccessfulExecutorEndBatchOpinions.size() + 1,
                               m_contractEnvironment.executors().size() + 1)) {
 
+        m_executorEnvironment.logger().error("BatchExecution checkEndBatchTransactionReadiness() enough unsuccess opinions ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         if (!m_unsuccessfulEndBatchSent) {
 
             m_unsuccessfulEndBatchSent = true;
@@ -927,14 +983,17 @@ void BatchExecutionTask::executeNextCall() {
     ASSERT(!m_callExecutionManager, m_executorEnvironment.logger())
 
     ASSERT(!m_storageQuery, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution executeNextCall() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (m_callIterator != m_batch.m_callRequests.end()) {
+        m_executorEnvironment.logger().error("BatchExecution executeNextCall() execute next call ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         auto callRequest = *m_callIterator;
 		uint64_t height = callRequest->blockHeight();
         m_callIterator++;
         auto[query, callback] = createAsyncQuery<std::unique_ptr<storage::SandboxModification>>(
                 [=, this, callRequest = std::move(callRequest)](auto&& res) mutable {
                     if (!res) {
+                        m_executorEnvironment.logger().error("BatchExecution executeNextCall() res fail onUnableToExecuteBatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                         const auto& ec = res.error();
                         ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
                         onUnableToExecuteBatch(ec);
@@ -948,22 +1007,27 @@ void BatchExecutionTask::executeNextCall() {
         m_storageModification->initiateSandboxModification({m_executorEnvironment.executorConfig().getConfigByHeight(height).storagePathPrefix()},
                                                            callback);
     } else {
+        m_executorEnvironment.logger().error("BatchExecution executeNextCall() else ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         computeProofOfExecution();
+        m_executorEnvironment.logger().error("BatchExecution executeNextCall() computeProofOfExecution ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         auto[query, callback] = createAsyncQuery<storage::StorageState>([this](auto&& state) {
 
             if (!state) {
+                m_executorEnvironment.logger().error("BatchExecution executeNextCall() callback !state ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 const auto& ec = state.error();
                 ASSERT(ec == storage::StorageError::storage_unavailable, m_executorEnvironment.logger())
                 onUnableToExecuteBatch(ec);
                 return;
             }
 
+            m_executorEnvironment.logger().error("BatchExecution executeNextCall() onStorageHashEvaluated() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             onStorageHashEvaluated(std::move(*state));
         }, [] {}, m_executorEnvironment, true, true);
 
         m_storageQuery = std::move(query);
 
+        m_executorEnvironment.logger().error("BatchExecution executeNextCall() evaluateStorageHash ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_storageModification->evaluateStorageHash(callback);
     }
 }
@@ -971,6 +1035,8 @@ void BatchExecutionTask::executeNextCall() {
 void BatchExecutionTask::onUnsuccessfulExecutionTimerExpiration() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+
+    m_executorEnvironment.logger().error("BatchExecution onUnsuccessfulExecutionTimerExpiration() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
     ASSERT(!m_unsuccessfulEndBatchOpinion, m_executorEnvironment.logger())
@@ -1009,9 +1075,11 @@ void BatchExecutionTask::onUnableToExecuteBatch(const std::error_code& ec) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("BatchExecution onUnableToExecuteBatch() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
     m_executorEnvironment.logger().error("Unable to execute batch. "
                                          "Contract key: {}, batch index: {}. "
-                                         "Reason: {}",
+                                         "Reason: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~",
                                          m_contractEnvironment.contractKey(),
                                          m_batch.m_batchIndex,
                                          ec.message());
@@ -1031,6 +1099,7 @@ void BatchExecutionTask::onAppliedStorageModifications() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(m_storageQuery, m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onAppliedStorageModifications() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_storageQuery.reset();
 
@@ -1052,6 +1121,8 @@ void BatchExecutionTask::shareOpinions() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     auto messenger = m_executorEnvironment.messenger().lock();
+    
+    m_executorEnvironment.logger().error("BatchExecution shareOpinions() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_executorEnvironment.logger().debug("Share opinions. "
                                          "Contract key: {}, batch index: {}. ",
@@ -1061,22 +1132,33 @@ void BatchExecutionTask::shareOpinions() {
     if (messenger) {
 
         ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+        m_executorEnvironment.logger().error("BatchExecution m_successfulEndBatchOpinion hasvalue: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", m_successfulEndBatchOpinion.has_value());
 
         for (const auto&[executor, _]: m_contractEnvironment.executors()) {
             auto serializedInfo = utils::serialize(*m_successfulEndBatchOpinion);
+            std::stringstream ss;
+            ss << std::hex << std::setfill('0'); // Set fill character to '0' for padding
+
+            for (const auto& ch : serializedInfo) {
+                ss << std::setw(2) << static_cast<int>(static_cast<unsigned char>(ch));
+            }
             auto tag = magic_enum::enum_name(MessageTag::SUCCESSFUL_END_BATCH);
+            m_executorEnvironment.logger().error("BatchExecution shareOpinions() serializedata size {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", serializedInfo.size());
+            m_executorEnvironment.logger().error("BatchExecution shareOpinions() serializedata size {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", ss.str());
             messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
+            m_executorEnvironment.logger().error("BatchExecution shareOpinions() send success to executor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
 
         if (m_unsuccessfulEndBatchOpinion) {
             for (const auto&[executor, _]: m_contractEnvironment.executors()) {
                 auto serializedInfo = utils::serialize(*m_unsuccessfulEndBatchOpinion);
                 auto tag = magic_enum::enum_name(MessageTag::UNSUCCESSFUL_END_BATCH);
+                m_executorEnvironment.logger().error("BatchExecution shareOpinions() send unsuccess to executor ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                 messenger->sendMessage(messenger::OutputMessage{executor, {tag.begin(), tag.end()}, serializedInfo});
             }
         }
     } else {
-        m_executorEnvironment.logger().warn("Messenger not available");
+        m_executorEnvironment.logger().error("BatchExecution shareOpinions() Messenger not available ~~~~~~~~~~~~~~~~~~~~~~~~~~");
     }
 
     m_shareOpinionTimer = Timer(m_executorEnvironment.threadManager().context(),
@@ -1088,6 +1170,7 @@ void BatchExecutionTask::shareOpinions() {
 bool BatchExecutionTask::onBlockPublished(uint64_t height) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("BatchExecution onBlockPublished() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     auto& batchesManager = m_contractEnvironment.batchesManager();
 

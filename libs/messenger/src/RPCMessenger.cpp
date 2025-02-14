@@ -51,6 +51,7 @@ void RPCMessenger::write() {
     }
 
     if (!m_queuedTags.empty()) {
+        m_environment.logger().error("RPCMessenger write if ~~~~~~~~~~~~~~~~~~~~~~~~");
         auto tag = std::move(m_queuedTags.front());
         m_queuedTags.pop();
         auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
@@ -59,6 +60,7 @@ void RPCMessenger::write() {
         m_writeQuery = std::move(query);
         m_rpcSession->subscribe(tag, std::move(callback));
     } else if (!m_queuedMessages.empty()) {
+        m_environment.logger().error("RPCMessenger write else if ~~~~~~~~~~~~~~~~~~~~~~~~");
         auto message = std::move(m_queuedMessages.front());
         m_queuedMessages.pop();
         auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
@@ -131,6 +133,7 @@ void RPCMessenger::onRead(expected<InputMessage>&& res) {
     ASSERT(m_readQuery, m_environment.logger())
 
     ASSERT(isSessionActive(), m_environment.logger())
+    m_environment.logger().error("onRead ~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (!res) {
         restartSession();
@@ -138,9 +141,10 @@ void RPCMessenger::onRead(expected<InputMessage>&& res) {
     }
 
     if (m_subscribedTags.contains(res->m_tag)) {
+        m_environment.logger().error("onRead contain ~~~~~~~~~~~~~~~~~~~~~~~~");
         m_subscriber.onMessageReceived(*res);
     } else {
-        m_environment.logger().warn("Received Message With Unknown Tag: {}", res->m_tag);
+        m_environment.logger().error("Received Message With Unknown Tag: {}", res->m_tag);
     }
 
     m_readQuery.reset();
@@ -166,6 +170,8 @@ void RPCMessenger::startSession() {
 
     ASSERT(!m_sessionInitiateQuery, m_environment.logger())
 
+        m_environment.logger().error("startSession contain ~~~~~~~~~~~~~~~~~~~~~~~~");
+
     auto[query, callback] = createAsyncQuery<void>([this](auto&& res) {
         onSessionInitiated(std::forward<expected<void>>(res));
     }, [] {}, m_environment, true, true);
@@ -180,6 +186,7 @@ void RPCMessenger::restartSession() {
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    m_environment.logger().error("restartSession contain ~~~~~~~~~~~~~~~~~~~~~~~~");
     stopSession();
     m_restartTimer = Timer(m_environment.threadManager().context(), 15000, [this] {
         startSession();

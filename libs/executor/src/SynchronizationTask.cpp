@@ -37,6 +37,7 @@ void SynchronizationTask::run() {
 
     ASSERT(!m_storageQuery, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("SynchronizationTask() run ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_executorEnvironment.logger().info("Synchronization task is run. "
                                         "Contract key: {}, "
                                         "batch index: {}, "
@@ -50,12 +51,14 @@ void SynchronizationTask::run() {
     auto storage = m_executorEnvironment.storage().lock();
 
     if (!storage) {
+        m_executorEnvironment.logger().error("SynchronizationTask run no storage ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         onStorageUnavailable();
         return;
     }
 
     auto [query, callback] = createAsyncQuery<void>([this](auto&& res) {
         if (!res) {
+            m_executorEnvironment.logger().error("SynchronizationTask run !res ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             onStorageUnavailable();
             return;
         }
@@ -70,6 +73,7 @@ void SynchronizationTask::run() {
 void SynchronizationTask::terminate() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("SynchronizationTask() terminated ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_executorEnvironment.logger().info("Synchronization task is terminated. "
                                          "Contract key: {}, batch index: {}",
@@ -86,6 +90,7 @@ void SynchronizationTask::onStorageUnavailable() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("SynchronizationTask onStorageUnavailable()  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_storageQuery.reset();
 
     ASSERT(!m_storageTimer, m_executorEnvironment.logger())
@@ -106,6 +111,7 @@ void SynchronizationTask::onStorageUnavailable() {
 void SynchronizationTask::onStorageStateSynchronized() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("SynchronizationTask onStorageStateSynchronized()  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_executorEnvironment.logger().info("Synchronization is done. "
                                         "Contract key: {}, "

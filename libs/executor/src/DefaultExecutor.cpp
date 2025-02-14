@@ -172,17 +172,21 @@ void DefaultExecutor::setExecutors(const ContractKey& key, std::map<ExecutorKey,
 // region message subscriber
 
 void DefaultExecutor::onMessageReceived(const messenger::InputMessage& inputMessage) {
+    m_logger->critical("DefaultExecutor onMessageReceived() outside ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_threadManager->execute([=, this] {
+        m_logger->critical("DefaultExecutor onMessageReceived() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         try {
             auto tag = magic_enum::enum_cast<MessageTag>(inputMessage.m_tag);
             if (tag.has_value()) {
                 switch (tag.value()) {
                     case MessageTag::SUCCESSFUL_END_BATCH: {
+                        m_logger->critical("DefaultExecutor onMessageReceived() SUCCESSFUL_END_BATCH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                         auto info = utils::deserialize<SuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
                         onEndBatchExecutionOpinionReceived(info);
                         break;
                     }
                     case MessageTag::UNSUCCESSFUL_END_BATCH: {
+                        m_logger->critical("DefaultExecutor onMessageReceived() UNSUCCESSFUL_END_BATCH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
                         auto info = utils::deserialize<UnsuccessfulEndBatchExecutionOpinion>(inputMessage.m_content);
                         onEndBatchExecutionOpinionReceived(info);
                         break;
@@ -330,13 +334,16 @@ void DefaultExecutor::terminate() {
 }
 
 void DefaultExecutor::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatchExecutionOpinion& opinion) {
+    m_logger->critical("DefaultExecutor onSusEndBatchExecutionOpinionReceived ````````````````````````````````````````");
     if (!opinion.verify()) {
+        m_logger->critical("DefaultExecutor onSusEndBatchExecutionOpinionReceived !opinion returned ````````````````````````````````````````");
         return;
     }
 
     auto contractIt = m_contracts.find(opinion.m_contractKey);
 
     if (contractIt == m_contracts.end()) {
+        m_logger->critical("DefaultExecutor onSusEndBatchExecutionOpinionReceived contract end returned ````````````````````````````````````````");
         return;
     }
 
@@ -344,13 +351,16 @@ void DefaultExecutor::onEndBatchExecutionOpinionReceived(const SuccessfulEndBatc
 }
 
 void DefaultExecutor::onEndBatchExecutionOpinionReceived(const UnsuccessfulEndBatchExecutionOpinion& opinion) {
+    m_logger->critical("DefaultExecutor onUnsusEndBatchExecutionOpinionReceived ````````````````````````````````````````");
     if (!opinion.verify()) {
+        m_logger->critical("DefaultExecutor onUnsusEndBatchExecutionOpinionReceived !opinion returned ````````````````````````````````````````");
         return;
     }
 
     auto contractIt = m_contracts.find(opinion.m_contractKey);
 
     if (contractIt == m_contracts.end()) {
+        m_logger->critical("DefaultExecutor onUnsusEndBatchExecutionOpinionReceived contract end returned ````````````````````````````````````````");
         return;
     }
 

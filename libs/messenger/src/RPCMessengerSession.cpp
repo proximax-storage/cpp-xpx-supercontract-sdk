@@ -36,6 +36,17 @@ void RPCMessengerSession::read(std::shared_ptr<AsyncQueryCallback<InputMessage>>
 void RPCMessengerSession::write(const OutputMessage& message, std::shared_ptr<AsyncQueryCallback<void>> callback) {
 
     ASSERT(isSingleThread(), m_environment.logger())
+    m_environment.logger().error("Session write ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    m_environment.logger().error("Session write tag: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", message.m_tag);
+    std::stringstream ss;
+    ss << std::hex << std::setfill('0'); // Set fill character to '0' for padding
+
+    for (const auto& ch : message.m_content) {
+        ss << std::setw(2) << static_cast<int>(static_cast<unsigned char>(ch));
+    }
+    m_environment.logger().error("Session write content: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", ss.str());
+    
+
 
     auto* outputMessage = new messengerServer::OutputMessage();
     outputMessage->set_receiver(message.m_receiver.toString());

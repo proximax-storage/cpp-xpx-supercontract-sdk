@@ -10,6 +10,26 @@
 #include <utils/Serializer.h>
 #include "AutorunBlockchainQueryHandler.h"
 
+
+// #include <iostream>
+// #include <fstream>
+// #include <string>
+
+// // Function to write logs to a file
+// void writeLog(const std::string& message) {
+//     std::ofstream logFile;
+    
+//     // Open log file in append mode
+//     logFile.open("logfile.log", std::ios_base::app);
+    
+//     if (logFile.is_open()) {
+//         logFile << message << std::endl;
+//         logFile.close();
+//     } else {
+//         std::cerr << "Unable to open log file!" << std::endl;
+//     }
+// }
+
 namespace sirius::contract {
 
 DefaultBatchesManager::DefaultBatchesManager(uint64_t nextBatchIndex, ContractEnvironment& contractEnvironment,
@@ -22,7 +42,11 @@ void DefaultBatchesManager::run() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("DefaultBatchesManager Start ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+
+
     if (!m_run) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager !mrun ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_run = true;
         for(const auto& callInfo: m_autorunCallInfos) {
             callInfo.second.m_callExecutionManager->run();
@@ -33,10 +57,12 @@ void DefaultBatchesManager::run() {
 void DefaultBatchesManager::addManualCall(const ManualCallRequest& request) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager addManualCall() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     auto height = request.blockHeight();
 
     if (m_batches.empty() || (--m_batches.end())->first != height) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager addManualCall() batch empty emplace height~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_batches.try_emplace(height);
     }
 
@@ -48,16 +74,20 @@ void DefaultBatchesManager::addManualCall(const ManualCallRequest& request) {
 void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::optional<uint64_t>& blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager setAutomaticExecutionsEnabledSince() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_automaticExecutionsEnabledSince = blockHeight;
 
     if (m_delayedBatch && !isBatchValid(*m_delayedBatch)) {
+    m_executorEnvironment.logger().error("DefaultBatchesManager setAutomaticExecutionsEnabledSince() in delayedBatchExtractAutomaticCall() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         delayedBatchExtractAutomaticCall();
     }
 
     if (!m_automaticExecutionsEnabledSince) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager setAutomaticExecutionsEnabledSince() in disableAutomaticExecutionsTill(1) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         disableAutomaticExecutionsTill(UINT64_MAX);
     } else {
+        m_executorEnvironment.logger().error("DefaultBatchesManager setAutomaticExecutionsEnabledSince() in disableAutomaticExecutionsTill(2) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         disableAutomaticExecutionsTill(*m_automaticExecutionsEnabledSince);
     }
 }
@@ -65,10 +95,12 @@ void DefaultBatchesManager::setAutomaticExecutionsEnabledSince(const std::option
 bool DefaultBatchesManager::hasNextBatch() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager hasNextBatch() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     clearOutdatedBatches();
 
     if (m_delayedBatch) {
+    m_executorEnvironment.logger().error("DefaultBatchesManager hasNextBatch() delayed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return true;
     }
 
@@ -79,10 +111,12 @@ bool DefaultBatchesManager::hasNextBatch() {
 Batch DefaultBatchesManager::nextBatch() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager nextBatch() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     clearOutdatedBatches();
 
     if (m_delayedBatch) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager nextBatch() delayed ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         auto batch = std::move(*m_delayedBatch);
         m_delayedBatch.reset();
         return batch;
@@ -100,21 +134,26 @@ Batch DefaultBatchesManager::nextBatch() {
 void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (!m_automaticExecutionsEnabledSince || blockHeight < *m_automaticExecutionsEnabledSince) {
         // Automatic Executions Are Disabled For This Block
 
         if (m_batches.empty()) {
+            m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() empty batch return ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             return;
         }
 
+        m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() process batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         auto batchIt = --m_batches.end();
 
         if (batchIt->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::MANUAL) {
+            m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() manual to finish status ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
         }
 
         if (hasNextBatch()) {
+            m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() has next batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         	// Note that we do not check here that exactly this batch is the next batch
         	// That's why the number of notifications might not be the same as the number of ready batches
         	// due to gaps
@@ -122,10 +161,13 @@ void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
         }
 
     } else {
+        m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() automatic ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         if (m_batches.empty() || (--m_batches.end())->first < blockHeight) {
+            m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() automatic empty batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
             m_batches.try_emplace(blockHeight);
         }
 
+        m_executorEnvironment.logger().error("DefaultBatchesManager addBlock() automatic process batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         auto batchIt = --m_batches.end();
         batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::AUTOMATIC;
 
@@ -149,6 +191,7 @@ void DefaultBatchesManager::addBlock(uint64_t blockHeight) {
 std::unique_ptr<CallExecutionManager> DefaultBatchesManager::runAutorunCall(const CallId& callId, uint64_t height) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager runAturoCall() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     vm::CallRequest request(callId,
                             m_executorEnvironment.executorConfig().getConfigByHeight(height).autorunFile(),
@@ -189,6 +232,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
                                                         vm::CallExecutionResult&& executionResult) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager onSuperContractCallExecuted() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     auto callIt = m_autorunCallInfos.find(blockHeight);
 
@@ -203,6 +247,8 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
            m_executorEnvironment.logger())
 
     if (executionResult.m_success && executionResult.m_return == 0) {
+        
+        m_executorEnvironment.logger().error("DefaultBatchesManager onSuperContractCallExecuted() return success and status 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
         auto height = callIt->first;
 
@@ -224,6 +270,7 @@ void DefaultBatchesManager::onSuperContractCallExecuted(uint64_t blockHeight,
         batchIt->second.m_requests.push_back(std::move(pRequest));
     }
 
+    m_executorEnvironment.logger().error("DefaultBatchesManager onSuperContractCallExecuted() status finished ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     batchIt->second.m_batchFormationStatus = DraftBatch::BatchFormationStatus::FINISHED;
 
     if (batchIt->second.m_requests.empty()) {
@@ -246,6 +293,7 @@ void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std:
 
     ASSERT(ec == vm::ExecutionError::virtual_machine_unavailable, m_executorEnvironment.logger())
 
+    m_executorEnvironment.logger().error("DefaultBatchesManager onSuperContractCallFailed() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_executorEnvironment.logger().error("Failed to execute autorun call. Reason: {}", ec.message());
 
     auto callIt = m_autorunCallInfos.find(blockHeight);
@@ -270,6 +318,7 @@ void DefaultBatchesManager::onSuperContractCallFailed(uint64_t blockHeight, std:
 void DefaultBatchesManager::skipBatches(uint64_t nextBatchIndex) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager skipBatches() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     m_executorEnvironment.logger().debug("Skipped batches. Contract key: {}, next batch: {}",
                                          m_contractEnvironment.contractKey(),
@@ -281,15 +330,18 @@ void DefaultBatchesManager::skipBatches(uint64_t nextBatchIndex) {
 void DefaultBatchesManager::clearOutdatedBatches() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager clearOutdatedBatches() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     if (m_delayedBatch && m_delayedBatch->m_batchIndex < m_skippedNextBatchIndex) {
         // Note that we do NOT increment next batch index
+        m_executorEnvironment.logger().error("DefaultBatchesManager clearOutdatedBatches() reset delayedbatch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_delayedBatch.reset();
     }
 
     while (!m_batches.empty() &&
            m_batches.begin()->second.m_batchFormationStatus == DraftBatch::BatchFormationStatus::FINISHED &&
            m_nextBatchIndex < m_skippedNextBatchIndex) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager clearOutdatedBatches() erase batch ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         m_batches.erase(m_batches.begin());
         m_nextBatchIndex++;
     }
@@ -297,12 +349,13 @@ void DefaultBatchesManager::clearOutdatedBatches() {
 
 void DefaultBatchesManager::delayBatch(Batch&& batch) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager delayBatch() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     ASSERT(!m_delayedBatch, m_executorEnvironment.logger())
 
     ASSERT(batch.m_batchIndex + 1 == m_nextBatchIndex, m_executorEnvironment.logger())
 
-    m_executorEnvironment.logger().debug("Batch is delayed. Contract key: {}, batch index: {}",
+    m_executorEnvironment.logger().error("Batch is delayed. Contract key: {}, batch index: {}",
                                          m_contractEnvironment.contractKey(),
                                          batch.m_batchIndex);
 
@@ -316,8 +369,9 @@ void DefaultBatchesManager::delayBatch(Batch&& batch) {
 void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t nextBlockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager disableAutomaticExecutionsTill() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
-    m_executorEnvironment.logger().debug("Automatic executions are disabled. Contract key: {}, next block height: {}",
+    m_executorEnvironment.logger().error("Automatic executions are disabled. Contract key: {}, next block height: {}",
                                          m_contractEnvironment.contractKey(),
                                          nextBlockHeight);
 
@@ -355,6 +409,7 @@ void DefaultBatchesManager::disableAutomaticExecutionsTill(uint64_t nextBlockHei
 void DefaultBatchesManager::fixUnmodifiable(uint64_t nextBlockHeight) {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager fixUnmodifiable() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     ASSERT(nextBlockHeight > m_nextModifiableBlock, m_executorEnvironment.logger())
 
@@ -370,6 +425,7 @@ bool DefaultBatchesManager::isBatchValid(const Batch& batch) {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     ASSERT(!batch.m_callRequests.empty(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager isBatchValid() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     const auto& lastCall = batch.m_callRequests.back();
 
@@ -387,12 +443,14 @@ bool DefaultBatchesManager::isBatchValid(const Batch& batch) {
         return true;
     }
 
+    m_executorEnvironment.logger().error("DefaultBatchesManager isBatchValid() not valid ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     return false;
 }
 
 void DefaultBatchesManager::delayedBatchExtractAutomaticCall() {
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
+    m_executorEnvironment.logger().error("DefaultBatchesManager delayedBatchExtractAutomaticCall() ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
 
     ASSERT(m_delayedBatch, m_executorEnvironment.logger())
 
@@ -413,9 +471,11 @@ uint64_t DefaultBatchesManager::minBatchIndex() {
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
     if (m_nextBatchIndex == 0) {
+        m_executorEnvironment.logger().error("DefaultBatchesManager minBatchIndex(): 0 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         return 0;
     }
 
+    m_executorEnvironment.logger().error("DefaultBatchesManager minBatchIndex(): {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", std::max(m_nextBatchIndex - 1, m_skippedNextBatchIndex));
     return std::max(m_nextBatchIndex - 1, m_skippedNextBatchIndex);
 }
 
