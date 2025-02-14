@@ -674,7 +674,7 @@ bool BatchExecutionTask::validateOtherBatchInfo(const UnsuccessfulEndBatchExecut
 
     ASSERT(isSingleThread(), m_executorEnvironment.logger())
 
-    ASSERT(m_successfulEndBatchOpinion, m_executorEnvironment.logger())
+    ASSERT(m_unsuccessfulEndBatchOpinion, m_executorEnvironment.logger())
 
     const auto& executors = m_contractEnvironment.executors();
 
