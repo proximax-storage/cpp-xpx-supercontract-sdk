@@ -29,12 +29,14 @@ void RPCMessengerSession::read(std::shared_ptr<AsyncQueryCallback<InputMessage>>
 
     ASSERT(isSingleThread(), m_environment.logger())
 
+    m_environment.logger().error("RPCMessengerSession read() ~~~~~~~~~~~~~~~~~~~~~~~`");
+    
     auto* tag = new ReadInputMessageTag(m_environment, std::move(callback));
     m_stream->Read(&tag->m_response, tag);
 }
 
 void RPCMessengerSession::write(const OutputMessage& message, std::shared_ptr<AsyncQueryCallback<void>> callback) {
-
+    
     ASSERT(isSingleThread(), m_environment.logger())
     m_environment.logger().error("Session write ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     m_environment.logger().error("Session write tag: {} ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~", message.m_tag);
@@ -48,6 +50,8 @@ void RPCMessengerSession::write(const OutputMessage& message, std::shared_ptr<As
     
 
 
+    
+    m_environment.logger().error("RPCMessengerSession write() ~~~~~~~~~~~~~~~~~~~~~~~`");
     auto* outputMessage = new messengerServer::OutputMessage();
     outputMessage->set_receiver(message.m_receiver.toString());
     outputMessage->set_tag(message.m_tag);

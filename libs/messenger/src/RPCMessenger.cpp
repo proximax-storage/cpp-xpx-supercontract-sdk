@@ -10,42 +10,44 @@
 #include "ReadInputMessageTag.h"
 
 namespace sirius::contract::messenger {
-
-RPCMessenger::RPCMessenger(GlobalEnvironment& environment,
-                           const std::string& address,
-                           MessageSubscriber& subscriber)
+    
+    RPCMessenger::RPCMessenger(GlobalEnvironment& environment,
+        const std::string& address,
+        MessageSubscriber& subscriber)
         : m_environment(environment)
         , m_stub(messengerServer::MessengerServer::NewStub(grpc::CreateChannel(
-                address, grpc::InsecureChannelCredentials())))
-        , m_subscriber(subscriber)
-        , m_subscribedTags(m_subscriber.subscriptions()) {
-    startSession();
-}
-
-RPCMessenger::~RPCMessenger() {
-
-    ASSERT(isSingleThread(), m_environment.logger())
-
-    stopSession();
-}
-
-void RPCMessenger::sendMessage(const OutputMessage& message) {
-
-    ASSERT(isSingleThread(), m_environment.logger())
-
-    m_queuedMessages.push(message);
-
-    if (!m_writeQuery) {
-        write();
+            address, grpc::InsecureChannelCredentials())))
+            , m_subscriber(subscriber)
+            , m_subscribedTags(m_subscriber.subscriptions()) {
+                startSession();
+            }
+            
+            RPCMessenger::~RPCMessenger() {
+                
+                ASSERT(isSingleThread(), m_environment.logger())
+                
+                stopSession();
+            }
+            
+            void RPCMessenger::sendMessage(const OutputMessage& message) {
+                
+                ASSERT(isSingleThread(), m_environment.logger())
+                
+                m_queuedMessages.push(message);
+                
+                m_environment.logger().error("RPCMessenger sendMessage(): {} ~~~~~~~~~~~~~~~~~~~~~~", message.m_tag);
+                
+                if (!m_writeQuery) {
+                    write();
     }
 }
 
 void RPCMessenger::write() {
 
     ASSERT(isSingleThread(), m_environment.logger())
-
+    
     ASSERT(!m_writeQuery, m_environment.logger())
-
+    
     if (!isSessionActive()) {
         return;
     }
@@ -88,15 +90,15 @@ void RPCMessenger::read() {
 }
 
 void RPCMessenger::onSessionInitiated(expected<void>&& res) {
-
+    
     ASSERT(isSingleThread(), m_environment.logger())
-
+    
     ASSERT(m_sessionInitiateQuery, m_environment.logger())
-
+    
     ASSERT(m_rpcSession, m_environment.logger())
-
+    
     m_sessionInitiateQuery.reset();
-
+    
     if (!res) {
         restartSession();
         return;
