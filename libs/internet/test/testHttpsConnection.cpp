@@ -17,6 +17,10 @@
 #include "internet/InternetUtils.h"
 #include "TestUtils.h"
 
+// TODO: Clean up. Some unit tests depend on RapidJSON library, which is currently included from cereal.
+#include "../../../../cpp-xpx-storage-sdk/cereal/include/cereal/external/rapidjson/document.h"
+#include "../../../../cpp-xpx-storage-sdk/cereal/include/cereal/external/rapidjson/rapidjson.h"
+
 namespace ssl = boost::asio::ssl;       // from <boost/asio/ssl.hpp>
 
 namespace sirius::contract::internet::test {
@@ -122,6 +126,374 @@ TEST(HttpsConnection, ValidRead) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+														 boost::beast::http::verb::get,
+                                                         {},
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidBodylessPostRequest) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://httpbin.org/anything");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than POST will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+                            	ASSERT_TRUE(document["method"].IsString());
+                            	ASSERT_EQ(document["method"], "POST");
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::post,
+                                                         {},
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidBodylessPutRequest) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://httpbin.org/anything");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than PUT will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+								ASSERT_TRUE(document["method"].IsString());
+								ASSERT_EQ(document["method"], "PUT");
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::put,
+                                                         {},
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidBodylessDeleteRequest) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        auto urlDescription = parseURL("https://httpbin.org/anything");
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than DELETE will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+								ASSERT_TRUE(document["method"].IsString());
+								ASSERT_EQ(document["method"], "DELETE");
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::delete_,
+                                                         {},
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidPostRequestWithBody) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        const auto urlDescription = parseURL("https://httpbin.org/anything");
+    	const auto requestBody = "Test body (PUT method)";
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection, requestBody](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than POST will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+                            	ASSERT_TRUE(document["method"].IsString());
+                            	ASSERT_EQ(document["method"], "POST");
+                            	ASSERT_EQ(document["data"], requestBody);
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::post,
+                                                         requestBody,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidPutRequestWithBody) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        const auto urlDescription = parseURL("https://httpbin.org/anything");
+    	const auto requestBody = "Test body (PUT method)";
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection, requestBody](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than PUT will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+								ASSERT_TRUE(document["method"].IsString());
+								ASSERT_EQ(document["method"], "PUT");
+                            	ASSERT_EQ(document["data"], requestBody);
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::put,
+                                                         requestBody,
+                                                         16 * 1024,
+                                                         30000,
+                                                         500,
+                                                         60,
+                                                         RevocationVerificationMode::HARD,
+                                                         connectionCallback);
+    });
+    threadManager.stop();
+}
+
+TEST(HttpsConnection, ValidDeleteRequestWithBody) {
+
+    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+    auto& threadManager = globalEnvironment.threadManager();
+
+    threadManager.execute([&] {
+
+        ssl::context ctx{ssl::context::tlsv12_client};
+        ctx.set_default_verify_paths();
+        ctx.set_verify_mode(ssl::verify_peer);
+
+        const auto urlDescription = parseURL("https://httpbin.org/anything");
+    	const auto requestBody = "Test body (DELETE method)";
+
+        ASSERT_TRUE(urlDescription);
+        ASSERT_TRUE(urlDescription->ssl);
+        ASSERT_EQ(urlDescription->port, "443");
+
+        auto[connectionQuery, connectionCallback] = createAsyncQuery<InternetConnection>(
+                [&](auto&& connection) {
+                    ASSERT_TRUE(connection);
+
+                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+
+                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+                            [connection = sharedConnection, requestBody](auto&& res) {
+                                ASSERT_TRUE(res.has_value());
+                                std::string actual(res->begin(), res->end());
+
+                            	rapidjson::Document document;
+                            	document.Parse(actual.c_str());
+                            	ASSERT_TRUE(document.IsObject());	// Using methods other than DELETE will result
+                            										// in an HTML document with 405 Method Not Allowed
+                            										// error text, which cannot be parsed as a JSON.
+
+                            	ASSERT_TRUE(document.HasMember("method"));
+								ASSERT_TRUE(document["method"].IsString());
+								ASSERT_EQ(document["method"], "DELETE");
+                            	ASSERT_EQ(document["data"], requestBody);
+                            }, [] {}, globalEnvironment, false, false);
+                    sharedConnection->read(readCallback);
+                },
+                [] {},
+                globalEnvironment, false, false);
+
+        InternetConnection::buildHttpsInternetConnection(ctx,
+                                                         globalEnvironment,
+                                                         urlDescription->host,
+                                                         urlDescription->port,
+                                                         urlDescription->target,
+														 boost::beast::http::verb::delete_,
+                                                         requestBody,
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -159,6 +531,8 @@ TEST(HttpsConnection, ConnectingLocalhost) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -235,6 +609,8 @@ TEST(HttpsConnection, ReadBigWebsite) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -324,6 +700,8 @@ TEST(HttpsConnection, ReadWhenNetworkAdapterDown) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -376,6 +754,8 @@ TEST(HttpsConnection, ConnectWhenBlockingConnection) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -437,6 +817,8 @@ TEST(HttpsConnection, ReadWhenBlockingConnection) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -476,6 +858,8 @@ TEST(HttpsConnection, ValidCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -519,6 +903,8 @@ TEST(HttpsConnection, TerminateCall) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -560,6 +946,8 @@ TEST(HttpsConnection, NonExisting) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -570,56 +958,59 @@ TEST(HttpsConnection, NonExisting) {
     threadManager.stop();
 }
 
-TEST(HttpsConnection, NonExistingTarget) {
-
-    GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
-    auto& threadManager = globalEnvironment.threadManager();
-
-    bool read_flag = false;
-    threadManager.execute([&] {
-
-        ssl::context ctx{ssl::context::tlsv12_client};
-        ctx.set_default_verify_paths();
-        ctx.set_verify_mode(ssl::verify_peer);
-
-        auto urlDescription = parseURL("https://google.com/eg");
-
-        ASSERT_TRUE(urlDescription);
-        ASSERT_TRUE(urlDescription->ssl);
-        ASSERT_EQ(urlDescription->port, "443");
-
-        auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
-                [&](auto&& connection) {
-                    ASSERT_TRUE(connection);
-                    auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
-                    auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
-                            [&read_flag, sharedConnection](auto&& res) {
-                                read_flag = true;
-                                ASSERT_TRUE(res.has_value());
-                                std::string actual(res->begin(), res->end());
-                                const std::string expected = "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}\n  </style>\n  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>\n  <p><b>404.</b> <ins>That\xE2\x80\x99s an error.</ins>\n  <p>The requested URL <code>/eg</code> was not found on this server.  <ins>That\xE2\x80\x99s all we know.</ins>\n";
-                                ASSERT_EQ(actual, expected);
-                            },
-                            [] {}, globalEnvironment, false, false);
-                    sharedConnection->read(readCallback);
-                },
-                [] {}, globalEnvironment, false, false);
-
-        InternetConnection::buildHttpsInternetConnection(ctx,
-                                                         globalEnvironment,
-                                                         urlDescription->host,
-                                                         urlDescription->port,
-                                                         urlDescription->target,
-                                                         16 * 1024,
-                                                         30000,
-                                                         500,
-                                                         60,
-                                                         RevocationVerificationMode::HARD,
-                                                         connectionCallback);
-    });
-    threadManager.stop();
-    ASSERT_TRUE(read_flag);
-}
+// TODO: Needs updating (handshake with google.com fails).
+// TEST(HttpsConnection, NonExistingTarget) {
+//
+//     GlobalEnvironment globalEnvironment(std::make_shared<logging::Logger>(getLoggerConfig(), "executor"));
+//     auto& threadManager = globalEnvironment.threadManager();
+//
+//     bool read_flag = false;
+//     threadManager.execute([&] {
+//
+//         ssl::context ctx{ssl::context::tlsv12_client};
+//         ctx.set_default_verify_paths();
+//         ctx.set_verify_mode(ssl::verify_peer);
+//
+//         auto urlDescription = parseURL("https://google.com/eg");
+//
+//         ASSERT_TRUE(urlDescription);
+//         ASSERT_TRUE(urlDescription->ssl);
+//         ASSERT_EQ(urlDescription->port, "443");
+//
+//         auto[_, connectionCallback] = createAsyncQuery<InternetConnection>(
+//                 [&](auto&& connection) {
+//                     ASSERT_TRUE(connection);
+//                     auto sharedConnection = std::make_shared<InternetConnection>(std::move(*connection));
+//                     auto[_, readCallback] = createAsyncQuery<std::vector<uint8_t>>(
+//                             [&read_flag, sharedConnection](auto&& res) {
+//                                 read_flag = true;
+//                                 ASSERT_TRUE(res.has_value());
+//                                 std::string actual(res->begin(), res->end());
+//                                 const std::string expected = "<!DOCTYPE html>\n<html lang=en>\n  <meta charset=utf-8>\n  <meta name=viewport content=\"initial-scale=1, minimum-scale=1, width=device-width\">\n  <title>Error 404 (Not Found)!!1</title>\n  <style>\n    *{margin:0;padding:0}html,code{font:15px/22px arial,sans-serif}html{background:#fff;color:#222;padding:15px}body{margin:7% auto 0;max-width:390px;min-height:180px;padding:30px 0 15px}* > body{background:url(//www.google.com/images/errors/robot.png) 100% 5px no-repeat;padding-right:205px}p{margin:11px 0 22px;overflow:hidden}ins{color:#777;text-decoration:none}a img{border:0}@media screen and (max-width:772px){body{background:none;margin-top:0;max-width:none;padding-right:0}}#logo{background:url(//www.google.com/images/branding/googlelogo/1x/googlelogo_color_150x54dp.png) no-repeat;margin-left:-5px}@media only screen and (min-resolution:192dpi){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat 0% 0%/100% 100%;-moz-border-image:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) 0}}@media only screen and (-webkit-min-device-pixel-ratio:2){#logo{background:url(//www.google.com/images/branding/googlelogo/2x/googlelogo_color_150x54dp.png) no-repeat;-webkit-background-size:100% 100%}}#logo{display:inline-block;height:54px;width:150px}\n  </style>\n  <a href=//www.google.com/><span id=logo aria-label=Google></span></a>\n  <p><b>404.</b> <ins>That\xE2\x80\x99s an error.</ins>\n  <p>The requested URL <code>/eg</code> was not found on this server.  <ins>That\xE2\x80\x99s all we know.</ins>\n";
+//                                 ASSERT_EQ(actual, expected);
+//                             },
+//                             [] {}, globalEnvironment, false, false);
+//                     sharedConnection->read(readCallback);
+//                 },
+//                 [] {}, globalEnvironment, false, false);
+//
+//         InternetConnection::buildHttpsInternetConnection(ctx,
+//                                                          globalEnvironment,
+//                                                          urlDescription->host,
+//                                                          urlDescription->port,
+//                                                          urlDescription->target,
+//                                                          boost::beast::http::verb::get,
+//                                                          {},
+//                                                          16 * 1024,
+//                                                          30000,
+//                                                          500,
+//                                                          60,
+//                                                          RevocationVerificationMode::HARD,
+//                                                          connectionCallback);
+//     });
+//     threadManager.stop();
+//     ASSERT_TRUE(read_flag);
+// }
 
 TEST(HttpsConnection, RevokedCertificate) {
 
@@ -648,6 +1039,8 @@ TEST(HttpsConnection, RevokedCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -685,6 +1078,8 @@ TEST(HttpsConnection, ExpiredCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -721,6 +1116,8 @@ TEST(HttpsConnection, UntrustedRootCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -758,6 +1155,8 @@ TEST(HttpsConnection, SelfSignedCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -795,6 +1194,8 @@ TEST(HttpsConnection, WrongHostCertificate) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -832,6 +1233,8 @@ TEST(HttpsConnection, PinningTest) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -869,6 +1272,8 @@ TEST(HttpsConnection, ClientCertMissing) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -906,6 +1311,8 @@ TEST(HttpsConnection, WeakSignature) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,
@@ -943,6 +1350,8 @@ TEST(HttpsConnection, ConnectingNonHttpsURL) {
                                                          urlDescription->host,
                                                          urlDescription->port,
                                                          urlDescription->target,
+                                                         boost::beast::http::verb::get,
+                                                         {},
                                                          16 * 1024,
                                                          30000,
                                                          500,

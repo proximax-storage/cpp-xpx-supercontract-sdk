@@ -44,13 +44,23 @@ void InternetConnection::read(std::shared_ptr<AsyncQueryCallback<std::vector<uin
     m_resource->read(callback);
 }
 
-void InternetConnection::buildHttpInternetConnection(GlobalEnvironment& globalEnvironment, const std::string& host,
-                                                     const std::string& port, const std::string& target,
-                                                     int bufferSize, int timeout,
+void InternetConnection::buildHttpInternetConnection(GlobalEnvironment& globalEnvironment,
+	                                                 const std::string& host,
+                                                     const std::string& port,
+                                                     const std::string& target,
+                                                     const http::verb& method,
+                                                     const std::string& body,
+                                                     int bufferSize,
+                                                     int timeout,
                                                      const std::shared_ptr<AsyncQueryCallback<InternetConnection>>& callback) {
-
-    auto resource = std::make_shared<HttpInternetResource>(globalEnvironment, host, port, target, bufferSize,
-                                                           timeout);
+    auto resource = std::make_shared<HttpInternetResource>(globalEnvironment,
+    	                                                   host,
+    	                                                   port,
+    	                                                   target,
+    	                                                   method,
+    	                                                   body,
+    	                                                   bufferSize,
+    	                                                   timeout);
 
     auto[_, openCallback] = createAsyncQuery<InternetResourceContainer>(
             [&globalEnvironment, callback](auto&& resource) {
@@ -71,6 +81,8 @@ void InternetConnection::buildHttpsInternetConnection(ssl::context& ctx,
                                                       const std::string& host,
                                                       const std::string& port,
                                                       const std::string& target,
+                                                      const http::verb& method,
+                                                      const std::string& body,
                                                       int bufferSize,
                                                       int connectionTimeout,
                                                       int ocspQueryTimerDelay,
@@ -82,6 +94,8 @@ void InternetConnection::buildHttpsInternetConnection(ssl::context& ctx,
                                                             host,
                                                             port,
                                                             target,
+                                                            method,
+                                                            body,
                                                             bufferSize,
                                                             connectionTimeout,
                                                             ocspQueryTimerDelay,

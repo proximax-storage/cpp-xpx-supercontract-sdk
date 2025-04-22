@@ -46,11 +46,13 @@ private:
     std::string m_host;
     std::string m_port;
     std::string m_target;
+	http::verb m_method;
+	std::string m_body;
 
     tcp::resolver m_resolver;
     beast::ssl_stream<beast::tcp_stream> m_stream;
     beast::flat_buffer m_buffer;
-    http::request<http::empty_body> m_req;
+    http::request<http::string_body> m_req;
     http::parser<false, http::buffer_body> m_res;
     std::vector<uint8_t> m_readDataBuffer;
 
@@ -74,6 +76,8 @@ public:
             const std::string& host,
             const std::string& port,
             const std::string& target,
+            const http::verb& method,
+            const std::string& body,
             int bufferSize,
             int connectionTimeout,
             int ocspQueryTimerDelay,

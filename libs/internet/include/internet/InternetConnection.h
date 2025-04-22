@@ -9,6 +9,7 @@
 #include <memory>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/asio/ssl/impl/context.ipp>
+#include <boost/beast/http/verb.hpp>
 
 #include "InternetResource.h"
 #include <common/AsyncQuery.h>
@@ -49,6 +50,8 @@ public:
                                             const std::string& host,
                                             const std::string& port,
                                             const std::string& target,
+                                            const boost::beast::http::verb& method,
+                                            const std::string& body,
                                             int bufferSize,
                                             int timeout,
                                              const std::shared_ptr<AsyncQueryCallback<InternetConnection>>&);
@@ -58,6 +61,8 @@ public:
                                              const std::string& host,
                                              const std::string& port,
                                              const std::string& target,
+                                             const boost::beast::http::verb& method,
+                                             const std::string& body,
                                              int bufferSize,
                                              int connectionTimeout,
                                              int ocspQueryTimerDelay,

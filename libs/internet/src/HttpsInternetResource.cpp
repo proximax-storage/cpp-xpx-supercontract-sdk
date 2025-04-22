@@ -24,13 +24,16 @@ namespace sirius::contract::internet {
 
 HttpsInternetResource::HttpsInternetResource(ssl::context& ctx, GlobalEnvironment& globalEnvironment,
                                              const std::string& host, const std::string& port,
-                                             const std::string& target, int bufferSize, int connectionTimeout,
+                                             const std::string& target, const http::verb& method,
+                                             const std::string& body, int bufferSize, int connectionTimeout,
                                              int ocspQueryTimerDelay, int ocspQueryMaxEfforts,
                                              RevocationVerificationMode mode)
         : m_environment(globalEnvironment)
         , m_host(host)
         , m_port(port)
         , m_target(target)
+		, m_method(method)
+		, m_body(body)
         , m_resolver(globalEnvironment.threadManager().context())
         , m_stream(globalEnvironment.threadManager().context(), ctx)
         , m_buffer(bufferSize)
@@ -66,10 +69,12 @@ void HttpsInternetResource::open(std::shared_ptr<AsyncQueryCallback<InternetReso
     ASSERT(SSL_set1_host(m_stream.native_handle(), m_host.c_str()), m_environment.logger())
 
     m_req.version(10);
-    m_req.method(http::verb::get);
+    m_req.method(m_method);
     m_req.target(m_target);
     m_req.set(http::field::host, m_host);
     m_req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
+	m_req.body() = m_body;
+	m_req.prepare_payload();
     m_res.eager(true);
 
     // Look up the domain name
